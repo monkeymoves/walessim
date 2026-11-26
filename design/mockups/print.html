@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cymru 2031, print</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bevan:ital@0;1&family=Cabin:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Cabin+Condensed:wght@500;600;700&display=swap&subset=latin-ext" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js" integrity="sha384-CjloA8y00+1SDAUkjs099PVfnY2KmDC2BZnws9kh8D/lX1s46w6EPhpXdqMfjK6i" crossorigin="anonymous"></script>
+<script src="data/wales.js"></script>
+<style>
+/* Print palette: four inks on rag paper. Every colour on the page is one of these. */
+:root{
+  --paper:#ECE5D3;
+  --paper-deep:#E2D9C2;
+  --key:#20252B;        /* slate key block, Blaenau slate black */
+  --sea:#22597D;        /* estuary blue */
+  --bracken:#CF9A45;    /* autumn bracken on the uplands */
+  --draig:#BB2F2A;      /* dragon red, the overprint ink */
+  --key-soft:#4A4F55;
+  --rule:2.5px;
+  --display:"Bevan", Georgia, serif;
+  --text:"Cabin", "Gill Sans", sans-serif;
+  --cond:"Cabin Condensed", "Cabin", sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background-color:var(--paper);
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' seed='7'/><feColorMatrix values='0 0 0 0 .35  0 0 0 0 .29  0 0 0 0 .2  0 0 0 .09 0'/></filter><rect width='240' height='240' filter='url(%23f)'/></svg>");
+  color:var(--key);
+  font-family:var(--text);
+  font-size:15px;
+  line-height:1.4;
+  overflow:hidden;
+}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--draig);outline-offset:2px}
+
+.sheet{
+  height:100vh;min-height:780px;
+  display:grid;
+  grid-template-rows:auto 1fr auto auto;
+  padding:14px 18px 8px;
+  gap:10px;
+}
+
+/* ---------- top bar: a printed masthead strip ---------- */
+.mast{
+  display:grid;
+  grid-template-columns:auto auto 1fr auto;
+  align-items:center;
+  gap:22px;
+  padding:6px 4px 12px;
+  border-bottom:var(--rule) solid var(--key);
+  position:relative;
+}
+.mast::after{ /* second, thinner rule: a printed double rule */
+  content:"";position:absolute;left:0;right:0;bottom:-7px;border-bottom:1px solid var(--key);
+}
+.year{
+  font-family:var(--display);
+  font-size:50px;line-height:.9;letter-spacing:-.01em;
+  color:var(--key);
+  position:relative;
+}
+.year span{ /* mis-registered red pass under the key */
+  position:absolute;left:3px;top:-3px;color:var(--draig);z-index:-1;
+}
+.term{line-height:1.2}
+.term b{display:block;font-family:var(--display);font-weight:400;font-size:17px}
+.term small{font-size:14px;color:var(--key-soft);font-weight:600}
+
+.meters{display:flex;justify-content:center;gap:4px;flex-wrap:nowrap}
+.meter{
+  position:relative;padding:4px 8px 3px;border-left:1px solid var(--key);
+  cursor:help;min-width:0;
+}
+.meter:first-child{border-left:0}
+.meter .lbl{
+  font-family:var(--cond);font-weight:700;font-size:13px;letter-spacing:.01em;
+  white-space:nowrap;display:flex;align-items:center;gap:5px;
+}
+.meter .lbl svg{flex:none}
+.meter .bar{display:flex;gap:2px;margin-top:4px}
+.meter .bar i{width:8px;height:11px;border:1.4px solid var(--key);display:block}
+.meter .bar i.on{background:var(--key)}
+.meter .bar i.part{background:linear-gradient(90deg,var(--key) 50%,transparent 50%)}
+.meter .tip{
+  position:absolute;top:calc(100% + 10px);left:50%;transform:translateX(-50%);
+  width:230px;padding:8px 10px;background:var(--paper);border:2px solid var(--key);
+  font-size:13px;line-height:1.3;z-index:20;display:none;box-shadow:4px 4px 0 var(--key);
+}
+.meter .tip b{display:block;font-family:var(--display);font-weight:400;font-size:14px}
+.meter .tip em{color:var(--key-soft)}
+.meter:hover .tip,.meter:focus-visible .tip{display:block}
+
+.lang{display:flex;border:2px solid var(--key)}
+.lang button{
+  background:none;border:0;padding:6px 10px;cursor:pointer;
+  font-family:var(--cond);font-weight:700;font-size:14px;
+}
+.lang button[aria-pressed="true"]{background:var(--key);color:var(--paper)}
+
+/* ---------- main three-column sheet ---------- */
+.main{
+  display:grid;
+  grid-template-columns:352px 1fr 384px;
+  gap:22px;
+  min-height:0;
+  padding-top:6px;
+}
+.col{min-height:0;display:flex;flex-direction:column;gap:14px}
+
+/* map plate */
+.plate{position:relative;min-height:0}
+.plate canvas,.plate svg.ov{position:absolute;inset:0;width:100%;height:100%}
+.plate canvas{mix-blend-mode:multiply}
+.ov text{font-family:var(--display)}
+.ov .town{font-size:11px;fill:var(--key);paint-order:stroke;stroke:var(--paper);stroke-width:3.2px;stroke-linejoin:round}
+.ov .town.city{font-size:13.5px}
+.ov .peak{font-family:var(--text);font-style:italic;font-weight:600;font-size:11px;fill:var(--key);paint-order:stroke;stroke:var(--paper);stroke-width:3px;stroke-linejoin:round}
+.ov .region{font-family:var(--text);font-style:italic;font-weight:700;font-size:12.5px;letter-spacing:.22em;fill:var(--key);paint-order:stroke;stroke:var(--paper);stroke-width:3.4px;stroke-linejoin:round}
+.ov .sealbl{font-size:15px;letter-spacing:.16em;fill:var(--paper)}
+.ov .sealbl.small{font-size:12px}
+.ov .eng{font-family:var(--text);font-style:italic;font-size:13px;letter-spacing:.3em;fill:var(--key-soft)}
+.ov .rct{font-size:15px;fill:var(--draig);paint-order:stroke;stroke:var(--paper);stroke-width:4px;stroke-linejoin:round}
+.ov .site{cursor:help}
+.legend{
+  position:absolute;left:0;bottom:0;background:var(--paper);border:2px solid var(--key);
+  padding:5px 9px 5px 6px;font-size:11.5px;line-height:1.2;display:grid;grid-template-columns:auto 1fr;gap:1px 6px;align-items:center;
+  white-space:nowrap;
+}
+.legend svg{display:block}
+
+/* place broadside */
+.broadside{
+  position:relative;padding:16px 18px 16px;flex:1 1 auto;min-height:0;
+  display:flex;flex-direction:column;gap:10px;
+}
+.broadside::before,.ticket::before,.slip::before{
+  content:"";position:absolute;inset:0;border:var(--rule) solid var(--key);pointer-events:none;filter:url(#rough);
+}
+.broadside .kicker{font-family:var(--cond);font-weight:700;font-size:13px;color:var(--draig);display:flex;align-items:center;gap:6px}
+.broadside h1{
+  font-family:var(--display);font-weight:400;font-size:31px;line-height:1.02;margin:0;color:var(--key);
+}
+.broadside .alt{font-style:italic;font-size:15px;margin-top:-4px;color:var(--key-soft)}
+.figs{display:grid;grid-template-columns:1fr 1fr auto;border-top:2px solid var(--key);border-bottom:1px solid var(--key)}
+.fig{padding:8px 0 7px}
+.fig+.fig{border-left:1px solid var(--key);padding-left:12px}
+.fig b{font-family:var(--display);font-weight:400;font-size:27px;line-height:1;display:block}
+.fig span{font-size:13px;font-weight:600}
+.unv{font-size:12.5px;font-style:italic;color:var(--key-soft);margin-top:-6px}
+.hist{font-size:15px;line-height:1.5;margin:0}
+.boom{margin:6px 0 0;flex:1 1 0;min-height:64px;max-height:150px;display:flex;flex-direction:column}
+.boom .plot{flex:1 1 auto;position:relative;min-height:28px;border-bottom:2px solid var(--key)}
+.boom svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.boom figcaption{position:relative;height:16px;font-family:var(--cond);font-weight:700;font-size:12px}
+.boom figcaption span{position:absolute;top:1px;transform:translateX(-50%)}
+.boom figcaption span:first-child{left:5.5%}
+.boom .cap{font-size:12.5px;font-style:italic;color:var(--key-soft)}
+.chips{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:auto}
+.tag{
+  display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;
+  border:1.6px solid var(--key);padding:3px 10px 3px 6px;
+  clip-path:polygon(9px 0,100% 0,100% 100%,9px 100%,0 50%);padding-left:16px;position:relative;
+}
+.tag::before{content:"";position:absolute;left:8px;top:50%;width:5px;height:5px;margin-top:-2.5px;border-radius:50%;border:1.4px solid var(--key)}
+.thread{width:46px;height:20px;margin-right:-10px}
+.conf{display:grid;place-items:center;padding-left:8px;font-family:var(--cond);font-weight:700;font-size:13px}
+.conf .stamp{
+  width:60px;height:60px;border-radius:50%;border:2.5px solid var(--draig);color:var(--draig);
+  display:grid;place-items:center;text-align:center;font-size:10.5px;line-height:1.05;transform:rotate(-8deg);
+  filter:url(#rough);
+}
+.conf .stamp b{font-family:var(--display);font-weight:400;font-size:12px;display:block}
+
+/* curveball slip: blue ink, torn edges, red stamp */
+.slip{
+  position:relative;background:var(--sea);color:var(--paper);padding:20px 18px 18px;
+  transform:rotate(-1.2deg);margin:0 4px 4px;
+  clip-path:polygon(0 4%,4% 0,9% 3%,15% 0,22% 2%,28% 0,35% 3%,41% 1%,48% 3%,55% 0,61% 2%,68% 0,74% 3%,81% 1%,87% 3%,93% 0,100% 2%,100% 97%,95% 100%,89% 97%,83% 100%,76% 98%,70% 100%,63% 97%,57% 100%,50% 98%,44% 100%,37% 97%,31% 100%,24% 98%,18% 100%,11% 97%,5% 100%,0 98%);
+  flex:none;
+}
+.slip::before{border:0;background:
+  repeating-linear-gradient(118deg,transparent 0 9px,rgba(236,229,211,.13) 9px 10.5px);filter:none}
+.slip .kind{font-family:var(--cond);font-weight:700;font-size:13px;display:flex;gap:7px;align-items:center}
+.slip h2{font-family:var(--display);font-weight:400;font-size:20px;line-height:1.12;margin:6px 0 8px;max-width:76%}
+.slip .ripple{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;border-top:1.5px solid var(--paper);padding-top:8px}
+.slip .ripple svg{flex:none}
+.slip .stampc{
+  position:absolute;right:14px;top:12px;width:62px;height:62px;border-radius:50%;
+  border:2.5px solid #EC8A80;color:#F8CFC9;display:grid;place-items:center;text-align:center;
+  font-family:var(--cond);font-weight:700;font-size:10px;line-height:1.05;transform:rotate(14deg);filter:url(#rough);
+}
+
+/* hand of policy tickets */
+.handhead{display:flex;align-items:baseline;justify-content:space-between;border-bottom:2px solid var(--key);padding-bottom:4px}
+.handhead h2{font-family:var(--display);font-weight:400;font-size:19px;margin:0}
+.handhead span{font-size:13px;font-weight:600;color:var(--key-soft)}
+.hand{display:grid;grid-template-rows:repeat(4,1fr);gap:10px;flex:1;min-height:0}
+.ticket{
+  position:relative;display:grid;grid-template-columns:72px 1fr;min-height:0;
+  -webkit-mask:radial-gradient(circle 7px at 0 0,#0000 98%,#000) top left/51% 51% no-repeat,
+              radial-gradient(circle 7px at 100% 0,#0000 98%,#000) top right/51% 51% no-repeat,
+              radial-gradient(circle 7px at 0 100%,#0000 98%,#000) bottom left/51% 51% no-repeat,
+              radial-gradient(circle 7px at 100% 100%,#0000 98%,#000) bottom right/51% 51% no-repeat;
+}
+.ticket::before{border-width:2px}
+.stub{background:var(--key);display:grid;place-items:center;position:relative;border-right:2px dashed var(--paper)}
+.stub svg{width:52px;height:52px;margin-bottom:12px}
+.stub .no{position:absolute;bottom:5px;left:0;right:0;text-align:center;font-family:var(--cond);font-weight:700;font-size:10.5px;color:var(--paper);letter-spacing:.05em}
+.tbody{padding:9px 14px 9px 14px;display:flex;flex-direction:column;gap:5px;min-width:0}
+.ticket h3{font-family:var(--display);font-weight:400;font-size:18px;line-height:1.1;margin:0}
+.talt{font-style:italic;font-size:13px;color:var(--key-soft);margin-top:-3px}
+.effects{display:flex;flex-wrap:wrap;gap:4px 5px}
+.fx{display:inline-flex;align-items:center;gap:4px;font-family:var(--cond);font-weight:700;font-size:12.5px;padding:1px 6px 1px 2px;border:1.5px solid var(--key);line-height:1.25}
+.fx i{font-style:normal;width:14px;height:14px;display:grid;place-items:center;font-family:var(--text);font-size:13px;line-height:1}
+.fx.up{background:var(--key);color:var(--paper)}
+.fx.up i{background:var(--paper);color:var(--key)}
+.fx.down{border-color:var(--draig);color:var(--draig)}
+.fx.down i{background:var(--draig);color:var(--paper)}
+.fx.need{border-style:dashed}
+.meta{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;margin-top:auto;gap:8px}
+.meta .cost{font-family:var(--display);font-weight:400;font-size:14px}
+.delay{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.delay .pips{display:flex;gap:3px}
+.delay .pips b{width:9px;height:9px;border:1.5px solid var(--key);border-radius:50%}
+.delay .pips b.on{background:var(--key)}
+
+/* timeline */
+.timeline{height:76px;position:relative}
+.timeline svg{width:100%;height:100%;display:block;overflow:visible}
+.timeline text{font-family:var(--cond);font-weight:700;font-size:12px;fill:var(--key)}
+.timeline .era{font-family:var(--display);font-weight:400;font-size:15px}
+.timeline .gloss{font-family:var(--text);font-style:italic;font-weight:400;font-size:12.5px;fill:var(--key-soft)}
+.timeline .now{fill:var(--draig);font-family:var(--display);font-weight:400;font-size:14px}
+
+.foot{display:flex;justify-content:space-between;font-size:12.5px;color:var(--key-soft);border-top:1px solid var(--key);padding-top:4px}
+.foot b{color:var(--key);font-weight:700}
+
+@media (max-width:1360px){
+  .main{grid-template-columns:300px 1fr 360px;gap:18px}
+  .year{font-size:42px}
+  .meter{padding:4px 6px 3px}
+  .meter .bar i{width:7px}
+  .broadside h1{font-size:27px}
+  .hist{font-size:14px}
+  .ticket h3{font-size:15px}
+  .mast{gap:16px}
+}
+@media (max-height:820px){
+  .sheet{padding-top:10px;gap:8px}
+  .year{font-size:40px}
+  .fig b{font-size:23px}
+  .broadside{gap:8px;padding:13px 15px}
+  .slip{padding:16px 16px 14px}
+  .slip h2{font-size:18px}
+  .timeline{height:70px}
+  .talt{display:none}
+  .hand{gap:8px}
+  .tbody{padding:7px 12px 7px 12px;gap:4px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- roughens printed edges so rules look cut, not drawn -->
+    <filter id="rough" x="-3%" y="-3%" width="106%" height="106%">
+      <feTurbulence type="fractalNoise" baseFrequency=".05 .35" numOctaves="2" seed="4" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="2" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="ink" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="11" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="1.5" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+</svg>
+
+<div class="sheet">
+  <header class="mast">
+    <div class="year" aria-label="2031">2031<span aria-hidden="true">2031</span></div>
+    <div class="term"><b id="t-term"></b><small id="t-gen"></small></div>
+    <div class="meters" id="meters"></div>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-l="en">English</button>
+      <button type="button" data-l="cy">Cymraeg</button>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="col">
+      <article class="broadside" id="place"></article>
+      <aside class="slip" id="curve"></aside>
+    </section>
+    <section class="plate" id="plate">
+      <canvas id="map" aria-hidden="true"></canvas>
+      <svg class="ov" id="ov" role="img"></svg>
+      <div class="legend" id="legend"></div>
+    </section>
+    <section class="col">
+      <div class="handhead"><h2 id="t-hand"></h2><span id="t-handsub"></span></div>
+      <div class="hand" id="hand"></div>
+    </section>
+  </main>
+
+  <div class="timeline"><svg id="tl"></svg></div>
+  <footer class="foot"><span id="t-foot"></span><span id="t-credit"></span></footer>
+</div>
+
+<script>
+/* ======================= dictionary ======================= */
+const STRANDS = ["pro","res","hea","equ","coh","cul","glo"];
+const I18N = {
+  en:{
+    term:"Term 2 of 5", gen:"Generation 2025 to 2050",
+    s_pro:"Prosperous", s_res:"Resilient", s_hea:"Healthier", s_equ:"More equal", s_coh:"Cohesive", s_cul:"Culture", s_glo:"Global",
+    f_pro:"A prosperous Wales", f_res:"A resilient Wales", f_hea:"A healthier Wales", f_equ:"A more equal Wales",
+    f_coh:"A Wales of cohesive communities", f_cul:"A Wales of vibrant culture and thriving Welsh language", f_glo:"A globally responsible Wales",
+    level:"Level", change:"change since last term",
+    selected:"Selected place", pop:"people", speakers:"speak Welsh", unverified:"approx., unverified",
+    boom:"Rhondda coal, boom to closure. Shape illustrative.",
+    hist:"Rhondda steam coal fuelled the world's ships from the 1850s; the last deep mine, Tower Colliery, closed in 2008, leaving the tips behind.",
+    source:"Source: Census 2021, ONS", confidence:"Confidence", conf_v:"Medium",
+    curve_kind:"Curveball from the horizon scan", curve:"Climate instability: a wet, stormy decade",
+    ripple:"Raises coal tip risk", stamp:"Horizon<br>scan",
+    hand:"Your hand", handsub:"Play up to two this term",
+    c1:"Restore upland peat", c2:"Make coal tips safe", c3:"Community-owned energy", c4:"Welsh-medium childcare",
+    needs:"Needs partners", cost:"Cost",
+    pays1:"Pays out in 1 term", pays:"Pays out in {n} terms",
+    sea_irish:"Irish Sea", sea_card:"Cardigan Bay", sea_bris:"Bristol Channel", england:"England",
+    r_eryri:"Eryri", r_camb:"Cambrian Mountains", r_bann:"Bannau Brycheiniog",
+    lg_tip:"Coal tip, a lasting liability", lg_town:"Town or city", lg_site:"Heritage or industry site", lg_peak:"Summit", lg_sel:"Selected place",
+    ddoe:"Ddoe", heddiw:"Heddiw", yfory:"Yfory", g_ddoe:"the past, on rails", g_heddiw:"the present", g_yfory:"the future",
+    now:"2031", genb:"Generation boundaries",
+    foot:"Mockup. Illustrative values. A thinking tool, not a forecast.",
+    credit:"Boundaries ONS (OGL). Terrain AWS Terrain Tiles. Figures approximate.",
+    maptitle:"Map of Wales showing terrain, local authorities, towns, coal tips and Rhondda Cynon Taf selected",
+  },
+  cy:{
+    term:"Tymor 2 o 5", gen:"Cenhedlaeth 2025 i 2050",
+    s_pro:"Llewyrchus", s_res:"Cydnerth", s_hea:"Iachach", s_equ:"Cyfartal", s_coh:"Cydlynus", s_cul:"Diwylliant", s_glo:"Cyfrifol",
+    f_pro:"Cymru lewyrchus", f_res:"Cymru gydnerth", f_hea:"Cymru iachach", f_equ:"Cymru sy'n fwy cyfartal",
+    f_coh:"Cymru o gymunedau cydlynus", f_cul:"Cymru â diwylliant bywiog lle mae'r Gymraeg yn ffynnu", f_glo:"Cymru sy'n gyfrifol ar lefel fyd-eang",
+    level:"Lefel", change:"newid ers y tymor diwethaf",
+    selected:"Lle dethol", pop:"o bobl", speakers:"yn siarad Cymraeg", unverified:"bras, heb ei wirio",
+    boom:"Glo'r Rhondda, o'r ffyniant i'r cau. Siâp enghreifftiol.",
+    hist:"Bu glo stêm y Rhondda yn gyrru llongau'r byd o'r 1850au; caeodd y pwll dwfn olaf, Glofa'r Tŵr, yn 2008, gan adael y tomenni ar ôl.",
+    source:"Ffynhonnell: Cyfrifiad 2021, SYG", confidence:"Hyder", conf_v:"Canolig",
+    curve_kind:"Pelen gromlin o'r sgan gorwel", curve:"Ansefydlogrwydd hinsawdd: degawd gwlyb a stormus",
+    ripple:"Yn codi'r risg i domenni glo", stamp:"Sgan<br>gorwel",
+    hand:"Eich llaw", handsub:"Chwaraewch hyd at ddau y tymor hwn",
+    c1:"Adfer mawndiroedd yr ucheldir", c2:"Gwneud tomenni glo yn ddiogel", c3:"Ynni dan berchnogaeth gymunedol", c4:"Gofal plant cyfrwng Cymraeg",
+    needs:"Angen partneriaid", cost:"Cost",
+    pays1:"Effaith ymhen 1 tymor", pays:"Effaith ymhen {n} thymor",
+    sea_irish:"Môr Iwerddon", sea_card:"Bae Ceredigion", sea_bris:"Môr Hafren", england:"Lloegr",
+    r_eryri:"Eryri", r_camb:"Mynyddoedd Cambria", r_bann:"Bannau Brycheiniog",
+    lg_tip:"Tomen lo, baich parhaol", lg_town:"Tref neu ddinas", lg_site:"Safle treftadaeth neu ddiwydiant", lg_peak:"Copa", lg_sel:"Lle dethol",
+    ddoe:"Ddoe", heddiw:"Heddiw", yfory:"Yfory", g_ddoe:"", g_heddiw:"", g_yfory:"",
+    now:"2031", genb:"Ffiniau cenhedlaeth",
+    foot:"Ffug-gynllun. Gwerthoedd enghreifftiol. Offeryn meddwl, nid rhagolwg.",
+    credit:"Ffiniau SYG (OGL). Tirwedd AWS Terrain Tiles. Ffigurau bras.",
+    maptitle:"Map o Gymru yn dangos tirwedd, awdurdodau lleol, trefi, tomenni glo a Rhondda Cynon Taf wedi'i ddewis",
+  }
+};
+let lang = new URLSearchParams(location.search).get("lang") === "cy" ? "cy" : "en";
+const t = k => I18N[lang][k] ?? k;
+
+/* illustrative game state */
+const METER = {pro:[46,-1],res:[38,1],hea:[52,1],equ:[41,-1],coh:[57,1],cul:[63,1],glo:[35,0]};
+const CARDS = [
+  {k:"c1", icon:"peat",  up:["res","glo"], down:["pro"], cost:"£60m",  delay:2},
+  {k:"c2", icon:"tip",   up:["res","hea","coh"], down:[], cost:"£420m", delay:1, costly:true},
+  {k:"c3", icon:"wind",  up:["pro","coh","glo"], down:[], need:true, cost:"£90m", delay:1},
+  {k:"c4", icon:"child", up:["cul","equ"], down:[], cost:"£150m", delay:3},
+];
+const W = window.WALES, GW = W.width, GH = W.height, EL = W.elevation.rows;
+const RCT = W.las.find(l => l.en === "Rhondda Cynon Taf");
+
+/* ======================= small SVG marks ======================= */
+function arrow(d, col){
+  if (d > 0) return `<svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 0.5 L9.5 8.5 L0.5 8.5Z" fill="var(--key)"/></svg>`;
+  if (d < 0) return `<svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 9.5 L9.5 1.5 L0.5 1.5Z" fill="var(--draig)"/></svg>`;
+  return `<svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><rect x="1" y="4" width="8" height="2.4" fill="var(--key-soft)"/></svg>`;
+}
+const ICONS = {
+  // carved into the black stub: paper-coloured cuts
+  peat:`<svg viewBox="0 0 44 44"><g fill="none" stroke="var(--paper)" stroke-width="2.4" stroke-linecap="round">
+    <path d="M6 30 Q10 18 12 30 M12 30 Q15 14 18 30 M18 30 Q22 20 24 30"/><path d="M24 30 Q28 16 31 30 M31 30 Q34 22 38 30"/>
+    <path d="M5 35 H39" stroke-width="2"/><path d="M9 39 H17 M22 39 H35" stroke-width="1.6"/></g>
+    <circle cx="33" cy="10" r="3.2" fill="var(--paper)"/></svg>`,
+  tip:`<svg viewBox="0 0 44 44"><path d="M4 34 L14 16 Q18 11 24 12 L30 13 Q34 16 40 34Z" fill="var(--paper)"/>
+    <g stroke="var(--key)" stroke-width="2.2"><path d="M12 34 L22 14 M19 34 L28 15 M26 34 L33 20 M33 34 L37 27"/></g>
+    <path d="M2 37 H42" stroke="var(--paper)" stroke-width="2.4"/><path d="M6 40 H38" stroke="var(--paper)" stroke-width="1.4" stroke-dasharray="4 3"/></svg>`,
+  wind:`<svg viewBox="0 0 44 44"><g fill="none" stroke="var(--paper)" stroke-linecap="round"><path d="M22 16 V40" stroke-width="2.6"/>
+    <path d="M22 16 L22 3 M22 16 L33 22 M22 16 L11 22" stroke-width="3"/></g><circle cx="22" cy="16" r="2.6" fill="var(--key)" stroke="var(--paper)" stroke-width="1.6"/>
+    <path d="M4 40 V33 L9 29 L14 33 V40Z M30 40 V34 L35 30 L40 34 V40Z" fill="var(--paper)"/></svg>`,
+  child:`<svg viewBox="0 0 44 44"><rect x="5" y="24" width="14" height="14" fill="var(--paper)"/><rect x="21" y="24" width="14" height="14" fill="none" stroke="var(--paper)" stroke-width="2.2"/>
+    <rect x="13" y="8" width="14" height="14" fill="var(--paper)" transform="rotate(-8 20 15)"/>
+    <text x="12" y="35.5" text-anchor="middle" font-family="Bevan" font-size="11" fill="var(--key)">a</text>
+    <text x="28" y="35.5" text-anchor="middle" font-family="Bevan" font-size="11" fill="var(--paper)">b</text>
+    <text x="20" y="20" text-anchor="middle" font-family="Bevan" font-size="10.5" fill="var(--key)" transform="rotate(-8 20 15)">ŵ</text></svg>`,
+};
+function tipMark(sz=1, id=""){
+  // heavy black carved mound with carved diagonal warning hatching
+  return `<g transform="scale(${sz})">
+    <path d="M-12 6 L-4 -6 Q-1 -9 3 -8 L5 -7 Q8 -3 12 6Z" fill="var(--key)" stroke="var(--paper)" stroke-width="3" paint-order="stroke"/>
+    <g clip-path="url(#tipclip)" stroke="var(--paper)" stroke-width="1">
+      <path d="M-6 6 L2 -9 M-1 6 L7 -8 M4 6 L10 -3"/></g>
+    <path d="M-14 8 H14" stroke="var(--key)" stroke-width="2.4"/></g>`;
+}
+function siteGlyph(kind){
+  const k = "var(--key)";
+  switch(kind){
+    case "coal": return `<circle r="2.6" fill="none" stroke="${k}" stroke-width="1.3"/><path d="M-3.6 4 L0 -2.6 L3.6 4" fill="none" stroke="${k}" stroke-width="1.3"/>`;
+    case "slate": return `<path d="M-4 -2.5 H4 M-4 0.3 H4 M-4 3.1 H4" stroke="${k}" stroke-width="1.6"/>`;
+    case "copper": return `<path d="M-4 3 L-2.4 -3 H2.4 L4 3Z" fill="${k}"/>`;
+    case "steel": return `<path d="M-4 -3 H4 M-4 3 H4 M0 -3 V3" stroke="${k}" stroke-width="1.8"/>`;
+    case "energy": return `<path d="M0 0 V4.5 M0 0 L0 -4.2 M0 0 L3.8 2 M0 0 L-3.8 2" stroke="${k}" stroke-width="1.4" stroke-linecap="round"/>`;
+    case "water": return `<path d="M-4 -1 q2 -2 4 0 t4 0 M-4 2.6 q2 -2 4 0 t4 0" fill="none" stroke="${k}" stroke-width="1.4"/>`;
+    default: return `<path d="M-4 4 V-1 A4 4 0 0 1 4 -1 V4 M-1.6 4 V0.5 A1.6 1.6 0 0 1 1.6 0.5 V4" fill="none" stroke="${k}" stroke-width="1.3"/>`;
+  }
+}
+
+/* ======================= DOM panels ======================= */
+function renderMast(){
+  document.getElementById("t-term").textContent = t("term");
+  document.getElementById("t-gen").textContent = t("gen");
+  document.getElementById("meters").innerHTML = STRANDS.map(s=>{
+    const [v,d] = METER[s]; const cells = v/10;
+    let bar=""; for(let i=0;i<10;i++){ bar += `<i class="${i+1<=cells?'on':(i<cells?'part':'')}"></i>`; }
+    const other = lang==="en" ? I18N.cy["f_"+s] : I18N.en["f_"+s];
+    return `<div class="meter" tabindex="0" aria-label="${t("f_"+s)}: ${v}">
+      <div class="lbl">${t("s_"+s)} ${arrow(d)}</div><div class="bar">${bar}</div>
+      <div class="tip" role="tooltip"><b>${t("f_"+s)}</b><em>${other}</em><br>${t("level")} ${v} / 100</div></div>`;
+  }).join("");
+  document.querySelectorAll(".lang button").forEach(b=>b.setAttribute("aria-pressed", b.dataset.l===lang));
+}
+function boomSVG(){
+  // carved silhouette of output: a rising seam, a peak in 1913, a long fall to 2008
+  const P=[[1840,0],[1850,2],[1865,14],[1880,38],[1895,66],[1905,86],[1913,97],[1921,88],[1927,78],[1935,55],[1945,50],[1955,44],[1965,28],[1975,16],[1985,9],[1995,4],[2008,0],[2020,0]];
+  const X=y=>(y-1840)/180*300, Y=v=>98-v*0.92;
+  let d=`M0 100 `+P.map(([y,v])=>`L${X(y).toFixed(1)} ${Y(v).toFixed(1)}`).join(" ")+` L300 100Z`;
+  let cuts=""; for(let yy=18; yy<100; yy+=7) cuts+=`<path d="M0 ${yy} Q75 ${yy-2.5} 150 ${yy} T300 ${yy}" stroke="var(--paper)" stroke-width="1.6" fill="none" vector-effect="non-scaling-stroke"/>`;
+  return `<defs><clipPath id="boomc"><path d="${d}"/></clipPath></defs><path d="${d}" fill="var(--key)"/><g clip-path="url(#boomc)">${cuts}</g>
+    <line x1="${X(1913)}" x2="${X(1913)}" y1="0" y2="100" stroke="var(--draig)" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-dasharray="3 3"/>
+    <line x1="${X(2008)}" x2="${X(2008)}" y1="60" y2="100" stroke="var(--draig)" stroke-width="2" vector-effect="non-scaling-stroke"/>`;
+}
+function renderPlace(){
+  const a = RCT.approx;
+  const alt = lang==="en" ? RCT.cy : RCT.en;
+  const pct = lang==="cy" ? a.welsh_speakers_pct.toString().replace(".", ".") : a.welsh_speakers_pct;
+  document.getElementById("place").innerHTML = `
+    <div class="kicker"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><rect x="1" y="1" width="12" height="12" fill="var(--draig)"/></svg>${t("selected")}</div>
+    <h1>${RCT[lang]}</h1>
+    <div class="alt" lang="${lang==='en'?'cy':'en'}">${alt}</div>
+    <div class="figs">
+      <div class="fig"><b>${a.population_k}k</b><span>${t("pop")}</span></div>
+      <div class="fig"><b>${pct}%</b><span>${t("speakers")}</span></div>
+      <div class="conf" title="${t("confidence")}: ${t("conf_v")}"><div class="stamp"><div>${t("confidence")}<b>${t("conf_v")}</b></div></div></div>
+    </div>
+    <div class="unv">${t("unverified")}</div>
+    <p class="hist">${t("hist")}</p>
+    <figure class="boom"><div class="plot"><svg viewBox="0 0 300 100" preserveAspectRatio="none" aria-hidden="true">${boomSVG()}</svg></div>
+      <figcaption><span>1850</span><span style="left:${(1913-1840)/180*100}%">1913</span><span style="left:${(2008-1840)/180*100}%">2008</span></figcaption>
+      <div class="cap">${t("boom")}</div></figure>
+    <div class="chips">
+      <span style="display:inline-flex;align-items:center"><svg class="thread" viewBox="0 0 46 20" aria-hidden="true"><path d="M0 14 C10 2 18 20 28 9 S40 6 46 10" fill="none" stroke="var(--draig)" stroke-width="1.8"/></svg><span class="tag">${t("source")}</span></span>
+    </div>`;
+}
+function renderCurve(){
+  document.getElementById("curve").innerHTML = `
+    <div class="kind"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M1 8 h3 M12 8 h3 M8 1 v3 M8 12 v3" stroke="var(--paper)" stroke-width="2"/><circle cx="8" cy="8" r="3" fill="none" stroke="var(--paper)" stroke-width="2"/></svg>${t("curve_kind")}</div>
+    <h2>${t("curve")}</h2>
+    <div class="ripple"><svg width="34" height="20" viewBox="0 0 34 20" aria-hidden="true">
+      <path d="M1 18 L7 9 Q10 6 13 7 L16 8 Q19 11 22 18Z" fill="var(--paper)"/>
+      <path d="M27 18 V4 M23 8 L27 3 L31 8" fill="none" stroke="var(--paper)" stroke-width="2.2"/></svg>${t("ripple")}</div>
+    <div class="stampc" aria-hidden="true"><div>${t("stamp")}</div></div>`;
+}
+function renderHand(){
+  document.getElementById("t-hand").textContent = t("hand");
+  document.getElementById("t-handsub").textContent = t("handsub");
+  document.getElementById("hand").innerHTML = CARDS.map((c,i)=>{
+    const ups = c.up.map(s=>`<span class="fx up" title="${t("f_"+s)}"><i>+</i>${t("s_"+s)}</span>`).join("");
+    const downs = c.down.map(s=>`<span class="fx down" title="${t("f_"+s)}"><i>&minus;</i>${t("s_"+s)}</span>`).join("");
+    const need = c.need ? `<span class="fx need"><i>?</i>${t("needs")}</span>` : "";
+    let pips=""; for(let k=0;k<3;k++) pips += `<b class="${k<c.delay?'on':''}"></b>`;
+    const pays = c.delay===1 ? t("pays1") : t("pays").replace("{n}", c.delay);
+    return `<article class="ticket">
+      <div class="stub">${ICONS[c.icon]}<span class="no">No. ${String(417+i*23).padStart(4,"0")}</span></div>
+      <div class="tbody"><h3>${t(c.k)}</h3><div class="talt" lang="${lang==='en'?'cy':'en'}">${I18N[lang==='en'?'cy':'en'][c.k]}</div>
+        <div class="effects">${ups}${downs}${need}</div>
+        <div class="meta"><span>${t("cost")} <span class="cost">${c.cost}</span></span>
+          <span class="delay"><span class="pips">${pips}</span>${pays}</span></div>
+      </div></article>`;
+  }).join("");
+}
+function renderFoot(){
+  document.getElementById("t-foot").innerHTML = `<b>${t("foot")}</b>`;
+  document.getElementById("t-credit").textContent = t("credit");
+}
+
+/* ======================= timeline ======================= */
+function renderTimeline(){
+  const svg = document.getElementById("tl");
+  const w = svg.clientWidth, y0 = 24, y1 = 42, pad = 4;
+  const X = yr => pad + (yr-1780)/320*(w-2*pad);
+  let g = "";
+  // Ddoe told on rails: two rails and sleepers
+  g += `<g stroke="var(--key)">`;
+  for(let yr=1780; yr<2000; yr+=1.6) g += `<line x1="${X(yr)}" x2="${X(yr)}" y1="${y0-1}" y2="${y1+1}" stroke-width="1.6"/>`;
+  g += `<line x1="${X(1780)}" x2="${X(2000)}" y1="${y0+4}" y2="${y0+4}" stroke-width="2.2"/><line x1="${X(1780)}" x2="${X(2000)}" y1="${y1-4}" y2="${y1-4}" stroke-width="2.2"/></g>`;
+  // Heddiw: solid key block with carved name
+  g += `<rect x="${X(2000)}" y="${y0-2}" width="${X(2025)-X(2000)}" height="${y1-y0+4}" fill="var(--key)" filter="url(#ink)"/>`;
+  // Yfory: bracken block, carved diagonal lines
+  g += `<defs><pattern id="hatchY" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><rect width="7" height="7" fill="var(--bracken)"/><rect width="1.6" height="7" fill="var(--paper)"/></pattern></defs>`;
+  g += `<rect x="${X(2025)}" y="${y0-2}" width="${X(2100)-X(2025)}" height="${y1-y0+4}" fill="url(#hatchY)" stroke="var(--key)" stroke-width="2" filter="url(#ink)"/>`;
+  // era names
+  const gl = k => t(k) ? ` <tspan class="gloss">${t(k)}</tspan>` : "";
+  g += `<text class="era" x="${X(1780)}" y="${y0-8}">${t("ddoe")}${gl("g_ddoe")}</text>`;
+  g += `<text class="era" x="${X(2000)+6}" y="${y1-4}" fill="var(--paper)">${t("heddiw")}</text>`;
+  g += `<text class="era" x="${X(2036)}" y="${y0-8}">${t("yfory")}${gl("g_yfory")}</text>`;
+  if (t("g_heddiw")) g += `<text class="gloss" x="${X(2000)+6}" y="${y0-8}">${t("g_heddiw")}</text>`;
+  // decade ticks + century labels
+  for(let yr=1780; yr<=2100; yr+=10){
+    const big = yr%100===0;
+    g += `<line x1="${X(yr)}" x2="${X(yr)}" y1="${y1+3}" y2="${y1+(big?11:6)}" stroke="var(--key)" stroke-width="${big?1.6:1}"/>`;
+    if ((big && yr<2100) || yr===1780) g += `<text x="${X(yr)}" y="${y1+24}" text-anchor="${yr===1780?'start':'middle'}">${yr}</text>`;
+  }
+  // generation boundaries every 25 years from 2025
+  [2025,2050,2075,2100].forEach(yr=>{
+    g += `<line x1="${X(yr)}" x2="${X(yr)}" y1="${y0-6}" y2="${y1+12}" stroke="var(--key)" stroke-width="3"/>`;
+    if (yr!==2100) g += `<text x="${X(yr)}" y="${y1+24}" text-anchor="middle">${yr}</text>`;
+  });
+  g += `<text x="${X(2100)}" y="${y1+24}" text-anchor="end">2100</text>`;
+  g += `<text class="gloss" x="${X(2100)}" y="${y0-8}" text-anchor="end">${t("genb")}</text>`;
+  // now marker, red overprint
+  const nx = X(2031);
+  g += `<g fill="var(--draig)"><path d="M${nx-7} ${y0-20} H${nx+7} L${nx} ${y0-9}Z"/><rect x="${nx-1.5}" y="${y0-10}" width="3" height="${y1-y0+18}"/></g>`;
+  g += `<text class="now" x="${nx-10}" y="${y0-10}" text-anchor="end">${t("now")}</text>`;
+  svg.innerHTML = g;
+}
+
+/* ======================= the map: a four-block relief print ======================= */
+// seeded random so every pull of the print is the same
+function rng(seed){ return function(){ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+
+const UP = 2; // upsample factor for smooth contours
+let GEO = null;
+function prepGeo(){
+  // elevation field: sea = 0, England filled by neighbour averaging so contours do not wrap the border
+  const n = GW*GH, f = new Float32Array(n), known = new Uint8Array(n);
+  for(let y=0;y<GH;y++) for(let x=0;x<GW;x++){ const v=EL[y][x], i=y*GW+x;
+    if (v>=0){f[i]=v;known[i]=1} else if (v===-1){f[i]=0;known[i]=1} }
+  for(let it=0; it<80; it++){ let left=0; const nf=f.slice(), nk=known.slice();
+    for(let y=0;y<GH;y++) for(let x=0;x<GW;x++){ const i=y*GW+x; if(known[i]) continue; let s=0,c=0;
+      for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){ const xx=x+dx,yy=y+dy; if(xx<0||yy<0||xx>=GW||yy>=GH) continue; const j=yy*GW+xx; if(known[j]&&EL[yy][xx]!==-1){s+=f[j];c++} }
+      if(c){nf[i]=s/c;nk[i]=1} else left++; }
+    f.set(nf); known.set(nk); if(!left) break; }
+  for(let i=0;i<n;i++) if(!known[i]) f[i]=0;
+  // binary fields: England (outside land), and land for distance
+  const eng = new Float32Array(n), land = new Uint8Array(n);
+  for(let y=0;y<GH;y++) for(let x=0;x<GW;x++){ const v=EL[y][x], i=y*GW+x; eng[i]= v===-2?1:0; land[i]= v!==-1?1:0; }
+  // chamfer distance (km) from land
+  const d = new Float32Array(n).fill(1e9);
+  for(let i=0;i<n;i++) if(land[i]) d[i]=0;
+  const D1=1, D2=1.414;
+  for(let y=0;y<GH;y++) for(let x=0;x<GW;x++){ const i=y*GW+x;
+    if(x>0) d[i]=Math.min(d[i],d[i-1]+D1); if(y>0){ d[i]=Math.min(d[i],d[i-GW]+D1); if(x>0)d[i]=Math.min(d[i],d[i-GW-1]+D2); if(x<GW-1)d[i]=Math.min(d[i],d[i-GW+1]+D2);} }
+  for(let y=GH-1;y>=0;y--) for(let x=GW-1;x>=0;x--){ const i=y*GW+x;
+    if(x<GW-1) d[i]=Math.min(d[i],d[i+1]+D1); if(y<GH-1){ d[i]=Math.min(d[i],d[i+GW]+D1); if(x<GW-1)d[i]=Math.min(d[i],d[i+GW+1]+D2); if(x>0)d[i]=Math.min(d[i],d[i+GW-1]+D2);} }
+
+  const up = (src, blur) => { // bilinear upsample then box blur
+    const w2=GW*UP, h2=GH*UP, o=new Float32Array(w2*h2);
+    for(let y=0;y<h2;y++) for(let x=0;x<w2;x++){
+      const gx=Math.min(GW-1.001,Math.max(0,(x+.5)/UP-.5)), gy=Math.min(GH-1.001,Math.max(0,(y+.5)/UP-.5));
+      const x0=Math.floor(gx), y0=Math.floor(gy), fx=gx-x0, fy=gy-y0, i=y0*GW+x0;
+      o[y*w2+x]=src[i]*(1-fx)*(1-fy)+src[i+1]*fx*(1-fy)+src[i+GW]*(1-fx)*fy+src[i+GW+1]*fx*fy; }
+    for(let p=0;p<blur;p++){ const t2=o.slice();
+      for(let y=1;y<h2-1;y++) for(let x=1;x<w2-1;x++){ let s=0; for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++) s+=t2[(y+dy)*w2+x+dx]; o[y*w2+x]=s/9; } }
+    return o; };
+  const fe = up(f,2), fEng = up(eng,2), fD = up(d,1);
+  const C = d3.contours().size([GW*UP, GH*UP]);
+  const levels = [80,160,240,320,400,460,520,580,640,700,760,820,880];
+  const terrain = {}; levels.forEach(L => terrain[L] = C.thresholds([L])(fe)[0]);
+  return { terrain, levels, fe, england: C.thresholds([0.3])(fEng)[0],
+    echoes: [1.3,2.7,4.3].map(v => C.thresholds([v])(fD)[0]), dist:d };
+}
+
+let G = null; // current plate geometry
+function px(x,y){ return [G.ox + x*G.s, G.oy + y*G.s]; }
+function polyPath(mp, scale=1){ // d3 multipolygon in grid/UP units to Path2D
+  const p = new Path2D();
+  for(const poly of mp.coordinates) for(const ring of poly){ ring.forEach(([x,y],i)=>{ const [X,Y]=px(x/scale,y/scale); i?p.lineTo(X,Y):p.moveTo(X,Y); }); p.closePath(); }
+  return p;
+}
+function ringsPath(rings){ const p=new Path2D(); for(const r of rings){ r.forEach(([x,y],i)=>{const [X,Y]=px(x,y); i?p.lineTo(X,Y):p.moveTo(X,Y);}); p.closePath(); } return p; }
+
+// carve a line as a gouge: width swells and thins along its length, with occasional lifts
+function gougeStroke(ctx, mp, scale, base, seed, minPts=10){
+  const R = rng(seed), bins = [0.25,0.5,0.75,1,1.3,1.65], paths = bins.map(()=>new Path2D());
+  for(const poly of mp.coordinates) for(const ring of poly){
+    if(ring.length < minPts) continue;
+    let L = 0, ph = R()*100, ph2 = R()*100;
+    let prev = px(ring[0][0]/scale, ring[0][1]/scale);
+    for(let i=1;i<ring.length;i++){
+      const cur = px(ring[i][0]/scale, ring[i][1]/scale);
+      const seg = Math.hypot(cur[0]-prev[0], cur[1]-prev[1]); L += seg;
+      let wv = 0.62 + 0.38*Math.sin(L/19+ph) + 0.22*Math.sin(L/7.3+ph2);
+      if (Math.sin(L/61+ph2*1.7) > 0.93) wv = 0.05; // the gouge lifts out of the block
+      wv = Math.max(0, Math.min(1.6, wv));
+      if (wv > 0.12){ let b=0; while(b<bins.length-1 && bins[b+1] <= wv) b++; paths[b].moveTo(prev[0],prev[1]); paths[b].lineTo(cur[0],cur[1]); }
+      prev = cur;
+    }
+  }
+  ctx.lineCap = "round"; ctx.lineJoin="round";
+  paths.forEach((p,b)=>{ ctx.lineWidth = base*bins[b]*1.15; ctx.stroke(p); });
+}
+function grain(ctx, w, h, seed, dens=1, big=false){
+  const R = rng(seed); ctx.save(); ctx.globalCompositeOperation = "destination-out"; ctx.fillStyle="#000";
+  const N = Math.round(w*h/260*dens);
+  for(let i=0;i<N;i++){ const x=R()*w, y=R()*h, r=0.35+R()*R()*1.1; ctx.globalAlpha = 0.5+R()*0.5; ctx.beginPath(); ctx.arc(x,y,r,0,7); ctx.fill(); }
+  ctx.globalAlpha = 0.55; ctx.strokeStyle="#000"; ctx.lineWidth = 0.7;
+  for(let i=0;i<N/14;i++){ const x=R()*w, y=R()*h, l=3+R()*14; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+l, y+(R()-.5)*1.2); ctx.stroke(); }
+  if (big){ ctx.globalAlpha=0.35; for(let i=0;i<N/90;i++){ const x=R()*w, y=R()*h; ctx.beginPath(); ctx.ellipse(x,y,2+R()*7,1+R()*2.5,R()*3,0,7); ctx.fill(); } }
+  ctx.restore();
+}
+function layer(w,h,dpr){ const c=document.createElement("canvas"); c.width=w*dpr; c.height=h*dpr; const x=c.getContext("2d"); x.setTransform(dpr,0,0,dpr,0,0); return [c,x]; }
+function ink(ctx, w, h, col){ ctx.save(); ctx.globalCompositeOperation="source-in"; ctx.fillStyle=col; ctx.fillRect(0,0,w,h); ctx.restore(); }
+
+function drawMap(){
+  if(!GEO) GEO = prepGeo();
+  const plate = document.getElementById("plate"), cv = document.getElementById("map");
+  const w = plate.clientWidth, h = plate.clientHeight, dpr = 2;
+  const s = Math.min(w/GW, h/GH);
+  G = { s, w, h, ox:(w-GW*s)*0.65, oy:(h-GH*s)/2 };
+  cv.width = w*dpr; cv.height = h*dpr;
+  const css = getComputedStyle(document.documentElement);
+  const C = k => css.getPropertyValue(k).trim();
+  const wales = new Path2D(); W.las.forEach(l => wales.addPath(ringsPath(l.rings)));
+  const eng = polyPath(GEO.england, UP);
+  const bx0 = G.ox - 2, by0 = G.oy - 2, bx1 = G.ox + GW*s + 2, by1 = G.oy + GH*s + 2;
+  const R = rng(7);
+
+  /* --- block 1: bracken uplands (above 300 m) --- */
+  const [cB, xB] = layer(w,h,dpr);
+  xB.save(); xB.clip(wales); xB.fillStyle="#000"; xB.fill(polyPath(GEO.terrain[320], UP));
+  xB.globalCompositeOperation="destination-out"; xB.strokeStyle="#000"; xB.lineCap="round";
+  // carved flecks in the bracken block, following the slope roughly horizontally
+  for(let i=0;i<900;i++){ const x=bx0+R()*(bx1-bx0), y=by0+R()*(by1-by0), l=3+R()*9; xB.lineWidth=0.7+R()*0.8; xB.beginPath(); xB.moveTo(x,y); xB.quadraticCurveTo(x+l/2,y-1.2,x+l,y+0.4); xB.stroke(); }
+  xB.restore(); grain(xB,w,h,11,1.2,true); ink(xB,w,h,C("--bracken"));
+
+  /* --- block 2: sea, carved ripples --- */
+  const [cS, xS] = layer(w,h,dpr);
+  xS.fillStyle="#000"; xS.beginPath(); // rough block edge
+  const edge = (x0,y0,x1,y1)=>{ const n=Math.ceil(Math.hypot(x1-x0,y1-y0)/9); for(let i=0;i<=n;i++){ const tt=i/n; xS.lineTo(x0+(x1-x0)*tt+(R()-.5)*1.6, y0+(y1-y0)*tt+(R()-.5)*1.6); } };
+  xS.moveTo(bx0,by0); edge(bx0,by0,bx1,by0); edge(bx1,by0,bx1,by1); edge(bx1,by1,bx0,by1); edge(bx0,by1,bx0,by0); xS.fill();
+  xS.globalCompositeOperation="destination-out"; xS.fill(wales); xS.fill(eng);
+  xS.lineWidth = 1.6; xS.strokeStyle="#000"; xS.stroke(wales);
+  // coast echoes: three carved lines that follow the shore outwards
+  GEO.echoes.forEach((e,k)=>{ xS.strokeStyle="#000"; gougeStroke(xS, e, UP, [1.9,1.6,1.3][k], 40+k, 6); });
+  // open water: horizontal ripple cuts
+  const dAt = (X,Y)=>{ const gx=Math.floor((X-G.ox)/s), gy=Math.floor((Y-G.oy)/s); if(gx<0||gy<0||gx>=GW||gy>=GH) return 99; return GEO.dist[gy*GW+gx]; };
+  xS.lineCap="round";
+  for(let y=by0+5; y<by1-2; y+=5.4){
+    let x = bx0 + R()*12;
+    while(x < bx1){
+      const len = 6 + R()*R()*46, gap = 4 + R()*16;
+      const ok = dAt(x,y) > 5.6 && dAt(x+len,y) > 5.6 && dAt(x+len/2,y) > 5.6;
+      if (ok){ xS.lineWidth = 0.9 + R()*1.1; xS.beginPath(); const ph=R()*6;
+        for(let k=0;k<=len;k+=2){ const yy = y + Math.sin((x+k)*0.22+ph)*0.9; k?xS.lineTo(x+k,yy):xS.moveTo(x+k,yy); } xS.stroke(); }
+      x += len + gap;
+    }
+  }
+  grain(xS,w,h,23,0.8,true); ink(xS,w,h,C("--sea"));
+
+  /* --- block 3: red overprint, the selected place --- */
+  const [cR, xR] = layer(w,h,dpr);
+  const rct = ringsPath(RCT.rings);
+  xR.fillStyle="#000"; xR.fill(rct);
+  xR.save(); xR.clip(rct); xR.globalCompositeOperation="destination-out"; xR.strokeStyle="#000"; xR.lineWidth=1.1;
+  for(let k=-h; k<w; k+=4.2){ xR.beginPath(); xR.moveTo(k,0); xR.lineTo(k+h*0.6,h); xR.stroke(); }
+  xR.restore();
+  xR.lineWidth=3.2; xR.strokeStyle="#000"; xR.lineJoin="round"; xR.stroke(rct);
+  grain(xR,w,h,31,0.9); ink(xR,w,h,C("--draig"));
+
+  /* --- block 4: key, slate black --- */
+  const [cK, xK] = layer(w,h,dpr);
+  // England, faint stipple on bare paper
+  xK.save(); xK.clip(eng); xK.fillStyle="#000";
+  for(let y=by0; y<by1; y+=4.5) for(let x=bx0+((y/4.5)%2)*2.25; x<bx1; x+=4.5){ xK.globalAlpha=.32; xK.fillRect(x,y,0.9,0.9); }
+  xK.restore(); xK.save(); xK.globalCompositeOperation="destination-out"; xK.fill(wales); xK.restore();
+  xK.save(); xK.clip(wales); xK.strokeStyle="#000";
+  // hachures: short cuts running downhill, longer and heavier where the ground is steep
+  { const fe = GEO.fe, w2 = GW*UP, h2 = GH*UP, RH = rng(91), step = 3.6;
+    xK.lineCap = "round";
+    for(let Y=by0; Y<by1; Y+=step) for(let X=bx0+((Y/step)%2)*step/2; X<bx1; X+=step){
+      const x = X + (RH()-.5)*1.6, y = Y + (RH()-.5)*1.6;
+      const gx = Math.round((x-G.ox)/s*UP), gy = Math.round((y-G.oy)/s*UP);
+      if(gx<1||gy<1||gx>=w2-1||gy>=h2-1) continue;
+      const e = fe[gy*w2+gx]; if (e < 60 || e > 520) continue;
+      const dx = (fe[gy*w2+gx+1]-fe[gy*w2+gx-1])/2*UP, dy = (fe[(gy+1)*w2+gx]-fe[(gy-1)*w2+gx])/2*UP; // m per km
+      const sl = Math.hypot(dx,dy); if (sl < 55) continue;
+      const len = Math.min(6.5, 1.4 + sl/45), ux = -dx/sl, uy = -dy/sl;
+      xK.lineWidth = 0.55 + Math.min(1, (sl-55)/160)*0.9;
+      xK.beginPath(); xK.moveTo(x, y); xK.lineTo(x+ux*len, y+uy*len); xK.stroke();
+    } }
+  GEO.levels.filter(L=>L<520).forEach((L,i)=> gougeStroke(xK, GEO.terrain[L], UP, 1.0 + (L-80)/380*1.1, 100+i, 14));
+  // summits above 520 m: solid black block, contours carved back out in white
+  xK.fillStyle="#000"; xK.fill(polyPath(GEO.terrain[520], UP));
+  xK.globalCompositeOperation="destination-out";
+  GEO.levels.filter(L=>L>520).forEach((L,i)=> gougeStroke(xK, GEO.terrain[L], UP, 1.3, 300+i, 6));
+  xK.globalCompositeOperation="source-over";
+  xK.restore();
+  // local authority rules and the coast
+  xK.lineJoin="round"; xK.strokeStyle="#000";
+  xK.lineWidth=0.8; xK.setLineDash([]); W.las.forEach(l=> xK.stroke(ringsPath(l.rings)));
+  xK.lineWidth=1.5; xK.stroke(wales);
+  grain(xK,w,h,47,0.7);
+  ink(xK,w,h,C("--key"));
+
+  /* --- pull the print: overprint blocks with slight mis-registration --- */
+  const ctx = cv.getContext("2d"); ctx.setTransform(1,0,0,1,0,0);
+  ctx.fillStyle="#fff"; ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.globalCompositeOperation="multiply";
+  ctx.globalAlpha = 0.85; ctx.drawImage(cB, 2.5, 1.5);
+  ctx.globalAlpha = 1;    ctx.drawImage(cS, -1.5, 1);
+  ctx.globalAlpha = 0.82; ctx.drawImage(cR, 2, -2.5);
+  ctx.globalAlpha = 1;    ctx.drawImage(cK, 0, 0);
+  ctx.globalCompositeOperation="source-over";
+}
+
+/* ---------- overlay: towns, tips, sites, labels (re-rendered per language) ---------- */
+const LBL = { // label side per town: r, l, t, b, plus small nudges
+  "Cardiff":["b",8,4],"Swansea":["l",0,0],"Newport":["b",4,0],"Wrexham":["r",0,0],"Bangor":["t",6,0],"St Davids":["t",8,0],
+  "Merthyr Tydfil":["l",0,-1],"Aberystwyth":["l",0,0],"Carmarthen":["r",0,0],"Llandrindod Wells":["r",0,0],"Holyhead":["l",0,0],
+  "Pembroke Dock":["b",6,0],"Rhyl":["t",0,0],"Bridgend":["b",-4,0],"Blaenau Ffestiniog":["r",0,-3],"Port Talbot":["b",8,0],
+  "Tonypandy":["r",2,4],"Ebbw Vale":["r",8,-7],"Newtown":["r",0,0],"Caernarfon":["l",0,0],"Llanelli":["l",0,0],"Brecon":["r",0,-3],
+  "Dolgellau":["r",0,0],"Bethesda":["r",0,2],"Machynlleth":["r",0,0],
+};
+const TIPS = [[129.2,205.6,1.15],[128.2,212.6,0.95],[140.0,198.6,1.05],[134.2,193.2,0.9],[146.0,194.6,1.1],[151.6,188.4,0.9]];
+function renderOverlay(){
+  const ov = document.getElementById("ov"), s = G.s;
+  ov.setAttribute("viewBox", `0 0 ${G.w} ${G.h}`);
+  ov.setAttribute("aria-label", t("maptitle"));
+  let g = `<defs><clipPath id="tipclip"><path d="M-12 6 L-4 -6 Q-1 -9 3 -8 L5 -7 Q8 -3 12 6Z"/></clipPath></defs>`;
+  const T = (x,y,txt,cls,anchor="start",extra="") => `<text class="${cls}" x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${anchor}" ${extra}>${txt}</text>`;
+  // sea names carved into the blue block
+  const sea = (k,x,y,rot,cls="sealbl") => { const [X,Y]=px(x,y), fs=(s*(cls.includes("small")?4.4:5.3)).toFixed(1);
+    return T(X,Y,t(k),cls,"middle",`style="font-size:${fs}px" transform="rotate(${rot} ${X.toFixed(1)} ${Y.toFixed(1)})"`); };
+  g += sea("sea_irish", 24, 62, 0) + sea("sea_card", 52, 128, -62) + sea("sea_bris", 95, 234, -2, "sealbl small");
+  { const [X,Y]=px(176,128); g += T(X,Y,t("england"),"eng","middle",`transform="rotate(90 ${X} ${Y})"`); }
+  // mountain regions
+  const reg = (k,x,y,rot=0) => { const [X,Y]=px(x,y); return T(X,Y,t(k),"region","middle",rot?`transform="rotate(${rot} ${X} ${Y})"`:""); };
+  g += reg("r_eryri", 112, 45) + reg("r_camb", 125, 131, -58) + reg("r_bann", 117, 168);
+  // RCT name
+  { const [ax,ay]=px(132,214), [X,Y]=px(150,241);
+    g += `<path d="M${ax} ${ay} L${X-4} ${Y-15}" stroke="var(--draig)" stroke-width="2"/><circle cx="${ax}" cy="${ay}" r="3" fill="var(--draig)"/>`;
+    g += T(X,Y, RCT[lang], "rct", "middle"); }
+  // peaks
+  W.peaks.forEach(p=>{ const [X,Y]=px(p.x,p.y); g += `<path d="M${X-4.5} ${Y+3.5} L${X} ${Y-4.5} L${X+4.5} ${Y+3.5}Z" fill="var(--paper)" stroke="var(--key)" stroke-width="1.6" filter="url(#ink)"/>`;
+    const name = p[lang]; const right = p.en!=="Snowdon"; g += T(X+(right?7:-7), Y+4, name, "peak", right?"start":"end"); });
+  // sites (assets): open printed roundels
+  const nudge = {"Dinorwig power station":[-5,2],"Big Pit":[-3,3],"Blaenavon industrial landscape":[5,-3],"Penrhyn slate quarry":[3,5],"Port Talbot steelworks":[-8,5],"Hafod-Morfa copperworks":[-1,-6]};
+  W.sites.forEach(st=>{ let [X,Y]=px(st.x,st.y); const n=nudge[st.en]||[0,0]; X+=n[0]*1; Y+=n[1]*1;
+    g += `<g class="site" transform="translate(${X.toFixed(1)} ${Y.toFixed(1)})" filter="url(#ink)"><title>${st[lang]}</title><circle r="7.2" fill="var(--paper)" stroke="var(--key)" stroke-width="1.6"/>${siteGlyph(st.kind)}</g>`; });
+  // coal tips: the lasting liability
+  TIPS.forEach(([x,y,sz])=>{ const [X,Y]=px(x,y); g += `<g transform="translate(${X.toFixed(1)} ${Y.toFixed(1)})" filter="url(#ink)"><title>${t("lg_tip")}</title>${tipMark(sz)}</g>`; });
+  // towns: printed blocks + names
+  W.towns.forEach(tw=>{ const [X,Y]=px(tw.x,tw.y); const city = tw.kind==="city"; const r = city?4.2:3;
+    g += `<rect x="${X-r}" y="${Y-r}" width="${2*r}" height="${2*r}" fill="var(--key)" ${city?'stroke="var(--paper)" stroke-width="1.2"':''}/>`;
+    const [side,dx,dy] = LBL[tw.en] || ["r",0,0]; const gap = r+4;
+    let lx=X, ly=Y+4, an="start";
+    if(side==="r"){lx=X+gap} else if(side==="l"){lx=X-gap; an="end"} else if(side==="t"){ly=Y-gap-1; an="middle"} else {ly=Y+gap+10; an="middle"}
+    g += T(lx+dx, ly+dy, tw[lang], "town"+(city?" city":""), an); });
+  ov.innerHTML = g;
+
+  // legend
+  const sw = (inner,w=30,h=17) => `<svg width="${w}" height="${h}" viewBox="${-w/2} ${-h/2} ${w} ${h}" aria-hidden="true">${inner}</svg>`;
+  document.getElementById("legend").innerHTML =
+    sw(`<defs><clipPath id="tipclip2"><path d="M-12 6 L-4 -6 Q-1 -9 3 -8 L5 -7 Q8 -3 12 6Z"/></clipPath></defs>`+tipMark(1).replace("tipclip","tipclip2")) + `<span><b>${t("lg_tip")}</b></span>` +
+    sw(`<circle r="7.2" fill="var(--paper)" stroke="var(--key)" stroke-width="1.6"/>${siteGlyph("coal")}`) + `<span>${t("lg_site")}</span>` +
+    sw(`<rect x="-4" y="-4" width="8" height="8" fill="var(--key)"/>`) + `<span>${t("lg_town")}</span>` +
+    sw(`<rect x="-12" y="-7" width="24" height="14" fill="var(--draig)" opacity=".85"/>`) + `<span>${t("lg_sel")}</span>`;
+}
+
+/* ======================= orchestration ======================= */
+function renderAll(){
+  document.documentElement.lang = lang;
+  renderMast(); renderPlace(); renderCurve(); renderHand(); renderFoot(); renderTimeline();
+  if (G) renderOverlay();
+}
+document.querySelectorAll(".lang button").forEach(b=>b.addEventListener("click", ()=>{
+  lang = b.dataset.l; const u = new URL(location.href); u.searchParams.set("lang", lang); history.replaceState(null,"",u); renderAll();
+}));
+let rT; window.addEventListener("resize", ()=>{ clearTimeout(rT); rT=setTimeout(()=>{ drawMap(); renderOverlay(); renderTimeline(); },150); });
+renderAll();
+const start = () => { drawMap(); renderOverlay(); };
+(document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(start);
+</script>
+</body>
+</html>

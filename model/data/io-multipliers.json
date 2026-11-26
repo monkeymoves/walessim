@@ -1,0 +1,1244 @@
+{
+ "source": {
+  "id": "wg-io-2022",
+  "title": "Supply, Use and Input-Output Tables 2022, Table 5 (indicative economic multipliers)",
+  "publisher": "Welsh Government",
+  "url": "https://www.gov.wales/supply-and-use-tables-and-input-output-tables-2022",
+  "licence": "OGL v3.0",
+  "status": "Official statistics in development",
+  "caveat": "Use for the economy or sectors as a whole, not individual transactions. FTE estimates are bespoke, for IO analysis only. Includes Port Talbot blast furnaces (since closed)."
+ },
+ "year": 2022,
+ "units": {
+  "output_m": "GBP million, basic prices, industry total output",
+  "gva_m": "GBP million",
+  "fte": "estimated full-time equivalent jobs (bespoke IO satellite)",
+  "output_mult": "total output per 1 unit of direct output (column sum of the Leontief inverse)",
+  "gva_mult": "total GVA effect divided by direct GVA per unit output",
+  "gva_effect": "GBP GVA generated per GBP 1 of final demand for the industry",
+  "emp_mult": "total FTE effect divided by direct FTE per unit output",
+  "emp_effect": "FTE jobs per GBP 1 million of final demand for the industry",
+  "type1": "direct + indirect (supply chain)",
+  "type2": "direct + indirect + induced (households endogenised)"
+ },
+ "industries": [
+  {
+   "id": "A01",
+   "name": "Agriculture and hunting",
+   "output_m": 2101.0,
+   "gva_m": 731.2114373970467,
+   "fte": 34049.5,
+   "type1": {
+    "output_mult": 1.212204333185953,
+    "gva_mult": 1.2735643769694922,
+    "gva_effect": 0.4432388570687942,
+    "emp_mult": 1.1291897103305368,
+    "emp_effect": 18.300021438314904
+   },
+   "type2": {
+    "output_mult": 1.2530731621894018,
+    "gva_mult": 1.3432013018863094,
+    "gva_effect": 0.4674746095506295,
+    "emp_mult": 1.1493293327552914,
+    "emp_effect": 18.626410811828315
+   }
+  },
+  {
+   "id": "A02",
+   "name": "Forestry and logging",
+   "output_m": 84.44006932899191,
+   "gva_m": 47.746921144201764,
+   "fte": 1673.7063058362842,
+   "type1": {
+    "output_mult": 1.1838610620812502,
+    "gva_mult": 1.1599124717439409,
+    "gva_effect": 0.6558764075234954,
+    "emp_mult": 1.0854582340985248,
+    "emp_effect": 21.515120790040065
+   },
+   "type2": {
+    "output_mult": 1.4324010212391767,
+    "gva_mult": 1.4205660826681386,
+    "gva_effect": 0.8032638683065962,
+    "emp_mult": 1.1855986447286628,
+    "emp_effect": 23.500027222170985
+   }
+  },
+  {
+   "id": "A03",
+   "name": "Fishing and aquaculture",
+   "output_m": 14.116298973843964,
+   "gva_m": 6.58817849746232,
+   "fte": 300.16776151595684,
+   "type1": {
+    "output_mult": 1.147938917008972,
+    "gva_mult": 1.1659177748767917,
+    "gva_effect": 0.5441422307989507,
+    "emp_mult": 1.0720437531571154,
+    "emp_effect": 22.795845726176903
+   },
+   "type2": {
+    "output_mult": 1.3012714088073536,
+    "gva_mult": 1.3607469528783365,
+    "gva_effect": 0.6350704127230058,
+    "emp_mult": 1.1296321264621991,
+    "emp_effect": 24.02039991962107
+   }
+  },
+  {
+   "id": "B",
+   "name": "Mining and quarrying",
+   "output_m": 565.3473045995349,
+   "gva_m": 231.25528770952968,
+   "fte": 2047.5,
+   "type1": {
+    "output_mult": 1.4119447536923666,
+    "gva_mult": 1.3184736603097593,
+    "gva_effect": 0.5393215872291981,
+    "emp_mult": 1.5317745175172308,
+    "emp_effect": 5.547578097746731
+   },
+   "type2": {
+    "output_mult": 1.5094041908631013,
+    "gva_mult": 1.4597638041737855,
+    "gva_effect": 0.5971163137697995,
+    "emp_mult": 1.7466857579931916,
+    "emp_effect": 6.325915168242233
+   }
+  },
+  {
+   "id": "C10:12",
+   "name": "Manufacture of food, beverages and tobacco",
+   "output_m": 6343.672279306443,
+   "gva_m": 1749.2242700563065,
+   "fte": 24635.160519231733,
+   "type1": {
+    "output_mult": 1.233039257183051,
+    "gva_mult": 1.3439840431200973,
+    "gva_effect": 0.37059441334367044,
+    "emp_mult": 1.557477949158775,
+    "emp_effect": 6.048345121460962
+   },
+   "type2": {
+    "output_mult": 1.321458935822912,
+    "gva_mult": 1.5341393676872448,
+    "gva_effect": 0.4230284443225934,
+    "emp_mult": 1.7393132045826003,
+    "emp_effect": 6.75448826823638
+   }
+  },
+  {
+   "id": "C13:15",
+   "name": "Manufacture of textiles, wearing apparel and leather",
+   "output_m": 394.1156155166312,
+   "gva_m": 208.9146205096238,
+   "fte": 2667.4210490683113,
+   "type1": {
+    "output_mult": 1.195016477179614,
+    "gva_mult": 1.2176323073555575,
+    "gva_effect": 0.645448141094296,
+    "emp_mult": 1.2552977433235264,
+    "emp_effect": 8.496003435438162
+   },
+   "type2": {
+    "output_mult": 1.340724762414425,
+    "gva_mult": 1.3806382245321611,
+    "gva_effect": 0.7318550683690066,
+    "emp_mult": 1.4272310961871701,
+    "emp_effect": 9.65966868088698
+   }
+  },
+  {
+   "id": "C16",
+   "name": "Manufacture of wood products, except furniture",
+   "output_m": 814.4267368597166,
+   "gva_m": 363.65103624701754,
+   "fte": 4011.5423558325915,
+   "type1": {
+    "output_mult": 1.34784904937936,
+    "gva_mult": 1.2731059647212364,
+    "gva_effect": 0.5684566608265484,
+    "emp_mult": 1.4148223437756782,
+    "emp_effect": 6.9688524469599855
+   },
+   "type2": {
+    "output_mult": 1.4262566133405847,
+    "gva_mult": 1.3772392256294181,
+    "gva_effect": 0.6149533762745877,
+    "emp_mult": 1.5419506960521583,
+    "emp_effect": 7.595036174364001
+   }
+  },
+  {
+   "id": "C17",
+   "name": "Manufacture of paper products",
+   "output_m": 1148.3347511985403,
+   "gva_m": 281.2993537096977,
+   "fte": 7152.000452884427,
+   "type1": {
+    "output_mult": 1.4287598870816856,
+    "gva_mult": 1.638379555826241,
+    "gva_effect": 0.40134212580789574,
+    "emp_mult": 1.4790648905505313,
+    "emp_effect": 9.211837189479896
+   },
+   "type2": {
+    "output_mult": 1.5412295066149209,
+    "gva_mult": 1.9106492562916972,
+    "gva_effect": 0.46803808767417904,
+    "emp_mult": 1.6232830726553424,
+    "emp_effect": 10.110049581512127
+   }
+  },
+  {
+   "id": "C18",
+   "name": "Printing and media reproduction",
+   "output_m": 172.6354381130445,
+   "gva_m": 67.90703162315333,
+   "fte": 3099.338892576233,
+   "type1": {
+    "output_mult": 1.2381494656704066,
+    "gva_mult": 1.2590355282865415,
+    "gva_effect": 0.4952480578063159,
+    "emp_mult": 1.1139505096482347,
+    "emp_effect": 19.99884946390399
+   },
+   "type2": {
+    "output_mult": 1.4210492952573344,
+    "gva_mult": 1.5347711145144187,
+    "gva_effect": 0.603710059457125,
+    "emp_mult": 1.1953118327383359,
+    "emp_effect": 21.459536306425214
+   }
+  },
+  {
+   "id": "C19:20",
+   "name": "Manufacture of coke, refined petroleum and chemicals",
+   "output_m": 5997.4469608266445,
+   "gva_m": 1068.9187212616744,
+   "fte": 5427.190036655604,
+   "type1": {
+    "output_mult": 1.134859770489175,
+    "gva_mult": 1.2620390357256797,
+    "gva_effect": 0.2249319020345736,
+    "emp_mult": 1.7998313039579512,
+    "emp_effect": 1.6286974414785158
+   },
+   "type2": {
+    "output_mult": 1.1685065671727877,
+    "gva_mult": 1.3739904979857007,
+    "gva_effect": 0.2448848944768548,
+    "emp_mult": 2.0967782938632715,
+    "emp_effect": 1.8974097378198405
+   }
+  },
+  {
+   "id": "C21",
+   "name": "Manufacture of pharmaceutical products",
+   "output_m": 1997.3556832958375,
+   "gva_m": 1131.3619297750824,
+   "fte": 4125.409200148866,
+   "type1": {
+    "output_mult": 1.137374008979834,
+    "gva_mult": 1.1118713306313084,
+    "gva_effect": 0.629797138689348,
+    "emp_mult": 1.5882761706697208,
+    "emp_effect": 3.2804818799454596
+   },
+   "type2": {
+    "output_mult": 1.199266680486549,
+    "gva_mult": 1.1766687025544684,
+    "gva_effect": 0.666500305960173,
+    "emp_mult": 1.8275919980846196,
+    "emp_effect": 3.77477326951387
+   }
+  },
+  {
+   "id": "C22",
+   "name": "Manufacture of rubber and plastic products",
+   "output_m": 1197.5077393574607,
+   "gva_m": 496.637119024384,
+   "fte": 8772.13691912951,
+   "type1": {
+    "output_mult": 1.2100837018617587,
+    "gva_mult": 1.2073715662911717,
+    "gva_effect": 0.5007279005950667,
+    "emp_mult": 1.2015381401288423,
+    "emp_effect": 8.801660926568907
+   },
+   "type2": {
+    "output_mult": 1.3525499996615806,
+    "gva_mult": 1.4110830940405348,
+    "gva_effect": 0.5852122867317142,
+    "emp_mult": 1.356858676732633,
+    "emp_effect": 9.939434795297458
+   }
+  },
+  {
+   "id": "C23",
+   "name": "Manufacture of other non-metallic mineral products",
+   "output_m": 827.4364722268441,
+   "gva_m": 331.3260808249714,
+   "fte": 4614.775875639128,
+   "type1": {
+    "output_mult": 1.2520472264163978,
+    "gva_mult": 1.2619873442283456,
+    "gva_effect": 0.505331025218889,
+    "emp_mult": 1.3664973814877224,
+    "emp_effect": 7.621224543368628
+   },
+   "type2": {
+    "output_mult": 1.369101942771635,
+    "gva_mult": 1.4353407058583392,
+    "gva_effect": 0.574746009733801,
+    "emp_mult": 1.5341138860784775,
+    "emp_effect": 8.556054742069746
+   }
+  },
+  {
+   "id": "C24",
+   "name": "Manufacture of basic metals",
+   "output_m": 3299.279505876404,
+   "gva_m": 804.2474537404332,
+   "fte": 10046.96259537257,
+   "type1": {
+    "output_mult": 1.3340602308461664,
+    "gva_mult": 1.4918770039337155,
+    "gva_effect": 0.36366675802112075,
+    "emp_mult": 1.6154691626244455,
+    "emp_effect": 4.919425050820072
+   },
+   "type2": {
+    "output_mult": 1.4274626642206807,
+    "gva_mult": 1.7190998105138082,
+    "gva_effect": 0.4190556280147988,
+    "emp_mult": 1.860424175366744,
+    "emp_effect": 5.665361806462466
+   }
+  },
+  {
+   "id": "C25",
+   "name": "Manufacture of fabricated metal products",
+   "output_m": 1721.4758711830045,
+   "gva_m": 592.2802832423856,
+   "fte": 12354.774736635172,
+   "type1": {
+    "output_mult": 1.2570722431505226,
+    "gva_mult": 1.3021743857727757,
+    "gva_effect": 0.44801802159821835,
+    "emp_mult": 1.2464548183548492,
+    "emp_effect": 8.945619719656579
+   },
+   "type2": {
+    "output_mult": 1.3973596837317044,
+    "gva_mult": 1.5439746497318316,
+    "gva_effect": 0.5312103167811514,
+    "emp_mult": 1.4025640969956998,
+    "emp_effect": 10.06599265324926
+   }
+  },
+  {
+   "id": "C26",
+   "name": "Manufacture of computer, electronic and optical products",
+   "output_m": 1854.7533590572652,
+   "gva_m": 913.9793394351541,
+   "fte": 7128.746365488132,
+   "type1": {
+    "output_mult": 1.1830154680566543,
+    "gva_mult": 1.1748169665697155,
+    "gva_effect": 0.578922491132929,
+    "emp_mult": 1.39196954599132,
+    "emp_effect": 5.35003632337372
+   },
+   "type2": {
+    "output_mult": 1.3127023788628378,
+    "gva_mult": 1.3308836664942094,
+    "gva_effect": 0.655828532902987,
+    "emp_mult": 1.66144112356017,
+    "emp_effect": 6.38575059762779
+   }
+  },
+  {
+   "id": "C27",
+   "name": "Manufacture of electrical equipment",
+   "output_m": 1394.8832574140713,
+   "gva_m": 374.227982242203,
+   "fte": 4388.647586305878,
+   "type1": {
+    "output_mult": 1.2792743644597067,
+    "gva_mult": 1.447176132494658,
+    "gva_effect": 0.38825744099657267,
+    "emp_mult": 1.6790491391690918,
+    "emp_effect": 5.28270370494237
+   },
+   "type2": {
+    "output_mult": 1.3994780023945002,
+    "gva_mult": 1.71287122287101,
+    "gva_effect": 0.4595397773746958,
+    "emp_mult": 1.9841676680586064,
+    "emp_effect": 6.242682031609366
+   }
+  },
+  {
+   "id": "C28",
+   "name": "Manufacture of machinery and equipment n.e.c.",
+   "output_m": 1055.922054819691,
+   "gva_m": 487.88403635876296,
+   "fte": 6004.222083047074,
+   "type1": {
+    "output_mult": 1.1926408553760626,
+    "gva_mult": 1.1832953923128398,
+    "gva_effect": 0.5467363140785004,
+    "emp_mult": 1.2760575754532855,
+    "emp_effect": 7.255964622392929
+   },
+   "type2": {
+    "output_mult": 1.3536567014218963,
+    "gva_mult": 1.389951471470176,
+    "gva_effect": 0.6422208260054475,
+    "emp_mult": 1.5022028661376368,
+    "emp_effect": 8.541880133018326
+   }
+  },
+  {
+   "id": "C29:30",
+   "name": "Manufacture of motor vehicles and other transport equipment",
+   "output_m": 5704.490814772522,
+   "gva_m": 1820.0266098373013,
+   "fte": 14990.982348684647,
+   "type1": {
+    "output_mult": 1.2187291588430114,
+    "gva_mult": 1.3044297466132186,
+    "gva_effect": 0.4161803264458509,
+    "emp_mult": 1.6637484070044746,
+    "emp_effect": 4.372208460300739
+   },
+   "type2": {
+    "output_mult": 1.3062917847736397,
+    "gva_mult": 1.467180211927412,
+    "gva_effect": 0.4681061139093279,
+    "emp_mult": 1.9298511712920998,
+    "emp_effect": 5.071506955451539
+   }
+  },
+  {
+   "id": "C31:32",
+   "name": "Manufacture of furniture and other manufacturing",
+   "output_m": 2991.5654877016214,
+   "gva_m": 547.4856930498081,
+   "fte": 12114.231165560594,
+   "type1": {
+    "output_mult": 1.3265677212866265,
+    "gva_mult": 1.7825020655077564,
+    "gva_effect": 0.3262152818345938,
+    "emp_mult": 1.6995963573464354,
+    "emp_effect": 6.882451093142516
+   },
+   "type2": {
+    "output_mult": 1.414951328726484,
+    "gva_mult": 2.068894655819816,
+    "gva_effect": 0.37862792211805685,
+    "emp_mult": 1.8739047096878176,
+    "emp_effect": 7.58830616568977
+   }
+  },
+  {
+   "id": "C33",
+   "name": "Repair and installation of machinery and equipment",
+   "output_m": 1191.5413696586593,
+   "gva_m": 425.50839519593046,
+   "fte": 7166.332817739529,
+   "type1": {
+    "output_mult": 1.2257462060716573,
+    "gva_mult": 1.267373818007683,
+    "gva_effect": 0.4525887335059759,
+    "emp_mult": 1.2891151709852695,
+    "emp_effect": 7.753174661761106
+   },
+   "type2": {
+    "output_mult": 1.3381490496197814,
+    "gva_mult": 1.4540300973185223,
+    "gva_effect": 0.5192450963358717,
+    "emp_mult": 1.4383716753868998,
+    "emp_effect": 8.650853762958324
+   }
+  },
+  {
+   "id": "D",
+   "name": "Electricity, gas, steam and air conditioning supply",
+   "output_m": 7204.043883785661,
+   "gva_m": 1303.9762514002923,
+   "fte": 5732.5,
+   "type1": {
+    "output_mult": 1.7241340816950348,
+    "gva_mult": 2.32882144942399,
+    "gva_effect": 0.4215310057501644,
+    "emp_mult": 5.76321831301272,
+    "emp_effect": 4.585986636436815
+   },
+   "type2": {
+    "output_mult": 1.7857050156836438,
+    "gva_mult": 2.530540410885686,
+    "gva_effect": 0.4580433784461729,
+    "emp_mult": 6.381166189702452,
+    "emp_effect": 5.077708544335911
+   }
+  },
+  {
+   "id": "E36:37",
+   "name": "Water supply and sewerage activities",
+   "output_m": 879.9550000000003,
+   "gva_m": 824.2805140490364,
+   "fte": 4216.771221331577,
+   "type1": {
+    "output_mult": 1.0551822605140473,
+    "gva_mult": 1.020692958886029,
+    "gva_effect": 0.956114024963558,
+    "emp_mult": 1.0519375501833887,
+    "emp_effect": 5.040916851715547
+   },
+   "type2": {
+    "output_mult": 1.1505600634113387,
+    "gva_mult": 1.081073507984024,
+    "gva_effect": 1.0126743150341393,
+    "emp_mult": 1.210891584311699,
+    "emp_effect": 5.802629435457687
+   }
+  },
+  {
+   "id": "E38:39",
+   "name": "Waste management and remediation activities",
+   "output_m": 1531.001901029909,
+   "gva_m": 612.3791608682606,
+   "fte": 8543.228778668423,
+   "type1": {
+    "output_mult": 1.2286279225353192,
+    "gva_mult": 1.277058298529408,
+    "gva_effect": 0.5108053025324165,
+    "emp_mult": 1.3379965277622499,
+    "emp_effect": 7.466228770876992
+   },
+   "type2": {
+    "output_mult": 1.3547018671419662,
+    "gva_mult": 1.4639736544634807,
+    "gva_effect": 0.5855688078835856,
+    "emp_mult": 1.5184323866430591,
+    "emp_effect": 8.47308893300828
+   }
+  },
+  {
+   "id": "F",
+   "name": "Construction",
+   "output_m": 11264.803781000419,
+   "gva_m": 4675.528996695884,
+   "fte": 89989.0,
+   "type1": {
+    "output_mult": 1.4063606259182773,
+    "gva_mult": 1.434115928403925,
+    "gva_effect": 0.595239006220888,
+    "emp_mult": 1.4263505149590003,
+    "emp_effect": 11.394415649488241
+   },
+   "type2": {
+    "output_mult": 1.5120483378215805,
+    "gva_mult": 1.5851175761504195,
+    "gva_effect": 0.6579132077705302,
+    "emp_mult": 1.5320085470645,
+    "emp_effect": 12.238465917561122
+   }
+  },
+  {
+   "id": "G45",
+   "name": "Motor trade and repair",
+   "output_m": 1635.5103297699638,
+   "gva_m": 1125.9781444477949,
+   "fte": 24361.615259001483,
+   "type1": {
+    "output_mult": 1.139850563092844,
+    "gva_mult": 1.0998641669853102,
+    "gva_effect": 0.7572089220989051,
+    "emp_mult": 1.085827736046733,
+    "emp_effect": 16.17386149242096
+   },
+   "type2": {
+    "output_mult": 1.3469616466004153,
+    "gva_mult": 1.2782625795141198,
+    "gva_effect": 0.8800285153813727,
+    "emp_mult": 1.1968715496510571,
+    "emp_effect": 17.82790586907819
+   }
+  },
+  {
+   "id": "G46",
+   "name": "Wholesale trade",
+   "output_m": 3114.03322237234,
+   "gva_m": 1914.495062661884,
+   "fte": 29158.611741285273,
+   "type1": {
+    "output_mult": 1.1475668080853973,
+    "gva_mult": 1.1199804032170881,
+    "gva_effect": 0.6885594337377314,
+    "emp_mult": 1.1483636427614834,
+    "emp_effect": 10.752836339870752
+   },
+   "type2": {
+    "output_mult": 1.306315687250418,
+    "gva_mult": 1.2731046525844905,
+    "gva_effect": 0.7826996045238241,
+    "emp_mult": 1.2837612166550252,
+    "emp_effect": 12.020647248087748
+   }
+  },
+  {
+   "id": "G47",
+   "name": "Retail trade",
+   "output_m": 5941.061251586359,
+   "gva_m": 3441.9307446189273,
+   "fte": 84855.14799971324,
+   "type1": {
+    "output_mult": 1.1884151909724308,
+    "gva_mult": 1.1560508589735639,
+    "gva_effect": 0.6697535718524632,
+    "emp_mult": 1.1158248204875714,
+    "emp_effect": 15.937132487725881
+   },
+   "type2": {
+    "output_mult": 1.3755585109607862,
+    "gva_mult": 1.3476089702105036,
+    "gva_effect": 0.780732019056909,
+    "emp_mult": 1.2204663263551296,
+    "emp_effect": 17.43170897688993
+   }
+  },
+  {
+   "id": "H49",
+   "name": "Land transport",
+   "output_m": 1624.9129885931563,
+   "gva_m": 827.8462057636416,
+   "fte": 29091.46038386014,
+   "type1": {
+    "output_mult": 1.1843146464397645,
+    "gva_mult": 1.1812481458150088,
+    "gva_effect": 0.6018117908116095,
+    "emp_mult": 1.1040383669543155,
+    "emp_effect": 19.766035867754884
+   },
+   "type2": {
+    "output_mult": 1.4013763738175842,
+    "gva_mult": 1.4339032151957347,
+    "gva_effect": 0.730532246628061,
+    "emp_mult": 1.2008642927511983,
+    "emp_effect": 21.49954874150536
+   }
+  },
+  {
+   "id": "H50:52",
+   "name": "Other transport, warehousing and supporting activities",
+   "output_m": 1288.1371633207489,
+   "gva_m": 720.0634971693778,
+   "fte": 15948.354516877163,
+   "type1": {
+    "output_mult": 1.1763115139291715,
+    "gva_mult": 1.154989193633885,
+    "gva_effect": 0.645634317246826,
+    "emp_mult": 1.1652565672347326,
+    "emp_effect": 14.42697669669778
+   },
+   "type2": {
+    "output_mult": 1.4041064351933203,
+    "gva_mult": 1.3966463528998763,
+    "gva_effect": 0.7807196980369449,
+    "emp_mult": 1.312194553113159,
+    "emp_effect": 16.246207720778962
+   }
+  },
+  {
+   "id": "H53",
+   "name": "Postal and courier activities",
+   "output_m": 583.9583396204631,
+   "gva_m": 363.99442580259847,
+   "fte": 10356.060099262695,
+   "type1": {
+    "output_mult": 1.1344494600603696,
+    "gva_mult": 1.1085425093095786,
+    "gva_effect": 0.6909795901128221,
+    "emp_mult": 1.0702551239116642,
+    "emp_effect": 18.980166276890078
+   },
+   "type2": {
+    "output_mult": 1.3720291469915815,
+    "gva_mult": 1.3345697337447133,
+    "gva_effect": 0.8318674654833392,
+    "emp_mult": 1.177244443382468,
+    "emp_effect": 20.877541050472356
+   }
+  },
+  {
+   "id": "I",
+   "name": "Accommodation and food service activities",
+   "output_m": 4483.6857881375845,
+   "gva_m": 2480.8805317540023,
+   "fte": 86700.0,
+   "type1": {
+    "output_mult": 1.247092425328676,
+    "gva_mult": 1.194592500340432,
+    "gva_effect": 0.6609832663374343,
+    "emp_mult": 1.0930826649787753,
+    "emp_effect": 21.1366878795102
+   },
+   "type2": {
+    "output_mult": 1.4248594542809616,
+    "gva_mult": 1.3851143754889503,
+    "gva_effect": 0.766401449783683,
+    "emp_mult": 1.1665021109758897,
+    "emp_effect": 22.55638280657017
+   }
+  },
+  {
+   "id": "J58",
+   "name": "Publishing activities",
+   "output_m": 71.92108210760532,
+   "gva_m": 28.62699385409202,
+   "fte": 1174.751942233533,
+   "type1": {
+    "output_mult": 1.3741370726141617,
+    "gva_mult": 1.5231608689037062,
+    "gva_effect": 0.6062689208104809,
+    "emp_mult": 1.2030776897052986,
+    "emp_effect": 19.650953673424773
+   },
+   "type2": {
+    "output_mult": 1.553553601223338,
+    "gva_mult": 1.7904659610236986,
+    "gva_effect": 0.7126652792222983,
+    "emp_mult": 1.2908012617174538,
+    "emp_effect": 21.083821944883177
+   }
+  },
+  {
+   "id": "J59:60",
+   "name": "Film, video, TV production and broadcasting",
+   "output_m": 893.3628649180399,
+   "gva_m": 409.1023420617951,
+   "fte": 7993.836001473742,
+   "type1": {
+    "output_mult": 1.1899597569280984,
+    "gva_mult": 1.2124352488794434,
+    "gva_effect": 0.5552168322559069,
+    "emp_mult": 1.241832833443868,
+    "emp_effect": 11.111955065097174
+   },
+   "type2": {
+    "output_mult": 1.3648604672339508,
+    "gva_mult": 1.4389267016736238,
+    "gva_effect": 0.6589352510907647,
+    "emp_mult": 1.3979346839230746,
+    "emp_effect": 12.508758806622557
+   }
+  },
+  {
+   "id": "J61",
+   "name": "Telecommunications",
+   "output_m": 1713.9183223123653,
+   "gva_m": 1127.9783075492594,
+   "fte": 8070.558013135106,
+   "type1": {
+    "output_mult": 1.1164321573842868,
+    "gva_mult": 1.0875076780063972,
+    "gva_effect": 0.7157196781871588,
+    "emp_mult": 1.220979068642455,
+    "emp_effect": 5.749388566549612
+   },
+   "type2": {
+    "output_mult": 1.2490614422060067,
+    "gva_mult": 1.2070146151106453,
+    "gva_effect": 0.7943705864016037,
+    "emp_mult": 1.4459206801204358,
+    "emp_effect": 6.80860142480989
+   }
+  },
+  {
+   "id": "J62:63",
+   "name": "Computer programming, consultancy and information services",
+   "output_m": 1065.8971462667212,
+   "gva_m": 732.9511368974286,
+   "fte": 15461.97904315762,
+   "type1": {
+    "output_mult": 1.1235314750443395,
+    "gva_mult": 1.0969938694370165,
+    "gva_effect": 0.754334418278078,
+    "emp_mult": 1.0900114780477206,
+    "emp_effect": 15.811783237627491
+   },
+   "type2": {
+    "output_mult": 1.3848605865173214,
+    "gva_mult": 1.3223619379675873,
+    "gva_effect": 0.9093060143916538,
+    "emp_mult": 1.2338853155160512,
+    "emp_effect": 17.898827252695465
+   }
+  },
+  {
+   "id": "K",
+   "name": "Financial and insurance activities",
+   "output_m": 7206.064908890467,
+   "gva_m": 3060.4579754226165,
+   "fte": 28429.625,
+   "type1": {
+    "output_mult": 1.1968642819392086,
+    "gva_mult": 1.2608723184007324,
+    "gva_effect": 0.5354998590254554,
+    "emp_mult": 1.5655225546956617,
+    "emp_effect": 6.176355572946472
+   },
+   "type2": {
+    "output_mult": 1.3571546360956073,
+    "gva_mult": 1.4846843616196888,
+    "gva_effect": 0.6305541447313764,
+    "emp_mult": 1.8899953150627065,
+    "emp_effect": 7.456477111758739
+   }
+  },
+  {
+   "id": "L68A",
+   "name": "Owner-occupiers' imputed rental",
+   "output_m": 7746.815271783795,
+   "gva_m": 6918.144613882542,
+   "fte": 0.0,
+   "type1": {
+    "output_mult": 1.0755363395167254,
+    "gva_mult": 1.0364101264821184,
+    "gva_effect": 0.9255461609380299,
+    "emp_mult": null,
+    "emp_effect": 0.694109209401385
+   },
+   "type2": {
+    "output_mult": 1.0822859097014237,
+    "gva_mult": 1.040892148604644,
+    "gva_effect": 0.9295487447248398,
+    "emp_mult": null,
+    "emp_effect": 0.7480130778944702
+   }
+  },
+  {
+   "id": "L68B",
+   "name": "Real estate activities, excluding imputed rental",
+   "output_m": 3151.612227914299,
+   "gva_m": 1970.628218461385,
+   "fte": 17796.0,
+   "type1": {
+    "output_mult": 1.282592671276278,
+    "gva_mult": 1.2065575423840085,
+    "gva_effect": 0.7544317537417553,
+    "emp_mult": 1.4410173258815162,
+    "emp_effect": 8.13689707897808
+   },
+   "type2": {
+    "output_mult": 1.38102241130178,
+    "gva_mult": 1.2999084901680824,
+    "gva_effect": 0.8128018826218409,
+    "emp_mult": 1.5802305636465441,
+    "emp_effect": 8.922983246979141
+   }
+  },
+  {
+   "id": "M69:70",
+   "name": "Legal, accounting, head office and consulting activities",
+   "output_m": 2342.473771889347,
+   "gva_m": 1677.2433118067574,
+   "fte": 40346.66070054473,
+   "type1": {
+    "output_mult": 1.1295447490836978,
+    "gva_mult": 1.0984638844332475,
+    "gva_effect": 0.7865151898545849,
+    "emp_mult": 1.0817010753815446,
+    "emp_effect": 18.631169659856123
+   },
+   "type2": {
+    "output_mult": 1.3773752731378248,
+    "gva_mult": 1.3037207901505465,
+    "gva_effect": 0.9334819463014751,
+    "emp_mult": 1.1966131730289422,
+    "emp_effect": 20.61041035394848
+   }
+  },
+  {
+   "id": "M71",
+   "name": "Architectural and engineering activities",
+   "output_m": 908.2419635029856,
+   "gva_m": 615.2248139243587,
+   "fte": 15056.440759828834,
+   "type1": {
+    "output_mult": 1.1154160854799855,
+    "gva_mult": 1.0847362107420586,
+    "gva_effect": 0.7347784623789884,
+    "emp_mult": 1.0648179210587037,
+    "emp_effect": 17.65208897262295
+   },
+   "type2": {
+    "output_mult": 1.325571286384419,
+    "gva_mult": 1.26871687252443,
+    "gva_effect": 0.8594032572675453,
+    "emp_mult": 1.1660605008016396,
+    "emp_effect": 19.33044448307801
+   }
+  },
+  {
+   "id": "M72",
+   "name": "Scientific research and development",
+   "output_m": 458.6359935192721,
+   "gva_m": 212.64543780052287,
+   "fte": 3867.6925445753523,
+   "type1": {
+    "output_mult": 1.146502228719791,
+    "gva_mult": 1.179173014391275,
+    "gva_effect": 0.546720635604145,
+    "emp_mult": 1.2141125533687223,
+    "emp_effect": 10.238651430095905
+   },
+   "type2": {
+    "output_mult": 1.2871783120741884,
+    "gva_mult": 1.3591001424377671,
+    "gva_effect": 0.6301434010570908,
+    "emp_mult": 1.3473358807689457,
+    "emp_effect": 11.362128168577648
+   }
+  },
+  {
+   "id": "M73",
+   "name": "Advertising and market research",
+   "output_m": 117.75545768610513,
+   "gva_m": 102.7556140166262,
+   "fte": 1353.6633061440102,
+   "type1": {
+    "output_mult": 1.0602094653536747,
+    "gva_mult": 1.0389429012352214,
+    "gva_effect": 0.9066010004327579,
+    "emp_mult": 1.0685116241046761,
+    "emp_effect": 12.283124758382337
+   },
+   "type2": {
+    "output_mult": 1.2077835416241232,
+    "gva_mult": 1.139231109818319,
+    "gva_effect": 0.9941143663019957,
+    "emp_mult": 1.1710353257414183,
+    "emp_effect": 13.461690708893611
+   }
+  },
+  {
+   "id": "M74:75",
+   "name": "Other professional and veterinary activities",
+   "output_m": 765.7628456344532,
+   "gva_m": 487.3396089071691,
+   "fte": 11855.667688907077,
+   "type1": {
+    "output_mult": 1.1950004029373824,
+    "gva_mult": 1.15253531126771,
+    "gva_effect": 0.7334857143395953,
+    "emp_mult": 1.1299743159764069,
+    "emp_effect": 17.494450225143726
+   },
+   "type2": {
+    "output_mult": 1.325828611284935,
+    "gva_mult": 1.2744422115001584,
+    "gva_effect": 0.8110685605446027,
+    "emp_mult": 1.1974602842618522,
+    "emp_effect": 18.539279206097312
+   }
+  },
+  {
+   "id": "N77",
+   "name": "Rental and leasing activities",
+   "output_m": 832.4717112039567,
+   "gva_m": 516.2888798867605,
+   "fte": 6973.839820088577,
+   "type1": {
+    "output_mult": 1.1541200096268913,
+    "gva_mult": 1.1385549253419303,
+    "gva_effect": 0.7061179847711628,
+    "emp_mult": 1.2247569529631384,
+    "emp_effect": 10.260118984886523
+   },
+   "type2": {
+    "output_mult": 1.2740860431491805,
+    "gva_mult": 1.2532644096512062,
+    "gva_effect": 0.7772594186113263,
+    "emp_mult": 1.3391236642278737,
+    "emp_effect": 11.218199739314917
+   }
+  },
+  {
+   "id": "N78",
+   "name": "Employment activities",
+   "output_m": 1081.0893948758714,
+   "gva_m": 831.0363331647525,
+   "fte": 26270.23641593049,
+   "type1": {
+    "output_mult": 1.1076389007288792,
+    "gva_mult": 1.0768743628407293,
+    "gva_effect": 0.8277962266728572,
+    "emp_mult": 1.048682718345355,
+    "emp_effect": 25.48276124695152
+   },
+   "type2": {
+    "output_mult": 1.3660693638467116,
+    "gva_mult": 1.2762396834352254,
+    "gva_effect": 0.9810488862330672,
+    "emp_mult": 1.133617416596065,
+    "emp_effect": 27.54665588280451
+   }
+  },
+  {
+   "id": "N79",
+   "name": "Travel agency and tour operator activities",
+   "output_m": 421.62898535567723,
+   "gva_m": 133.42979480097972,
+   "fte": 2701.7008005031284,
+   "type1": {
+    "output_mult": 1.3108192687645663,
+    "gva_mult": 1.4689233357787421,
+    "gva_effect": 0.46485926271408573,
+    "emp_mult": 1.5260547350039628,
+    "emp_effect": 9.77860498773292
+   },
+   "type2": {
+    "output_mult": 1.4075215732588826,
+    "gva_mult": 1.650131924961936,
+    "gva_effect": 0.5222049996313236,
+    "emp_mult": 1.6465788213893822,
+    "emp_effect": 10.550895394647686
+   }
+  },
+  {
+   "id": "N80:82",
+   "name": "Security, building, landscape and business support activities",
+   "output_m": 1609.127480321729,
+   "gva_m": 999.842296326486,
+   "fte": 47505.972963477805,
+   "type1": {
+    "output_mult": 1.1720439146491517,
+    "gva_mult": 1.1489387150689068,
+    "gva_effect": 0.7139008793655152,
+    "emp_mult": 1.0855807182326407,
+    "emp_effect": 32.049398746034356
+   },
+   "type2": {
+    "output_mult": 1.4010479882967068,
+    "gva_mult": 1.3674965948629352,
+    "gva_effect": 0.8497033034033036,
+    "emp_mult": 1.1475289991032143,
+    "emp_effect": 33.878286383689385
+   }
+  },
+  {
+   "id": "O",
+   "name": "Public administration and defence",
+   "output_m": 9885.451949882412,
+   "gva_m": 5288.463610253252,
+   "fte": 94232.125,
+   "type1": {
+    "output_mult": 1.2220606599122554,
+    "gva_mult": 1.2194171323179024,
+    "gva_effect": 0.6523569344808066,
+    "emp_mult": 1.2348965338248676,
+    "emp_effect": 11.771533069748607
+   },
+   "type2": {
+    "output_mult": 1.424314276335841,
+    "gva_mult": 1.443613008058517,
+    "gva_effect": 0.7722959859712347,
+    "emp_mult": 1.4043450057932432,
+    "emp_effect": 13.386784418147796
+   }
+  },
+  {
+   "id": "P",
+   "name": "Education",
+   "output_m": 8755.206896041076,
+   "gva_m": 5778.586228048203,
+   "fte": 97269.5,
+   "type1": {
+    "output_mult": 1.1600757047862078,
+    "gva_mult": 1.1314195866856247,
+    "gva_effect": 0.7467562696573045,
+    "emp_mult": 1.156877060935754,
+    "emp_effect": 12.85279201449523
+   },
+   "type2": {
+    "output_mult": 1.3912839330111155,
+    "gva_mult": 1.3391558976757332,
+    "gva_effect": 0.8838657863148476,
+    "emp_mult": 1.3230792853923876,
+    "emp_effect": 14.699282618742933
+   }
+  },
+  {
+   "id": "Q86",
+   "name": "Human health activities",
+   "output_m": 10581.13128790544,
+   "gva_m": 5608.332212116099,
+   "fte": 93353.44228742493,
+   "type1": {
+    "output_mult": 1.215647114969026,
+    "gva_mult": 1.2024644719746804,
+    "gva_effect": 0.6373439709428018,
+    "emp_mult": 1.2225004435270972,
+    "emp_effect": 10.785673241915656
+   },
+   "type2": {
+    "output_mult": 1.434366240082826,
+    "gva_mult": 1.4471731922733528,
+    "gva_effect": 0.767047285389477,
+    "emp_mult": 1.420485468581748,
+    "emp_effect": 12.532422536231651
+   }
+  },
+  {
+   "id": "Q87:88",
+   "name": "Residential care and social work activities",
+   "output_m": 4677.967771754627,
+   "gva_m": 3160.6307758269604,
+   "fte": 70486.30771257507,
+   "type1": {
+    "output_mult": 1.2501522713220816,
+    "gva_mult": 1.208584849608485,
+    "gva_effect": 0.8165704975427822,
+    "emp_mult": 1.196140351208393,
+    "emp_effect": 18.023107677605605
+   },
+   "type2": {
+    "output_mult": 1.4826951844077563,
+    "gva_mult": 1.4126885524036445,
+    "gva_effect": 0.9544714998561555,
+    "emp_mult": 1.3193938876323974,
+    "emp_effect": 19.880257431287394
+   }
+  },
+  {
+   "id": "R90:92",
+   "name": "Creative, cultural, entertainment and gambling activities",
+   "output_m": 579.6311057472333,
+   "gva_m": 261.728694450065,
+   "fte": 11792.643003295589,
+   "type1": {
+    "output_mult": 1.2484329207306952,
+    "gva_mult": 1.2416168279699775,
+    "gva_effect": 0.5606440858153761,
+    "emp_mult": 1.1077914230947583,
+    "emp_effect": 22.538108540306926
+   },
+   "type2": {
+    "output_mult": 1.40512798349569,
+    "gva_mult": 1.4474047926063185,
+    "gva_effect": 0.6535663164958209,
+    "emp_mult": 1.1693005640200764,
+    "emp_effect": 23.789517122730363
+   }
+  },
+  {
+   "id": "R93",
+   "name": "Sports, amusement and recreation activities",
+   "output_m": 951.490001285549,
+   "gva_m": 518.1405497291487,
+   "fte": 19744.85699670441,
+   "type1": {
+    "output_mult": 1.2278549871239166,
+    "gva_mult": 1.188976070892846,
+    "gva_effect": 0.6474652536073676,
+    "emp_mult": 1.0947136361112506,
+    "emp_effect": 22.71696409647519
+   },
+   "type2": {
+    "output_mult": 1.4041796031760347,
+    "gva_mult": 1.3809905189885026,
+    "gva_effect": 0.7520280672552271,
+    "emp_mult": 1.1625725648717287,
+    "emp_effect": 24.125139529233195
+   }
+  },
+  {
+   "id": "S94",
+   "name": "Activities of membership organisations",
+   "output_m": 531.6414691562976,
+   "gva_m": 328.4275692672747,
+   "fte": 10510.294547575191,
+   "type1": {
+    "output_mult": 1.192279712333084,
+    "gva_mult": 1.144848933615975,
+    "gva_effect": 0.7072434606021785,
+    "emp_mult": 1.0913037868968876,
+    "emp_effect": 21.574547710457978
+   },
+   "type2": {
+    "output_mult": 1.4092584329846718,
+    "gva_mult": 1.3531352319666787,
+    "gva_effect": 0.8359146923395374,
+    "emp_mult": 1.1789564111246036,
+    "emp_effect": 23.30739767034397
+   }
+  },
+  {
+   "id": "S95",
+   "name": "Repair of computers, personal and household goods",
+   "output_m": 91.9618875951279,
+   "gva_m": 60.54818793532814,
+   "fte": 1425.6510421060689,
+   "type1": {
+    "output_mult": 1.1680991652250097,
+    "gva_mult": 1.1259678971649036,
+    "gva_effect": 0.7413431545341476,
+    "emp_mult": 1.0823962428722822,
+    "emp_effect": 16.77998757937975
+   },
+   "type2": {
+    "output_mult": 1.3087079759238176,
+    "gva_mult": 1.252611592923165,
+    "gva_effect": 0.8247260264185864,
+    "emp_mult": 1.1548316645059238,
+    "emp_effect": 17.902927060483492
+   }
+  },
+  {
+   "id": "S96",
+   "name": "Other personal services",
+   "output_m": 1447.994830577643,
+   "gva_m": 830.346432699179,
+   "fte": 18824.429410318742,
+   "type1": {
+    "output_mult": 1.2059086676851267,
+    "gva_mult": 1.1818100639091755,
+    "gva_effect": 0.677703918530912,
+    "emp_mult": 1.1298696094736305,
+    "emp_effect": 14.688692429872795
+   },
+   "type2": {
+    "output_mult": 1.2863429354689304,
+    "gva_mult": 1.2649889526691311,
+    "gva_effect": 0.7254024959700028,
+    "emp_mult": 1.1792813462721086,
+    "emp_effect": 15.331061954792396
+   }
+  },
+  {
+   "id": "T97",
+   "name": "Activities of households as employers",
+   "output_m": 83.78777651973053,
+   "gva_m": 83.78777651973053,
+   "fte": 767.0,
+   "type1": {
+    "output_mult": 1.0,
+    "gva_mult": 1.0,
+    "gva_effect": 1.0,
+    "emp_mult": 1.0,
+    "emp_effect": 9.154079889199412
+   },
+   "type2": {
+    "output_mult": 1.4080247491912492,
+    "gva_mult": 1.2419640363815594,
+    "gva_effect": 1.2419640363815594,
+    "emp_mult": 1.3559718246233716,
+    "emp_effect": 12.412674410105838
+   }
+  }
+ ]
+}

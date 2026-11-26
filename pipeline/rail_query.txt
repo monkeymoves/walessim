@@ -1,0 +1,7 @@
+[out:json][timeout:240][bbox:51.30,-5.40,53.50,-2.60];
+(
+  way["railway"~"^(rail|preserved|narrow_gauge|light_rail)$"][!"service"];
+  way["railway"~"^(rail|preserved|narrow_gauge)$"]["service"~"^(spur)$"]["usage"~"main|branch|tourism"];
+  node["railway"~"^(station|halt)$"];
+);
+out geom qt;

@@ -1,0 +1,1430 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Papur v2: one decision, two scales</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&display=swap&subset=latin-ext" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+<script src="data/wales.js"></script>
+<script src="data/rhondda.js"></script>
+<style>
+/* PAPUR v2. Real things are paper. The player's choices are thread. */
+:root{
+  --board:#D8D9D3; --board-deep:#C9CAC3;
+  --paper:#FAFAF6; --paper-2:#EEEEE7; --paper-edge:#D2D2CA;
+  --ink:#1F2A30; --ink-2:#4E5B63; --ink-3:#6B767C; --rule:#C9CBC4;
+  --thread:#B0262C; --thread-dark:#7E1A1F;          /* red thread: provenance, pull the thread */
+  --stitch:#2C4E95; --stitch-hi:#D9E2F4;             /* carthen yarn: what the player has done */
+  --slate:#39454D;
+  --amber:#C98A2B;
+  --sea-0:#7D96A0;
+  /* carthen colour set, used only as woven trim */
+  --oat:#E6E0CF; --bottle:#2F5B45; --mustard:#C49A2C; --navy:#2B3F63; --madder:#9C3B30; --charcoal:#2E3236;
+  --past:#DCD6CA; --present:#F7F7F2; --future:#D9E2E4;
+  --s-pro:#B48A1E; --s-res:#5A7B41; --s-hea:#2F7575; --s-equ:#82628A; --s-coh:#A0602F; --s-cul:#2F5E86; --s-glo:#5E8597;
+  --serif:"Newsreader", Georgia, serif;
+  --sans:"Familjen Grotesk", "Helvetica Neue", sans-serif;
+  --grain:none; --grain-light:none; --weave-a:none; --weave-b:none; --weave-c:none; --weave-d:none;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--board);background-image:var(--grain-light);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.35;-webkit-font-smoothing:antialiased;overflow:hidden}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--thread);outline-offset:2px}
+.app{height:100vh;min-height:760px;display:grid;grid-template-rows:auto 1fr auto auto}
+
+/* ---------- top bar ---------- */
+.topbar{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:16px;padding:9px 20px 9px 22px}
+.when{display:flex;align-items:center;gap:12px}
+.year{font-family:var(--serif);font-weight:500;font-size:40px;line-height:1;letter-spacing:-.01em}
+.termgen{display:flex;flex-direction:column;gap:1px;font-size:13px;color:var(--ink-2);white-space:nowrap}
+.termgen b{color:var(--ink);font-weight:600}
+.strands{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.meter{position:relative;background:var(--paper);background-image:var(--grain);background-blend-mode:multiply;border-radius:2px;padding:6px 8px 7px;
+  box-shadow:0 0 0 1px rgba(40,45,40,.08),1px 1.5px 0 var(--paper-edge),2px 4px 6px -3px rgba(30,35,30,.35);min-width:0;cursor:default}
+.meter.pullable{cursor:pointer;box-shadow:0 0 0 1.5px var(--thread),1px 1.5px 0 var(--paper-edge),2px 4px 6px -3px rgba(30,35,30,.35)}
+.meter.pullable::after{content:"";position:absolute;right:-4px;bottom:-4px;width:9px;height:9px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#E2585C,var(--thread) 55%,var(--thread-dark));box-shadow:1px 1px 2px rgba(0,0,0,.35)}
+.m-head{display:flex;align-items:center;justify-content:space-between;gap:4px}
+.m-name{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m-arrow{flex:none;display:flex;align-items:center;gap:2px;font-size:11px;font-weight:600;color:var(--ink-2)}
+/* the strand: woven yarn pips laid on an unwoven guide thread */
+.m-yarn{position:relative;display:flex;gap:2px;margin-top:6px;height:8px;align-items:center}
+.m-yarn::before{content:"";position:absolute;left:0;right:0;top:3.5px;border-top:1px dotted rgba(31,42,48,.35)}
+.m-yarn b{position:relative;flex:1;height:6px;border-radius:3px;background:var(--paper);box-shadow:inset 0 0 0 1px rgba(31,42,48,.2)}
+.m-yarn b.on{background-color:var(--c);background-image:repeating-linear-gradient(115deg,rgba(0,0,0,.28) 0 1.2px,transparent 1.2px 3.6px),linear-gradient(rgba(255,255,255,.25),transparent 60%);box-shadow:0 1px 0 rgba(0,0,0,.25)}
+.m-yarn b.new{animation:stitchIn .9s cubic-bezier(.2,.8,.2,1) both;outline:1.5px solid var(--thread);outline-offset:1px}
+@keyframes stitchIn{0%{transform:scaleX(0);opacity:0}60%{transform:scaleX(1.25);opacity:1}100%{transform:scaleX(1)}}
+.tip{position:absolute;left:50%;top:calc(100% + 8px);transform:translateX(-50%);width:230px;z-index:60;background:var(--ink);color:#F3F4F1;font-size:12.5px;line-height:1.35;padding:8px 10px;border-radius:2px;pointer-events:none;opacity:0;transition:opacity .12s}
+.tip strong{display:block;font-family:var(--serif);font-weight:500;font-size:14.5px;margin-bottom:2px}
+body.tracing .meter .tip{display:none}
+.meter:hover .tip,.meter:focus .tip,.trust:hover .tip,.trust:focus .tip{opacity:1}
+/* trust: a separate gauge, not an eighth strand */
+.trust{position:relative;display:flex;align-items:center;gap:8px;padding:5px 10px 5px 8px;background:var(--slate);color:#EEF1F0;border-radius:2px;box-shadow:1px 1.5px 0 #262F35,2px 4px 6px -3px rgba(30,35,30,.5);cursor:default}
+.trust .t-txt{display:flex;flex-direction:column;line-height:1.15}
+.trust .t-txt b{font-size:12.5px;font-weight:600}
+.trust .t-txt span{font-size:11.5px;color:#C9D2D4}
+.trust svg{display:block}
+.trust .tip{width:240px}
+.lang{display:flex;padding:3px;border-radius:2px;background:var(--board-deep);box-shadow:inset 1px 1px 2px rgba(0,0,0,.18)}
+.lang button{border:0;background:transparent;cursor:pointer;font-weight:600;font-size:13px;letter-spacing:.04em;padding:6px 11px;border-radius:1px;color:var(--ink-2)}
+.lang button[aria-pressed="true"]{background:var(--paper);color:var(--ink);box-shadow:1px 1.5px 0 var(--paper-edge),1px 3px 4px -2px rgba(0,0,0,.3)}
+
+/* ---------- table ---------- */
+.table{display:grid;grid-template-columns:1fr var(--side-w);gap:14px;padding:0 20px;min-height:0;--side-w:clamp(372px,30vw,440px)}
+.stage{position:relative;min-height:0;overflow:hidden;border-radius:3px;background:var(--sea-0);
+  box-shadow:inset 0 0 0 1px rgba(20,30,35,.25),inset 2px 3px 8px rgba(10,20,30,.3),0 1px 0 rgba(255,255,255,.6);perspective:1800px}
+.view{position:absolute;inset:0}
+.view.off{visibility:hidden;pointer-events:none}
+.view canvas,.view svg.overlay{position:absolute;inset:0;width:100%;height:100%;display:block}
+.view svg.overlay{pointer-events:none}
+.view svg.overlay .hit{pointer-events:auto;cursor:pointer}
+#vRh{background:#B7BFA0}
+.fold{position:absolute;inset:0;z-index:20;pointer-events:none;transform-style:preserve-3d}
+.fold .half{position:absolute;top:0;bottom:0;overflow:hidden;backface-visibility:hidden;transform-style:preserve-3d;box-shadow:0 0 30px rgba(0,0,0,.25)}
+.fold .inner{position:absolute;top:0}
+.fold .inner canvas,.fold .inner svg{position:absolute;inset:0;display:block}
+.fold .shade{position:absolute;inset:0;opacity:0}
+.fold .half.l .shade{background:linear-gradient(90deg,rgba(255,255,255,.15),rgba(20,25,25,.55))}
+.fold .half.r .shade{background:linear-gradient(90deg,rgba(20,25,25,.55),rgba(255,255,255,.1))}
+
+.piece{background:var(--paper);background-image:var(--grain);background-blend-mode:multiply;border-radius:2px;
+  box-shadow:0 0 0 1px rgba(40,45,40,.07),1px 1.5px 0 var(--paper-edge),2px 2.5px 0 #BFC0B8,3px 8px 14px -6px rgba(25,35,35,.45)}
+
+/* Wales view pieces */
+.curve{position:absolute;left:14px;top:14px;z-index:3;width:var(--place-w,272px);filter:drop-shadow(2px 3px 0 rgba(20,25,30,.25)) drop-shadow(3px 8px 10px rgba(20,25,30,.3));transform:rotate(-.6deg)}
+.curve .sheet{background:var(--slate);background-image:repeating-linear-gradient(-62deg,rgba(255,255,255,.045) 0 1px,transparent 1px 7px),var(--grain);background-blend-mode:normal,multiply;color:#EEF1F0;padding:17px 15px 12px;
+  clip-path:polygon(0% 7px,3% 3px,7% 6px,12% 2px,18% 5px,24% 1px,31% 6px,37% 3px,44% 5px,50% 1px,57% 5px,63% 2px,70% 6px,76% 2px,83% 5px,89% 1px,94% 5px,100% 3px,100% 100%,0% 100%)}
+.cv-kick{display:flex;align-items:center;gap:7px;font-size:12px;color:#C9D2D4}
+.cv-title{font-family:var(--serif);font-weight:500;font-size:19px;line-height:1.15;margin:6px 0 8px}
+.cv-ripple{display:flex;align-items:center;gap:8px;font-size:12.5px;margin:0;padding-top:8px;border-top:1px solid rgba(255,255,255,.16)}
+.cv-ripple .lab{font-size:11px;font-weight:600;letter-spacing:.04em;color:#20262A;background:var(--amber);padding:2px 6px;border-radius:1px}
+.place{position:absolute;left:14px;bottom:14px;z-index:3;width:var(--place-w,272px);padding:13px 15px}
+.place::before{content:"";position:absolute;right:-5px;top:var(--pin-y,40%);width:9px;height:9px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#E2585C,var(--thread) 55%,var(--thread-dark));box-shadow:1px 1.5px 2px rgba(0,0,0,.35)}
+.p-eyebrow{font-size:12px;color:var(--ink-2);margin:0 0 3px}
+.p-name{font-family:var(--serif);font-weight:500;font-size:25px;line-height:1.05;margin:0}
+.p-alt{display:flex;align-items:baseline;gap:6px;margin-top:3px;font-family:var(--serif);font-style:italic;font-size:14.5px;color:var(--ink-2)}
+abbr.lg{font-family:var(--sans);font-style:normal;font-size:10.5px;font-weight:600;letter-spacing:.05em;text-decoration:none;color:var(--ink-3);border:1px solid var(--rule);padding:0 4px;border-radius:2px}
+.p-figs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 2px;padding-top:9px;border-top:1px solid var(--rule)}
+.p-fig b{display:block;font-family:var(--serif);font-weight:500;font-size:23px;line-height:1}
+.p-fig span{font-size:12px;color:var(--ink-2)}
+.p-approx{font-size:11.5px;font-style:italic;color:var(--ink-3);margin:3px 0 8px}
+.p-hist{font-family:var(--serif);font-size:14px;line-height:1.4;margin:0 0 10px}
+.p-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip-src{display:inline-flex;align-items:center;gap:6px;border:0;background:#F3EDEA;box-shadow:inset 0 0 0 1px rgba(176,38,44,.35);font-size:12px;padding:4px 8px 4px 6px;border-radius:2px;color:var(--ink)}
+.chip-src em{font-style:normal;color:var(--thread-dark);font-weight:600}
+.conf{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2);padding:3px 2px}
+.conf .bars{display:flex;gap:2px;align-items:flex-end}
+.conf .bars i{display:block;width:4px;background:var(--rule)}
+.conf .bars i.on{background:var(--ink)}
+.keytab{position:absolute;right:12px;top:12px;z-index:4}
+.keytab > button{border:0;cursor:pointer;font-size:12px;font-weight:600;padding:5px 10px}
+.keybox{position:absolute;right:0;top:34px;width:220px;padding:10px 12px;font-size:12px;color:var(--ink-2);display:none}
+.keytab.open .keybox{display:block}
+.keybox ul{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.keybox li,.rkey li{display:flex;align-items:center;gap:8px;line-height:1.2}
+.keybox li svg,.rkey li svg{flex:none}
+
+/* Rhondda view pieces */
+.rcol{position:absolute;left:12px;top:12px;bottom:12px;width:var(--rcol-w,206px);z-index:3;display:flex;flex-direction:column;gap:10px}
+.hist{padding:11px 12px}
+.hist h2{font-family:var(--serif);font-weight:500;font-size:20px;line-height:1.1;margin:0}
+.hist .alt{font-family:var(--serif);font-style:italic;font-size:13.5px;color:var(--ink-2);margin-top:2px}
+.hist p{font-family:var(--serif);font-size:13.5px;line-height:1.38;margin:8px 0 0}
+.hist .check{font-family:var(--sans);font-size:11px;font-weight:600;color:var(--thread-dark);background:#F3EDEA;padding:1px 5px;border-radius:1px;margin-left:3px;white-space:nowrap}
+.peak{margin-top:8px;display:flex;align-items:flex-end;gap:8px}
+.peak svg{display:block;flex:1}
+.rkey{padding:10px 12px;font-size:11.5px;color:var(--ink-2);margin-top:auto}
+.rkey ul{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.zoomer{position:absolute;right:12px;top:12px;z-index:4;display:flex;flex-direction:column}
+.zoomer button{width:30px;height:30px;border:0;cursor:pointer;font-size:17px;font-weight:600;display:grid;place-items:center}
+.zoomer button + button{margin-top:6px}
+.below{position:absolute;z-index:6;width:286px;padding:12px 13px 11px;font-size:12.5px}
+.below[hidden]{display:none}
+.b-head{display:flex;gap:9px;align-items:flex-start}
+.b-no{flex:none;width:22px;height:22px;display:grid;place-items:center;font-weight:700;font-size:12px;background:var(--ink);color:var(--paper);border-radius:1px}
+.b-head h3{font-family:var(--serif);font-weight:500;font-size:18px;line-height:1.1;margin:0}
+.b-src{font-size:11.5px;color:var(--ink-2);margin:2px 0 0}
+.x{margin-left:auto;border:0;background:none;cursor:pointer;font-size:16px;line-height:1;padding:2px 4px;color:var(--ink-2)}
+.b-risk{display:flex;gap:6px;align-items:center;font-size:12px;margin:8px 0 6px;padding:4px 7px;background:#F6EEDD;box-shadow:inset 0 0 0 1px rgba(201,138,43,.5);border-radius:1px}
+.below dl{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;margin:6px 0 8px}
+.below dt{color:var(--ink-2);font-size:11.5px;white-space:nowrap}
+.below dd{margin:0;font-size:12.5px}
+.below dd b{font-family:var(--serif);font-weight:500;font-size:17px;line-height:1}
+.below dd.none{color:var(--ink-3)}
+.b-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;padding-top:8px;border-top:1px dashed var(--rule)}
+.link{white-space:nowrap;border:0;background:none;padding:0;cursor:pointer;color:var(--thread-dark);font-weight:600;font-size:12px;text-decoration:underline;text-underline-offset:2px}
+.btn{white-space:nowrap;border:0;cursor:pointer;font-weight:600;font-size:12.5px;padding:7px 11px;border-radius:2px;background:var(--stitch);color:#fff;box-shadow:1px 1.5px 0 #1B3264}
+.btn.ghost{background:var(--paper-2);color:var(--ink);box-shadow:inset 0 0 0 1px var(--rule)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.rule{position:absolute;z-index:7;width:350px;padding:14px 16px 13px;font-size:12.5px}
+.rule[hidden]{display:none}
+.rule h3{font-family:var(--serif);font-weight:500;font-size:19px;margin:0 0 6px}
+.rule .plain{font-family:var(--serif);font-size:14.5px;line-height:1.4;margin:0 0 8px}
+.rule .param{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;margin:6px 0;font-size:12.5px}
+.rule input[type=range]{width:100%;accent-color:var(--ink)}
+.rule output{font-weight:700;font-variant-numeric:tabular-nums;min-width:54px;text-align:right}
+.rule h4{font-size:11.5px;font-weight:600;color:var(--ink-2);margin:10px 0 4px}
+.rule ul{margin:0;padding-left:16px;display:grid;gap:3px;color:var(--ink-2);font-size:12px}
+.rule .badge{display:inline-flex;align-items:center;gap:6px;margin-top:9px;font-size:12px;font-weight:600;padding:4px 8px;background:#F3EDEA;box-shadow:inset 0 0 0 1px rgba(176,38,44,.35);border-radius:1px}
+
+/* ---------- side ---------- */
+.side{position:relative;min-height:0}
+.panel{position:absolute;inset:0;display:flex;flex-direction:column;gap:10px;min-height:0}
+.panel.off{visibility:hidden;pointer-events:none}
+.voice{position:relative;padding:11px 14px 10px 18px}
+.voice::before{content:"";position:absolute;left:0;top:0;bottom:0;width:7px;background-image:var(--weave-b);background-size:12px 12px;image-rendering:pixelated;border-radius:2px 0 0 2px}
+.voice q{display:block;font-family:var(--serif);font-style:italic;font-size:15px;line-height:1.35;quotes:"\201C" "\201D"}
+.voice .who{display:flex;justify-content:space-between;gap:8px;margin-top:5px;font-size:12px;color:var(--ink-2)}
+.voice .who b{color:var(--ink);font-weight:600}
+.hand-h{display:flex;align-items:baseline;justify-content:space-between;margin:2px 2px -2px}
+.hand-h h2{font-family:var(--serif);font-weight:500;font-style:italic;font-size:16px;margin:0;color:var(--ink-2)}
+.hand-h span{font-size:12px;color:var(--ink-2)}
+.hand{flex:1;min-height:0;display:grid;grid-template-rows:repeat(4,1fr);gap:9px}
+/* railway tickets on Papur stock */
+.ticket{position:relative;min-height:0;filter:drop-shadow(1px 1.5px 0 var(--paper-edge)) drop-shadow(1px 1px 0 #BDBEB6) drop-shadow(2px 6px 7px rgba(25,35,35,.26))}
+.ticket .sheet{height:100%;display:grid;grid-template-columns:70px 1fr;background:var(--paper);background-image:var(--grain);background-blend-mode:multiply;
+  -webkit-mask:radial-gradient(circle 7px at 0 0,#0000 98%,#000) top left/51% 51% no-repeat,radial-gradient(circle 7px at 100% 0,#0000 98%,#000) top right/51% 51% no-repeat,radial-gradient(circle 7px at 0 100%,#0000 98%,#000) bottom left/51% 51% no-repeat,radial-gradient(circle 7px at 100% 100%,#0000 98%,#000) bottom right/51% 51% no-repeat;
+  mask:radial-gradient(circle 7px at 0 0,#0000 98%,#000) top left/51% 51% no-repeat,radial-gradient(circle 7px at 100% 0,#0000 98%,#000) top right/51% 51% no-repeat,radial-gradient(circle 7px at 0 100%,#0000 98%,#000) bottom left/51% 51% no-repeat,radial-gradient(circle 7px at 100% 100%,#0000 98%,#000) bottom right/51% 51% no-repeat}
+.stub{position:relative;background:var(--paper-2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding-left:9px}
+.stub::before{content:"";position:absolute;left:0;top:0;bottom:0;width:9px;background-image:var(--wv);background-size:12px 12px;image-rendering:pixelated}
+.stub::after{content:"";position:absolute;right:-1px;top:6px;bottom:6px;border-right:2px dotted #A9AAA2}
+.stub svg{width:36px;height:36px}
+.stub .no{font-size:10.5px;font-weight:600;letter-spacing:.04em;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.tbody{padding:8px 12px 8px 12px;display:flex;flex-direction:column;gap:5px;min-width:0}
+.t-title{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
+.t-title h3{font-family:var(--serif);font-weight:500;font-size:17px;line-height:1.1;margin:0}
+.t-alt{font-family:var(--serif);font-style:italic;font-size:13px;color:var(--ink-2);margin-top:-4px}
+.effects{display:flex;flex-wrap:wrap;gap:3px}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;line-height:1.2;padding:2px 6px 2px 4px;border-radius:1px;background:#EEEFEA;box-shadow:inset 0 0 0 1px rgba(0,0,0,.06)}
+.chip i{width:10px;height:5px;border-radius:2.5px;background-color:var(--c);background-image:repeating-linear-gradient(115deg,rgba(0,0,0,.28) 0 1px,transparent 1px 3px);flex:none}
+.chip.strain{background:transparent;box-shadow:inset 0 0 0 1px var(--rule);color:var(--ink-2)}
+.chip.strain i{background:transparent;box-shadow:inset 0 0 0 1.2px var(--c);background-image:none}
+.chip.note{background:transparent;box-shadow:inset 0 0 0 1px var(--rule);border-style:dashed;color:var(--ink-2);font-style:italic}
+.tmeta{margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:11.5px;color:var(--ink-2)}
+.pips{display:inline-flex;gap:3px;vertical-align:middle;margin-left:4px}
+.pips b{width:8px;height:8px;border-radius:50%;box-shadow:inset 0 0 0 1.3px var(--ink-2)}
+.pips b.on{background:var(--ink);box-shadow:none}
+.play{border:0;cursor:pointer;font-size:12px;font-weight:600;padding:3px 9px;border-radius:2px;background:var(--ink);color:var(--paper)}
+.ticket.playable{cursor:pointer}
+.ticket.playable:hover{transform:translateY(-2px)}
+.ticket.playable{transition:transform .15s}
+.ticket.spent .sheet{filter:saturate(.3)}
+.ticket.spent .tbody > *:not(.stamp){opacity:.5}
+.stamp{position:absolute;right:14px;top:50%;transform:translateY(-50%) rotate(-8deg);border:2px solid var(--thread);color:var(--thread);font-weight:700;font-size:12px;letter-spacing:.06em;padding:3px 8px;border-radius:2px;background:rgba(250,250,246,.8)}
+.punch{position:absolute;left:58px;top:12px;width:11px;height:11px;border-radius:50%;background:var(--board);box-shadow:inset 1px 1px 2px rgba(0,0,0,.45)}
+
+/* decision panel */
+.d-ticket{display:grid;grid-template-columns:62px 1fr;min-height:66px}
+.d-ticket .tbody{justify-content:center;gap:2px}
+.d-ticket h3{font-family:var(--serif);font-weight:500;font-size:18px;margin:0}
+.d-ticket p{margin:0;font-size:12.5px;color:var(--ink-2)}
+.tokens{display:flex;align-items:center;gap:10px;padding:2px 4px}
+.tokens .spools{display:flex;gap:6px}
+.tokens span{font-size:12.5px;color:var(--ink-2)}
+.d-list{flex:1;min-height:0;overflow:auto;padding:6px 0 4px}
+.d-list table{width:100%;border-collapse:collapse;font-size:12px}
+.d-list th{font-size:10.5px;font-weight:600;color:var(--ink-2);text-align:left;padding:0 6px 4px;border-bottom:1px solid var(--rule);white-space:nowrap}
+.d-list th.n,.d-list td.n{text-align:right}
+.d-list td{padding:3px 6px;border-bottom:1px solid rgba(201,203,196,.55);white-space:nowrap}
+.d-list tr.row{cursor:pointer}
+.d-list tr.row:hover td{background:rgba(31,42,48,.04)}
+.d-list tr.sel td{background:rgba(31,42,48,.08)}
+.d-list .no{display:inline-grid;place-items:center;width:17px;height:16px;font-weight:700;font-size:10.5px;background:var(--ink);color:var(--paper);border-radius:1px}
+.d-list tr.stitched .no{background:var(--stitch)}
+.d-list .nm{max-width:146px;overflow:hidden;text-overflow:ellipsis;display:block}
+.d-list .bar{display:inline-block;height:5px;background:var(--ink-3);vertical-align:middle;margin-left:5px;border-radius:1px}
+.flags{display:inline-flex;gap:3px}
+.flags i{display:inline-grid;place-items:center;width:16px;height:15px;font-style:normal;font-size:9.5px;font-weight:700;border-radius:1px;background:#E7E8E2;color:var(--ink-3)}
+.flags i.on{background:var(--ink);color:var(--paper)}
+.flags i.fl.on{background:#4F7F95}
+.flags i.dep.on{background:var(--s-equ)}
+.d-foot{display:flex;flex-direction:column;gap:8px;padding:9px 12px 10px}
+.d-foot .row2{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.d-legend{font-size:11px;color:var(--ink-2);padding:6px 8px 0;display:flex;flex-wrap:wrap;gap:3px 9px}
+.d-legend b{display:inline-grid;place-items:center;min-width:14px;height:13px;font-size:9.5px;background:var(--ink);color:var(--paper);border-radius:1px;margin-right:3px;padding:0 2px}
+.d-foot .msg{font-size:12px;color:var(--ink-2);min-height:16px}
+
+/* the trace: pulled thread */
+.trace{position:absolute;left:14px;top:14px;z-index:8;width:340px;padding:13px 15px 12px 26px;max-height:calc(100% - 28px);overflow:auto}
+.trace[hidden]{display:none}
+.trace h3{font-family:var(--serif);font-weight:500;font-size:19px;margin:0 0 2px}
+.trace .sub{font-size:12px;color:var(--ink-2);margin:0 0 8px}
+.trace section{position:relative;padding:6px 0 8px;border-top:1px solid var(--rule)}
+.trace section h4{font-size:11px;font-weight:600;color:var(--ink-2);margin:0 0 3px}
+.trace section p,.trace section li{font-size:12.5px;margin:0}
+.trace section ul{margin:0;padding-left:15px;display:grid;gap:3px}
+.trace .knot{position:absolute;left:-17px;top:9px;width:9px;height:9px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#E2585C,var(--thread) 55%,var(--thread-dark))}
+.trace .note{font-size:11.5px;font-style:italic;color:var(--ink-3);margin-top:6px}
+svg.threadlayer{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:9}
+
+/* timeline */
+.timeline{padding:12px 20px 0}
+.strip{position:relative;height:56px;filter:drop-shadow(1px 1.5px 0 var(--paper-edge)) drop-shadow(2px 5px 6px rgba(25,35,35,.25))}
+.strip .band{position:absolute;top:0;height:40px;background-image:var(--grain);background-blend-mode:multiply}
+.strip .band.past{background-color:var(--past);background-image:repeating-linear-gradient(90deg,transparent 0 22px,rgba(0,0,0,.055) 22px 23px,rgba(255,255,255,.35) 23px 24px,transparent 24px 46px),var(--grain)}
+.strip .band.present{background-color:var(--present)}
+.strip .band.future{background-color:var(--future)}
+.era{position:absolute;top:5px;display:flex;align-items:baseline;gap:6px;white-space:nowrap;transform:translateX(-50%)}
+.era b{font-family:var(--serif);font-weight:500;font-style:italic;font-size:17px}
+.era span{font-size:12px;color:var(--ink-2)}
+.tick{position:absolute;top:28px;height:12px;width:1px;background:rgba(31,42,48,.45)}
+.tick.small{top:34px;height:6px;background:rgba(31,42,48,.3)}
+.tlab{position:absolute;top:42px;font-size:11.5px;color:var(--ink-2);transform:translateX(-50%);font-variant-numeric:tabular-nums}
+.fold-c{position:absolute;top:0;height:40px;width:2px;background:linear-gradient(90deg,rgba(0,0,0,.2),rgba(255,255,255,.7))}
+.fold-lab{position:absolute;top:24px;font-size:10.5px;color:var(--ink-2);white-space:nowrap;padding-left:5px}
+.now{position:absolute;top:-4px;height:48px;width:2px;background:var(--thread)}
+.now::before{content:"";position:absolute;left:-4px;top:-3px;width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#E2585C,var(--thread) 55%,var(--thread-dark));box-shadow:1px 1.5px 2px rgba(0,0,0,.35)}
+.now-lab{position:absolute;top:8px;left:6px;font-size:12px;font-weight:700;color:var(--thread-dark);white-space:nowrap;background:var(--future);padding:0 4px}
+.tstitch{position:absolute;top:20px;width:14px;height:14px}
+.foot{display:flex;justify-content:space-between;gap:20px;padding:2px 20px 8px;font-size:11.5px;color:var(--ink-2)}
+
+@media (max-height:840px){
+  .year{font-size:34px}
+  .topbar{padding:7px 16px 7px 18px;gap:12px}
+  .table{padding:0 16px;gap:12px}
+  .timeline{padding:10px 16px 0}
+  .foot{padding:2px 16px 6px}
+  .curve,.place{--place-w:250px}
+  .cv-title{font-size:17px;margin:5px 0 6px}
+  .curve .sheet{padding:14px 13px 10px}
+  .place{padding:11px 13px}
+  .p-name{font-size:22px}
+  .p-hist{font-size:13px;margin-bottom:8px}
+  .p-fig b{font-size:20px}
+  .t-title h3{font-size:15px}
+  .stub svg{width:30px;height:30px}
+  .tbody{padding:6px 10px;gap:3px}
+  .chip{font-size:11px;padding:1px 5px 1px 4px}
+  .voice q{font-size:13.5px}
+  .voice{padding:8px 12px 8px 17px}
+  .rcol{--rcol-w:190px}
+  .hist p{font-size:12.5px}
+  .hist h2{font-size:18px}
+  .d-list td{padding:2px 5px}
+  .below{width:270px;padding:10px 11px}
+}
+@media (max-width:1340px){
+  .table{--side-w:368px}
+  .m-name{font-size:11.5px}
+  .meter{padding:5px 6px 6px}
+  .trust .t-txt span{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="when"><div class="year">2031</div><div class="termgen"><b id="t-term"></b><span id="t-gen"></span></div></div>
+    <ul class="strands" id="strands"></ul>
+    <div class="trust" id="trust" tabindex="0"></div>
+    <div class="lang" role="group" id="lang"><button type="button" data-lang="en">EN</button><button type="button" data-lang="cy">CY</button></div>
+  </header>
+
+  <main class="table">
+    <section class="stage" id="stage">
+      <div class="view" id="vWales">
+        <canvas id="cWales"></canvas>
+        <svg class="overlay" id="oWales" xmlns="http://www.w3.org/2000/svg"></svg>
+        <article class="curve" id="curve"></article>
+        <aside class="place piece" id="place"></aside>
+        <div class="keytab" id="keytab"><button type="button" class="piece" id="keybtn"></button><div class="keybox piece" id="keybox"></div></div>
+      </div>
+      <div class="view off" id="vRh">
+        <canvas id="cRh"></canvas>
+        <canvas id="cBelow"></canvas>
+        <svg class="overlay" id="oRh" xmlns="http://www.w3.org/2000/svg"></svg>
+        <div class="rcol" id="rcol"></div>
+        <div class="zoomer" id="zoomer"><button type="button" class="piece" data-z="in">+</button><button type="button" class="piece" data-z="out">&#8722;</button></div>
+        <aside class="below piece" id="below" hidden></aside>
+        <aside class="rule piece" id="rule" hidden></aside>
+      </div>
+      <aside class="trace piece" id="trace" hidden></aside>
+    </section>
+    <section class="side">
+      <div class="panel" id="pHand">
+        <figure class="voice piece" id="voice" style="margin:0"></figure>
+        <div class="hand-h"><h2 id="hand-h"></h2><span id="hand-sub"></span></div>
+        <div class="hand" id="hand"></div>
+      </div>
+      <div class="panel off" id="pDecide"></div>
+    </section>
+  </main>
+
+  <footer class="timeline"><div class="strip" id="strip"></div></footer>
+  <div class="foot"><span id="t-foot"></span><span id="t-credit"></span></div>
+</div>
+<svg class="threadlayer" id="threadlayer" xmlns="http://www.w3.org/2000/svg"></svg>
+
+<script>
+/* ===================================================================
+   Dictionaries. Every visible string lives here.
+   Welsh beyond the brief's own strings is drafted for the fluent reviewer.
+   =================================================================== */
+const DICT = {
+  en: {
+    htmlLang: "en", term: "Term 2, the 2030s", gen: "Generation 2025 to 2050", langGroup: "Language",
+    levelTip: (l, d) => `${l} of 10 pips, ${d > 0 ? "up " + d : d < 0 ? "down " + (-d) : "no change"} since last term`,
+    pullHint: "Changed by your choice. Click to pull the thread.",
+    strands: {
+      pro: ["Prosperous", "A prosperous Wales"], res: ["Resilient", "A resilient Wales"], hea: ["Healthier", "A healthier Wales"],
+      equ: ["More equal", "A more equal Wales"], coh: ["Cohesive", "A Wales of cohesive communities"],
+      cul: ["Culture", "A Wales of vibrant culture and thriving Welsh language"], glo: ["Global", "A globally responsible Wales"],
+    },
+    trust: { name: "Trust", band: v => v < 40 ? "Low" : v < 65 ? "Fair" : "High", limit: "3 cards next term",
+      tip: "Trust is how far people believe you. It is not a goal: it limits how many cards you can play next term. Kept promises raise it." },
+    mapLabel: "Paper relief model of Wales", rhLabel: "Paper relief model of the Rhondda valleys",
+    key: { btn: "Key", city: "City", town: "Town", site: "Industry or heritage", tip: "Coal tip, a lasting liability", risk: "Tip risk raised by the storms", stitched: "Your work, stitched in thread", peak: "Peak", border: "Council boundary" },
+    regions: { eryri: "Eryri", cambria: "Cambrian Mountains", bannau: "Bannau Brycheiniog", irish: "Irish Sea", bay: "Cardigan Bay", severn: "Bristol Channel", england: "England" },
+    place: { eyebrow: "Selected place", pop: "people", welsh: "speak Welsh", approx: "approx., unverified",
+      hist: "Steam coal made the Rhondda one of the most intensively mined places on earth after the 1850s; the last deep pits closed between 1990 and 2008, and the tips stayed.",
+      source: "Census 2021, ONS", pull: "Pull the thread", conf: "Medium confidence" },
+    curve: { kick: "From the horizon scan", title: "Climate instability: a wet, stormy decade", ripple: "Ripple", rippleText: "Raises coal tip risk" },
+    voice: { q: "The tip over the school moved again in the February rain. We just want to know which one they'll do first.", who: "Treorchy, 2031", tag: "Illustrative voice, not a real quote" },
+    hand: "Your hand", handSub: "Trust allows 3 this term",
+    card: { plus: "Strengthens", minus: "Strains", cost: "Cost", pays: "Pays out", shortTerm: "short term", heavy: "heavy cost", partners: "Needs partners", play: "Play", spent: "PLAYED 2031" },
+    cards: { peat: "Restore upland peat", tips: "Make coal tips safe", energy: "Community-owned energy", child: "Welsh-medium childcare" },
+    eras: { past: ["Ddoe", "the past"], present: ["Heddiw", "the present"], future: ["Yfory", "the future"] },
+    genBoundary: "Generation boundary",
+    foot: "Mockup. Illustrative values. A thinking tool, not a forecast.",
+    credit: "Boundaries ONS (OGL). Terrain AWS Terrain Tiles. Rhondda: OpenStreetMap contributors (ODbL), BGS (OGL), NRW, WIMD 2019.",
+    rh: {
+      title: "Rhondda", alt: "Y Rhondda", hist: "On rails: from the 1850s two narrow valleys filled with pits and terraces; output peaked around 1913; the last Rhondda pit, Maerdy, closed in 1990.",
+      check: "to check", peak: "Coal output, shape illustrative", peakYear: "1913",
+      key: { bld: "Building (OSM)", rail: "Railway, in use", station: "Station", disused: "Old colliery line", bus: "Bus route, with number", stop: "Bus stop", school: "School", chapel: "Chapel or church", health: "Surgery or hospital", inst: "Institute or workmen's hall", flood: "Flood zone 2 or 3", tipPt: "Tip, from a BGS landslide record", tipPoly: "Spoil heap outline (OSM)", stitch: "Your thread: made safe" },
+    },
+    decide: {
+      title: "Make coal tips safe", sub: "The money covers three tips this term. There are more tips than thread.",
+      tokens: (n) => `${n} of 3 threads placed`, tipsN: n => `${n} tips on the model`,
+      cols: ["Tip", "Homes below", "What else is below"],
+      flags: { s: ["S", "School below"], r: ["R", "Railway or station below"], b: ["B", "Bus route below"], f: ["F", "Flood zone below"], d: ["D", "Most deprived 10% of Wales below"] },
+      how: "How is this worked out?", confirm: "Confirm and fold back up", cancel: "Fold back without playing",
+      need: n => n === 3 ? "Ready. Confirming spends the card." : `Place ${3 - n} more ${3 - n === 1 ? "thread" : "threads"}.`,
+      full: "All three threads are placed. Unpick one first.",
+    },
+    below: {
+      src: { OSM: "OSM spoil heap outline", tip_landslide_record: "BGS landslide record on a tip", landslide_near_tip: "BGS landslide record near a tip" },
+      ref: "ref", risk: "Risk raised this decade by the wet curveball (illustrative)",
+      res: "Homes land below", ha: v => `${v} ha of residential land`, bld: "Buildings mapped", bldNote: "OSM footprints, incomplete here", schools: "Schools", fac: "Also below", rail: "Railway", bus: "Buses", river: "Nearest river", flood: "Flood zone below", dep: "Neighbourhood below",
+      none: "None", busNone: "None mapped (OSM bus data has gaps here)", stops: n => `${n} ${n === 1 ? "stop" : "stops"}`,
+      chapels: n => `${n} ${n === 1 ? "chapel or church" : "chapels or churches"}`, health: n => `${n} health ${n === 1 ? "site" : "sites"}`, inst: n => `${n} ${n === 1 ? "institute or hall" : "institutes or halls"}`, other: n => `${n} other`,
+      unnamedSchool: "school, unnamed in OSM", station: "station", zone: z => `Zone ${z}`, noFlood: "Not in a mapped zone",
+      rank: (n, r) => `${n}, WIMD rank ${r} of 1,909`, m: v => `${v} m`,
+      stitch: "Stitch a thread here", unpick: "Unpick thread",
+    },
+    rule: {
+      title: "How “below” is worked out",
+      plain: d => `Count what lies within ${d} m of the tip and at least 10 m lower than its base. It is a crude proxy: real run-out follows streams and slope.`,
+      dist: "Distance", height: "Height", heightV: "10 m lower, fixed here",
+      inputs: "Inputs and where they come from",
+      src: [
+        "Tips: BGS National Landslide Database records that mention a tip (OGL), and one OSM spoil heap. The official register of disused coal tips exists, but it is not open data, so it is not used.",
+        "Height: AWS Terrain Tiles, resampled to 50 m.",
+        "Homes, buildings, schools, chapels, rail, stations, buses: OpenStreetMap (ODbL). Many terraces have no building footprints yet (Treorchy, Wattstown, Ynyshir), so residential land is the steadier guide. Bus routes are missing in the Rhondda Fach and around Treherbert.",
+        "Flood zones: NRW Flood Map for Planning (licence to verify).",
+        "Neighbourhoods: Welsh Index of Multiple Deprivation 2019 (OGL).",
+      ],
+      conf: "Confidence: Low. A proxy, not an engineering assessment.",
+    },
+    trace: {
+      title: "Pull the thread", sub: "Why Resilient moved one pip",
+      strand: "Strand", strandTxt: "Resilient rose from 4 to 5 pips. Healthier rose one pip. Trust rose a little.",
+      card: "Card", cardTxt: "Make coal tips safe, ticket No. 0440, played in 2031. It pays out in one term.",
+      tips: "Tips you chose", rule: "Rule and sources",
+      ruleTxt: d => `Below means within ${d} m and at least 10 m lower. Confidence low.`,
+      line: (ha, b, s, r) => `${ha} ha of homes and ${b} mapped buildings below${s ? ", a school" : ""}${r ? ", the railway" : ""}`,
+      note: "The national strand moves in pips and bands. Place counts are never summed into a national number.",
+    },
+  },
+  cy: {
+    htmlLang: "cy", term: "Tymor 2, y 2030au", gen: "Cenhedlaeth 2025 i 2050", langGroup: "Iaith",
+    levelTip: (l, d) => `${l} o 10, ${d > 0 ? "i fyny " + d : d < 0 ? "i lawr " + (-d) : "dim newid"} ers y tymor diwethaf`,
+    pullHint: "Wedi newid oherwydd eich dewis. Cliciwch i dynnu'r edau.",
+    strands: {
+      pro: ["Llewyrchus", "Cymru lewyrchus"], res: ["Cydnerth", "Cymru gydnerth"], hea: ["Iachach", "Cymru iachach"],
+      equ: ["Cyfartal", "Cymru sy'n fwy cyfartal"], coh: ["Cydlynus", "Cymru o gymunedau cydlynus"],
+      cul: ["Diwylliant", "Cymru â diwylliant bywiog lle mae'r Gymraeg yn ffynnu"], glo: ["Byd-eang", "Cymru sy'n gyfrifol ar lefel fyd-eang"],
+    },
+    trust: { name: "Ymddiriedaeth", band: v => v < 40 ? "Isel" : v < 65 ? "Gweddol" : "Uchel", limit: "3 cherdyn y tymor nesaf",
+      tip: "Ymddiriedaeth yw faint mae pobl yn eich credu. Nid nod yw hi: mae'n cyfyngu ar faint o gardiau y gallwch eu chwarae y tymor nesaf. Mae cadw addewidion yn ei chodi." },
+    mapLabel: "Model cerfwedd papur o Gymru", rhLabel: "Model cerfwedd papur o gymoedd y Rhondda",
+    key: { btn: "Allwedd", city: "Dinas", town: "Tref", site: "Diwydiant neu dreftadaeth", tip: "Tomen lo, baich parhaol", risk: "Risg tomenni'n codi", stitched: "Eich gwaith, wedi'i bwytho", peak: "Copa", border: "Ffin cyngor" },
+    regions: { eryri: "Eryri", cambria: "Mynyddoedd Cambria", bannau: "Bannau Brycheiniog", irish: "Môr Iwerddon", bay: "Bae Ceredigion", severn: "Môr Hafren", england: "Lloegr" },
+    place: { eyebrow: "Lle a ddewiswyd", pop: "o bobl", welsh: "yn siarad Cymraeg", approx: "bras, heb ei wirio",
+      hist: "Ar ôl y 1850au gwnaeth glo ager y Rhondda yn un o'r llefydd a gloddiwyd ddwysaf ar y ddaear; caeodd y pyllau dwfn olaf rhwng 1990 a 2008, ac arhosodd y tomenni.",
+      source: "Cyfrifiad 2021, SYG", pull: "Tynnu'r edau", conf: "Hyder canolig" },
+    curve: { kick: "O'r sgan gorwel", title: "Ansefydlogrwydd hinsawdd: degawd gwlyb a stormus", ripple: "Effaith", rippleText: "Yn codi risg tomenni glo" },
+    voice: { q: "Symudodd y domen uwchben yr ysgol eto yn law mis Chwefror. Rydyn ni jyst eisiau gwybod pa un gaiff ei gwneud gyntaf.", who: "Treorci, 2031", tag: "Llais enghreifftiol, nid dyfyniad go iawn" },
+    hand: "Eich llaw", handSub: "Mae ymddiriedaeth yn caniatáu 3 y tymor hwn",
+    card: { plus: "Yn cryfhau", minus: "Yn rhoi straen ar", cost: "Cost", pays: "Yn talu", shortTerm: "tymor byr", heavy: "cost drom", partners: "Angen partneriaid", play: "Chwarae", spent: "CHWARAEWYD 2031" },
+    cards: { peat: "Adfer mawndiroedd yr ucheldir", tips: "Gwneud tomenni glo yn ddiogel", energy: "Ynni dan berchnogaeth gymunedol", child: "Gofal plant cyfrwng Cymraeg" },
+    eras: { past: ["Ddoe", "y gorffennol"], present: ["Heddiw", "y presennol"], future: ["Yfory", "y dyfodol"] },
+    genBoundary: "Ffin cenhedlaeth",
+    foot: "Ffug-gynllun. Gwerthoedd enghreifftiol. Offeryn meddwl, nid rhagolwg.",
+    credit: "Ffiniau ONS (OGL). Tirwedd AWS Terrain Tiles. Rhondda: cyfranwyr OpenStreetMap (ODbL), BGS (OGL), CNC, MALlC 2019.",
+    rh: {
+      title: "Y Rhondda", alt: "Rhondda", hist: "Ar y cledrau: o'r 1850au llanwyd dau gwm cul â phyllau a thai teras; cyrhaeddodd y cynnyrch ei uchafbwynt tua 1913; caeodd pwll olaf y Rhondda, y Maerdy, yn 1990.",
+      check: "i'w wirio", peak: "Cynnyrch glo, siâp enghreifftiol", peakYear: "1913",
+      key: { bld: "Adeilad (OSM)", rail: "Rheilffordd, ar waith", station: "Gorsaf", disused: "Hen lein glofa", bus: "Llwybr bws, gyda rhif", stop: "Arhosfan bws", school: "Ysgol", chapel: "Capel neu eglwys", health: "Meddygfa neu ysbyty", inst: "Stiwt neu neuadd y gweithwyr", flood: "Parth llifogydd 2 neu 3", tipPt: "Tomen, o gofnod tirlithriad BGS", tipPoly: "Amlinell tomen (OSM)", stitch: "Eich edau: wedi'i gwneud yn ddiogel" },
+    },
+    decide: {
+      title: "Gwneud tomenni glo yn ddiogel", sub: "Mae'r arian yn talu am dair tomen y tymor hwn. Mae mwy o domenni nag o edau.",
+      tokens: (n) => `${n} o 3 edau wedi'u gosod`, tipsN: n => `${n} tomen ar y model`,
+      cols: ["Tomen", "Tai islaw", "Beth arall sydd islaw"],
+      flags: { s: ["Y", "Ysgol islaw"], r: ["R", "Rheilffordd neu orsaf islaw"], b: ["B", "Llwybr bws islaw"], f: ["Ll", "Parth llifogydd islaw"], d: ["A", "Y 10% mwyaf difreintiedig yng Nghymru islaw"] },
+      how: "Sut mae hyn yn cael ei gyfrifo?", confirm: "Cadarnhau a phlygu'n ôl i fyny", cancel: "Plygu'n ôl heb chwarae",
+      need: n => n === 3 ? "Yn barod. Mae cadarnhau'n gwario'r cerdyn." : `Gosodwch ${3 - n} edau arall.`,
+      full: "Mae'r tair edau wedi'u gosod. Datodwch un yn gyntaf.",
+    },
+    below: {
+      src: { OSM: "Amlinell tomen OSM", tip_landslide_record: "Cofnod tirlithriad BGS ar domen", landslide_near_tip: "Cofnod tirlithriad BGS ger tomen" },
+      ref: "cyf.", risk: "Risg wedi codi'r degawd hwn oherwydd y degawd gwlyb (enghreifftiol)",
+      res: "Tir tai islaw", ha: v => `${v} ha o dir preswyl`, bld: "Adeiladau wedi'u mapio", bldNote: "olion OSM, anghyflawn yma", schools: "Ysgolion", fac: "Hefyd islaw", rail: "Rheilffordd", bus: "Bysiau", river: "Afon agosaf", flood: "Parth llifogydd islaw", dep: "Cymdogaeth islaw",
+      none: "Dim", busNone: "Dim wedi'u mapio (bylchau yn nata bysiau OSM yma)", stops: n => `${n} arhosfan`,
+      chapels: n => `${n} capel neu eglwys`, health: n => `${n} safle iechyd`, inst: n => `${n} stiwt neu neuadd`, other: n => `${n} arall`,
+      unnamedSchool: "ysgol, dim enw yn OSM", station: "gorsaf", zone: z => `Parth ${z}`, noFlood: "Ddim mewn parth wedi'i fapio",
+      rank: (n, r) => `${n}, safle MALlC ${r} o 1,909`, m: v => `${v} m`,
+      stitch: "Pwytho edau yma", unpick: "Datod yr edau",
+    },
+    rule: {
+      title: "Sut mae “islaw” yn cael ei gyfrifo",
+      plain: d => `Cyfrif beth sydd o fewn ${d} m i'r domen ac o leiaf 10 m yn is na'i gwaelod. Dirprwy bras yw hwn: mae llif go iawn yn dilyn nentydd a llethrau.`,
+      dist: "Pellter", height: "Uchder", heightV: "10 m yn is, sefydlog yma",
+      inputs: "Mewnbynnau ac o ble maen nhw'n dod",
+      src: [
+        "Tomenni: cofnodion Cronfa Ddata Tirlithriadau Genedlaethol BGS sy'n sôn am domen (OGL), ac un domen OSM. Mae'r gofrestr swyddogol o domenni glo segur yn bod, ond nid data agored yw hi, felly ni chaiff ei defnyddio.",
+        "Uchder: AWS Terrain Tiles, wedi'i ailsamplu i 50 m.",
+        "Tai, adeiladau, ysgolion, capeli, rheilffordd, gorsafoedd, bysiau: OpenStreetMap (ODbL). Does dim olion adeiladau eto i lawer o derasau (Treorci, Wattstown, Ynys-hir), felly tir preswyl yw'r canllaw cadarnach. Mae llwybrau bws ar goll yn y Rhondda Fach ac o gwmpas Treherbert.",
+        "Parthau llifogydd: Map Llifogydd ar gyfer Cynllunio CNC (trwydded i'w gwirio).",
+        "Cymdogaethau: Mynegai Amddifadedd Lluosog Cymru 2019 (OGL).",
+      ],
+      conf: "Hyder: Isel. Dirprwy, nid asesiad peirianyddol.",
+    },
+    trace: {
+      title: "Tynnu'r edau", sub: "Pam symudodd Cydnerth un cam",
+      strand: "Llinyn", strandTxt: "Cododd Cydnerth o 4 i 5. Cododd Iachach un cam. Cododd ymddiriedaeth ychydig.",
+      card: "Cerdyn", cardTxt: "Gwneud tomenni glo yn ddiogel, tocyn Rhif 0440, wedi'i chwarae yn 2031. Yn talu ymhen un tymor.",
+      tips: "Y tomenni a ddewisoch", rule: "Rheol a ffynonellau",
+      ruleTxt: d => `Mae islaw yn golygu o fewn ${d} m ac o leiaf 10 m yn is. Hyder isel.`,
+      line: (ha, b, s, r) => `${ha} ha o dai a ${b} adeilad wedi'u mapio islaw${s ? ", ysgol" : ""}${r ? ", y rheilffordd" : ""}`,
+      note: "Mae'r llinyn cenedlaethol yn symud fesul cam a band. Ni chaiff ffigurau lleol eu hadio'n rhif cenedlaethol.",
+    },
+  },
+};
+let lang = new URLSearchParams(location.search).get("lang") === "cy" ? "cy" : "en";
+const L = () => DICT[lang];
+const nm = o => (o && (o[lang] || o.en || o.name)) || "";
+const esc = s => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+
+/* ============ game state (illustrative) ============ */
+const STRANDS = [
+  { id: "pro", lvl: 5, d: -1 }, { id: "res", lvl: 4, d: 1 }, { id: "hea", lvl: 6, d: 0 },
+  { id: "equ", lvl: 4, d: -1 }, { id: "coh", lvl: 6, d: 1 }, { id: "cul", lvl: 7, d: 1 }, { id: "glo", lvl: 5, d: 1 },
+];
+const CARDS = [
+  { id: "peat", no: "0417", plus: ["res", "glo"], minus: [["pro", "shortTerm"]], cost: 2, delay: 2, wv: "a" },
+  { id: "tips", no: "0440", plus: ["res", "hea", "coh"], minus: [["pro", "heavy"]], cost: 4, delay: 1, wv: "d", playable: true },
+  { id: "energy", no: "0463", plus: ["pro", "coh", "glo"], minus: [], note: "partners", cost: 1, delay: 1, wv: "c" },
+  { id: "child", no: "0486", plus: ["cul", "equ"], minus: [["pro", "shortTerm"]], cost: 2, delay: 3, wv: "b" },
+];
+const S = { view: "wales", played: false, tokens: [], sel: null, D: 1000, rule: false, trace: false, zoom: 1, centre: null, trust: 52, busy: false, newPips: [] };
+const sc = id => `var(--s-${id})`;
+const cssv = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+/* ============ paper grain and carthen weave tiles ============ */
+function makeGrain(size, lo, hi, fibres) {
+  const c = document.createElement("canvas"); c.width = c.height = size;
+  const g = c.getContext("2d"), id = g.createImageData(size, size);
+  for (let i = 0; i < size * size; i++) { const v = lo + Math.random() * (hi - lo); id.data[i * 4] = v; id.data[i * 4 + 1] = v; id.data[i * 4 + 2] = v - 2; id.data[i * 4 + 3] = 255; }
+  g.putImageData(id, 0, 0); g.lineCap = "round";
+  for (let i = 0; i < fibres; i++) {
+    const x = Math.random() * size, y = Math.random() * size, a = Math.random() * 6.28, l = 4 + Math.random() * 12;
+    g.strokeStyle = `rgba(${Math.random() < .5 ? "110,100,90" : "255,255,255"},${.12 + Math.random() * .14})`; g.lineWidth = .5 + Math.random() * .6;
+    g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + Math.cos(a + .5) * l * .5, y + Math.sin(a + .5) * l * .5, x + Math.cos(a) * l, y + Math.sin(a) * l); g.stroke();
+  }
+  return c;
+}
+/* a stepped diamond, the commonest Welsh double cloth figure, 12 picks to the repeat */
+function weave(c1, c2, c3) {
+  const n = 12, c = document.createElement("canvas"); c.width = c.height = n; const g = c.getContext("2d");
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    const dx = Math.abs(x - 5.5), dy = Math.abs(y - 5.5), d = Math.floor(dx + dy);
+    g.fillStyle = d <= 1 ? c3 : d <= 3 ? c1 : d <= 5 ? c2 : (dx > 4.6 || dy > 4.6) ? ((x + y) % 2 ? c1 : c2) : c1; g.fillRect(x, y, 1, 1);
+  }
+  return `url(${c.toDataURL()})`;
+}
+const GRAIN = makeGrain(220, 214, 255, 260);
+(() => {
+  const r = document.documentElement.style;
+  r.setProperty("--grain", `url(${makeGrain(160, 236, 255, 120).toDataURL()})`);
+  r.setProperty("--grain-light", `url(${makeGrain(160, 244, 255, 60).toDataURL()})`);
+  const v = n => cssv(n);
+  r.setProperty("--weave-a", weave(v("--bottle"), v("--oat"), v("--mustard")));
+  r.setProperty("--weave-b", weave(v("--charcoal"), v("--oat"), v("--madder")));
+  r.setProperty("--weave-c", weave(v("--navy"), v("--mustard"), v("--oat")));
+  r.setProperty("--weave-d", weave(v("--madder"), v("--oat"), v("--navy")));
+})();
+
+/* ============ small drawn marks ============ */
+const ICON = {
+  peat: `<svg viewBox="0 0 34 34" aria-hidden="true"><rect x="2" y="20" width="30" height="5" fill="#6E5A45"/><rect x="2" y="25" width="30" height="4" fill="#4B3E33"/><rect x="2" y="29" width="30" height="3" fill="#2E2823"/><path d="M2 20h30" stroke="#93A274" stroke-width="2"/><g stroke="#3E4A3A" stroke-width="1.1"><path d="M9 19v-8M14 19v-10M20 19v-7M26 19v-9"/></g><g fill="#FAFAF6" stroke="#9A9A90" stroke-width=".6"><circle cx="9" cy="10" r="2.4"/><circle cx="14" cy="8" r="2.6"/><circle cx="20" cy="11" r="2.2"/><circle cx="26" cy="9" r="2.5"/></g></svg>`,
+  tips: `<svg viewBox="0 0 34 34" aria-hidden="true"><path d="M3 29 L17 8 L31 29Z" fill="#2B2826"/><path d="M8 22h18M12 16h10" stroke="#93A274" stroke-width="2.2"/><path d="M17 8 C19 14 15 20 19 29" stroke="#6F9CB0" stroke-width="1.4" fill="none" stroke-dasharray="2 1.6"/><circle cx="17" cy="19" r="12.5" fill="none" stroke="#2C4E95" stroke-width="1.4" stroke-dasharray="2.5 2"/><path d="M1 30.5h32" stroke="#1F2A30"/></svg>`,
+  energy: `<svg viewBox="0 0 34 34" aria-hidden="true"><path d="M16.2 13 L15.4 32 H18.6 L17.8 13Z" fill="#FAFAF6" stroke="#1F2A30" stroke-width=".9"/><g fill="#FAFAF6" stroke="#1F2A30" stroke-width=".9"><path d="M17 12 L18.4 2.5 L17.9 2.2 Z"/><path d="M17 12 L25.7 15.6 L25.9 15 Z"/><path d="M17 12 L8.6 16.7 L9.1 17.1 Z"/></g><circle cx="17" cy="12" r="1.8" fill="#1F2A30"/><g fill="#5A7B41"><rect x="2" y="27" width="6" height="5"/><path d="M1.5 27 L5 24 L8.5 27Z"/><rect x="26" y="26" width="6" height="6"/><path d="M25.5 26 L29 23 L32.5 26Z"/></g></svg>`,
+  child: `<svg viewBox="0 0 34 34" aria-hidden="true"><rect x="3" y="20" width="12" height="12" fill="#2F5E86"/><rect x="17" y="20" width="12" height="12" fill="#FAFAF6" stroke="#1F2A30" stroke-width=".9"/><rect x="10" y="7" width="12" height="12" fill="#B48A1E"/><path d="M6.5 26.5h5M9 24v5" stroke="#FAFAF6" stroke-width="1.6"/><circle cx="23" cy="26" r="2.6" fill="none" stroke="#1F2A30" stroke-width="1.1"/><path d="M13 15 L16 10 L19 15Z" fill="#FAFAF6"/></svg>`,
+  storm: `<svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true"><path d="M5 9a4 4 0 0 1 1-7.8A5 5 0 0 1 15.5 2 3.6 3.6 0 0 1 17 9Z" fill="#C9D2D4"/><g stroke="#8FB2C2" stroke-width="1.2"><path d="M6 11l-1.5 4M10 11l-1.5 4M14 11l-1.5 4"/></g></svg>`,
+  thread: `<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><rect x="3" y="1.5" width="8" height="2" fill="#7E1A1F"/><rect x="3" y="10.5" width="8" height="2" fill="#7E1A1F"/><rect x="4" y="3.5" width="6" height="7" fill="#B0262C"/><path d="M4 5h6M4 7h6M4 9h6" stroke="#E2585C" stroke-width=".7"/></svg>`,
+};
+function spool(on) {
+  // a thread token: a wound spool of carthen yarn
+  return `<svg width="26" height="30" viewBox="0 0 26 30" aria-hidden="true"><rect x="3" y="2" width="20" height="4" rx="1" fill="#B9A27A"/><rect x="3" y="24" width="20" height="4" rx="1" fill="#B9A27A"/>
+    ${on ? `<rect x="5" y="6" width="16" height="18" fill="#C9CAC3"/><path d="M5 9h16M5 13h16M5 17h16M5 21h16" stroke="#B5B6AE" stroke-width=".8"/>`
+         : `<rect x="5" y="6" width="16" height="18" fill="var(--stitch)"/><path d="M5 8l16 3M5 11l16 3M5 14l16 3M5 17l16 3M5 20l16 3" stroke="#6C88C4" stroke-width=".9"/>`}</svg>`;
+}
+function arrowSvg(d) {
+  if (d > 0) return `<svg width="9" height="8" viewBox="0 0 9 8" aria-hidden="true"><path d="M4.5 .5 L8.5 7.5 H.5Z" fill="var(--s-res)"/></svg>`;
+  if (d < 0) return `<svg width="9" height="8" viewBox="0 0 9 8" aria-hidden="true"><path d="M.5 .5 H8.5 L4.5 7.5Z" fill="var(--thread)"/></svg>`;
+  return `<svg width="9" height="8" viewBox="0 0 9 8" aria-hidden="true"><rect x=".5" y="3" width="8" height="2" fill="var(--ink-3)"/></svg>`;
+}
+/* the player's mark: a ring of carthen cross-stitches */
+function stitchRing(x, y, r, n) {
+  let g = `<g class="stitch" transform="translate(${x.toFixed(1)},${y.toFixed(1)})"><circle r="${r}" fill="none" stroke="#1B3264" stroke-width="2.6" stroke-dasharray="1 ${(2 * Math.PI * r / n - 1).toFixed(2)}" opacity=".0"/>`;
+  for (let i = 0; i < n; i++) {
+    const a = i / n * Math.PI * 2, cx = Math.cos(a) * r, cy = Math.sin(a) * r, k = 2.1;
+    g += `<path d="M${(cx - k).toFixed(1)} ${(cy - k).toFixed(1)}L${(cx + k).toFixed(1)} ${(cy + k).toFixed(1)}M${(cx + k).toFixed(1)} ${(cy - k).toFixed(1)}L${(cx - k).toFixed(1)} ${(cy + k).toFixed(1)}" stroke="#14244A" stroke-width="2.6" stroke-linecap="round"/>`;
+    g += `<path d="M${(cx - k).toFixed(1)} ${(cy - k).toFixed(1)}L${(cx + k).toFixed(1)} ${(cy + k).toFixed(1)}M${(cx + k).toFixed(1)} ${(cy - k).toFixed(1)}L${(cx - k).toFixed(1)} ${(cy + k).toFixed(1)}" stroke="#4A6FBF" stroke-width="1.4" stroke-linecap="round"/>`;
+  }
+  return g + `</g>`;
+}
+
+/* ===================================================================
+   WALES: terrain preparation (as v1)
+   =================================================================== */
+const WD = window.WALES, NX = WD.width, NY = WD.height, ROWS = WD.elevation.rows;
+const LEVELS = [45, 110, 180, 250, 320, 390, 460, 530, 610, 700, 800];
+const LAND = ["#C3CC9F", "#B3BF8E", "#A3B17F", "#94A373", "#A2A170", "#B39C67", "#A9855A", "#93745C", "#7F6A62", "#7A7672", "#959799", "#B4B6B6"];
+const SEA_T = [30, 17, 9, 4, 1.6], SEA_C = ["#8EA7AF", "#9DB4BA", "#AEC3C6", "#BFD0D0", "#CEDCD8"];
+const PADL = 170, PADR = 70, PADT = 40, PADB = 40;
+const WPREP = (() => {
+  const n = NX * NY, el = new Float32Array(n), known = new Uint8Array(n), q = [];
+  for (let y = 0; y < NY; y++) for (let x = 0; x < NX; x++) { const v = ROWS[y][x], i = y * NX + x; if (v >= 0) { el[i] = v; known[i] = 1; q.push(i); } else if (v === -1) { el[i] = -40; known[i] = 2; } }
+  for (let h = 0; h < q.length; h++) { const i = q[h], x = i % NX, y = (i / NX) | 0;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= NX || yy >= NY) continue; const j = yy * NX + xx; if (known[j]) continue; known[j] = 1; el[j] = el[i] * .97; q.push(j); } }
+  const U = 2, UW = NX * U, UH = NY * U, up = new Float64Array(UW * UH);
+  for (let Y = 0; Y < UH; Y++) for (let X = 0; X < UW; X++) {
+    let gx = Math.max(0, Math.min(NX - 1.001, (X + .5) / U - .5)), gy = Math.max(0, Math.min(NY - 1.001, (Y + .5) / U - .5));
+    const x0 = gx | 0, y0 = gy | 0, fx = gx - x0, fy = gy - y0;
+    up[Y * UW + X] = el[y0 * NX + x0] * (1 - fx) * (1 - fy) + el[y0 * NX + x0 + 1] * fx * (1 - fy) + el[(y0 + 1) * NX + x0] * (1 - fx) * fy + el[(y0 + 1) * NX + x0 + 1] * fx * fy;
+  }
+  d3.blur2({ data: up, width: UW, height: UH }, 2.4);
+  const cont = d3.contours().size([UW, UH]), bands = LEVELS.map(t => cont.contour(up, t));
+  const PW = NX + PADL + PADR, PH = NY + PADT + PADB;
+  const cls = (x, y) => { const v = ROWS[Math.max(0, Math.min(NY - 1, y - PADT))][Math.max(0, Math.min(NX - 1, x - PADL))]; return v === -1 ? 0 : v === -2 ? 2 : 1; };
+  const dist = new Float64Array(PW * PH), eng = new Float64Array(PW * PH), C = new Uint8Array(PW * PH);
+  for (let y = 0; y < PH; y++) for (let x = 0; x < PW; x++) { const c = cls(x, y); C[y * PW + x] = c; dist[y * PW + x] = c ? 0 : 1e9; }
+  const R2 = Math.SQRT2;
+  for (let y = 0; y < PH; y++) for (let x = 0; x < PW; x++) { const i = y * PW + x; let v = dist[i];
+    if (x > 0) v = Math.min(v, dist[i - 1] + 1);
+    if (y > 0) { v = Math.min(v, dist[i - PW] + 1); if (x > 0) v = Math.min(v, dist[i - PW - 1] + R2); if (x < PW - 1) v = Math.min(v, dist[i - PW + 1] + R2); } dist[i] = v; }
+  for (let y = PH - 1; y >= 0; y--) for (let x = PW - 1; x >= 0; x--) { const i = y * PW + x; let v = dist[i];
+    if (x < PW - 1) v = Math.min(v, dist[i + 1] + 1);
+    if (y < PH - 1) { v = Math.min(v, dist[i + PW] + 1); if (x < PW - 1) v = Math.min(v, dist[i + PW + 1] + R2); if (x > 0) v = Math.min(v, dist[i + PW - 1] + R2); } dist[i] = v; }
+  const neg = Float64Array.from(dist, v => -v); d3.blur2({ data: neg, width: PW, height: PH }, 1.6);
+  const pc = d3.contours().size([PW, PH]), sea = SEA_T.map(t => pc.contour(neg, -t));
+  for (let y = 0; y < PH; y++) for (let x = 0; x < PW; x++) { let v = 0; const c = C[y * PW + x];
+    if (c === 2) v = 1; else if (c === 1) { outer: for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) { const xx = x + dx, yy = y + dy; if (xx >= 0 && yy >= 0 && xx < PW && yy < PH && C[yy * PW + xx] === 2) { v = 1; break outer; } } }
+    eng[y * PW + x] = v; }
+  d3.blur2({ data: eng, width: PW, height: PH }, .8);
+  return { bands, sea, england: pc.contour(eng, .5), U };
+})();
+const BB = (() => { let b = [1e9, 1e9, -1e9, -1e9]; WD.las.forEach(l => l.rings.forEach(r => r.forEach(([x, y]) => { b[0] = Math.min(b[0], x); b[1] = Math.min(b[1], y); b[2] = Math.max(b[2], x); b[3] = Math.max(b[3], y); }))); return b; })();
+const SEL = WD.las.find(l => l.code === "W06000016") || WD.las.find(l => /Rhondda/.test(l.en));
+const SEL_ANCHOR = [135.2, 217.6];
+const FOLD_AT = [131.5, 206.5]; // the Rhondda, where the national sheet folds
+const WTIPS = [[129.6, 206.2, 1], [133.6, 211.2, .9], [131.0, 203.6, .75], [135.6, 207.2, .7], [135.4, 192.2, 1], [139.6, 197.6, .95], [136.4, 199.8, .7], [147.0, 188.8, .9], [150.8, 194.0, 1], [146.6, 194.8, .7]];
+const WTIP_GROUPS = [[132.4, 207.4, 7], [137.4, 196.4, 6.2], [148.4, 191.8, 5.6]];
+
+function pip(ring, x, y) { let c = false; for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) { const a = ring[i], b = ring[j]; if ((a[1] > y) !== (b[1] > y) && x < (b[0] - a[0]) * (y - a[1]) / (b[1] - a[1]) + a[0]) c = !c; } return c; }
+const laAt = (x, y) => WD.las.find(l => l.rings.some(r => pip(r, x, y)));
+
+/* ============ shared drawing helpers ============ */
+const stage = document.getElementById("stage");
+let VW = null, VR = null;
+const projW = (x, y) => [VW.ox + x * VW.s, VW.oy + y * VW.s];
+const projR = (x, y) => [VR.ox + x * VR.s, VR.oy + y * VR.s];
+const geoPath = (scale, dx, dy) => d3.geoPath(d3.geoTransform({ point(x, y) { this.stream.point(dx + x * scale, dy + y * scale); } }));
+function ringsPath(rings, P, closed = true) {
+  const p = new Path2D();
+  for (const r of rings) { for (let i = 0; i < r.length; i++) { const [px, py] = P(r[i][0], r[i][1]); i ? p.lineTo(px, py) : p.moveTo(px, py); } if (closed) p.closePath(); }
+  return p;
+}
+function sheet(ctx, path, fill, sh, bevel = 1) {
+  ctx.save(); ctx.shadowColor = sh.c; ctx.shadowBlur = sh.b; ctx.shadowOffsetX = sh.x; ctx.shadowOffsetY = sh.y; ctx.fillStyle = fill; ctx.fill(path, "evenodd"); ctx.restore();
+  if (!bevel) return;
+  ctx.save(); ctx.clip(path, "evenodd");
+  ctx.translate(.8, .9); ctx.strokeStyle = "rgba(255,255,255,.32)"; ctx.lineWidth = 1.5; ctx.stroke(path);
+  ctx.translate(-1.6, -1.8); ctx.strokeStyle = "rgba(40,30,20,.16)"; ctx.lineWidth = 1.4; ctx.stroke(path);
+  ctx.restore();
+}
+function grainOver(ctx, W, H, a) { ctx.save(); ctx.globalCompositeOperation = "multiply"; ctx.globalAlpha = a; ctx.fillStyle = ctx.createPattern(GRAIN, "repeat"); ctx.fillRect(0, 0, W, H); ctx.restore(); }
+function newCanvas(W, H, dpr) { const c = document.createElement("canvas"); c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); const g = c.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); return [c, g]; }
+const DPR = () => Math.min(2, window.devicePixelRatio || 1);
+function blit(canvas, src, W, H) { canvas.width = src.width; canvas.height = src.height; canvas.getContext("2d").drawImage(src, 0, 0); }
+
+/* ===================================================================
+   WALES view
+   =================================================================== */
+let WCACHE = null;
+function computeWales() {
+  const W = stage.clientWidth, H = stage.clientHeight;
+  const placeW = document.getElementById("place").offsetWidth || 272;
+  const left = 14 + placeW + 12, right = W - 10, padY = 12;
+  const s = Math.min((H - 2 * padY) / (BB[3] - BB[1]), (right - left) / (BB[2] - BB[0]));
+  return { W, H, s, ox: (left + right) / 2 - ((BB[0] + BB[2]) / 2) * s, oy: H / 2 - ((BB[1] + BB[3]) / 2) * s };
+}
+function drawWales() {
+  VW = computeWales();
+  const { W, H, s, ox, oy } = VW, dpr = DPR(), k = s / 3;
+  const key = `${W}x${H}@${dpr}`;
+  if (!WCACHE || WCACHE.key !== key) {
+    const [cv, ctx] = newCanvas(W, H, dpr);
+    ctx.fillStyle = cssv("--sea-0"); ctx.fillRect(0, 0, W, H);
+    const seaPath = geoPath(s, ox - PADL * s, oy - PADT * s);
+    WPREP.sea.forEach((g, i) => sheet(ctx, new Path2D(seaPath(g)), SEA_C[i], { c: "rgba(20,40,55,.28)", b: 5 * k, x: 1.3 * k, y: 1.8 * k }));
+    grainOver(ctx, W, H, .5);
+    const eng = new Path2D(seaPath(WPREP.england));
+    sheet(ctx, eng, "#E9E9E3", { c: "rgba(20,35,40,.4)", b: 7 * k, x: 2.4 * k, y: 3.2 * k });
+    const [tc, t] = newCanvas(W, H, dpr);
+    const wales = ringsPath(WD.las.flatMap(l => l.rings), projW), elevPath = geoPath(s / WPREP.U, ox, oy);
+    t.save(); t.shadowColor = "rgba(15,30,35,.5)"; t.shadowBlur = 8 * k; t.shadowOffsetX = 2.8 * k; t.shadowOffsetY = 3.8 * k; t.fillStyle = LAND[0]; t.fill(wales); t.restore();
+    t.save(); t.clip(wales);
+    WPREP.bands.forEach((g, i) => sheet(t, new Path2D(elevPath(g)), LAND[i + 1], { c: "rgba(40,30,20,.42)", b: 4 * k, x: 1.8 * k, y: 2.5 * k }));
+    t.globalCompositeOperation = "multiply"; t.globalAlpha = .38; t.fillStyle = t.createPattern(GRAIN, "repeat"); t.fillRect(0, 0, W, H); t.restore();
+    t.save(); t.clip(wales); t.translate(.7, .8); t.strokeStyle = "rgba(255,255,255,.45)"; t.lineWidth = 1.4; t.stroke(wales); t.restore();
+    ctx.drawImage(tc, 0, 0, W, H);
+    WD.las.forEach(l => { const p = ringsPath(l.rings, projW); ctx.save(); ctx.clip(wales);
+      ctx.translate(.6, .6); ctx.strokeStyle = "rgba(255,255,255,.55)"; ctx.lineWidth = .8; ctx.stroke(p);
+      ctx.translate(-.6, -.6); ctx.strokeStyle = "rgba(38,40,38,.5)"; ctx.lineWidth = .7; ctx.setLineDash([2.2, 1.4]); ctx.stroke(p); ctx.restore(); });
+    const sel = ringsPath(SEL.rings, projW), lx = -3.2 * k, ly = -4.8 * k;
+    ctx.save(); ctx.translate(lx, ly); ctx.shadowColor = "rgba(15,20,20,.6)"; ctx.shadowBlur = 12 * k; ctx.shadowOffsetX = 5 * k; ctx.shadowOffsetY = 7 * k;
+    ctx.fillStyle = LAND[3]; ctx.fill(sel); ctx.shadowColor = "transparent";
+    ctx.save(); ctx.clip(sel); ctx.drawImage(tc, 0, 0, W, H); ctx.fillStyle = "rgba(255,250,240,.16)"; ctx.fillRect(0, 0, W, H); ctx.restore();
+    ctx.lineJoin = "round"; ctx.shadowColor = "rgba(60,10,10,.45)"; ctx.shadowBlur = 2; ctx.shadowOffsetX = .8; ctx.shadowOffsetY = 1.2;
+    ctx.strokeStyle = "#B0262C"; ctx.lineWidth = 2.4; ctx.stroke(sel); ctx.shadowColor = "transparent";
+    ctx.strokeStyle = "rgba(110,15,20,.7)"; ctx.setLineDash([1.3, 2.1]); ctx.stroke(sel);
+    ctx.strokeStyle = "rgba(255,150,150,.55)"; ctx.lineWidth = .6; ctx.setLineDash([2, 1.4]); ctx.stroke(sel); ctx.restore();
+    WCACHE = { key, canvas: cv, lift: [lx, ly] };
+  }
+  VW.lift = WCACHE.lift;
+  const c = document.getElementById("cWales"); blit(c, WCACHE.canvas, W, H);
+  c.setAttribute("role", "img"); c.setAttribute("aria-label", L().mapLabel);
+}
+
+const TOWN_LBL = { "Cardiff": [8, 13, "start"], "Swansea": [-8, -3, "end"], "Newport": [8, 4, "start"], "Wrexham": [7, 4, "start"], "Bangor": [-6, -6, "end"], "St Davids": [-2, 14, "start"], "Merthyr Tydfil": [-8, -7, "end"], "Aberystwyth": [-7, 4, "end"], "Carmarthen": [0, -9, "middle"], "Llandrindod Wells": [7, 4, "start"], "Holyhead": [-7, 4, "end"], "Pembroke Dock": [0, 14, "middle"], "Rhyl": [0, -8, "middle"], "Bridgend": [-6, 12, "end"], "Blaenau Ffestiniog": [7, 4, "start"], "Port Talbot": [-3, 14, "end"], "Tonypandy": [-8, 8, "end"], "Ebbw Vale": [5, -8, "start"], "Newtown": [7, 4, "start"], "Caernarfon": [-7, 4, "end"], "Llanelli": [-6, -5, "end"], "Brecon": [7, 2, "start"], "Dolgellau": [7, 1, "start"], "Bethesda": [7, 2, "start"], "Machynlleth": [7, 4, "start"] };
+const SITE_HEAD = { "Blaenavon industrial landscape": [9, -9], "Big Pit": [10, 6], "Penrhyn slate quarry": [10, 8], "Dinorwig power station": [-10, 3], "Hafod-Morfa copperworks": [3, -11], "Port Talbot steelworks": [9, 6], "Parys Mountain copper mine": [0, -11], "Pontcysyllte Aqueduct": [-9, 6], "Gwynt y Môr wind farm": [0, 9], "Llyn Celyn (Tryweryn)": [7, 9] };
+const PEAK_LBL = { "Snowdon": [7, 10, "start"], "Pen y Fan": [-7, 9, "end"], "Cadair Idris": [-7, 8, "end"], "Plynlimon": [7, 5, "start"] };
+function siteGlyph(kind) {
+  const s = 'stroke="#1F2A30" stroke-width="1" fill="none" stroke-linecap="round" stroke-linejoin="round"';
+  return ({
+    coal: `<path d="M-3 3.2 L0 -3 L3 3.2 M-1.9 1 H1.9" ${s}/><circle cx="0" cy="-3" r="1.2" ${s}/>`,
+    slate: `<path d="M-3.4 -1.6 L2.6 -2.8 M-3 .6 L3 -.6 M-2.6 2.8 L3.4 1.6" ${s}/>`,
+    copper: `<path d="M0 -3.4 L3.2 2.6 H-3.2Z" fill="#A9643A" stroke="#1F2A30" stroke-width=".8"/>`,
+    steel: `<path d="M-3 -3 H3 M-3 3 H3 M0 -3 V3" ${s} stroke-width="1.3"/>`,
+    energy: `<path d="M0 0 L0 -3.6 M0 0 L3.1 1.8 M0 0 L-3.1 1.8" ${s}/><circle r=".9" fill="#1F2A30"/>`,
+    heritage: `<path d="M-3.2 3 V-.6 A3.2 3.2 0 0 1 3.2 -.6 V3 M-1.2 3 V.4 A1.2 1.2 0 0 1 1.2 .4 V3" ${s}/>`,
+    water: `<path d="M-3.4 -1 q1.7 -1.6 3.4 0 t3.4 0 M-3.4 2 q1.7 -1.6 3.4 0 t3.4 0" ${s}/>`,
+  })[kind] || "";
+}
+function house(x, y, w, h, city) {
+  const a = w / 2, r = h * .42;
+  return `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)})" filter="url(#sh)"><path d="M${-a} ${h / 2} V${-h / 2 + r} L0 ${-h / 2} L0 ${h / 2}Z" fill="#FFF"/><path d="M0 ${-h / 2} L${a} ${-h / 2 + r} V${h / 2} H0Z" fill="${city ? "#1F2A30" : "#C2C3BB"}"/><path d="M${-a} ${h / 2} V${-h / 2 + r} L0 ${-h / 2} L${a} ${-h / 2 + r} V${h / 2}Z" fill="none" stroke="#1F2A30" stroke-width=".7" stroke-linejoin="round"/></g>`;
+}
+function tipMark(x, y, r) {
+  const cols = ["#1F1C1A", "#342F2B", "#4B443E", "#655C54", "#81776D"];
+  let g = `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)})" filter="url(#rough)">`;
+  for (let i = 0; i < 5; i++) { const rr = r * (1 - i * .19); g += `<ellipse cx="${(-i * r * .17).toFixed(1)}" cy="${(-i * r * .25).toFixed(1)}" rx="${rr.toFixed(2)}" ry="${(rr * .78).toFixed(2)}" fill="${cols[i]}" stroke="${i ? "rgba(140,130,120,.35)" : "#141211"}" stroke-width="${i ? .5 : .7}"/>`; }
+  return g + `</g>`;
+}
+const SVG_DEFS = `<defs>
+  <filter id="sh" x="-50%" y="-50%" width="220%" height="220%"><feDropShadow dx="1.1" dy="1.5" stdDeviation=".8" flood-color="#20261F" flood-opacity=".5"/></filter>
+  <filter id="rough" x="-60%" y="-60%" width="240%" height="240%"><feTurbulence type="fractalNoise" baseFrequency=".75" numOctaves="2" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="2.1" xChannelSelector="R" yChannelSelector="G" result="d"/><feDropShadow in="d" dx="1.6" dy="2.2" stdDeviation="1.1" flood-color="#120F0C" flood-opacity=".6"/></filter>
+  <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx=".8" dy="1.4" stdDeviation="1" flood-color="#3A0A0C" flood-opacity=".45"/></filter>
+  <filter id="lift" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="1.5" dy="2.2" stdDeviation="1.4" flood-color="#10141A" flood-opacity=".45"/></filter>
+</defs>`;
+const SVG_STYLE = `<style>
+  text{font-family:"Familjen Grotesk",sans-serif;paint-order:stroke;stroke-linejoin:round}
+  .tn{font-size:11.5px;font-weight:500;fill:#1F2A30;stroke:rgba(246,246,240,.88);stroke-width:3px}
+  .tn.city{font-size:13px;font-weight:700}
+  .pk{font-family:"Newsreader",serif;font-style:italic;font-size:12.5px;fill:#2A2522;stroke:rgba(240,238,230,.8);stroke-width:2.6px}
+  .rg{font-family:"Newsreader",serif;font-style:italic;letter-spacing:.06em;fill:rgba(40,35,30,.62);stroke:rgba(236,232,220,.45);stroke-width:2.4px;text-anchor:middle}
+  .sea{font-family:"Newsreader",serif;font-style:italic;letter-spacing:.12em;fill:rgba(32,62,74,.72);text-anchor:middle}
+  .eng{font-size:12px;letter-spacing:.2em;fill:rgba(60,64,60,.55);text-anchor:middle}
+  .pl{font-size:12px;font-weight:600;fill:#1F2A30;stroke:rgba(246,246,240,.9);stroke-width:3px}
+  .pl.big{font-size:13.5px;font-weight:700}
+  .pl.small{font-size:10.5px;font-weight:500;fill:#3B464D}
+  .st{font-size:10.5px;font-weight:600;fill:#1F2A30;stroke:rgba(246,246,240,.9);stroke-width:2.6px}
+  .rt{font-size:9.5px;font-weight:700;fill:#fff;stroke:none}
+  .tg{font-size:10.5px;font-weight:700;fill:#FAFAF6;stroke:none}
+  .river{font-family:"Newsreader",serif;font-style:italic;font-size:11.5px;fill:#2E5C70;stroke:rgba(240,240,232,.8);stroke-width:2.4px}
+</style>`;
+
+function drawWalesOverlay() {
+  const { W, H, s } = VW, D = L(), P = projW, ov = document.getElementById("oWales");
+  ov.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  let o = "";
+  const lab = (x, y, txt, cls, fs) => { const [px, py] = P(x, y); return `<text class="${cls}" x="${px.toFixed(1)}" y="${py.toFixed(1)}" style="font-size:${fs.toFixed(1)}px">${esc(txt)}</text>`; };
+  const rf = Math.max(13, s * 5.2), sf = Math.max(14, s * 5.6);
+  o += lab(103, 70, D.regions.eryri, "rg", rf) + lab(122, 131, D.regions.cambria, "rg", rf) + lab(110, 170, D.regions.bannau, "rg", rf);
+  o += lab(14, 34, D.regions.irish, "sea", sf) + lab(52, 110, D.regions.bay, "sea", sf) + lab(104, 232, D.regions.severn, "sea", sf) + lab(187, 95, D.regions.england, "eng", 12);
+  // red thread from the selected place to its card
+  const pl = document.getElementById("place"), sr = stage.getBoundingClientRect(), pr = pl.getBoundingClientRect();
+  const [sx0, sy0] = P(SEL_ANCHOR[0], SEL_ANCHOR[1]), sx = sx0 + VW.lift[0], sy = sy0 + VW.lift[1];
+  const ex = pr.right - sr.left + 1, ey = pr.top - sr.top + pr.height * .3;
+  pl.style.setProperty("--pin-y", `${(pr.height * .3 - 4).toFixed(0)}px`);
+  const th = `M${sx.toFixed(1)},${sy.toFixed(1)} Q${((sx + ex) / 2).toFixed(1)},${(Math.max(sy, ey) + 46).toFixed(1)} ${ex.toFixed(1)},${ey.toFixed(1)}`;
+  o += `<g filter="url(#soft)"><path d="${th}" fill="none" stroke="#B0262C" stroke-width="1.8" stroke-linecap="round"/><path d="${th}" fill="none" stroke="#6E1418" stroke-width="1.8" stroke-dasharray="1.2 2.2" opacity=".7"/></g>`;
+  WTIP_GROUPS.forEach(([x, y, r]) => { const [px, py] = P(x, y); o += `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="${(r * s).toFixed(1)}" fill="rgba(201,138,43,.13)" stroke="#C98A2B" stroke-width="1.3" stroke-dasharray="3 2.4"/>`; });
+  WTIPS.forEach(([x, y, z]) => { const [px, py] = P(x, y); o += tipMark(px, py, 6 * z * Math.max(.8, s / 3)); });
+  if (S.played) { // your three tips, stitched on the national sheet
+    const m = S.tokens.map(i => TIPS[i]); const cx = d3.mean(m, t => t.x), cy = d3.mean(m, t => t.y);
+    const [px, py] = P(cx, cy); o += stitchRing(px + VW.lift[0], py + VW.lift[1], 13, 12);
+  }
+  WD.peaks.forEach(p => { const [px, py] = P(p.x, p.y), [dx, dy, a] = PEAK_LBL[p.en] || [7, 4, "start"];
+    o += `<path d="M${px - 3.6} ${py + 2.6} L${px} ${py - 3.6} L${px + 3.6} ${py + 2.6}Z" fill="#1F2A30" stroke="#FBFBF8" stroke-width=".8" filter="url(#sh)"/><text class="pk" x="${(px + dx).toFixed(1)}" y="${(py + dy).toFixed(1)}" text-anchor="${a}">${esc(nm(p))}</text>`; });
+  WD.sites.forEach(t => { const [px, py] = P(t.x, t.y), [hx, hy] = SITE_HEAD[t.en] || [0, -10];
+    o += `<g><title>${esc(nm(t))}</title><line x1="${px.toFixed(1)}" y1="${py.toFixed(1)}" x2="${(px + hx).toFixed(1)}" y2="${(py + hy).toFixed(1)}" stroke="#3A4247" stroke-width=".9"/><circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="1.1" fill="#3A4247"/><g transform="translate(${(px + hx).toFixed(1)},${(py + hy).toFixed(1)})" filter="url(#sh)"><circle r="6.2" fill="#FBFBF8" stroke="#1F2A30" stroke-width=".7"/>${siteGlyph(t.kind)}</g></g>`; });
+  WD.towns.forEach(t => { const [px, py] = P(t.x, t.y), c = t.kind === "city"; o += house(px, py, c ? 11 : 8, c ? 9 : 7, c); });
+  WD.towns.forEach(t => { const [px, py] = P(t.x, t.y), c = t.kind === "city", [dx, dy, a] = TOWN_LBL[t.en] || [7, 4, "start"];
+    o += `<text class="${c ? "tn city" : "tn"}" x="${(px + dx).toFixed(1)}" y="${(py + dy).toFixed(1)}" text-anchor="${a}">${esc(nm(t))}</text>`; });
+  o += `<circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="3.4" fill="#B0262C" stroke="#6E1418" stroke-width=".8" filter="url(#soft)"/>`;
+  ov.innerHTML = SVG_STYLE + SVG_DEFS + o;
+}
+
+/* ===================================================================
+   RHONDDA: data preparation (once, deferred so the first view is quick)
+   =================================================================== */
+const RH = window.RHONDDA, EG = RH.elevation, EX0 = EG.x0, EY0 = EG.y0, EC = EG.cellKm, EW = EG.width, EHh = EG.height;
+const RBB = RH.bbox;
+function elevAt(x, y) {
+  let gx = (x - EX0) / EC - .5, gy = (y - EY0) / EC - .5;
+  gx = Math.max(0, Math.min(EW - 1.001, gx)); gy = Math.max(0, Math.min(EHh - 1.001, gy));
+  const x0 = gx | 0, y0 = gy | 0, fx = gx - x0, fy = gy - y0, R = EG.rows;
+  return R[y0][x0] * (1 - fx) * (1 - fy) + R[y0][x0 + 1] * fx * (1 - fy) + R[y0 + 1][x0] * (1 - fx) * fy + R[y0 + 1][x0 + 1] * fx * fy;
+}
+const RLEVELS = d3.range(80, 600, 22.5); // 23 sheets: finer than the national model
+const RCOL = (() => { const f = d3.interpolateRgbBasis(["#C3CDA0", "#B5C18F", "#A8B581", "#A3AC77", "#B0A875", "#B8A070", "#B0926B", "#A08872", "#968C84"]); return d3.range(RLEVELS.length + 1).map(i => f(i / RLEVELS.length)); })();
+const BUS_COL = { "120": "#9C3B30", "122": "#2B3F63", "130": "#B8861E", "83": "#2F5B45", "9": "#7A4E7E", "89": "#2D7A7A" };
+let RP = null; // prepared Rhondda data
+let TIPS = [];
+
+function prepRhondda() {
+  if (RP) return RP;
+  const vals = new Float64Array(EW * EHh); for (let y = 0; y < EHh; y++) for (let x = 0; x < EW; x++) vals[y * EW + x] = EG.rows[y][x];
+  d3.blur2({ data: vals, width: EW, height: EHh }, 1);
+  const cont = d3.contours().size([EW, EHh]), bands = RLEVELS.map(t => cont.contour(vals, t));
+  // flood raster at 25 m, painted once
+  const FS = 2, fc = document.createElement("canvas"); fc.width = EW * FS; fc.height = EHh * FS; const fg = fc.getContext("2d");
+  const fpx = (x, y) => [(x - EX0) / EC * FS, (y - EY0) / EC * FS];
+  for (const z of ["Flood Zone 2", "Flood Zone 3"]) { fg.fillStyle = z.endsWith("3") ? "rgb(220,0,0)" : "rgb(100,0,0)";
+    RH.flood.filter(f => f.zone === z).forEach(f => { const p = new Path2D(); f.rings.forEach(r => { r.forEach((pt, i) => { const [a, b] = fpx(pt[0], pt[1]); i ? p.lineTo(a, b) : p.moveTo(a, b); }); p.closePath(); }); fg.fill(p, "evenodd"); }); }
+  fg.fillStyle = "rgb(0,0,0)";
+  const fd = fg.getImageData(0, 0, fc.width, fc.height).data;
+  const rc = document.createElement("canvas"); rc.width = EW * FS; rc.height = EHh * FS; const rg = rc.getContext("2d"); rg.fillStyle = "rgb(0,200,0)";
+  RH.landuse.filter(l => l.class === "residential").forEach(l => { const p = new Path2D(); l.rings.forEach(r => { r.forEach((pt, i) => { const [a, b] = fpx(pt[0], pt[1]); i ? p.lineTo(a, b) : p.moveTo(a, b); }); p.closePath(); }); rg.fill(p, "evenodd"); });
+  const rd = rg.getImageData(0, 0, rc.width, rc.height).data;
+  const resAt = (x, y) => { const [a, b] = fpx(x, y); if (a < 0 || b < 0 || a >= rc.width || b >= rc.height) return 0; return rd[((b | 0) * rc.width + (a | 0)) * 4 + 1] > 100 ? 1 : 0; };
+  const floodAt = (x, y) => { const [a, b] = fpx(x, y), i = ((b | 0) * fc.width + (a | 0)) * 4; if (a < 0 || b < 0 || a >= fc.width || b >= fc.height) return 0; const r = fd[i]; return r > 160 ? 3 : r > 60 ? 2 : 0; };
+  // neighbourhoods
+  const lsoa = RH.lsoas.map(l => { let b = [1e9, 1e9, -1e9, -1e9]; l.polys.forEach(p => p[0].forEach(([x, y]) => { b[0] = Math.min(b[0], x); b[1] = Math.min(b[1], y); b[2] = Math.max(b[2], x); b[3] = Math.max(b[3], y); })); return { ...l, bb: b }; });
+  const lsoaAt = (x, y) => { for (let i = 0; i < lsoa.length; i++) { const l = lsoa[i], b = l.bb; if (x < b[0] || x > b[2] || y < b[1] || y > b[3]) continue; if (l.polys.some(p => { let c = false; p.forEach(r => { if (pip(r, x, y)) c = !c; }); return c; })) return i; } return -1; };
+  const bld = RH.buildings.map(r => { let x = 0, y = 0; r.forEach(p => { x += p[0]; y += p[1]; }); x /= r.length; y /= r.length; return { x, y, z: elevAt(x, y), l: -1, f: 0 }; });
+  bld.forEach(b => { b.l = lsoaAt(b.x, b.y); b.f = floodAt(b.x, b.y); });
+  const fac = RH.facilities.map(f => ({ ...f, z: elevAt(f.x, f.y) }));
+  const stops = RH.busStops.map(f => ({ ...f, z: elevAt(f.x, f.y) }));
+  const stations = RH.stations.filter(s => s.kind === "rail_station").map(f => ({ ...f, z: elevAt(f.x, f.y) }));
+  const segs = (lines, tag) => { const out = []; lines.forEach(ln => { for (let i = 1; i < ln.pts.length; i++) out.push({ a: ln.pts[i - 1], b: ln.pts[i], tag: tag(ln) }); }); return out; };
+  const railSegs = segs(RH.rail.filter(r => r.status === "active"), r => r.name || "Rhondda Line");
+  const busSegs = []; RH.busRoutes.forEach(br => br.lines.forEach(l => { for (let i = 1; i < l.length; i++) busSegs.push({ a: l[i - 1], b: l[i], tag: br.ref }); }));
+  const riverSegs = segs(RH.rivers.filter(r => r.kind === "river" && r.name), r => r.name);
+  // tips: one record each, numbered north to south
+  TIPS = RH.tips.map(t => {
+    const clean = (t.attrs && t.attrs.name ? t.attrs.name : "").replace(/\s*\(.*?\)\s*/g, " ").replace(/"/g, "").replace(/\s+/g, " ").trim();
+    let base = elevAt(t.x, t.y);
+    if (t.rings) t.rings[0].forEach(([x, y]) => { base = Math.min(base, elevAt(x, y)); });
+    const la = laAt(t.x, t.y);
+    return { ...t, nameEn: clean || "Spoil heap above Llwynypia", nameCy: clean || "Tomen uwchben Llwynypia", base, la };
+  }).sort((a, b) => a.y - b.y).map((t, i) => ({ ...t, n: i + 1 }));
+  TIPS.forEach(t => { // nearest named river
+    let best = 1e9, nmR = ""; riverSegs.forEach(sg => { const [d] = segDist(t.x, t.y, sg.a, sg.b); if (d < best) { best = d; nmR = sg.tag; } }); t.river = { name: nmR, m: Math.round(best * 1000 / 10) * 10 };
+  });
+  RP = { bands, bld, fac, stops, stations, railSegs, busSegs, lsoa, floodAt, resAt };
+  computeBelow();
+  return RP;
+}
+function segDist(px, py, a, b) {
+  const dx = b[0] - a[0], dy = b[1] - a[1], L2 = dx * dx + dy * dy; let t = L2 ? ((px - a[0]) * dx + (py - a[1]) * dy) / L2 : 0; t = Math.max(0, Math.min(1, t));
+  const x = a[0] + t * dx, y = a[1] + t * dy; return [Math.hypot(px - x, py - y), x, y];
+}
+/* the model rule: within D of the tip and at least 10 m lower than its base */
+const DROP = 10;
+function computeBelow() {
+  const Dk = S.D / 1000;
+  TIPS.forEach(t => {
+    const ok = (x, y, z) => Math.hypot(x - t.x, y - t.y) <= Dk && (z == null ? elevAt(x, y) : z) < t.base - DROP;
+    const B = { bld: 0, lsoaMin: null, schools: [], chapels: 0, health: 0, inst: [], other: 0, rail: new Set(), stations: [], bus: new Set(), stops: 0, flood: 0 };
+    const lsCount = {};
+    RP.bld.forEach(b => { if (Math.abs(b.x - t.x) > Dk || Math.abs(b.y - t.y) > Dk) return; if (!ok(b.x, b.y, b.z)) return; B.bld++; if (b.l >= 0) lsCount[b.l] = (lsCount[b.l] || 0) + 1; if (b.f > B.flood) B.flood = b.f; });
+    // flood zone among the low ground itself, sampled on the 50 m grid
+    B.resHa = 0;
+    for (let y = t.y - Dk; y <= t.y + Dk; y += .05) for (let x = t.x - Dk; x <= t.x + Dk; x += .05) { if (ok(x, y)) { const f = RP.floodAt(x, y); if (f > B.flood) B.flood = f; if (RP.resAt(x, y)) B.resHa += .25; } }
+    Object.keys(lsCount).forEach(i => { const l = RP.lsoa[i]; if (lsCount[i] >= 3 && (!B.lsoaMin || l.wimdRank < B.lsoaMin.wimdRank)) B.lsoaMin = l; });
+    RP.fac.forEach(f => { if (!ok(f.x, f.y, f.z)) return;
+      if (f.kind === "school") B.schools.push(f); else if (f.kind === "place_of_worship") B.chapels++; else if (["doctors", "clinic", "hospital"].includes(f.kind)) B.health++; else if (f.kind === "institute") B.inst.push(f); else B.other++; });
+    RP.stations.forEach(s => { if (ok(s.x, s.y, s.z)) B.stations.push(s); });
+    RP.stops.forEach(s => { if (ok(s.x, s.y, s.z)) B.stops++; });
+    RP.railSegs.forEach(sg => { const [d, x, y] = segDist(t.x, t.y, sg.a, sg.b); if (d <= Dk && elevAt(x, y) < t.base - DROP) B.rail.add(sg.tag); });
+    RP.busSegs.forEach(sg => { const [d, x, y] = segDist(t.x, t.y, sg.a, sg.b); if (d <= Dk && elevAt(x, y) < t.base - DROP) B.bus.add(sg.tag); });
+    t.B = B;
+  });
+}
+
+/* ===================================================================
+   RHONDDA view drawing, cached per zoom and centre
+   =================================================================== */
+const RCACHE = new Map();
+function computeRh() {
+  const W = stage.clientWidth, H = stage.clientHeight;
+  const colW = (document.getElementById("rcol").offsetWidth || 206) + 12;
+  const left = 12 + colW, right = W - 8, top = 8, bottom = H - 8;
+  // fit the valleys to the height; if too wide, keep the eastern valleys whole and tuck the far west under the notes
+  const s0 = (bottom - top) / (RBB.y1 - RBB.y0), w0 = (RBB.x1 - RBB.x0) * s0;
+  const ox0 = w0 <= right - left ? (left + right) / 2 - (RBB.x0 + RBB.x1) / 2 * s0 : right - RBB.x1 * s0;
+  const oy0 = (top + bottom) / 2 - (RBB.y0 + RBB.y1) / 2 * s0;
+  if (S.zoom <= 1 || !S.centre) return { W, H, s: s0, ox: ox0, oy: oy0, s0, ox0, oy0 };
+  const s = s0 * S.zoom, mx = (left + right) / 2, my = (top + bottom) / 2;
+  return { W, H, s, ox: mx - S.centre[0] * s, oy: my - S.centre[1] * s, s0, ox0, oy0 };
+}
+function warmRhondda() { // render the valley sheet ahead of time, so the fold starts the moment the card is played
+  prepRhondda(); renderRhPieces(); const keep = VR; drawRhondda(true); VR = keep;
+}
+function drawRhondda(cacheOnly) {
+  prepRhondda();
+  VR = computeRh();
+  const { W, H, s, ox, oy } = VR, dpr = DPR(), key = `${W}x${H}@${dpr}:${s.toFixed(2)}:${ox.toFixed(1)},${oy.toFixed(1)}`;
+  let cv = RCACHE.get(key);
+  if (!cv) {
+    let ctx; [cv, ctx] = newCanvas(W, H, dpr);
+    const P = projR, k = Math.min(1.6, s / 50);
+    // the base board beyond the surveyed block: plain unpainted card
+    ctx.fillStyle = "#DDDCD4"; ctx.fillRect(0, 0, W, H); grainOver(ctx, W, H, .45);
+    const [bx0, by0] = P(RBB.x0, RBB.y0), [bx1, by1] = P(RBB.x1, RBB.y1), block = new Path2D(); block.rect(bx0, by0, bx1 - bx0, by1 - by0);
+    sheet(ctx, block, RCOL[0], { c: "rgba(20,25,25,.45)", b: 10, x: 4, y: 6 }, 0);
+    ctx.save(); ctx.clip(block);
+    const ep = geoPath(s * EC, ox + EX0 * s, oy + EY0 * s);
+    RP.bands.forEach((g, i) => sheet(ctx, new Path2D(ep(g)), RCOL[i + 1], { c: "rgba(40,30,20,.32)", b: 3.2 * k, x: 1.3 * k, y: 1.9 * k }));
+    grainOver(ctx, W, H, .4);
+    // woodland: a darker, slightly felted paper
+    const wood = new Path2D(); RH.landuse.filter(l => l.class === "woodland").forEach(l => wood.addPath(ringsPath(l.rings, P)));
+    ctx.save(); ctx.globalCompositeOperation = "multiply"; ctx.fillStyle = "rgba(78,104,66,.26)"; ctx.fill(wood, "evenodd"); ctx.restore();
+    // where people live: residential land as a pale card, so terraces read even where OSM has no footprints yet
+    const res = new Path2D(); RH.landuse.filter(l => l.class === "residential").forEach(l => res.addPath(ringsPath(l.rings, P)));
+    ctx.save(); ctx.fillStyle = "rgba(238,234,222,.62)"; ctx.fill(res, "evenodd"); ctx.strokeStyle = "rgba(120,110,95,.35)"; ctx.lineWidth = .6; ctx.stroke(res); ctx.restore();
+    // flood zones: faint blue tracing with a fine hatch
+    const hc = document.createElement("canvas"); hc.width = hc.height = 8; const hg = hc.getContext("2d"); hg.strokeStyle = "rgba(60,110,150,.55)"; hg.lineWidth = 1; hg.beginPath(); hg.moveTo(0, 8); hg.lineTo(8, 0); hg.stroke();
+    const fl = new Path2D(); RH.flood.forEach(f => fl.addPath(ringsPath(f.rings, P)));
+    ctx.save(); ctx.fillStyle = "rgba(150,190,215,.32)"; ctx.fill(fl, "evenodd"); ctx.fillStyle = ctx.createPattern(hc, "repeat"); ctx.globalAlpha = .7; ctx.fill(fl, "evenodd"); ctx.restore();
+    // water
+    const wat = new Path2D(); RH.water.forEach(w => wat.addPath(ringsPath(w.rings, P)));
+    sheet(ctx, wat, "#9DB9C4", { c: "rgba(20,40,50,.0)", b: 0, x: 0, y: 0 });
+    // rivers and streams
+    const line = (pts) => ringsPath([pts], P, false);
+    ctx.save(); ctx.lineCap = "round"; ctx.lineJoin = "round";
+    const streams = new Path2D(), rivers = new Path2D();
+    RH.rivers.forEach(r => (r.kind === "river" ? rivers : streams).addPath(line(r.pts)));
+    ctx.strokeStyle = "rgba(60,105,130,.42)"; ctx.lineWidth = .7 * k; ctx.stroke(streams);
+    ctx.strokeStyle = "#4D7F96"; ctx.lineWidth = 2 * k; ctx.stroke(rivers); ctx.strokeStyle = "rgba(190,220,232,.7)"; ctx.lineWidth = .6 * k; ctx.stroke(rivers);
+    // roads: scored into the paper
+    const byC = {}; RH.roads.forEach(r => { (byC[r.class] = byC[r.class] || new Path2D()).addPath(line(r.pts)); });
+    if (byC.path) { ctx.setLineDash([1.5, 2.5]); ctx.strokeStyle = "rgba(90,70,50,.35)"; ctx.lineWidth = .6; ctx.stroke(byC.path); if (byC.track) ctx.stroke(byC.track); ctx.setLineDash([]); }
+    if (byC.service) { ctx.strokeStyle = "rgba(250,248,240,.5)"; ctx.lineWidth = .6 * k; ctx.stroke(byC.service); }
+    ["residential", "minor"].forEach(c => { if (!byC[c]) return; ctx.strokeStyle = "rgba(70,60,50,.35)"; ctx.lineWidth = 1.5 * k; ctx.stroke(byC[c]); ctx.strokeStyle = "rgba(252,250,244,.85)"; ctx.lineWidth = .9 * k; ctx.stroke(byC[c]); });
+    if (byC.major) { ctx.strokeStyle = "rgba(60,50,40,.5)"; ctx.lineWidth = 3 * k; ctx.stroke(byC.major); ctx.strokeStyle = "#F2EBD8"; ctx.lineWidth = 2 * k; ctx.stroke(byC.major); }
+    // old colliery lines: faint dashes
+    const old = new Path2D(); RH.rail.filter(r => r.status !== "active").forEach(r => old.addPath(line(r.pts)));
+    ctx.setLineDash([3, 2.5]); ctx.strokeStyle = "rgba(50,45,40,.42)"; ctx.lineWidth = 1; ctx.stroke(old); ctx.setLineDash([]);
+    // buildings: 13,868 tiny raised blocks, one path, one shadow
+    const bp = new Path2D(); RH.buildings.forEach(r => { for (let i = 0; i < r.length; i++) { const x = ox + r[i][0] * s, y = oy + r[i][1] * s; i ? bp.lineTo(x, y) : bp.moveTo(x, y); } bp.closePath(); });
+    ctx.save(); ctx.shadowColor = "rgba(30,25,20,.55)"; ctx.shadowBlur = .8 * k; ctx.shadowOffsetX = .7 * k; ctx.shadowOffsetY = 1 * k;
+    ctx.fillStyle = "#FBFAF5"; ctx.strokeStyle = "#FBFAF5"; ctx.lineWidth = s < 70 ? 1.25 : s < 110 ? .9 : .5; ctx.fill(bp); ctx.stroke(bp); ctx.restore();
+    ctx.strokeStyle = "rgba(60,55,50,.35)"; ctx.lineWidth = .25; ctx.stroke(bp);
+    // railway in use: ink on a raised paper strip, with sleepers
+    const act = new Path2D(); RH.rail.filter(r => r.status === "active").forEach(r => act.addPath(line(r.pts)));
+    ctx.save(); ctx.shadowColor = "rgba(20,20,20,.45)"; ctx.shadowBlur = 2; ctx.shadowOffsetX = 1; ctx.shadowOffsetY = 1.4;
+    ctx.strokeStyle = "#FBFBF7"; ctx.lineWidth = 6 * k; ctx.stroke(act); ctx.restore();
+    ctx.strokeStyle = "#1F2A30"; ctx.lineWidth = 1.6 * k; ctx.stroke(act);
+    ctx.setLineDash([.9, 3.2]); ctx.lineWidth = 4 * k; ctx.stroke(act); ctx.setLineDash([]);
+    // buses: thin coloured thread
+    RH.busRoutes.forEach((br, i) => { const p = new Path2D(); br.lines.forEach(l => p.addPath(line(l)));
+      ctx.save(); ctx.translate(((i % 3) - 1) * .9, ((i % 2) - .5) * .9); ctx.strokeStyle = BUS_COL[br.ref] || "#555"; ctx.globalAlpha = .85; ctx.lineWidth = 1.3 * Math.min(1.3, k); ctx.stroke(p); ctx.restore(); });
+    ctx.restore();
+    ctx.restore();
+    ctx.save(); ctx.strokeStyle = "rgba(255,255,255,.5)"; ctx.lineWidth = 1; ctx.strokeRect(bx0 + .5, by0 + .5, bx1 - bx0 - 1, by1 - by0 - 1); ctx.restore();
+    RCACHE.set(key, cv);
+    if (RCACHE.size > 6) RCACHE.delete(RCACHE.keys().next().value);
+  }
+  if (cacheOnly === true) return;
+  const c = document.getElementById("cRh"); blit(c, cv, W, H);
+  c.setAttribute("role", "img"); c.setAttribute("aria-label", L().rhLabel);
+  drawBelowLayer(); drawRhOverlay();
+}
+/* what the rule counts, shaded live on its own thin layer */
+function drawBelowLayer() {
+  const cb = document.getElementById("cBelow"), { W, H, s } = VR, dpr = DPR();
+  cb.width = Math.round(W * dpr); cb.height = Math.round(H * dpr); const g = cb.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  if (S.sel == null) return;
+  const t = TIPS[S.sel], Dk = S.D / 1000, P = projR, cell = EC * s;
+  g.save(); g.fillStyle = "rgba(201,138,43,.30)";
+  for (let y = t.y - Dk; y <= t.y + Dk; y += EC) for (let x = t.x - Dk; x <= t.x + Dk; x += EC) {
+    if (Math.hypot(x - t.x, y - t.y) <= Dk && elevAt(x, y) < t.base - DROP) { const [px, py] = P(x - EC / 2, y - EC / 2); g.fillRect(px, py, cell + .5, cell + .5); }
+  }
+  g.restore();
+  const bp = new Path2D();
+  RP.bld.forEach((b, i) => { if (Math.hypot(b.x - t.x, b.y - t.y) <= Dk && b.z < t.base - DROP) { const r = RH.buildings[i]; r.forEach((p, j) => { const [x, y] = P(p[0], p[1]); j ? bp.lineTo(x, y) : bp.moveTo(x, y); }); bp.closePath(); } });
+  g.fillStyle = "#8E3B12"; g.strokeStyle = "#8E3B12"; g.lineWidth = .8; g.fill(bp); g.stroke(bp);
+  const [cx, cy] = P(t.x, t.y);
+  g.setLineDash([4, 3]); g.strokeStyle = "rgba(31,42,48,.8)"; g.lineWidth = 1.2; g.beginPath(); g.arc(cx, cy, Dk * s, 0, Math.PI * 2); g.stroke();
+}
+
+function facGlyph(f, x, y) {
+  const X = x.toFixed(1), Y = y.toFixed(1);
+  switch (f.kind) {
+    case "school": return `<rect x="${(x - 3).toFixed(1)}" y="${(y - 3).toFixed(1)}" width="6" height="6" fill="#FBFBF8" stroke="#1F2A30" stroke-width="1"/><path d="M${X} ${(y - 3).toFixed(1)}v-3.5l3 1.2-3 1.2" fill="#1F2A30" stroke="#1F2A30" stroke-width=".6"/>`;
+    case "place_of_worship": return `<path d="M${(x - 2.4).toFixed(1)} ${(y + 2.6).toFixed(1)}V${(y - .6).toFixed(1)}L${X} ${(y - 3.2).toFixed(1)}L${(x + 2.4).toFixed(1)} ${(y - .6).toFixed(1)}V${(y + 2.6).toFixed(1)}Z" fill="#4A4F52" stroke="#FBFBF8" stroke-width=".6"/>`;
+    case "doctors": case "clinic": case "hospital": return `<circle cx="${X}" cy="${Y}" r="3.4" fill="#FBFBF8" stroke="#1F2A30" stroke-width=".8"/><path d="M${X} ${(y - 2).toFixed(1)}v4M${(x - 2).toFixed(1)} ${Y}h4" stroke="#2F7575" stroke-width="1.4"/>`;
+    case "institute": return `<g transform="translate(${X},${Y})"><circle r="4.4" fill="#FBFBF8" stroke="#9C3B30" stroke-width="1.1"/><path d="M-2.4 2.2V-.4A2.4 2.4 0 0 1 2.4 -.4V2.2" stroke="#9C3B30" stroke-width="1" fill="none"/></g>`;
+    default: return `<circle cx="${X}" cy="${Y}" r="1.8" fill="#6B767C"/>`;
+  }
+}
+function drawRhOverlay() {
+  const { W, H, s } = VR, D = L(), P = projR, ov = document.getElementById("oRh"), zoomed = S.zoom > 1.4;
+  ov.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const inView = (x, y, m = 0) => x > -m && y > -m && x < W + m && y < H + m;
+  let o = "";
+  // bus stops
+  RH.busStops.forEach(b => { const [x, y] = P(b.x, b.y); if (inView(x, y)) o += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${zoomed ? 2.2 : 1.5}" fill="#FBFBF8" stroke="#3A4247" stroke-width=".7"/>`; });
+  // route numbers, once per route, at the middle of its longest line
+  const seen = new Set();
+  RH.busRoutes.slice().sort((a, b) => b.lengthKmInBbox - a.lengthKmInBbox).forEach(br => { if (seen.has(br.ref)) return; seen.add(br.ref);
+    const ln = br.lines.reduce((m, l) => l.length > m.length ? l : m, br.lines[0]); const p = ln[Math.floor(ln.length * (br.ref === "130" ? .32 : br.ref === "120" ? .62 : .5))]; const [x, y] = P(p[0], p[1]);
+    if (!inView(x, y)) return; const w = br.ref.length * 6 + 8;
+    o += `<g filter="url(#sh)"><rect x="${(x - w / 2).toFixed(1)}" y="${(y - 7).toFixed(1)}" width="${w}" height="13" rx="6.5" fill="${BUS_COL[br.ref] || "#555"}"/><text class="rt" x="${x.toFixed(1)}" y="${(y + 3.4).toFixed(1)}" text-anchor="middle">${esc(br.ref)}</text></g>`; });
+  // facilities
+  RH.facilities.forEach(f => { const [x, y] = P(f.x, f.y); if (!inView(x, y)) return; if (!zoomed && f.kind === "place_of_worship") { o += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="1.7" fill="#4A4F52"/>`; return; }
+    o += `<g><title>${esc(f.name || "")}</title>${facGlyph(f, x, y)}</g>`; });
+  // stations: punched tickets on the line
+  const placeNames = RH.places.map(p => p.en);
+  RH.stations.filter(st => st.kind === "rail_station").forEach(st => { const [x, y] = P(st.x, st.y); if (!inView(x, y)) return;
+    o += `<g filter="url(#sh)"><rect x="${(x - 4.5).toFixed(1)}" y="${(y - 3.2).toFixed(1)}" width="9" height="6.4" fill="#FBFBF8" stroke="#1F2A30" stroke-width="1.2"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="1.3" fill="#B0262C"/></g>`;
+    if (zoomed || !placeNames.some(p => st.name && (st.name.toLowerCase().includes(p.toLowerCase()) || p.toLowerCase().includes(st.name.toLowerCase())))) o += `<text class="st" x="${(x + 7).toFixed(1)}" y="${(y + 10).toFixed(1)}">${esc(lang === "cy" ? st.cy || st.name : st.name)}</text>`; });
+  // river names, quietly
+  [["Afon Rhondda Fawr", 127.6, 204.0, -32], ["Afon Rhondda Fach", 133.4, 204.9, -50], ["Afon Cynon", 136.6, 201.9, -40]].forEach(([n, x0, y0, a]) => { const [x, y] = P(x0, y0); if (inView(x, y)) o += `<text class="river" transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${a})">${esc(n)}</text>`; });
+  // places
+  const BIG = ["Treorchy", "Tonypandy", "Porth", "Aberdare", "Mountain Ash", "Ferndale", "Treherbert", "Maerdy"];
+  RH.places.forEach(p => { const [x, y] = P(p.x, p.y); if (!inView(x, y, -10)) return; const big = BIG.includes(p.en), small = ["hamlet", "suburb"].includes(p.kind);
+    if (small && !zoomed && !big) return;
+    o += `<text class="pl ${big ? "big" : small ? "small" : ""}" x="${x.toFixed(1)}" y="${(y - 6).toFixed(1)}" text-anchor="middle">${esc(lang === "cy" ? p.cy || p.en : p.en)}</text>`; });
+  // tips: mounds, the OSM outline, number tags, stitches
+  const tags = [];
+  TIPS.forEach((t, i) => { const [x, y] = P(t.x, t.y);
+    if (t.rings) { const d = t.rings.map(r => "M" + r.map(p => P(p[0], p[1]).map(v => v.toFixed(1)).join(",")).join("L") + "Z").join("");
+      o += `<g filter="url(#rough)"><path d="${d}" fill="#24201E" stroke="#141211" stroke-width=".8"/></g><path d="${d}" fill="none" stroke="rgba(150,140,130,.6)" stroke-width="1" transform="translate(-1,-1.4)"/>`; }
+    else o += tipMark(x, y, Math.max(4.2, Math.min(9, s * .09)));
+    tags.push({ i, x, y, tx: x + 9, ty: y - 13 });
+  });
+  // keep tags apart
+  for (let it = 0; it < 80; it++) for (let a = 0; a < tags.length; a++) for (let b = a + 1; b < tags.length; b++) {
+    const A = tags[a], B = tags[b], dx = B.tx - A.tx, dy = B.ty - A.ty; if (Math.abs(dx) < 21 && Math.abs(dy) < 17) { const push = (17 - Math.abs(dy)) / 2 + .5, sgn = dy >= 0 ? 1 : -1; A.ty -= push * sgn; B.ty += push * sgn; if (Math.abs(dx) < 4) { A.tx -= 3; B.tx += 3; } }
+  }
+  TIPS.forEach((t, i) => { if (S.tokens.includes(i)) { const [x, y] = P(t.x, t.y); o += stitchRing(x, y, Math.max(11, s * .14), 14); } });
+  tags.forEach(g => { const t = TIPS[g.i], st = S.tokens.includes(g.i), sel = S.sel === g.i;
+    o += `<g class="hit" data-tip="${g.i}" tabindex="0" role="button" aria-label="${esc(tipName(t))}"><title>${esc(tipName(t))}</title>
+      <circle cx="${g.x.toFixed(1)}" cy="${g.y.toFixed(1)}" r="11" fill="transparent"/>
+      <line x1="${g.x.toFixed(1)}" y1="${g.y.toFixed(1)}" x2="${g.tx.toFixed(1)}" y2="${g.ty.toFixed(1)}" stroke="#1F2A30" stroke-width=".8"/>
+      <g filter="url(#sh)"><rect x="${(g.tx - 8).toFixed(1)}" y="${(g.ty - 7.5).toFixed(1)}" width="17" height="15" rx="1" fill="${st ? "#2C4E95" : sel ? "#B0262C" : "#1F2A30"}" stroke="${sel ? "#FBFBF8" : "none"}" stroke-width="1.2"/></g>
+      <text class="tg" x="${(g.tx + .5).toFixed(1)}" y="${(g.ty + 3.8).toFixed(1)}" text-anchor="middle">${t.n}</text></g>`; });
+  ov.innerHTML = SVG_STYLE + SVG_DEFS + o;
+  ov.querySelectorAll(".hit").forEach(h => { h.addEventListener("click", e => { e.stopPropagation(); selectTip(+h.dataset.tip); }); h.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectTip(+h.dataset.tip); } }); });
+}
+const fmtHa = v => (Math.round(v * 2) / 2).toLocaleString(lang === "cy" ? "cy-GB" : "en-GB");
+const tipName = t => lang === "cy" ? t.nameCy : t.nameEn;
+
+/* ===================================================================
+   DOM pieces
+   =================================================================== */
+function renderTop() {
+  const D = L();
+  document.documentElement.lang = D.htmlLang;
+  document.getElementById("t-term").textContent = D.term;
+  document.getElementById("t-gen").textContent = D.gen;
+  document.getElementById("lang").setAttribute("aria-label", D.langGroup);
+  document.querySelectorAll("#lang button").forEach(b => b.setAttribute("aria-pressed", b.dataset.lang === lang));
+  document.getElementById("strands").innerHTML = STRANDS.map(st => {
+    const [short, full] = D.strands[st.id], tip = D.levelTip(st.lvl, st.d), pull = S.played && st.id === "res";
+    return `<li class="meter${pull ? " pullable" : ""}" data-strand="${st.id}" tabindex="0" style="--c:${sc(st.id)}" aria-label="${esc(full)}. ${esc(tip)}">
+      <div class="m-head"><span class="m-name">${esc(short)}</span><span class="m-arrow">${arrowSvg(st.d)}${st.d ? Math.abs(st.d) : ""}</span></div>
+      <div class="m-yarn" aria-hidden="true">${Array.from({ length: 10 }, (_, i) => `<b class="${i < st.lvl ? "on" : ""}${S.newPips.includes(st.id) && i === st.lvl - 1 ? " new" : ""}"></b>`).join("")}</div>
+      <div class="tip" role="tooltip"><strong>${esc(full)}</strong>${esc(tip)}${pull ? `<br>${esc(D.pullHint)}` : ""}</div></li>`;
+  }).join("");
+  const T = D.trust, v = S.trust, a = Math.PI * (1 - v / 100), nx = 28 + Math.cos(a) * 19, ny = 27 - Math.sin(a) * 19;
+  const arc = (a0, a1) => { const p = t => [28 + Math.cos(Math.PI * (1 - t)) * 22, 27 - Math.sin(Math.PI * (1 - t)) * 22]; const [x0, y0] = p(a0), [x1, y1] = p(a1); return `M${x0.toFixed(1)} ${y0.toFixed(1)} A22 22 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`; };
+  document.getElementById("trust").innerHTML = `<svg width="56" height="31" viewBox="0 0 56 31" aria-hidden="true">
+      <path d="${arc(0, .4)}" stroke="#7D8A90" stroke-width="5" fill="none" stroke-dasharray="1.5 1.5"/><path d="${arc(.41, .65)}" stroke="#AEB9BC" stroke-width="5" fill="none"/><path d="${arc(.66, 1)}" stroke="#E6E0CF" stroke-width="5" fill="none"/>
+      <line x1="28" y1="27" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}" stroke="#E2585C" stroke-width="2" stroke-linecap="round" style="transition:all .9s"/><circle cx="28" cy="27" r="2.6" fill="#EEF1F0"/></svg>
+    <div class="t-txt"><b>${esc(T.name)}: ${esc(T.band(v))}</b><span>${esc(T.limit)}</span></div>
+    <div class="tip" role="tooltip"><strong>${esc(T.name)}</strong>${esc(T.tip)}</div>`;
+  document.getElementById("trust").setAttribute("aria-label", `${T.name}: ${T.band(v)}. ${T.tip}`);
+}
+function renderWalesPieces() {
+  const D = L();
+  document.getElementById("curve").innerHTML = `<div class="sheet"><div class="cv-kick">${ICON.storm}<span>${esc(D.curve.kick)}</span></div><h2 class="cv-title">${esc(D.curve.title)}</h2><p class="cv-ripple"><span class="lab">${esc(D.curve.ripple)}</span><span>${esc(D.curve.rippleText)}</span></p></div>`;
+  const P = D.place, other = lang === "en" ? "cy" : "en", a = SEL.approx || {};
+  document.getElementById("place").innerHTML = `<p class="p-eyebrow">${esc(P.eyebrow)}</p><h1 class="p-name">${esc(SEL[lang])}</h1>
+    <div class="p-alt"><abbr class="lg" title="${other === "cy" ? "Cymraeg" : "English"}">${other.toUpperCase()}</abbr><span lang="${other}">${esc(SEL[other])}</span></div>
+    <div class="p-figs"><div class="p-fig"><b>${lang === "cy" ? a.population_k + " mil" : a.population_k + "k"}</b><span>${esc(P.pop)}</span></div><div class="p-fig"><b>${(a.welsh_speakers_pct ?? 0).toFixed(1)}%</b><span>${esc(P.welsh)}</span></div></div>
+    <p class="p-approx">${esc(P.approx)}</p><p class="p-hist">${esc(P.hist)}</p>
+    <div class="p-meta"><span class="chip-src">${ICON.thread}<span>${esc(P.source)}</span><em>${esc(P.pull)}</em></span><span class="conf"><span class="bars" aria-hidden="true"><i class="on" style="height:5px"></i><i class="on" style="height:8px"></i><i style="height:11px"></i></span>${esc(P.conf)}</span></div>`;
+  const K = D.key, sw = (svg, t) => `<li><svg width="22" height="16" viewBox="-11 -8 22 16" aria-hidden="true">${svg}</svg><span>${esc(t)}</span></li>`;
+  document.getElementById("keybtn").textContent = K.btn;
+  document.getElementById("keybox").innerHTML = `<ul>
+    ${sw(`<path d="M-5 4.5V-1L0 -4.5 5 -1V4.5Z" fill="#fff" stroke="#1F2A30" stroke-width=".7"/><path d="M0 -4.5 5 -1V4.5H0Z" fill="#1F2A30"/>`, K.city)}
+    ${sw(`<path d="M-4 3.5V-.6L0 -3.5 4 -.6V3.5Z" fill="#fff" stroke="#1F2A30" stroke-width=".7"/><path d="M0 -3.5 4 -.6V3.5H0Z" fill="#C2C3BB"/>`, K.town)}
+    ${sw(`<circle r="5" fill="#FBFBF8" stroke="#1F2A30" stroke-width=".7"/><path d="M-2.4 2V-.4A2.4 2.4 0 0 1 2.4 -.4V2" stroke="#1F2A30" fill="none" stroke-width=".9"/>`, K.site)}
+    ${sw(`<ellipse cx="0" cy="1" rx="6" ry="5" fill="#2B2724"/><ellipse cx="-.7" cy="-.2" rx="4.5" ry="3.8" fill="#3B3532"/><ellipse cx="-1.4" cy="-1.4" rx="3" ry="2.6" fill="#4D4540"/>`, K.tip)}
+    ${sw(`<circle r="6.5" fill="rgba(201,138,43,.15)" stroke="#C98A2B" stroke-width="1.2" stroke-dasharray="3 2.2"/>`, K.risk)}
+    ${sw(`<path d="M-5 -2L-2 2M-2 -2L-5 2M2 -2L5 2M5 -2L2 2" stroke="#2C4E95" stroke-width="1.5"/>`, K.stitched)}
+    ${sw(`<path d="M-3.6 2.6 L0 -3.6 L3.6 2.6Z" fill="#1F2A30"/>`, K.peak)}
+    ${sw(`<path d="M-10 0 H10" stroke="#26282A" stroke-width=".8" stroke-dasharray="2.2 1.4"/>`, K.border)}</ul>`;
+}
+function ticketHTML(c, D) {
+  const chip = id => `<span class="chip" style="--c:${sc(id)}"><i></i>${esc(D.strands[id][0])}</span>`;
+  const strain = ([id, why]) => `<span class="chip strain" style="--c:${sc(id)}"><i></i>${esc(D.strands[id][0])}, ${esc(D.card[why])}</span>`;
+  const pips = (n, on) => `<span class="pips">${Array.from({ length: n }, (_, i) => `<b class="${i < on ? "on" : ""}"></b>`).join("")}</span>`;
+  const spent = S.played && c.id === "tips", playable = c.playable && !S.played;
+  return `<article class="ticket${playable ? " playable" : ""}${spent ? " spent" : ""}" data-card="${c.id}" ${playable ? 'tabindex="0" role="button"' : ""} aria-label="${esc(D.cards[c.id])}">
+    <div class="sheet" style="--wv:var(--weave-${c.wv})">
+      <div class="stub">${ICON[c.id]}<span class="no">No. ${c.no}</span></div>
+      <div class="tbody">
+        <div class="t-title"><h3>${esc(D.cards[c.id])}</h3>${playable ? `<span class="play">${esc(D.card.play)}</span>` : ""}</div>
+        <div class="t-alt" lang="${lang === "en" ? "cy" : "en"}">${esc(DICT[lang === "en" ? "cy" : "en"].cards[c.id])}</div>
+        <div class="effects">${c.plus.map(chip).join("")}${c.minus.map(strain).join("")}${c.note ? `<span class="chip note">${esc(D.card[c.note])}</span>` : ""}</div>
+        <div class="tmeta"><span>${esc(D.card.cost)}${pips(4, c.cost)}</span><span>${esc(D.card.pays)}${pips(c.delay + 1, c.delay)}</span></div>
+        ${spent ? `<span class="stamp">${esc(D.card.spent)}</span>` : ""}
+      </div></div>${spent ? `<span class="punch"></span>` : ""}</article>`;
+}
+function renderHand() {
+  const D = L();
+  document.getElementById("voice").innerHTML = `<q lang="${lang}">${esc(D.voice.q)}</q><figcaption class="who"><b>${esc(D.voice.who)}</b><span>${esc(D.voice.tag)}</span></figcaption>`;
+  document.getElementById("hand-h").textContent = D.hand;
+  document.getElementById("hand-sub").textContent = D.handSub;
+  document.getElementById("hand").innerHTML = CARDS.map(c => ticketHTML(c, D)).join("");
+  document.querySelectorAll(".ticket.playable").forEach(t => { const go = () => foldDown(); t.addEventListener("click", go); t.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } }); });
+}
+function renderRhPieces() {
+  const D = L(), R = D.rh, K = R.key;
+  // a silhouette of output rising to 1913 and falling away, shape only
+  const pts = d3.range(0, 101).map(i => { const yr = 1850 + i * 1.6, h = yr < 1913 ? Math.pow((yr - 1850) / 63, 1.6) : Math.max(0, 1 - Math.pow((yr - 1913) / 77, .9)); return [i * 1.7, 34 - h * 30]; });
+  const sw = (svg, t) => `<li><svg width="22" height="14" viewBox="-11 -7 22 14" aria-hidden="true">${svg}</svg><span>${esc(t)}</span></li>`;
+  document.getElementById("rcol").innerHTML = `<section class="hist piece"><h2>${esc(R.title)}</h2><div class="alt">${esc(R.alt)}</div>
+      <p>${esc(R.hist)} <span class="check">${esc(R.check)}</span></p>
+      <div class="peak"><svg viewBox="0 0 170 40" height="40" aria-hidden="true"><path d="M0 34 L${pts.map(p => p.map(v => v.toFixed(1)).join(" ")).join(" L")} L170 34Z" fill="#2E2A27"/><path d="M0 34H170" stroke="#1F2A30"/><line x1="${(63 / 1.6 * 1.7).toFixed(1)}" y1="2" x2="${(63 / 1.6 * 1.7).toFixed(1)}" y2="34" stroke="#B0262C" stroke-width="1" stroke-dasharray="2 2"/><text x="${(63 / 1.6 * 1.7 + 3).toFixed(1)}" y="9" font-size="10" font-weight="700" fill="#7E1A1F" font-family="Familjen Grotesk">${R.peakYear}</text></svg></div>
+      <div style="font-size:11px;color:var(--ink-3);font-style:italic;margin-top:2px">${esc(R.peak)}</div></section>
+    <section class="rkey piece"><ul>
+      ${sw(`<rect x="-6" y="-2" width="12" height="4" fill="#FBFAF5" stroke="#8C8880" stroke-width=".5"/>`, K.bld)}
+      ${sw(`<path d="M-10 0H10" stroke="#FBFBF7" stroke-width="5"/><path d="M-10 0H10" stroke="#1F2A30" stroke-width="1.4"/><path d="M-10 0H10" stroke="#1F2A30" stroke-width="3.6" stroke-dasharray=".9 3"/>`, K.rail)}
+      ${sw(`<rect x="-4.5" y="-3.2" width="9" height="6.4" fill="#FBFBF8" stroke="#1F2A30" stroke-width="1.2"/><circle r="1.3" fill="#B0262C"/>`, K.station)}
+      ${sw(`<path d="M-10 0H10" stroke="rgba(50,45,40,.6)" stroke-dasharray="3 2.5"/>`, K.disused)}
+      ${sw(`<path d="M-10 2C-4 -3 4 3 10 -2" stroke="#9C3B30" stroke-width="1.4" fill="none"/><circle cx="0" cy="0" r="1.6" fill="#FBFBF8" stroke="#3A4247" stroke-width=".7"/>`, K.bus)}
+      ${sw(`<rect x="-3" y="-3" width="6" height="6" fill="#FBFBF8" stroke="#1F2A30"/><path d="M0 -3v-3l3 1-3 1" fill="#1F2A30"/>`, K.school)}
+      ${sw(`<path d="M-2.4 2.6V-.6L0 -3.2 2.4 -.6V2.6Z" fill="#4A4F52"/>`, K.chapel)}
+      ${sw(`<circle r="3.4" fill="#FBFBF8" stroke="#1F2A30" stroke-width=".8"/><path d="M0 -2v4M-2 0h4" stroke="#2F7575" stroke-width="1.4"/>`, K.health)}
+      ${sw(`<circle r="4.4" fill="#FBFBF8" stroke="#9C3B30" stroke-width="1.1"/><path d="M-2.4 2.2V-.4A2.4 2.4 0 0 1 2.4 -.4V2.2" stroke="#9C3B30" fill="none"/>`, K.inst)}
+      ${sw(`<rect x="-8" y="-4" width="16" height="8" fill="rgba(150,190,215,.6)"/><path d="M-8 4L0 -4M-2 4L6 -4M4 4L8 0" stroke="rgba(60,110,150,.7)"/>`, K.flood)}
+      ${sw(`<ellipse cx="0" cy="1" rx="5.5" ry="4.4" fill="#2B2724"/><ellipse cx="-1" cy="-.4" rx="3.6" ry="2.9" fill="#4B443E"/>`, K.tipPt)}
+      ${sw(`<path d="M-7 3C-6 -3 2 -4 7 -1 5 3 -1 4 -7 3Z" fill="#24201E"/>`, K.tipPoly)}
+      ${sw(`<path d="M-6 -2L-2 2M-2 -2L-6 2M2 -2L6 2M6 -2L2 2" stroke="#2C4E95" stroke-width="1.6"/>`, K.stitch)}
+    </ul></section>`;
+}
+function renderDecide() {
+  if (!TIPS.length) return;
+  const D = L(), C = D.decide, F = C.flags, n = S.tokens.length;
+  const maxB = d3.max(TIPS, t => t.B.resHa) || 1;
+  const rows = TIPS.map((t, i) => { const B = t.B, f = {
+      s: B.schools.length > 0, r: B.rail.size > 0 || B.stations.length > 0, b: B.bus.size > 0, fl: B.flood > 0, d: B.lsoaMin && B.lsoaMin.decile === 1 };
+    return `<tr class="row${S.sel === i ? " sel" : ""}${S.tokens.includes(i) ? " stitched" : ""}" data-tip="${i}">
+      <td><span class="no">${t.n}</span></td><td><span class="nm" title="${esc(tipName(t))}">${esc(tipName(t))}</span></td>
+      <td class="n">${fmtHa(B.resHa)} ha<span class="bar" style="width:${(B.resHa / maxB * 34).toFixed(1)}px"></span></td>
+      <td><span class="flags"><i class="${f.s ? "on" : ""}" title="${esc(F.s[1])}">${F.s[0]}</i><i class="${f.r ? "on" : ""}" title="${esc(F.r[1])}">${F.r[0]}</i><i class="${f.b ? "on" : ""}" title="${esc(F.b[1])}">${F.b[0]}</i><i class="fl ${f.fl ? "on" : ""}" title="${esc(F.f[1])}">${F.f[0]}</i><i class="dep ${f.d ? "on" : ""}" title="${esc(F.d[1])}">${F.d[0]}</i></span></td></tr>`; }).join("");
+  const p = document.getElementById("pDecide");
+  p.innerHTML = `<div class="ticket" style="flex:none"><div class="sheet d-ticket" style="--wv:var(--weave-d)"><div class="stub">${ICON.tips}<span class="no">No. 0440</span></div>
+      <div class="tbody"><h3>${esc(C.title)}</h3><p>${esc(C.sub)}</p></div></div></div>
+    <div class="tokens"><span class="spools">${[0, 1, 2].map(i => spool(i < n)).join("")}</span><span>${esc(C.tokens(n))}. ${esc(C.tipsN(TIPS.length))}.</span></div>
+    <div class="d-list piece"><table><thead><tr><th></th><th>${esc(C.cols[0])}</th><th class="n">${esc(C.cols[1])}</th><th>${esc(C.cols[2])}</th></tr></thead><tbody>${rows}</tbody></table><div class="d-legend">${Object.values(F).map(([k, t]) => `<span><b>${esc(k)}</b>${esc(t)}</span>`).join("")}</div></div>
+    <div class="d-foot piece"><div class="row2"><button type="button" class="link" id="howBtn">${esc(C.how)}</button><span class="msg" id="dmsg">${esc(C.need(n))}</span></div>
+      <div class="row2"><button type="button" class="btn ghost" id="cancelBtn">${esc(C.cancel)}</button><button type="button" class="btn" id="confirmBtn" ${n === 3 ? "" : "disabled"}>${esc(C.confirm)}</button></div></div>`;
+  p.querySelectorAll("tr.row").forEach(r => r.addEventListener("click", () => selectTip(+r.dataset.tip)));
+  document.getElementById("howBtn").onclick = () => openRule(true);
+  document.getElementById("confirmBtn").onclick = () => foldUp(true);
+  document.getElementById("cancelBtn").onclick = () => foldUp(false);
+}
+function renderBelow() {
+  const el = document.getElementById("below");
+  if (S.sel == null || S.view !== "rhondda") { el.hidden = true; return; }
+  const D = L(), Bd = D.below, t = TIPS[S.sel], B = t.B, st = S.tokens.includes(S.sel);
+  const list = (arr) => arr.length ? arr.map(esc).join(", ") : `<span class="none">${esc(Bd.none)}</span>`;
+  const fac = [B.chapels && Bd.chapels(B.chapels), B.health && Bd.health(B.health), B.inst.length && Bd.inst(B.inst.length), B.other && Bd.other(B.other)].filter(Boolean);
+  const rail = [...B.rail].concat(B.stations.map(s => `${lang === "cy" ? s.cy || s.name : s.name} ${Bd.station}`));
+  const bus = B.bus.size ? `${[...B.bus].sort((a, b) => a - b).join(", ")}; ${Bd.stops(B.stops)}` : (B.stops ? Bd.stops(B.stops) : null);
+  const ls = B.lsoaMin;
+  el.innerHTML = `<div class="b-head"><span class="b-no">${t.n}</span><div><h3>${esc(tipName(t))}</h3>
+      <p class="b-src">${esc(Bd.src[t.kind === "spoil_heap_osm" ? "OSM" : t.kind])}${t.attrs && t.attrs.bgs_ls_id ? `, ${Bd.ref} ${t.attrs.bgs_ls_id}` : ""}${t.la ? `. ${esc(nm(t.la))}` : ""}</p></div>
+      <button class="x" type="button" aria-label="close" id="belowX">&#215;</button></div>
+    <div class="b-risk"><svg width="14" height="12" viewBox="0 0 14 12" aria-hidden="true"><path d="M7 1L13 11H1Z" fill="#C98A2B"/><path d="M7 4.5v3M7 9v.6" stroke="#20262A" stroke-width="1.3"/></svg>${esc(Bd.risk)}</div>
+    <dl>
+      <dt>${esc(Bd.res)}</dt><dd><b>${fmtHa(B.resHa)}</b> ha</dd>
+      <dt>${esc(Bd.bld)}</dt><dd>${B.bld} <span class="none">(${esc(Bd.bldNote)})</span></dd>
+      <dt>${esc(Bd.schools)}</dt><dd>${B.schools.length ? B.schools.map(s => esc(s.name || Bd.unnamedSchool)).join("; ") : `<span class="none">${esc(Bd.none)}</span>`}</dd>
+      <dt>${esc(Bd.fac)}</dt><dd>${fac.length ? esc(fac.join(", ")) : `<span class="none">${esc(Bd.none)}</span>`}</dd>
+      <dt>${esc(Bd.rail)}</dt><dd>${list(rail)}</dd>
+      <dt>${esc(Bd.bus)}</dt><dd>${bus ? esc(bus) : `<span class="none">${esc(Bd.busNone)}</span>`}</dd>
+      <dt>${esc(Bd.river)}</dt><dd>${esc(t.river.name)}, ${esc(Bd.m(t.river.m))}</dd>
+      <dt>${esc(Bd.flood)}</dt><dd>${B.flood ? esc(Bd.zone(B.flood)) : `<span class="none">${esc(Bd.noFlood)}</span>`}</dd>
+      <dt>${esc(Bd.dep)}</dt><dd>${ls ? esc(Bd.rank(lang === "cy" ? ls.cy || ls.en : ls.en, ls.wimdRank)) : `<span class="none">${esc(Bd.none)}</span>`}</dd>
+    </dl>
+    <div class="b-foot"><button type="button" class="link" id="howBtn2">${esc(L().decide.how)}</button><button type="button" class="btn${st ? " ghost" : ""}" id="stitchBtn">${esc(st ? Bd.unpick : Bd.stitch)}</button></div>`;
+  el.hidden = false;
+  // place beside the tip, inside the map
+  // dock in the map corner farthest from the tip, so the ground below stays in view
+  const [x, y] = projR(t.x, t.y), W = VR.W, H = VR.H, w = el.offsetWidth, h = el.offsetHeight, minX = (document.getElementById("rcol").offsetWidth || 200) + 24;
+  const cands = [[minX, 12], [W - w - 52, 12], [minX, H - h - 12], [W - w - 12, H - h - 12]];
+  const dist = ([l, tp]) => Math.hypot(Math.max(l - x, 0, x - (l + w)), Math.max(tp - y, 0, y - (tp + h)));
+  const covers = ([l, tp]) => TIPS.filter(q => { const [qx, qy] = projR(q.x, q.y); return qx > l - 8 && qx < l + w + 8 && qy > tp - 8 && qy < tp + h + 8; }).length;
+  const score = c => dist(c) - covers(c) * 120;
+  const [left, top] = cands.reduce((a, b) => score(b) > score(a) ? b : a);
+  el.style.left = left + "px"; el.style.top = top + "px"; el.dataset.corner = (top < H / 2 ? "t" : "b") + (left < W / 2 ? "l" : "r");
+  const g = document.getElementById("cBelow").getContext("2d"), ex = Math.max(left, Math.min(left + w, x)), ey = Math.max(top, Math.min(top + h, y));
+  g.save(); g.setLineDash([2, 3]); g.strokeStyle = "rgba(31,42,48,.75)"; g.lineWidth = 1.2; g.beginPath(); g.moveTo(x, y); g.lineTo(ex, ey); g.stroke(); g.restore();
+  document.getElementById("belowX").onclick = () => { S.sel = null; refreshRh(); };
+  document.getElementById("howBtn2").onclick = () => openRule(true);
+  document.getElementById("stitchBtn").onclick = () => toggleToken(S.sel);
+}
+function renderRule() {
+  const el = document.getElementById("rule"); if (!S.rule) { el.hidden = true; return; }
+  const R = L().rule;
+  el.innerHTML = `<div style="display:flex;align-items:flex-start"><h3>${esc(R.title)}</h3><button class="x" type="button" aria-label="close" id="ruleX">&#215;</button></div>
+    <p class="plain" id="rulePlain">${esc(R.plain(S.D))}</p>
+    <div class="param"><span>${esc(R.dist)}</span><input type="range" min="250" max="1500" step="50" value="${S.D}" id="dSlider" aria-label="${esc(R.dist)}"><output id="dOut">${S.D} m</output></div>
+    <div class="param"><span>${esc(R.height)}</span><span style="grid-column:span 2;color:var(--ink-2)">${esc(R.heightV)}</span></div>
+    <h4>${esc(R.inputs)}</h4><ul>${R.src.map(s => `<li>${esc(s)}</li>`).join("")}</ul>
+    <div class="badge"><span class="conf"><span class="bars" aria-hidden="true"><i class="on" style="height:5px;background:var(--thread)"></i><i style="height:8px"></i><i style="height:11px"></i></span></span>${esc(R.conf)}</div>`;
+  el.hidden = false;
+  const minX = (document.getElementById("rcol").offsetWidth || 200) + 24;
+  const below = document.getElementById("below");
+  const c = below.hidden ? "br" : below.dataset.corner, W = VR.W, H = VR.H, w = el.offsetWidth, h = el.offsetHeight;
+  // sit beside the below card, never on top of it
+  const spots = { tl: [minX, 12], tr: [W - w - 52, 12], bl: [minX, H - h - 12], br: [W - w - 12, H - h - 12] };
+  const pickSpot = c === "tl" ? "tr" : c === "tr" ? "tl" : c === "bl" ? "br" : "bl";
+  el.style.left = spots[pickSpot][0] + "px"; el.style.top = spots[pickSpot][1] + "px";
+  document.getElementById("ruleX").onclick = () => openRule(false);
+  const sl = document.getElementById("dSlider");
+  sl.addEventListener("input", () => { S.D = +sl.value; document.getElementById("dOut").textContent = S.D + " m"; document.getElementById("rulePlain").textContent = R.plain(S.D);
+    computeBelow(); renderDecide(); renderBelow(); drawBelowLayer(); });
+}
+function renderTimeline() {
+  const D = L();
+  const tx = y => y <= 2000 ? (y - 1780) / 220 * .40 : y <= 2025 ? .40 + (y - 2000) / 25 * .15 : .55 + (y - 2025) / 75 * .45;
+  const pc = y => (tx(y) * 100).toFixed(3) + "%";
+  let h = `<div class="band past" style="left:0;width:${pc(2000)}"></div><div class="band present" style="left:${pc(2000)};width:15%"></div><div class="band future" style="left:${pc(2025)};right:0"></div>`;
+  const era = (k, a, b) => `<div class="era" style="left:${((tx(a) + tx(b)) * 50).toFixed(2)}%"><b>${esc(D.eras[k][0])}</b><span>${esc(D.eras[k][1])}</span></div>`;
+  h += era("past", 1780, 2000) + era("present", 2000, 2025) + era("future", 2025, 2100);
+  [1800, 1850, 1900, 1950, 2000].forEach(y => { h += `<div class="tick" style="left:${pc(y)}"></div><div class="tlab" style="left:${pc(y)}">${y}</div>`; });
+  for (let y = 1780; y < 2000; y += 10) if (y % 50) h += `<div class="tick small" style="left:${pc(y)}"></div>`;
+  for (let y = 2005; y < 2025; y += 5) h += `<div class="tick small" style="left:${pc(y)}"></div>`;
+  h += `<div class="tlab" style="left:0;transform:none">1780</div>`;
+  for (let y = 2030; y < 2100; y += 5) if (y % 25) h += `<div class="tick small" style="left:${pc(y)}"></div>`;
+  [2025, 2050, 2075].forEach(y => { h += `<div class="fold-c" style="left:calc(${pc(y)} - 1px)"></div><div class="tlab" style="left:${pc(y)}">${y}</div>`; });
+  h += `<div class="tlab" style="left:auto;right:0;transform:none">2100</div><div class="fold-lab" style="left:${pc(2050)}">${esc(D.genBoundary)}</div>`;
+  if (S.played) h += `<svg class="tstitch" style="left:calc(${pc(2033)} - 7px)" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 3L11 11M11 3L3 11" stroke="#14244A" stroke-width="3" stroke-linecap="round"/><path d="M3 3L11 11M11 3L3 11" stroke="#4A6FBF" stroke-width="1.6" stroke-linecap="round"/></svg>`;
+  h += `<div class="now" style="left:calc(${pc(2031)} - 1px)"><span class="now-lab">2031</span></div>`;
+  document.getElementById("strip").innerHTML = h;
+  document.getElementById("t-foot").textContent = D.foot;
+  document.getElementById("t-credit").textContent = D.credit;
+}
+
+/* ===================================================================
+   Interaction
+   =================================================================== */
+function selectTip(i) { S.sel = S.sel === i ? null : i; if (S.sel != null && S.zoom > 1.4) S.centre = [TIPS[i].x, TIPS[i].y]; refreshRh(S.zoom > 1.4); }
+function toggleToken(i) {
+  const k = S.tokens.indexOf(i);
+  if (k >= 0) S.tokens.splice(k, 1);
+  else if (S.tokens.length >= 3) { const m = document.getElementById("dmsg"); if (m) m.textContent = L().decide.full; return; }
+  else S.tokens.push(i);
+  refreshRh();
+}
+function openRule(on) { S.rule = on; renderRule(); }
+function refreshRh(redraw) {
+  if (redraw) drawRhondda(); else { drawBelowLayer(); drawRhOverlay(); }
+  renderDecide(); renderBelow(); renderRule();
+}
+document.getElementById("zoomer").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.z === "in") { S.zoom = 2.6; S.centre = S.sel != null ? [TIPS[S.sel].x, TIPS[S.sel].y] : [131.8, 206.6]; }
+  else { S.zoom = 1; S.centre = null; }
+  refreshRh(true);
+});
+// drag to pan when zoomed in; the cached sheet slides, then is redrawn where it lands
+(() => { let d = null; const v = document.getElementById("vRh");
+  v.addEventListener("pointerdown", e => { if (S.zoom <= 1 || e.target.closest(".hit,.piece,button,aside")) return; d = { x: e.clientX, y: e.clientY, c: S.centre.slice() }; v.setPointerCapture(e.pointerId); });
+  v.addEventListener("pointermove", e => { if (!d) return; const dx = e.clientX - d.x, dy = e.clientY - d.y; ["cRh", "cBelow", "oRh"].forEach(id => document.getElementById(id).style.transform = `translate(${dx}px,${dy}px)`); });
+  v.addEventListener("pointerup", e => { if (!d) return; const dx = e.clientX - d.x, dy = e.clientY - d.y; ["cRh", "cBelow", "oRh"].forEach(id => document.getElementById(id).style.transform = ""); if (Math.hypot(dx, dy) > 3) { S.centre = [d.c[0] - dx / VR.s, d.c[1] - dy / VR.s]; refreshRh(true); } d = null; });
+})();
+document.getElementById("keybtn").addEventListener("click", () => document.getElementById("keytab").classList.toggle("open"));
+
+const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+function snapshotHalves() {
+  // two halves of the national sheet, creased through the Rhondda
+  const W = VW.W, H = VW.H, [cx] = projW(FOLD_AT[0], FOLD_AT[1]);
+  const layer = document.createElement("div"); layer.className = "fold";
+  const src = document.getElementById("cWales"), ov = document.getElementById("oWales");
+  const halves = ["l", "r"].map(side => {
+    const half = document.createElement("div"); half.className = "half " + side;
+    if (side === "l") { half.style.left = "0"; half.style.width = cx + "px"; half.style.transformOrigin = "100% 50%"; }
+    else { half.style.left = cx + "px"; half.style.right = "0"; half.style.transformOrigin = "0 50%"; }
+    const inner = document.createElement("div"); inner.className = "inner"; inner.style.width = W + "px"; inner.style.height = H + "px"; inner.style.left = (side === "l" ? 0 : -cx) + "px";
+    const c = document.createElement("canvas"); c.width = src.width; c.height = src.height; c.style.width = W + "px"; c.style.height = H + "px"; c.getContext("2d").drawImage(src, 0, 0);
+    inner.appendChild(c); const o2 = ov.cloneNode(true); o2.removeAttribute("id"); o2.style.width = W + "px"; o2.style.height = H + "px"; inner.appendChild(o2);
+    const sh = document.createElement("div"); sh.className = "shade";
+    half.appendChild(inner); half.appendChild(sh); layer.appendChild(half); return half;
+  });
+  stage.appendChild(layer);
+  return { layer, halves, origin: projW(FOLD_AT[0], FOLD_AT[1]) };
+}
+function swapSide(toDecide) {
+  const a = document.getElementById("pHand"), b = document.getElementById("pDecide");
+  (toDecide ? a : b).classList.add("off"); (toDecide ? b : a).classList.remove("off");
+  if (!reduced()) (toDecide ? b : a).animate([{ opacity: 0, transform: "translateY(8px)" }, { opacity: 1, transform: "none" }], { duration: 380, easing: "ease-out" });
+}
+function foldDown() {
+  if (S.busy || S.played) return; S.busy = true;
+  closeTrace();
+  S.view = "rhondda"; S.sel = null; S.rule = false; S.zoom = 1; S.centre = null;
+  const vW = document.getElementById("vWales"), vR = document.getElementById("vRh");
+  vR.classList.remove("off"); renderRhPieces(); drawRhondda(); renderDecide(); renderBelow(); renderRule();
+  swapSide(true);
+  if (reduced()) { vW.classList.add("off"); S.busy = false; return; }
+  const { layer, halves, origin } = snapshotHalves();
+  vW.classList.add("off");
+  layer.style.transformOrigin = `${origin[0]}px ${origin[1]}px`;
+  const E = "cubic-bezier(.55,0,.25,1)";
+  layer.animate([{ transform: "scale(1)" }, { transform: "scale(2.6)" }], { duration: 1200, easing: E, fill: "forwards" });
+  halves[0].animate([{ transform: "rotateY(0deg)", opacity: 1 }, { transform: "rotateY(0deg)", opacity: 1, offset: .12 }, { transform: "rotateY(80deg)", opacity: 1, offset: .8 }, { transform: "rotateY(100deg)", opacity: 0 }], { duration: 1200, easing: E, fill: "forwards" });
+  halves[1].animate([{ transform: "rotateY(0deg)", opacity: 1 }, { transform: "rotateY(0deg)", opacity: 1, offset: .12 }, { transform: "rotateY(-80deg)", opacity: 1, offset: .8 }, { transform: "rotateY(-100deg)", opacity: 0 }], { duration: 1200, easing: E, fill: "forwards" });
+  halves.forEach(h => h.querySelector(".shade").animate([{ opacity: 0 }, { opacity: .9 }], { duration: 1100, easing: "ease-in", fill: "forwards" }));
+  vR.animate([{ opacity: 0, transform: "translateY(-16px) scale(1.035)" }, { opacity: 1, transform: "none" }], { duration: 820, delay: 420, easing: "cubic-bezier(.2,.75,.25,1)", fill: "backwards" });
+  setTimeout(() => { layer.remove(); S.busy = false; }, 1260);
+}
+function foldUp(confirmed) {
+  if (S.busy) return; S.busy = true;
+  if (confirmed) {
+    S.played = true; S.newPips = ["res", "hea"];
+    STRANDS.find(s => s.id === "res").lvl += 1; STRANDS.find(s => s.id === "hea").lvl += 1;
+    STRANDS.find(s => s.id === "res").d = 1; STRANDS.find(s => s.id === "hea").d = 1;
+  } else S.tokens = [];
+  S.view = "wales"; S.sel = null; S.rule = false;
+  const vW = document.getElementById("vWales"), vR = document.getElementById("vRh");
+  vW.classList.remove("off"); drawWales(); drawWalesOverlay(); renderHand(); renderTimeline();
+  document.getElementById("below").hidden = true; document.getElementById("rule").hidden = true;
+  swapSide(false);
+  const finish = () => { vR.classList.add("off"); S.busy = false;
+    if (confirmed) { renderTop(); setTimeout(() => { S.trust = 55; S.newPips = []; renderTop(); wireStrands(); }, 1100); wireStrands(); } };
+  if (reduced()) { finish(); return; }
+  const { layer, halves, origin } = snapshotHalves();
+  vW.classList.add("off");
+  layer.style.transformOrigin = `${origin[0]}px ${origin[1]}px`;
+  const E = "cubic-bezier(.45,0,.2,1)";
+  vR.animate([{ opacity: 1, transform: "none" }, { opacity: 0, transform: "translateY(-18px) scale(.96)" }], { duration: 520, easing: "ease-in", fill: "forwards" });
+  layer.animate([{ transform: "scale(2.6)" }, { transform: "scale(1)" }], { duration: 1150, easing: E, fill: "forwards" });
+  halves[0].animate([{ transform: "rotateY(100deg)", opacity: 0 }, { transform: "rotateY(80deg)", opacity: 1, offset: .2 }, { transform: "rotateY(0deg)", opacity: 1 }], { duration: 1150, easing: E, fill: "forwards" });
+  halves[1].animate([{ transform: "rotateY(-100deg)", opacity: 0 }, { transform: "rotateY(-80deg)", opacity: 1, offset: .2 }, { transform: "rotateY(0deg)", opacity: 1 }], { duration: 1150, easing: E, fill: "forwards" });
+  halves.forEach(h => h.querySelector(".shade").animate([{ opacity: .9 }, { opacity: 0 }], { duration: 1150, easing: "ease-out", fill: "forwards" }));
+  setTimeout(() => { vW.classList.remove("off"); layer.remove(); vR.getAnimations().forEach(a => a.cancel()); finish(); }, 1180);
+}
+
+/* ===================================================================
+   Pull the thread: the trace
+   =================================================================== */
+function wireStrands() {
+  document.querySelectorAll(".meter.pullable").forEach(m => { m.onclick = () => S.trace ? closeTrace() : openTrace(); m.onkeydown = e => { if (e.key === "Enter") openTrace(); }; });
+}
+function openTrace() {
+  S.trace = true; document.body.classList.add("tracing"); renderTrace();
+}
+function closeTrace() { S.trace = false; document.body.classList.remove("tracing"); document.getElementById("trace").hidden = true; document.getElementById("threadlayer").innerHTML = ""; }
+function renderTrace() {
+  if (!S.trace) return;
+  const D = L(), T = D.trace, Bd = D.below, el = document.getElementById("trace");
+  const tips = S.tokens.map(i => TIPS[i]);
+  el.innerHTML = `<div style="display:flex;align-items:flex-start"><div><h3>${esc(T.title)}</h3><p class="sub">${esc(T.sub)}</p></div><button class="x" type="button" aria-label="close" id="traceX">&#215;</button></div>
+    <section data-k="strand"><span class="knot"></span><h4>${esc(T.strand)}</h4><p>${esc(T.strandTxt)}</p></section>
+    <section data-k="card"><span class="knot"></span><h4>${esc(T.card)}</h4><p>${esc(T.cardTxt)}</p></section>
+    <section data-k="tips"><span class="knot"></span><h4>${esc(T.tips)}</h4><ul>${tips.map(t => `<li><b>${t.n}. ${esc(tipName(t))}</b><br><span style="color:var(--ink-2)">${esc(T.line(fmtHa(t.B.resHa), t.B.bld, t.B.schools.length, t.B.rail.size || t.B.stations.length))}${t.B.flood ? ", " + esc(Bd.zone(t.B.flood)) : ""}${t.B.lsoaMin ? ", WIMD " + t.B.lsoaMin.wimdRank : ""}</span></li>`).join("")}</ul></section>
+    <section data-k="rule"><span class="knot"></span><h4>${esc(T.rule)}</h4><p>${esc(T.ruleTxt(S.D))}</p><ul style="margin-top:4px">${D.rule.src.slice(0, 5).map(s => `<li style="font-size:11.5px;color:var(--ink-2)">${esc(s)}</li>`).join("")}</ul></section>
+    <p class="note">${esc(T.note)}</p>`;
+  el.hidden = false;
+  document.getElementById("traceX").onclick = closeTrace;
+  requestAnimationFrame(drawThread);
+}
+function drawThread() {
+  const lay = document.getElementById("threadlayer"); if (!S.trace) { lay.innerHTML = ""; return; }
+  const r = e => e.getBoundingClientRect();
+  const m = document.querySelector('.meter[data-strand="res"]'), kn = [...document.querySelectorAll("#trace .knot")].map(r);
+  const tk = document.querySelector('.ticket[data-card="tips"]');
+  if (!m || !kn.length || !tk) return;
+  const mr = r(m), tr = r(tk), sl = r(document.getElementById("trace")), c = k => [k.left + k.width / 2, k.top + k.height / 2];
+  const kp = kn.map(c), mx = mr.left + mr.width / 2, my = mr.bottom, ex = sl.left - 7;
+  // down from the strand, along the gap above the table, then down the slip's edge through each knot
+  let d = `M${mx},${my} C${mx},${my + 10} ${mx - 20},${sl.top - 6} ${mx - 60},${sl.top - 6} L${ex + 20},${sl.top - 6} Q${ex},${sl.top - 6} ${ex},${sl.top + 14} L${ex},${kp[0][1] - 10} Q${ex},${kp[0][1]} ${kp[0][0]},${kp[0][1]}`;
+  for (let i = 1; i < kp.length; i++) { const a = kp[i - 1], b = kp[i]; d += ` C${a[0] - 16},${a[1] + 18} ${b[0] - 16},${b[1] - 18} ${b[0]},${b[1]}`; }
+  // branches leave from the slip's right edge: card to the spent ticket, tips to the stitched ring on the map
+  const sec = k => r(document.querySelector(`#trace section[data-k="${k}"]`));
+  const cs = sec("card"), ts = sec("tips");
+  const k2 = [sl.right, cs.top + 12], k3 = [sl.right, ts.top + 12];
+  const ring = document.querySelector("#oWales .stitch"); let br2 = "";
+  if (ring) { const rr = r(ring), rx = rr.left + rr.width / 2, ry = rr.top + rr.height / 2; br2 = `M${k3[0]},${k3[1]} C${k3[0] + 140},${k3[1]} ${rx - 60},${ry - 90} ${rx},${ry}`; }
+  const tx = tr.left + 6, ty = tr.top + tr.height / 2;
+  const br1 = `M${k2[0]},${k2[1]} C${k2[0] + 220},${k2[1] - 20} ${tx - 180},${ty} ${tx},${ty}`;
+  const th = p => `<path d="${p}" fill="none" stroke="#B0262C" stroke-width="2" stroke-linecap="round"/><path d="${p}" fill="none" stroke="#6E1418" stroke-width="2" stroke-dasharray="1.2 2.4" opacity=".7"/>`;
+  lay.innerHTML = `<g style="filter:drop-shadow(1px 1.5px 1px rgba(60,10,12,.4))">${th(d)}${th(br1)}${br2 ? th(br2) : ""}<circle cx="${tx}" cy="${ty}" r="4" fill="#B0262C"/><circle cx="${k2[0]}" cy="${k2[1]}" r="3.5" fill="#B0262C"/><circle cx="${k3[0]}" cy="${k3[1]}" r="3.5" fill="#B0262C"/></g>`;
+}
+
+/* ===================================================================
+   Boot
+   =================================================================== */
+function renderAll() {
+  renderTop(); renderWalesPieces(); renderHand(); renderTimeline();
+  drawWales(); drawWalesOverlay(); wireStrands();
+  if (S.view === "rhondda") { renderRhPieces(); drawRhondda(); renderDecide(); renderBelow(); renderRule(); }
+  if (S.trace) renderTrace();
+}
+document.getElementById("lang").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b || b.dataset.lang === lang) return;
+  lang = b.dataset.lang; const u = new URL(location.href); u.searchParams.set("lang", lang); history.replaceState(null, "", u); renderAll();
+});
+let rz; window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { WCACHE = null; RCACHE.clear(); renderAll(); if (S.view === "wales") setTimeout(warmRhondda, 60); if (S.trace) requestAnimationFrame(drawThread); }, 100); });
+Promise.all([document.fonts.load('500 12px "Familjen Grotesk"'), document.fonts.load('italic 13px "Newsreader"'), document.fonts.load('500 20px "Newsreader"')])
+  .catch(() => {}).finally(() => { renderAll(); setTimeout(warmRhondda, 60); });
+</script>
+</body>
+</html>

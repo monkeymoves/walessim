@@ -1,0 +1,4 @@
+{
+  "projects": { "default": "d3-showcase-apps" },
+  "targets": { "d3-showcase-apps": { "hosting": { "etifeddiaeth": ["etifeddiaeth"] } } }
+}

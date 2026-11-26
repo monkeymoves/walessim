@@ -1,0 +1,15 @@
+# The four regions players choose "where" across. They match the Corporate Joint Committee areas.
+# Source: Corporate Joint Committees (Wales) Regulations 2021.
+regions:
+  - id: north
+    name: { en: North Wales, cy: Gogledd Cymru }
+    authorities: [W06000001, W06000002, W06000003, W06000004, W06000005, W06000006]
+  - id: mid
+    name: { en: Mid Wales, cy: Canolbarth Cymru }
+    authorities: [W06000008, W06000023]
+  - id: southwest
+    name: { en: South West Wales, cy: De-orllewin Cymru }
+    authorities: [W06000009, W06000010, W06000011, W06000012]
+  - id: southeast
+    name: { en: South East Wales, cy: De-ddwyrain Cymru }
+    authorities: [W06000013, W06000014, W06000015, W06000016, W06000018, W06000019, W06000020, W06000021, W06000022, W06000024]

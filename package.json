@@ -1,0 +1,36 @@
+{
+  "name": "etifeddiaeth",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Etifeddiaeth (Inheritance): a game of Wales. A strategy game and atlas built on real open data.",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "dev": "npm run model:build && vite",
+    "build": "npm run model:build && vite build",
+    "preview": "vite preview",
+    "model:build": "tsx scripts/build-model.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "e2e": "npm run build && playwright test",
+    "deploy": "npm run build && firebase deploy --only hosting:etifeddiaeth"
+  },
+  "dependencies": {
+    "d3-contour": "^4.0.3",
+    "solid-js": "^1.9.20"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.1",
+    "@playwright/test": "^1.65.1",
+    "@types/d3-contour": "^3.0.6",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^26.6.11",
+    "js-yaml": "^4.3.2",
+    "tsx": "^4.23.15",
+    "typescript": "~5.9",
+    "vite": "^8.4.0",
+    "vite-plugin-solid": "^2.11.17",
+    "vitest": "^5.1.2"
+  }
+}
