@@ -105,14 +105,15 @@ function resolveOptions(model: CompiledModel, o: A.NewGameOptions = {}): A.Resol
   // already-normalised weights (a reloaded game) are kept exactly, so replays are bit-identical
   const weights = Object.fromEntries(STRAND_IDS.map((s) => [s, Math.abs(total - 1) < 1e-9 ? Math.max(0, w[s]) : Math.max(0, w[s]) / total])) as Record<StrandId, number>;
   return {
-    runs: Math.max(1, Math.floor(o.runs ?? model.game.runs)),
-    previewRuns: Math.max(1, Math.floor(o.previewRuns ?? model.game.preview_runs)),
+    // Clamp run counts: options can arrive from a shared save link, so they are untrusted.
+    runs: clampRuns(o.runs, model.game.runs),
+    previewRuns: clampRuns(o.previewRuns, model.game.preview_runs),
     firstGame: !!o.firstGame,
     daily: o.daily ?? null,
     weights,
     paramOverrides: { ...(o.paramOverrides ?? {}) },
     caretakerGhost: o.caretakerGhost ?? true,
-    timeBudgetMs: o.timeBudgetMs ?? 250,
+    timeBudgetMs: Math.min(2000, Math.max(50, Number.isFinite(o.timeBudgetMs) ? (o.timeBudgetMs as number) : 250)),
   };
 }
 
@@ -1624,6 +1625,15 @@ export function saveGame(state: A.GameState): string {
   return JSON.stringify(f);
 }
 
+/** The most actions a version 1 save can hold: six terms of a handful of steps each, with headroom. */
+const MAX_SAVE_ACTIONS = 400;
+/** The most simulation runs any option may ask for. */
+const MAX_RUNS = 400;
+function clampRuns(asked: number | undefined, fallback: number): number {
+  const n = Number.isFinite(asked) ? Math.floor(asked as number) : fallback;
+  return Math.min(MAX_RUNS, Math.max(1, n));
+}
+
 export function loadGame(model: CompiledModel, saved: string): A.GameState {
   let f: SaveFile;
   try {
@@ -1632,6 +1642,10 @@ export function loadGame(model: CompiledModel, saved: string): A.GameState {
     throw new EngineError("bad_save", "the save is not readable");
   }
   if (!f || f.v !== 1 || !Array.isArray(f.log)) throw new EngineError("bad_save", "the save is not a version 1 save");
+  // A save may come from a shared link: bound its size and ignore performance options it carries.
+  if (f.log.length > MAX_SAVE_ACTIONS) throw new EngineError("bad_save", "the save is too long");
+  if (!Number.isFinite(f.seed)) throw new EngineError("bad_save", "the save has no seed");
+  // newGame clamps run counts to MAX_RUNS, so replays stay identical without trusting the save.
   let st = newGame(model, f.seed, { ...f.options, daily: f.options.daily ?? undefined });
   st = { ...st, seedLabel: f.seedLabel };
   for (const a of f.log) st = dispatch(model, st, a);
