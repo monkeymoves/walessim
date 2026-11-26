@@ -1,0 +1,259 @@
+/* ==========================================================================
+   Etifeddiaeth (Inheritance): a game of Wales
+   Design tokens, Papur direction, v1.
+   Import once, before any component CSS. No @font-face here: the app imports
+   the Fontsource packages, which register the family names used below.
+
+     import "@fontsource-variable/besley/wght.css";          // 5.3.0
+     import "@fontsource-variable/besley/wght-italic.css";
+     import "@fontsource-variable/archivo/standard.css";     // 5.3.0, wght + wdth axes
+     import "@fontsource-variable/archivo/standard-italic.css";
+
+   Fontsource splits each face by unicode-range, so latin-ext (which carries
+   the Welsh w and y circumflex) is fetched only when a page uses it.
+   Full rules live in design-system.md. Where this file and that one disagree,
+   this file is what ships and the document needs fixing.
+   ========================================================================== */
+
+:root {
+  /* ---------- 1. Type families ------------------------------------------ */
+  /* Besley: a Clarendon, the jobbing printer's face of the railway and coal
+     decades. Titles, figures of note, narrative and the other-language line. */
+  --font-print: "Besley Variable", "Besley", "Clarendon", "Rockwell", Georgia, serif;
+  /* Archivo: a jobbing grotesque with a width axis. Interface text, tables,
+     ticket furniture, map town names. Always set a width token with it. */
+  --font-grot: "Archivo Variable", "Archivo", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+
+  /* Archivo widths (font-stretch). 100 is never used: it is the generic look. */
+  --wdth-ticket: 68%;   /* ticket furniture, table column heads, tight Welsh strings */
+  --wdth-label: 82%;    /* labels, map town names, chips of data */
+  --wdth-ui: 92%;       /* running interface text, buttons, tooltips */
+
+  /* Weights */
+  --wght-print-text: 400;
+  --wght-print-title: 600;
+  --wght-print-heavy: 800;   /* the year, the poster line. One per screen. */
+  --wght-grot-text: 440;
+  --wght-grot-strong: 640;
+  --wght-grot-heavy: 760;    /* ticket furniture only */
+
+  /* ---------- 2. Type scale (px, set for a 1440 wide board) -------------- */
+  /* Steps follow a printer's case: 11.5, 12.5, 13.5, 15, 17, 20, 26, 44, 72. */
+  --size-poster: 72px;   --lh-poster: 0.95;  --track-poster: -0.015em;  /* title screen, letter heading */
+  --size-year: 44px;     --lh-year: 1;       --track-year: -0.01em;     /* the year in the top bar */
+  --size-title-1: 26px;  --lh-title-1: 1.1;  --track-title-1: -0.005em; /* place name, drawer and page titles */
+  --size-title-2: 20px;  --lh-title-2: 1.15; --track-title-2: 0;        /* ticket title, slip title */
+  --size-title-3: 17px;  --lh-title-3: 1.2;  --track-title-3: 0;        /* sub-headings, popover titles */
+  --size-story: 15px;    --lh-story: 1.5;    /* narrative in Besley 400, measure 34 to 62 characters */
+  --size-story-small: 13.5px; --lh-story-small: 1.45;
+  --size-ui: 13.5px;     --lh-ui: 1.4;       /* Archivo at --wdth-ui */
+  --size-label: 12.5px;  --lh-label: 1.25;   /* Archivo at --wdth-label, weight 640, sentence case */
+  --size-small: 11.5px;  --lh-small: 1.3;    /* floor. Nothing is set smaller than this. */
+  --size-furniture: 10.5px; --track-furniture: 0.09em; /* ticket caps only, weight 760, --wdth-ticket.
+                                                         The one exception to the floor: it is print
+                                                         furniture, never the only carrier of meaning. */
+  --size-figure-big: 26px;  /* Besley 700, proportional lining figures */
+  --size-serial: 12.5px; --track-serial: 0.06em; /* ticket number, Besley 700, thread red */
+  --other-lang-scale: 0.8;  /* the other-language line is this fraction of the line it sits under */
+  --track-water: 0.14em;    /* map sea and bay names, Besley italic */
+  --measure-story: 62ch;
+  --measure-tooltip: 34ch;
+
+  /* Figures: tabular in every table, meter and counter. Use on Archivo only.
+     Besley's tabular zero does not hold its weight, so Besley numerals stay proportional. */
+  --figures-data: tabular-nums lining-nums;
+  --figures-print: proportional-nums lining-nums;
+
+  /* ---------- 3. Paper stocks ------------------------------------------- */
+  --board: #C9CBC2;         /* grey millboard the model sits on */
+  --board-deep: #B4B7AD;    /* wells, recesses, the bed of the stage */
+  --paper: #F5F3EA;         /* cartridge: Heddiw, every ordinary sheet */
+  --paper-2: #E9E6DA;       /* second sheet, selected row, backs of things */
+  --paper-edge: #CFCBBB;    /* the cut edge that shows on the south-east side */
+  --paper-ddoe: #D8CDB4;    /* aged stock for the past */
+  --paper-ddoe-soot: #B9AD95; /* the same stock, smoked: Ddoe panels under strain */
+  --paper-yfory: #E1E8E7;   /* tracing paper for the future */
+  --slate: #353B45;         /* heather-blue slate: Trust, the slip, tooltips, stamps */
+  --slate-2: #4A515C;       /* cut edge and rules on slate */
+  --slate-deep: #23282F;    /* the hard south-east edge under slate pieces */
+
+  /* Ticket card stocks. Stock says the scope of the card (game-design.md, Scope column), nothing else. */
+  --ticket-buff: #E6D3A3;   /* national */
+  --ticket-green: #C9D8B6;  /* region */
+  --ticket-pink: #EBC4B8;   /* between regions (the compact) */
+  --ticket-blue: #C5D3DC;   /* standing tickets in the ledger drawer (borrow, put off) */
+  --ticket-white: var(--paper); /* lessons and anything without a scope */
+
+  /* ---------- 4. Inks ---------------------------------------------------- */
+  --ink: #1B2226;           /* printer's black. 14.5:1 on paper */
+  --ink-2: #48535A;         /* secondary text. 7.1:1 on paper, 4.9:1 or better on every ticket stock */
+  --ink-3: #646E6C;         /* captions on --paper only. 4.7:1. Never on tickets, board or Ddoe stock */
+  --ink-ddoe: #2B2622;      /* engraver's sepia black for the past. 9.5:1 on --paper-ddoe */
+  --soot: #4A443E;          /* smudge and hatching in Ddoe */
+  --rule: #C4C3B6;          /* hairlines on paper. Decorative: never the only boundary of a control */
+  --rule-strong: #80857D;   /* fifth-row ledger rule, input borders. 3:1 on paper */
+  --on-slate: #EEF0EA;      /* text on slate. 9.8:1 */
+  --on-slate-2: #BFC6C8;    /* secondary text on slate. 6.5:1 */
+  --brass: #D9A21B;         /* pins and pivots on slate. 4.9:1 on slate. Not for text on paper */
+
+  /* ---------- 5. Reserved threads ---------------------------------------- */
+  /* Red means one thing: where a number came from. Nothing else is red. */
+  --thread: #A81E2B;        /* 6.6:1 on paper */
+  --thread-deep: #7A1520;   /* red text on tinted grounds */
+  --thread-tint: #F1DEDA;   /* ground of a source docket */
+  /* Cobalt means one thing: something the player did. Always a dashed running stitch. */
+  --stitch: #2B6CD9;        /* graphic use, 4.5:1 on paper */
+  --stitch-deep: #1F4FA8;   /* text, focus ring, stitch buttons. 6.9:1 */
+  --stitch-tint: #DCE6F7;
+
+  /* ---------- 6. Strand yarns -------------------------------------------- */
+  /* Seven goals, seven dyes. The first value is the yarn (fills, never text).
+     The -deep value is for text and keylines: all are 5.6:1 or better on paper.
+     Worst pair under simulated colour-vision deficiency is resilient against cohesive
+     (protan, delta E 11.6), so every strand also carries its own twist pattern
+     and a fixed position. Colour is never the only signal. */
+  --yarn-prosperous: #D9A21B;  --yarn-prosperous-deep: #7A5A00;  /* gorse gold */
+  --yarn-resilient: #2F6B3F;   --yarn-resilient-deep: #2F6B3F;   /* bracken green */
+  --yarn-healthier: #55B0A6;   --yarn-healthier-deep: #1F6B64;   /* lichen teal */
+  --yarn-equal: #A56BB0;       --yarn-equal-deep: #7A3F86;       /* heather */
+  --yarn-cohesive: #C7725E;    --yarn-cohesive-deep: #8E3F2E;    /* brick rose */
+  --yarn-culture: #232C63;     --yarn-culture-deep: #232C63;     /* woad indigo */
+  --yarn-global: #8FC0E0;      --yarn-global-deep: #2B6288;      /* sky */
+  --yarn-keyline: rgba(27, 34, 38, 0.55); /* 1px outline on every yarn so pale dyes reach 3:1 */
+
+  /* Twist patterns, one per strand, for use as a second background layer over the dye. */
+  --twist-prosperous: repeating-linear-gradient(115deg, rgba(0,0,0,.30) 0 1.2px, transparent 1.2px 4px);
+  --twist-resilient:  repeating-linear-gradient(65deg,  rgba(255,255,255,.34) 0 1.2px, transparent 1.2px 4px);
+  --twist-healthier:  repeating-linear-gradient(90deg,  rgba(0,0,0,.28) 0 1px, transparent 1px 3px);
+  --twist-equal:      repeating-linear-gradient(115deg, rgba(0,0,0,.30) 0 2.4px, transparent 2.4px 6px);
+  --twist-cohesive:   repeating-linear-gradient(65deg,  rgba(0,0,0,.30) 0 1.2px, transparent 1.2px 4px);
+  --twist-culture:    repeating-linear-gradient(115deg, rgba(255,255,255,.36) 0 1.2px, transparent 1.2px 4px);
+  --twist-global:     repeating-linear-gradient(65deg,  rgba(0,0,0,.26) 0 2.4px, transparent 2.4px 6px);
+
+  /* ---------- 7. Trust, warnings ------------------------------------------ */
+  /* Trust lives on slate and reads by needle position and a word, not by hue. */
+  --trust-ground: var(--slate);
+  --trust-band-off: #5B636E;
+  --trust-band-on: var(--on-slate);
+  --trust-needle: var(--on-slate);
+  --trust-pivot: var(--brass);
+
+  --warn: #8A5600;            /* text and icon. 5.5:1 on paper, 5.0:1 on --warn-paper */
+  --warn-paper: #F4E6C4;
+  --warn-hatch: repeating-linear-gradient(135deg, #8A5600 0 1.5px, transparent 1.5px 5px);
+  --severe-ground: var(--ink); /* the worst news is black with paper text, never red */
+  --severe-text: var(--paper);
+
+  /* ---------- 8. Map lens ramps ------------------------------------------- */
+  /* Stacked paper tints. Classed, five steps, never a continuous gradient.
+     Step 1 is the lowest layer. Each step is a cut sheet with a lit north-west edge. */
+  --lens-peat-1: #F1EBD8; --lens-peat-2: #E0CFA3; --lens-peat-3: #C9A968; --lens-peat-4: #A67C3C; --lens-peat-5: #6E4A1E;
+  --lens-woad-1: #E8EEF0; --lens-woad-2: #C3D5DF; --lens-woad-3: #93B4C9; --lens-woad-4: #5C8AA9; --lens-woad-5: #2C5778;
+  --lens-moss-1: #EDF0DE; --lens-moss-2: #CFDCB4; --lens-moss-3: #A3BF87; --lens-moss-4: #6E9A5E; --lens-moss-5: #3B6B3F;
+  /* Diverging: woad below the midpoint, peat above. Safe for red-green deficiency. */
+  --lens-div-1: #2C5778; --lens-div-2: #7FA3BC; --lens-div-3: #CBD9DE;
+  --lens-div-mid: #F1EEE2;
+  --lens-div-5: #E3CC9B; --lens-div-6: #BF8E45; --lens-div-7: #7A4E1C;
+  --lens-nodata: repeating-linear-gradient(45deg, rgba(27,34,38,.28) 0 1px, transparent 1px 5px); /* pencil hatch over --paper-2 */
+  --sea: #7F99A4; --sea-deep: #63808D; --sea-shallow: #A9BEC4;
+
+  /* ---------- 9. Space, edges, radii -------------------------------------- */
+  --space-1: 2px; --space-2: 4px; --space-3: 8px; --space-4: 12px;
+  --space-5: 16px; --space-6: 24px; --space-7: 32px; --space-8: 48px;
+
+  --radius-cut: 0;        /* sheets, panels, buttons, tooltips, inputs: paper is cut square */
+  --radius-worn: 1.5px;   /* ticket corners only: handled card */
+  --radius-round: 999px;  /* only things that are round in life: punch holes, pin heads, gauge pivots */
+
+  --perforation: 2px dotted rgba(27, 34, 38, 0.45); /* ticket stub line */
+  --crease: 1px solid rgba(27, 34, 38, 0.14);       /* fold line on a sheet */
+
+  /* ---------- 10. Shadows -------------------------------------------------- */
+  /* The relief is lit from the north-west, so every shadow falls south-east:
+     x and y offsets are both positive, always. No glows, no shadow on all sides.
+     A shadow is a statement of height. Three heights exist. */
+  --lit-edge: inset 1px 1px 0 rgba(255, 255, 255, 0.55);           /* north-west lip of a sheet */
+  --shadow-flat: 1px 1px 0 var(--paper-edge);                       /* glued down: tables, strips, meters */
+  --shadow-sheet: 1px 1px 0 var(--paper-edge), 2px 3px 0 rgba(40, 46, 42, 0.22);            /* resting on the board */
+  --shadow-lifted: 1px 1px 0 var(--paper-edge), 4px 6px 0 rgba(40, 46, 42, 0.16), 5px 9px 10px -4px rgba(30, 36, 34, 0.40); /* hovered, picked up */
+  --shadow-held: 1px 1px 0 var(--paper-edge), 8px 12px 0 rgba(40, 46, 42, 0.10), 10px 18px 18px -6px rgba(30, 36, 34, 0.45); /* dragged, open drawer */
+  --shadow-slate: 1px 1px 0 var(--slate-2), 3px 4px 0 var(--slate-deep);
+  --shadow-well: inset 2px 2px 3px rgba(20, 26, 24, 0.28);          /* recess cut into the board */
+
+  /* ---------- 11. Motion ---------------------------------------------------- */
+  --dur-punch: 90ms;     /* ticket nip, button press */
+  --dur-lift: 120ms;     /* a sheet rising under the pointer */
+  --dur-stamp: 140ms;    /* played, confirmed */
+  --dur-slide: 220ms;    /* drawer, slip, tooltip settle */
+  --dur-fold: 520ms;     /* the map folding between Wales and a valley */
+  --dur-stitch-step: 60ms;   /* per stitch along a thread */
+  --dur-stitch-max: 900ms;   /* whole thread, however long */
+  --ease-paper: cubic-bezier(0.3, 0, 0.2, 1);    /* fold, slide: starts promptly, settles */
+  --ease-press: cubic-bezier(0.4, 0, 1, 1);      /* punch, stamp: lands hard, no bounce */
+  --lift-x: -1px; --lift-y: -2px;                /* a lifted sheet moves towards the light */
+
+  /* ---------- 12. Layout ----------------------------------------------------- */
+  /* 1440 x 900 */
+  --margin: 20px; --gutter: 16px;
+  --bar-h: 56px;         /* top bar: year, strands, Trust, language */
+  --rail-w: 416px;       /* right rail: voice, hand */
+  --timeline-h: 60px;
+  --foot-h: 20px;
+  --ticket-h: 138px; --ticket-stub-w: 72px;
+  --target-min: 28px;    /* smallest pointer target */
+
+  /* ---------- 13. Focus ------------------------------------------------------- */
+  --focus-ring: 2px dashed var(--stitch-deep);   /* a running stitch round the thing */
+  --focus-ring-on-slate: 2px dashed var(--on-slate);
+  --focus-offset: 3px;
+}
+
+/* 1280 x 800 */
+@media (max-width: 1360px) {
+  :root {
+    --margin: 16px; --gutter: 12px;
+    --bar-h: 52px; --rail-w: 372px; --timeline-h: 54px;
+    --ticket-h: 118px; --ticket-stub-w: 60px;
+    --size-year: 38px; --size-title-1: 24px; --size-title-2: 18px;
+  }
+}
+
+/* Tablet landscape, 1180 x 820, and anything driven by touch */
+@media (max-width: 1200px), (pointer: coarse) {
+  :root {
+    --margin: 14px; --gutter: 12px;
+    --bar-h: 60px; --rail-w: 344px; --timeline-h: 64px;
+    --ticket-h: 124px; --ticket-stub-w: 56px;
+    --size-year: 36px; --size-title-1: 24px; --size-title-2: 18px;
+    --size-ui: 14.5px; --size-label: 13px; --size-small: 12px;
+    --target-min: 44px;
+  }
+}
+
+/* Ddoe: swap the stock and the ink, keep everything else. Set on the era container. */
+[data-era="ddoe"] {
+  --paper: var(--paper-ddoe);
+  --paper-2: var(--paper-ddoe-soot);
+  --paper-edge: #A2957C;
+  --ink: var(--ink-ddoe);
+  --ink-2: #433A33;      /* 7.0:1 on aged stock, 5.0:1 on the smoked stock */
+  --ink-3: #433A33;      /* the pale caption grey fails on aged stock, so it is not offered */
+  --rule: #B3A78E;
+}
+[data-era="yfory"] {
+  --paper-2: var(--paper-yfory);
+}
+
+/* Reduced motion: nothing travels. Things change state in place. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-punch: 0ms; --dur-lift: 0ms; --dur-stamp: 0ms;
+    --dur-slide: 0ms; --dur-fold: 150ms;   /* fold becomes a 150ms cross-fade */
+    --dur-stitch-step: 0ms; --dur-stitch-max: 0ms;
+    --lift-x: 0px; --lift-y: 0px;
+  }
+}
+
+/* The two base rules every surface relies on. */
+:where(:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+:where(.on-slate :focus-visible, .on-slate:focus-visible) { outline: var(--focus-ring-on-slate); }

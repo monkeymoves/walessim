@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Etifeddiaeth specimen sheet</title>
+<!-- Fonts: Fontsource builds from jsDelivr at exact versions. The app itself imports the npm packages. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/besley@5.3.0/wght.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/besley@5.3.0/wght-italic.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/archivo@5.3.0/standard.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/archivo@5.3.0/standard-italic.css">
+<link rel="stylesheet" href="tokens.css">
+<style>
+:root{
+  --grain:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 .1  0 0 0 0 .12  0 0 0 0 .1  0 0 0 .11 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--board) var(--grain);
+  color:var(--ink);
+  font-family:var(--font-grot);font-stretch:var(--wdth-ui);font-weight:var(--wght-grot-text);
+  font-size:var(--size-ui);line-height:var(--lh-ui);
+  -webkit-font-smoothing:antialiased;
+}
+p,h1,h2,h3,dl,dd,ul,ol,figure{margin:0;padding:0}
+ul,ol{list-style:none}
+
+.board{width:1440px;margin:0 auto;padding:30px 32px 30px;display:grid;grid-template-columns:848px 1fr;gap:34px 32px;align-items:start}
+
+/* ---- shared pieces ---- */
+.sheet{background:var(--paper) var(--grain);box-shadow:var(--lit-edge),var(--shadow-sheet)}
+.note{font-size:var(--size-small);line-height:var(--lh-small);font-stretch:var(--wdth-label);color:var(--ink-2)}
+.note b{display:block;color:var(--ink);font-weight:var(--wght-grot-strong);font-size:var(--size-label)}
+.label{font-size:var(--size-label);line-height:var(--lh-label);font-stretch:var(--wdth-label);font-weight:var(--wght-grot-strong)}
+.furniture{font-size:var(--size-furniture);line-height:1;font-stretch:var(--wdth-ticket);font-weight:var(--wght-grot-heavy);letter-spacing:var(--track-furniture);text-transform:uppercase}
+.print{font-family:var(--font-print);font-stretch:normal}
+.other{display:block;font-family:var(--font-print);font-stretch:normal;font-style:italic;font-weight:400;font-size:calc(1em * var(--other-lang-scale));line-height:1.25;color:var(--ink-2);letter-spacing:0;margin-top:.22em}
+.piece-name{font-size:var(--size-label);font-stretch:var(--wdth-label);font-weight:var(--wght-grot-strong);color:var(--ink);margin:0 0 8px}
+.piece-name span{font-weight:var(--wght-grot-text);color:var(--ink-2)}
+
+/* ---- the specimen sheet ---- */
+.spec{padding:30px 36px 30px 34px;position:relative}
+.masthead{display:grid;grid-template-columns:1fr auto;align-items:end;gap:20px;padding-bottom:16px;border-bottom:3px solid var(--ink)}
+.masthead h1{font-family:var(--font-print);font-weight:var(--wght-print-heavy);font-size:var(--size-poster);line-height:var(--lh-poster);letter-spacing:var(--track-poster)}
+.masthead h1 .other{font-size:19px;margin-top:10px;color:var(--ink)}
+.masthead .note{text-align:right;max-width:200px}
+.rows{display:grid;grid-template-columns:148px 1fr;column-gap:22px}
+.rows > .note{padding-top:15px;border-top:1px solid var(--rule)}
+.rows > .show{padding:11px 0 13px;border-top:1px solid var(--rule);min-width:0}
+.rows > :nth-child(-n+2){border-top:0}
+.t-year{font-family:var(--font-print);font-weight:var(--wght-print-heavy);font-size:var(--size-year);line-height:var(--lh-year);letter-spacing:var(--track-year)}
+.t-1{font-family:var(--font-print);font-weight:700;font-size:var(--size-title-1);line-height:var(--lh-title-1);letter-spacing:var(--track-title-1)}
+.t-2{font-family:var(--font-print);font-weight:var(--wght-print-title);font-size:var(--size-title-2);line-height:var(--lh-title-2)}
+.t-3{font-family:var(--font-print);font-weight:var(--wght-print-title);font-size:var(--size-title-3);line-height:var(--lh-title-3)}
+.story{font-family:var(--font-print);font-size:var(--size-story);line-height:var(--lh-story);max-width:var(--measure-story)}
+.cy-big{font-family:var(--font-print);font-weight:500;font-size:23px;line-height:1.3}
+.cy-big i{font-weight:400}
+.yearline{display:flex;align-items:baseline;gap:18px}
+.termgen{color:var(--ink-2)}.termgen b{color:var(--ink);font-weight:var(--wght-grot-strong)}
+.ui-pair{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+.ui-pair p + p{margin-top:5px}
+
+/* ledger */
+.ledger{width:100%;border-collapse:collapse;font-variant-numeric:var(--figures-data)}
+.ledger th{font-size:var(--size-small);font-stretch:var(--wdth-ticket);font-weight:var(--wght-grot-strong);color:var(--ink-2);text-align:right;padding:0 0 4px 12px;border-bottom:1.5px solid var(--ink);white-space:nowrap}
+.ledger th:first-child,.ledger td:first-child{text-align:left;padding-left:0}
+.ledger td{padding:4px 0 4px 12px;text-align:right;border-bottom:1px solid var(--rule);white-space:nowrap}
+.ledger td:first-child{font-stretch:var(--wdth-label);font-weight:540}
+.ledger tr.sel td{background:var(--paper-2)}
+.ledger tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--thread);padding-left:9px}
+.bigfigs{display:flex;gap:26px}
+.bigfigs b{display:block;font-family:var(--font-print);font-weight:700;font-size:var(--size-figure-big);line-height:1}
+.bigfigs span{font-size:var(--size-label);font-stretch:var(--wdth-label);color:var(--ink-2)}
+.figs{display:grid;grid-template-columns:auto 1fr;gap:26px;align-items:start}
+.maplet{display:flex;align-items:baseline;gap:26px;flex-wrap:wrap}
+.water{font-family:var(--font-print);font-style:italic;font-size:17px;letter-spacing:var(--track-water);color:var(--lens-woad-5)}
+.town{font-size:13px;font-stretch:var(--wdth-label);font-weight:var(--wght-grot-strong)}
+.range{font-family:var(--font-print);font-style:italic;font-size:14px;letter-spacing:.04em;color:var(--ink-2)}
+
+/* ---- right column ---- */
+.loose{display:grid;gap:24px;padding-top:2px}
+
+/* ticket */
+.ticket{position:relative;display:grid;grid-template-columns:18px var(--ticket-stub-w) 1fr 26px;height:var(--ticket-h);background:var(--stock,var(--ticket-buff)) var(--grain);border-radius:var(--radius-worn);box-shadow:var(--lit-edge),var(--shadow-sheet)}
+.ticket .weave{background-image:var(--weave);background-size:18px 18px;image-rendering:pixelated;border-right:1px solid rgba(27,34,38,.5)}
+.ticket .stub{display:grid;grid-template-rows:1fr auto;justify-items:center;align-items:center;padding:12px 0 10px;border-right:var(--perforation)}
+.ticket .stub svg{width:38px;height:38px}
+.serial{font-family:var(--font-print);font-weight:700;font-size:var(--size-serial);letter-spacing:var(--track-serial);color:var(--thread)}
+.ticket .body{padding:11px 12px 0 14px;display:grid;grid-template-rows:auto 1fr auto;min-width:0}
+.ticket h3{font-family:var(--font-print);font-weight:var(--wght-print-title);font-size:var(--size-title-2);line-height:var(--lh-title-2)}
+.pulls{display:flex;flex-wrap:wrap;gap:3px 14px;align-content:center;font-size:var(--size-label);font-stretch:var(--wdth-label);font-weight:540}
+.pulls li{display:flex;align-items:center;gap:6px}
+.snip{width:20px;height:7px;background:var(--c) var(--tw);box-shadow:0 0 0 1px var(--yarn-keyline)}
+.snip.frays{background:none;box-shadow:none;border:1.5px solid var(--cd);height:7px;border-left-style:dotted;border-right-style:dotted}
+.pulls .strain{color:var(--ink-2);font-style:italic}
+.fare{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid rgba(27,34,38,.55);padding:5px 0 7px}
+.fare div{display:flex;align-items:baseline;gap:7px}
+.fare b{font-family:var(--font-print);font-weight:700;font-size:16px;line-height:1}
+.fare small{font-size:var(--size-small);font-stretch:var(--wdth-label);color:var(--ink-2)}
+.ticket .verb{writing-mode:vertical-rl;display:flex;align-items:center;justify-content:center;gap:8px;border-left:1px solid rgba(27,34,38,.55);color:var(--ink)}
+.ticket .verb i{font-style:normal}
+.ticket.played{clip-path:polygon(0 0,calc(100% - 20px) 0,calc(100% - 13px) 9px,calc(100% - 6px) 0,100% 0,100% 100%,0 100%)}
+.ticket.played .body > *:not(.stamp){opacity:.5}
+.stamp{position:absolute;right:34px;top:54px;transform:rotate(-5deg);font-family:var(--font-print);font-weight:800;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);border:2.5px solid var(--ink);padding:4px 9px 3px;mix-blend-mode:multiply;opacity:.9}
+.hand{display:grid;gap:12px}
+
+/* actions */
+.actions{display:flex;flex-wrap:wrap;gap:12px 14px;align-items:center}
+.btn{font:inherit;cursor:pointer;border:0;border-radius:var(--radius-cut);min-height:34px;padding:7px 14px 6px}
+.btn-stamp{background:var(--slate);color:var(--on-slate);font-family:var(--font-print);font-stretch:normal;font-weight:600;font-size:14.5px;box-shadow:var(--shadow-slate)}
+.btn-tab{background:var(--paper);color:var(--ink);font-weight:var(--wght-grot-strong);box-shadow:inset 0 0 0 1.5px var(--ink),2px 3px 0 rgba(40,46,42,.22)}
+.btn-stitch{background:var(--stitch-deep);color:#fff;font-weight:var(--wght-grot-strong);outline:1.5px dashed rgba(255,255,255,.75);outline-offset:-5px;padding:9px 16px 8px;box-shadow:2px 3px 0 #153A7D}
+.link{color:var(--thread-deep);font-weight:var(--wght-grot-strong);text-decoration:underline;text-decoration-color:var(--thread);text-decoration-thickness:1.5px;text-underline-offset:3px}
+.docket{display:inline-flex;align-items:center;gap:8px;background:var(--thread-tint);color:var(--thread-deep);font-size:var(--size-label);font-stretch:var(--wdth-label);font-weight:var(--wght-grot-strong);padding:5px 10px 5px 8px;clip-path:polygon(9px 0,100% 0,100% 100%,9px 100%,0 50%)}
+.docket::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--paper);box-shadow:inset 0 0 0 1.5px var(--thread);margin-left:5px}
+.focus-demo{outline:var(--focus-ring);outline-offset:var(--focus-offset)}
+
+/* slip and gauge share a row */
+.duo{display:grid;grid-template-columns:1fr 196px;gap:22px;align-items:start}
+.slip{position:relative;background:var(--slate) var(--grain);background-blend-mode:overlay;color:var(--on-slate);padding:20px 18px 26px 18px;transform:rotate(-1.3deg);box-shadow:none;filter:drop-shadow(3px 5px 0 rgba(30,36,34,.34));
+  clip-path:polygon(0 0,100% 0,100% calc(100% - 7px),96% 100%,91% calc(100% - 6px),86% calc(100% - 1px),80% calc(100% - 7px),73% calc(100% - 2px),67% calc(100% - 8px),60% calc(100% - 3px),53% calc(100% - 7px),46% calc(100% - 1px),39% calc(100% - 6px),32% calc(100% - 2px),25% calc(100% - 8px),18% calc(100% - 3px),11% calc(100% - 7px),5% calc(100% - 1px),0 calc(100% - 5px))}
+.slipwrap{position:relative}
+.pin{position:absolute;left:50%;top:-3px;z-index:2;width:11px;height:11px;border-radius:50%;background:var(--brass);box-shadow:inset -2px -2px 0 rgba(0,0,0,.28),2px 3px 0 rgba(20,24,26,.45)}
+.slip .from{font-size:var(--size-label);font-stretch:var(--wdth-label);color:var(--on-slate-2)}
+.slip h3{font-family:var(--font-print);font-weight:600;font-size:var(--size-title-2);line-height:1.18;margin-top:5px}
+.slip .other{color:var(--on-slate-2)}
+.ripple{display:flex;align-items:center;gap:10px;margin-top:13px;padding-top:10px;border-top:1px solid var(--slate-2);font-weight:540}
+.ripple b{background:var(--warn-paper);color:var(--ink);font-size:var(--size-label);font-stretch:var(--wdth-label);font-weight:var(--wght-grot-strong);padding:2px 8px 2px 22px;position:relative}
+.ripple b::before{content:"";position:absolute;left:0;top:0;bottom:0;width:15px;background:var(--warn-hatch)}
+
+.gauge{background:var(--slate) var(--grain);background-blend-mode:overlay;color:var(--on-slate);padding:14px 14px 12px;box-shadow:var(--shadow-slate)}
+.gauge svg{display:block;width:100%;height:auto}
+.gauge .word{font-family:var(--font-print);font-weight:600;font-size:var(--size-title-3);line-height:1.2;margin-top:6px}
+.gauge .allow{font-size:var(--size-label);font-stretch:var(--wdth-label);color:var(--on-slate-2)}
+
+/* notices */
+.notices{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;align-items:start}
+.warnstrip{grid-column:1 / -1;display:flex;background:var(--warn-paper);box-shadow:var(--shadow-flat)}
+.warnstrip::before{content:"";flex:none;width:22px;background:var(--warn-hatch)}
+.warnstrip span{padding:6px 12px 5px;font-weight:540}
+.severe{background:var(--severe-ground);color:var(--severe-text);font-family:var(--font-print);font-stretch:normal;font-size:13.5px;line-height:1.4;padding:9px 12px 10px;box-shadow:2px 3px 0 rgba(40,46,42,.3)}
+.tip{position:relative;background:var(--slate);color:var(--on-slate-2);padding:8px 12px 9px;margin-top:7px;box-shadow:var(--shadow-slate)}
+.tip::before{content:"";position:absolute;left:18px;top:-7px;border:7px solid transparent;border-top:0;border-bottom-color:var(--slate)}
+.tip b{display:block;font-family:var(--font-print);font-stretch:normal;font-weight:600;font-size:14.5px;color:var(--on-slate)}
+/* icons */
+.icons{display:flex;gap:18px;align-items:flex-end}
+.icons svg{width:34px;height:34px;display:block}
+.icons figcaption{font-size:var(--size-small);font-stretch:var(--wdth-label);color:var(--ink-2);margin-top:4px}
+
+/* ---- strands: the full top-bar row ---- */
+.wide{grid-column:1 / -1}
+.strands{display:grid;grid-template-columns:repeat(7,1fr);gap:10px}
+.meter{background:var(--paper) var(--grain);padding:8px 11px 9px;box-shadow:var(--lit-edge),var(--shadow-flat);min-width:0}
+.meter .head{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.meter .name{font-size:13.5px;font-stretch:var(--wdth-label);font-weight:var(--wght-grot-strong);white-space:nowrap}
+.meter .move{font-size:12.5px;font-stretch:var(--wdth-label);font-weight:var(--wght-grot-strong);font-variant-numeric:var(--figures-data);color:var(--ink-2);display:flex;align-items:center;gap:4px}
+.meter .move svg{width:9px;height:8px}
+.meter .other{font-size:11.5px;margin-top:0}
+.yarn{position:relative;height:9px;margin-top:8px}
+.yarn::before{content:"";position:absolute;left:0;right:0;top:4px;border-top:1.5px dotted rgba(27,34,38,.5)}
+.yarn i{position:absolute;left:0;top:0;bottom:0;width:calc(var(--n) * 10%);background:var(--c) var(--tw);box-shadow:0 0 0 1px var(--yarn-keyline)}
+.yarn.sharp i::after{content:"";position:absolute;right:-5px;top:-2px;width:9px;height:13px;background:var(--cd);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+.yarn.fuzzy i{box-shadow:-1px 0 0 0 var(--yarn-keyline),0 -1px 0 0 var(--yarn-keyline),0 1px 0 0 var(--yarn-keyline)}
+.yarn.fuzzy i::after{content:"";position:absolute;left:100%;top:-1px;bottom:-1px;width:10px;background:repeating-linear-gradient(0deg,var(--cd) 0 1.5px,transparent 1.5px 3.6px);clip-path:polygon(0 0,100% 12%,55% 30%,90% 48%,45% 66%,100% 84%,0 100%)}
+.pegs{position:relative;height:4px;margin-top:2px;background:repeating-linear-gradient(90deg,rgba(27,34,38,.6) 0 1px,transparent 1px 10%);border-right:1px solid rgba(27,34,38,.6)}
+
+.colophon{font-size:var(--size-small);font-stretch:var(--wdth-label);color:var(--ink-2);border-top:1.5px solid var(--ink-2);padding-top:8px}
+.pegs b{position:absolute;left:calc(var(--s) * 10% - 5px);top:-1px;width:10px;height:10px;background:linear-gradient(45deg,transparent 42%,var(--ink) 42% 58%,transparent 58%),linear-gradient(-45deg,transparent 42%,var(--ink) 42% 58%,transparent 58%)}
+.meter{padding-bottom:13px}
+/* ---- palette ---- */
+.palette{display:grid;grid-template-columns:400px 1fr 372px;gap:32px;align-items:start}
+.stocks{position:relative;height:296px}
+.stock{position:absolute;width:var(--w,150px);height:88px;padding:9px 11px;background:var(--bg) var(--grain);box-shadow:var(--lit-edge),1px 1px 0 rgba(0,0,0,.14),2px 3px 0 rgba(40,46,42,.22);font-size:var(--size-small);font-stretch:var(--wdth-label);line-height:1.25;color:var(--fg,var(--ink-2))}
+.stock b{display:block;font-size:var(--size-label);font-weight:var(--wght-grot-strong);color:var(--fg,var(--ink))}
+.stock code,.shade code,.reserved code{font-family:inherit;font-variant-numeric:var(--figures-data)}
+.shadecard{padding:16px 18px 16px}
+.shadecard h3,.ramps h3{font-family:var(--font-print);font-weight:600;font-size:var(--size-title-3);margin-bottom:10px}
+.shades{display:grid;grid-template-columns:repeat(7,1fr);gap:10px}
+.shade .wound{height:74px;background:var(--c) var(--tw);background-size:auto,9px 9px;box-shadow:0 0 0 1px var(--yarn-keyline),inset 0 6px 0 -3px rgba(255,255,255,.18)}
+.shade .deep{height:7px;background:var(--cd);margin-top:3px}
+.shade b{display:block;margin-top:7px;font-size:var(--size-label);font-stretch:var(--wdth-ticket);font-weight:var(--wght-grot-strong);color:var(--cd)}
+.shade span{display:block;font-size:var(--size-small);font-stretch:var(--wdth-ticket);color:var(--ink-2);line-height:1.3}
+.reserved{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:16px;padding-top:12px;border-top:1px solid var(--rule)}
+.reserved svg{display:block;width:100%;height:22px}
+.reserved p{font-size:var(--size-small);font-stretch:var(--wdth-label);color:var(--ink-2);margin-top:3px}
+.reserved p b{color:var(--ink);font-weight:var(--wght-grot-strong)}
+.ramps{padding:16px 18px}
+.ramp{display:grid;grid-template-columns:repeat(var(--k,5),1fr);height:30px;margin-bottom:6px;align-items:end;padding-right:3px}
+.ramp i{background:var(--c);box-shadow:inset 1px 1px 0 rgba(255,255,255,.4),2px 2px 0 rgba(27,34,38,.3);position:relative;height:100%;margin-right:-3px}
+.ramp.step i:nth-child(1){height:52%}.ramp.step i:nth-child(2){height:64%}.ramp.step i:nth-child(3){height:76%}.ramp.step i:nth-child(4){height:88%}.ramp.step i{z-index:1}.ramp.step i:nth-child(2){z-index:2}.ramp.step i:nth-child(3){z-index:3}.ramp.step i:nth-child(4){z-index:4}.ramp.step i:nth-child(5){z-index:5}
+.ramp i.nd{background:var(--paper-2) var(--lens-nodata)}
+.ramps .note{margin-bottom:10px}
+</style>
+</head>
+<body>
+<main class="board">
+
+  <!-- ============ specimen sheet ============ -->
+  <section class="sheet spec" aria-label="Type">
+    <header class="masthead">
+      <h1>Etifeddiaeth<span class="other">Inheritance: a game of Wales. Gêm am Gymru.</span></h1>
+      <p class="note"><b>Papur, specimen sheet</b>Besley and Archivo, set on cartridge stock. Version 1.</p>
+    </header>
+
+    <div class="rows">
+      <p class="note"><b>Year</b>Besley 800, 44 on 44. One per screen.</p>
+      <div class="show yearline"><span class="t-year">2031</span>
+        <p class="termgen"><b>Term 2, the 2030s</b><br>Generation 2025 to 2050</p></div>
+
+      <p class="note"><b>Title 1</b>Besley 700, 26 on 29. Place names, page titles.</p>
+      <div class="show"><span class="t-1">Blaenau Ffestiniog, Ynys Môn, Tŷ Ddewi</span></div>
+
+      <p class="note"><b>Title 2 with its pair</b>Besley 600, 20 on 23. The other language sits beneath in italic at four fifths.</p>
+      <div class="show"><span class="t-2">Gwneud tomenni glo yn ddiogel<span class="other">Make coal tips safe</span></span></div>
+
+      <p class="note"><b>Title 3</b>Besley 600, 17 on 20.</p>
+      <div class="show"><span class="t-3">Why Resilient moved one place this term</span></div>
+
+      <p class="note"><b>Story</b>Besley 400, 15 on 22.5, up to 62 characters a line.</p>
+      <div class="show"><p class="story">Steam coal made the Rhondda one of the most intensively mined places on earth after the 1850s. The last deep pits closed between 1990 and 2008, and the tips stayed.</p></div>
+
+      <p class="note"><b>Cymraeg</b>Roman and italic. The circumflexed w and y come from the Latin Extended-A subset.</p>
+      <div class="show"><p class="cy-big" lang="cy">Tŷ Gŵyr, Ŵyl, Ynys Bŷr.<br><i>Cymru â diwylliant bywiog lle mae’r Gymraeg yn ffynnu.</i></p></div>
+
+      <p class="note"><b>Interface and label</b>Archivo at 92 width, 13.5 on 19. Labels at 82 width, weight 640, sentence case.</p>
+      <div class="show ui-pair">
+        <div><p>Trust allows three cards this term. Pick up to three tips on the model, then fold the map back.</p>
+          <p lang="cy">Mae ymddiriedaeth yn caniatáu tri cherdyn y tymor hwn.</p></div>
+        <div><p class="label">Homes on land below</p><p class="label" style="color:var(--ink-2)">Nearest river</p>
+          <p class="furniture" style="margin-top:9px">Region &nbsp; Rhanbarth &nbsp; Pays out in</p>
+          <p class="note" style="margin-top:4px">Ticket furniture: 68 width, 10.5, capitals. Tickets only.</p></div>
+      </div>
+
+      <p class="note"><b>Figures</b>Archivo tabular in ledgers. Besley 700 for the two or three numbers a panel is about.</p>
+      <div class="show figs">
+        <div class="bigfigs"><div><b>237k</b><span>people</span></div><div><b>11.4%</b><span>speak Welsh</span></div></div>
+        <table class="ledger">
+          <thead><tr><th>Tip</th><th>Homes below</th><th>Buildings</th><th>WIMD rank</th></tr></thead>
+          <tbody>
+            <tr><td>Maerdy Spoil Tips</td><td>20.5 ha</td><td>652</td><td>120</td></tr>
+            <tr class="sel"><td>Wattstown Tip</td><td>44.0 ha</td><td>18</td><td>121</td></tr>
+            <tr><td>Lewis Merthyr Tip 1</td><td>15.5 ha</td><td>140</td><td>742</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="note"><b>Map lettering</b>Water in tracked Besley italic, ranges in italic, towns in Archivo 82.</p>
+      <div class="show maplet"><span class="water">Bae Ceredigion</span><span class="range">Bannau Brycheiniog</span><span class="town">Tonypandy</span><span class="town">Aberystwyth</span></div>
+    </div>
+  </section>
+
+  <!-- ============ loose pieces ============ -->
+  <div class="loose">
+    <section aria-label="Railway-ticket cards">
+      <p class="piece-name">Railway-ticket cards <span>Stock colour is the scope. Weave trim is the strands it strengthens.</span></p>
+      <div class="hand">
+        <article class="ticket" style="--stock:var(--ticket-green);--weave:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' shape-rendering='crispEdges'%3E%3Crect width='12' height='12' fill='%232F6B3F'/%3E%3Cpath fill='%23F5F3EA' d='M4 0h4v2h-4zM2 2h8v2h-8zM0 4h4v4h-4zM8 4h4v4h-4zM2 8h8v2h-8zM4 10h4v2h-4z'/%3E%3Crect x='4' y='4' width='4' height='4' fill='%23C7725E'/%3E%3C/svg%3E&quot;)">
+          <div class="weave"></div>
+          <div class="stub">
+            <svg viewBox="0 0 40 40" aria-hidden="true"><path fill="#1B2226" d="M2 33 15 9l5 3 4-5 14 26z"/><path fill="#C9D8B6" d="M13 20l9-2-1 3-10 3zM9 27l19-4 1 3-22 5zM24 14l3-1 2 4-4 1z"/><path fill="#1B2226" d="M0 34h40v3H0z"/></svg>
+            <span class="serial">No. 0440</span>
+          </div>
+          <div class="body">
+            <h3>Make coal tips safe<span class="other" lang="cy">Gwneud tomenni glo yn ddiogel</span></h3>
+            <ul class="pulls">
+              <li><i class="snip" style="--c:var(--yarn-resilient);--tw:var(--twist-resilient)"></i>Resilient</li>
+              <li><i class="snip" style="--c:var(--yarn-healthier);--tw:var(--twist-healthier)"></i>Healthier</li>
+              <li><i class="snip" style="--c:var(--yarn-cohesive);--tw:var(--twist-cohesive)"></i>Cohesive</li>
+              <li class="strain"><i class="snip frays" style="--cd:var(--yarn-prosperous-deep)"></i>frays Prosperous</li>
+            </ul>
+            <div class="fare"><div><span class="furniture">Cost</span><b>4</b><small>of 8 pips</small></div><div><span class="furniture">Pays out in</span><b>1</b><small>term</small></div></div>
+          </div>
+          <div class="verb furniture"><span>Region</span></div>
+        </article>
+
+        <article class="ticket played" style="--stock:var(--ticket-buff);--weave:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' shape-rendering='crispEdges'%3E%3Crect width='12' height='12' fill='%23232C63'/%3E%3Cpath fill='%23F5F3EA' d='M4 0h4v2h-4zM2 2h8v2h-8zM0 4h4v4h-4zM8 4h4v4h-4zM2 8h8v2h-8zM4 10h4v2h-4z'/%3E%3Crect x='4' y='4' width='4' height='4' fill='%23A56BB0'/%3E%3C/svg%3E&quot;)">
+          <div class="weave"></div>
+          <div class="stub">
+            <svg viewBox="0 0 40 40" aria-hidden="true"><path fill="#1B2226" d="M5 37V16L20 4l15 12v21z"/><path fill="#E6D3A3" d="M16 37V25h8v12zM10 18h6v6h-6zM24 18h6v6h-6z"/><path fill="#1B2226" d="M19 25h2v12h-2z"/></svg>
+            <span class="serial">No. 0486</span>
+          </div>
+          <div class="body">
+            <h3>Welsh-medium childcare<span class="other" lang="cy">Gofal plant cyfrwng Cymraeg</span></h3>
+            <ul class="pulls">
+              <li><i class="snip" style="--c:var(--yarn-culture);--tw:var(--twist-culture)"></i>Culture and language</li>
+              <li><i class="snip" style="--c:var(--yarn-equal);--tw:var(--twist-equal)"></i>More equal</li>
+            </ul>
+            <div class="fare"><div><span class="furniture">Cost</span><b>2</b><small>of 8 pips</small></div><div><span class="furniture">Pays out in</span><b>3</b><small>terms</small></div></div>
+            <span class="stamp">Played 2031</span>
+          </div>
+          <div class="verb furniture"><span>National</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section aria-label="Actions">
+      <p class="piece-name">Actions <span>Stamp to commit, tab to step back, stitch to place, red to ask where a number came from.</span></p>
+      <div class="actions">
+        <button class="btn btn-stamp">Play this card</button>
+        <button class="btn btn-tab focus-demo">Fold back without playing</button>
+        <button class="btn btn-stitch">Stitch a thread here</button>
+        <a class="link" href="#">How is this worked out?</a>
+        <span class="docket">Census 2021, ONS</span>
+      </div>
+    </section>
+
+    <section class="duo">
+      <div>
+        <p class="piece-name">Curveball slip <span>The one piece that sits askew.</span></p>
+        <div class="slipwrap"><i class="pin"></i>
+        <article class="slip">
+          <p class="from">From the horizon scan</p>
+          <h3>Climate instability: a wet, stormy decade<span class="other" lang="cy">Ansefydlogrwydd hinsawdd: degawd gwlyb a stormus</span></h3>
+          <p class="ripple"><b>Ripple</b>Raises coal tip risk</p>
+        </article></div>
+      </div>
+      <div>
+        <p class="piece-name">Trust gauge</p>
+        <div class="gauge">
+          <svg viewBox="0 0 170 92" role="img" aria-label="Trust: Fair, third of four bands">
+            <g fill="none" stroke-width="15" stroke-linecap="butt">
+              <path stroke="#EEF0EA" d="M17 85A68 68 0 0 1 29.3 46"/>
+              <path stroke="#EEF0EA" d="M30.7 44.1A68 68 0 0 1 73.2 18"/>
+              <path stroke="#EEF0EA" d="M75.5 17.7A68 68 0 0 1 124 29.3"/>
+              <path stroke="#5B636E" d="M125.9 30.7A68 68 0 0 1 153 85"/>
+            </g>
+            <path fill="#EEF0EA" d="M81.5 85 85 31l3.5 54z" transform="rotate(9 85 85)"/>
+            <circle cx="85" cy="85" r="6.5" fill="#D9A21B"/><circle cx="85" cy="85" r="2" fill="#23282F"/>
+          </svg>
+          <p class="word">Trust: Fair</p>
+          <p class="allow">Three cards next term</p>
+        </div>
+      </div>
+    </section>
+
+    <section aria-label="Notices">
+      <p class="piece-name">Notices and tooltip <span>Said in pattern and words first, colour second.</span></p>
+      <div class="notices">
+        <p class="warnstrip"><span>Risk raised this decade by the wet curveball. Illustrative.</span></p>
+        <p class="severe">You have lost the seat. A caretaker holds the next term.</p>
+        <p class="tip on-slate"><b>Resilient, 5 of 10</b>Up one place since 2026. Pull the thread to see why.</p>
+      </div>
+    </section>
+
+    <section aria-label="Icons">
+      <p class="piece-name">Hand-cut icons <span>Solid silhouettes, straight cuts, detail removed with the knife.</span></p>
+      <div class="icons">
+        <figure><svg viewBox="0 0 40 40"><path fill="#1B2226" d="M2 33 15 9l5 3 4-5 14 26z"/><path fill="#C9CBC2" d="M13 20l9-2-1 3-10 3zM9 27l19-4 1 3-22 5z"/><path fill="#1B2226" d="M0 34h40v3H0z"/></svg><figcaption>Tip</figcaption></figure>
+        <figure><svg viewBox="0 0 40 40"><path fill="#1B2226" d="M8 37 17 8h6l9 29h-5l-2-8H15l-2 8zM16 25h8l-2-8h-4z"/><path fill="#1B2226" d="M12 3h16v6H12z"/><path fill="#C9CBC2" d="M18 4.5h4v3h-4z"/><path fill="#1B2226" d="M0 36h40v3H0z"/></svg><figcaption>Pit</figcaption></figure>
+        <figure><svg viewBox="0 0 40 40"><path fill="#1B2226" d="M6 37V17L20 4l14 13v20z"/><path fill="#C9CBC2" d="M17 37V27l3-4 3 4v10zM11 19h4v9h-4zM25 19h4v9h-4zM18 11h4v5h-4z"/></svg><figcaption>Chapel</figcaption></figure>
+        <figure><svg viewBox="0 0 40 40"><path fill="#1B2226" d="M2 37V21l6-6 6 6 6-6 6 6 6-6 6 6v16z"/><path fill="#C9CBC2" d="M6 26h4v11H6zM18 26h4v11h-4zM30 26h4v11h-4z"/><path fill="#1B2226" d="M10 8h4v9h-4zM26 8h4v9h-4z"/></svg><figcaption>Terrace</figcaption></figure>
+        <figure><svg viewBox="0 0 40 40"><path fill="#1B2226" d="M18.5 18h3l1.5 21h-6z"/><path fill="#1B2226" d="M20 17 17 1h4zM21 16l15 7-2 3zM19 16 4 23l2 3z"/></svg><figcaption>Wind</figcaption></figure>
+        <figure><svg viewBox="0 0 40 40"><path fill="#1B2226" d="M0 14c5-5 9-5 14 0s9 5 13 0 8-5 13 0v6c-5-5-9-5-13 0s-9 5-13 0-9-5-14 0zM0 27c5-5 9-5 14 0s9 5 13 0 8-5 13 0v6c-5-5-9-5-13 0s-9 5-13 0-9-5-14 0z"/></svg><figcaption>River</figcaption></figure>
+        <figure><svg viewBox="0 0 40 40"><path fill="#1B2226" d="M3 6h34v24H19l-9 8v-8H3z"/><path fill="#C9CBC2" d="M9 12h3v12H9zM9 21h8v3H9zM20 12h3v12h-3zM20 21h8v3h-8z"/></svg><figcaption>Language</figcaption></figure>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ strands ============ -->
+  <section class="wide" aria-label="Strand meters">
+    <p class="piece-name">Strand meters <span>Yarn wound along ten pegs shows how people are faring now. A knotted end when the model is sure, a loose end when it is fuzzy. The cross-stitch on the pegs marks what is being handed on. Each strand has its own twist, so the row reads without colour.</span></p>
+    <ol class="strands">
+      <li class="meter"><div class="head"><span class="name">Prosperous</span><span class="move"><svg viewBox="0 0 9 8"><path fill="currentColor" d="M0 0h9L4.5 8z"/></svg>1</span></div><span class="other" lang="cy">Llewyrchus</span>
+        <div class="yarn fuzzy" style="--n:5;--c:var(--yarn-prosperous);--cd:var(--yarn-prosperous-deep);--tw:var(--twist-prosperous)"><i></i></div><div class="pegs"><b style="--s:4"></b></div></li>
+      <li class="meter"><div class="head"><span class="name">Resilient</span><span class="move"><svg viewBox="0 0 9 8"><path fill="currentColor" d="M0 8h9L4.5 0z"/></svg>1</span></div><span class="other" lang="cy">Cydnerth</span>
+        <div class="yarn sharp" style="--n:5;--c:var(--yarn-resilient);--cd:var(--yarn-resilient-deep);--tw:var(--twist-resilient)"><i></i></div><div class="pegs"><b style="--s:6"></b></div></li>
+      <li class="meter"><div class="head"><span class="name">Healthier</span><span class="move">no change</span></div><span class="other" lang="cy">Iachach</span>
+        <div class="yarn sharp" style="--n:6;--c:var(--yarn-healthier);--cd:var(--yarn-healthier-deep);--tw:var(--twist-healthier)"><i></i></div><div class="pegs"><b style="--s:5"></b></div></li>
+      <li class="meter"><div class="head"><span class="name">More equal</span><span class="move"><svg viewBox="0 0 9 8"><path fill="currentColor" d="M0 0h9L4.5 8z"/></svg>1</span></div><span class="other" lang="cy">Mwy cyfartal</span>
+        <div class="yarn fuzzy" style="--n:4;--c:var(--yarn-equal);--cd:var(--yarn-equal-deep);--tw:var(--twist-equal)"><i></i></div><div class="pegs"><b style="--s:3"></b></div></li>
+      <li class="meter"><div class="head"><span class="name">Cohesive</span><span class="move"><svg viewBox="0 0 9 8"><path fill="currentColor" d="M0 8h9L4.5 0z"/></svg>1</span></div><span class="other" lang="cy">Cydlynus</span>
+        <div class="yarn sharp" style="--n:6;--c:var(--yarn-cohesive);--cd:var(--yarn-cohesive-deep);--tw:var(--twist-cohesive)"><i></i></div><div class="pegs"><b style="--s:7"></b></div></li>
+      <li class="meter"><div class="head"><span class="name">Culture, language</span><span class="move"><svg viewBox="0 0 9 8"><path fill="currentColor" d="M0 8h9L4.5 0z"/></svg>1</span></div><span class="other" lang="cy">Diwylliant, iaith</span>
+        <div class="yarn sharp" style="--n:7;--c:var(--yarn-culture);--cd:var(--yarn-culture-deep);--tw:var(--twist-culture)"><i></i></div><div class="pegs"><b style="--s:6"></b></div></li>
+      <li class="meter"><div class="head"><span class="name">Global</span><span class="move"><svg viewBox="0 0 9 8"><path fill="currentColor" d="M0 8h9L4.5 0z"/></svg>1</span></div><span class="other" lang="cy">Byd-eang</span>
+        <div class="yarn sharp" style="--n:5;--c:var(--yarn-global);--cd:var(--yarn-global-deep);--tw:var(--twist-global)"><i></i></div><div class="pegs"><b style="--s:4"></b></div></li>
+    </ol>
+  </section>
+
+  <!-- ============ palette ============ -->
+  <section class="wide palette" aria-label="Palette">
+    <div>
+      <p class="piece-name">Paper stocks <span>Offcuts on the millboard.</span></p>
+      <div class="stocks">
+        <div class="stock" style="--bg:var(--paper);left:0;top:0"><b>Cartridge</b>Heddiw, every sheet<br><code>#F5F3EA</code></div>
+        <div class="stock" style="--bg:var(--paper-2);left:128px;top:10px"><b>Second sheet</b>Backs, selected rows<br><code>#E9E6DA</code></div>
+        <div class="stock" style="--bg:var(--paper-yfory);left:256px;top:0;--w:144px"><b>Tracing</b>Yfory<br><code>#E1E8E7</code></div>
+        <div class="stock" style="--bg:var(--ticket-buff);left:0;top:106px;--w:112px"><b>Ticket buff</b>National<br><code>#E6D3A3</code></div>
+        <div class="stock" style="--bg:var(--ticket-green);left:96px;top:98px;--w:112px"><b>Ticket green</b>Region<br><code>#C9D8B6</code></div>
+        <div class="stock" style="--bg:var(--ticket-pink);left:192px;top:106px;--w:112px"><b>Ticket pink</b>Between regions<br><code>#EBC4B8</code></div>
+        <div class="stock" style="--bg:var(--ticket-blue);left:288px;top:98px;--w:112px"><b>Ticket blue</b>Standing<br><code>#C5D3DC</code></div>
+        <div class="stock" style="--bg:var(--paper-ddoe);--fg:var(--ink-ddoe);left:0;top:204px"><b>Aged</b>Ddoe<br><code>#D8CDB4</code></div>
+        <div class="stock" style="--bg:var(--paper-ddoe-soot);--fg:var(--ink-ddoe);left:128px;top:196px"><b>Smoked</b>Ddoe under strain<br><code>#B9AD95</code></div>
+        <div class="stock" style="--bg:var(--slate);--fg:var(--on-slate);left:256px;top:204px;--w:144px;box-shadow:var(--shadow-slate)"><b>Slate</b>Trust, slips, stamps<br><code>#353B45</code></div>
+      </div>
+    </div>
+
+    <div class="sheet shadecard">
+      <h3>Yarn shade card</h3>
+      <div class="shades">
+        <div class="shade" style="--c:var(--yarn-prosperous);--cd:var(--yarn-prosperous-deep);--tw:var(--twist-prosperous)"><div class="wound"></div><div class="deep"></div><b>Prosperous</b><span>Gorse gold<br><code>#D9A21B</code><br><code>#7A5A00</code></span></div>
+        <div class="shade" style="--c:var(--yarn-resilient);--cd:var(--yarn-resilient-deep);--tw:var(--twist-resilient)"><div class="wound"></div><div class="deep"></div><b>Resilient</b><span>Bracken<br><code>#2F6B3F</code></span></div>
+        <div class="shade" style="--c:var(--yarn-healthier);--cd:var(--yarn-healthier-deep);--tw:var(--twist-healthier)"><div class="wound"></div><div class="deep"></div><b>Healthier</b><span>Lichen teal<br><code>#55B0A6</code><br><code>#1F6B64</code></span></div>
+        <div class="shade" style="--c:var(--yarn-equal);--cd:var(--yarn-equal-deep);--tw:var(--twist-equal)"><div class="wound"></div><div class="deep"></div><b>More equal</b><span>Heather<br><code>#A56BB0</code><br><code>#7A3F86</code></span></div>
+        <div class="shade" style="--c:var(--yarn-cohesive);--cd:var(--yarn-cohesive-deep);--tw:var(--twist-cohesive)"><div class="wound"></div><div class="deep"></div><b>Cohesive</b><span>Brick rose<br><code>#C7725E</code><br><code>#8E3F2E</code></span></div>
+        <div class="shade" style="--c:var(--yarn-culture);--cd:var(--yarn-culture-deep);--tw:var(--twist-culture)"><div class="wound"></div><div class="deep"></div><b>Culture</b><span>Woad indigo<br><code>#232C63</code></span></div>
+        <div class="shade" style="--c:var(--yarn-global);--cd:var(--yarn-global-deep);--tw:var(--twist-global)"><div class="wound"></div><div class="deep"></div><b>Global</b><span>Sky<br><code>#8FC0E0</code><br><code>#2B6288</code></span></div>
+      </div>
+      <div class="reserved">
+        <div><svg viewBox="0 0 300 22" preserveAspectRatio="none"><path d="M6 14C60 2 110 22 170 11s90-4 124 2" fill="none" stroke="#A81E2B" stroke-width="2.2"/><circle cx="6" cy="14" r="4.5" fill="#A81E2B"/></svg>
+          <p><b>The red thread, <code>#A81E2B</code>.</b> Where a number came from. Nothing else is red.</p></div>
+        <div><svg viewBox="0 0 300 22" preserveAspectRatio="none"><path d="M4 11h292" fill="none" stroke="#2B6CD9" stroke-width="3.2" stroke-dasharray="11 6"/></svg>
+          <p><b>The player's stitch, <code>#2B6CD9</code>.</b> What you did. Always a dashed running stitch.</p></div>
+      </div>
+    </div>
+
+    <div class="sheet ramps">
+      <h3>Lens ramps</h3>
+      <p class="note">Five stacked tints, lowest first. Classed, never a smooth gradient.</p>
+      <div class="ramp step"><i style="--c:var(--lens-peat-1)"></i><i style="--c:var(--lens-peat-2)"></i><i style="--c:var(--lens-peat-3)"></i><i style="--c:var(--lens-peat-4)"></i><i style="--c:var(--lens-peat-5)"></i></div>
+      <div class="ramp step"><i style="--c:var(--lens-woad-1)"></i><i style="--c:var(--lens-woad-2)"></i><i style="--c:var(--lens-woad-3)"></i><i style="--c:var(--lens-woad-4)"></i><i style="--c:var(--lens-woad-5)"></i></div>
+      <div class="ramp step"><i style="--c:var(--lens-moss-1)"></i><i style="--c:var(--lens-moss-2)"></i><i style="--c:var(--lens-moss-3)"></i><i style="--c:var(--lens-moss-4)"></i><i style="--c:var(--lens-moss-5)"></i></div>
+      <p class="note" style="margin-top:12px">Diverging, woad below the middle and peat above. No data is pencil hatch.</p>
+      <div class="ramp" style="--k:8"><i style="--c:var(--lens-div-1)"></i><i style="--c:var(--lens-div-2)"></i><i style="--c:var(--lens-div-3)"></i><i style="--c:var(--lens-div-mid)"></i><i style="--c:var(--lens-div-5)"></i><i style="--c:var(--lens-div-6)"></i><i style="--c:var(--lens-div-7)"></i><i class="nd"></i></div>
+      <p class="note" style="margin-top:12px"><b>Inks</b></p>
+      <div class="ramp" style="--k:6;height:20px"><i style="--c:var(--ink)"></i><i style="--c:var(--ink-2)"></i><i style="--c:var(--ink-3)"></i><i style="--c:var(--ink-ddoe)"></i><i style="--c:var(--warn)"></i><i style="--c:var(--rule-strong)"></i></div>
+    </div>
+  </section>
+  <footer class="wide colophon"><p>Light falls from the north-west, so every shadow lies to the south-east. Fonts: @fontsource-variable/besley 5.3.0 and @fontsource-variable/archivo 5.3.0, both under the SIL Open Font Licence.</p></footer>
+</main>
+</body>
+</html>

@@ -1,0 +1,249 @@
+indicators:
+- id: pop
+  name:
+    en: Population (mid-year estimate)
+    cy: Poblogaeth (amcangyfrif canol blwyddyn)
+  cy_review: true
+  unit: people
+  format: integer
+  higher_is_better: null
+  strand: cohesive
+  national_indicator: null
+  source: nomis_mye
+  notes:
+    en: Mid-2025. Context and weighting indicator, no direction.
+- id: pop_change
+  name:
+    en: Population change over 10 years
+    cy: Newid yn y boblogaeth dros 10 mlynedd
+  cy_review: true
+  unit: percent
+  format: percent
+  higher_is_better: null
+  strand: cohesive
+  national_indicator: null
+  source: nomis_mye
+  notes:
+    en: Mid-2015 to mid-2025.
+- id: age65
+  name:
+    en: Share aged 65 and over
+    cy: Cyfran 65 oed a throsodd
+  cy_review: true
+  unit: percent of residents
+  format: percent
+  higher_is_better: false
+  strand: healthier
+  national_indicator: null
+  source: nomis_mye
+  notes:
+    en: Mid-2025. Feeds care_pressure in the game.
+- id: young_adults
+  name:
+    en: Share aged 20 to 34
+    cy: Cyfran 20 i 34 oed
+  cy_review: true
+  unit: percent of residents
+  format: percent
+  higher_is_better: true
+  strand: cohesive
+  national_indicator: null
+  source: nomis_mye
+  notes:
+    en: Mid-2025.
+- id: welsh_speakers
+  name:
+    en: Welsh speakers aged 3 and over
+    cy: Siaradwyr Cymraeg 3 oed a throsodd
+  cy_review: true
+  unit: percent of residents aged 3+
+  format: percent
+  higher_is_better: true
+  strand: culture
+  national_indicator: null
+  source: nomis_census_ts033
+  notes:
+    en: Census 2021. Can speak Welsh divided by all usual residents aged 3+.
+- id: deprivation
+  name:
+    en: Small areas in the most deprived fifth of Wales
+    cy: Ardaloedd bach yn y bumed rhan fwyaf difreintiedig o Gymru
+  cy_review: true
+  unit: percent of LSOAs
+  format: percent
+  higher_is_better: false
+  strand: equal
+  national_indicator: null
+  source: wimd_2025
+  notes:
+    en: WIMD 2025 overall rank, 1917 LSOAs. Wales value is 20 by construction.
+- id: deprivation_10
+  name:
+    en: Small areas in the most deprived tenth of Wales
+    cy: Ardaloedd bach yn y ddegfed ran fwyaf difreintiedig o Gymru
+  cy_review: true
+  unit: percent of LSOAs
+  format: percent
+  higher_is_better: false
+  strand: equal
+  national_indicator: null
+  source: wimd_2025
+  notes:
+    en: WIMD 2025 decile 1. Wales value is 10 by construction.
+- id: gva_head
+  name:
+    en: Gross value added per head
+    cy: Gwerth ychwanegol gros y pen
+  cy_review: true
+  unit: GBP per person
+  format: gbp
+  higher_is_better: true
+  strand: prosperous
+  national_indicator: null
+  source: ons_regional_gdp_la
+  notes:
+    en: GVA(B), current prices, 2024. Residence-based population denominator; commuting areas distort LAs with large workplace flows.
+- id: employment
+  name:
+    en: Employment rate, 16 to 64
+    cy: Cyfradd cyflogaeth, 16 i 64
+  cy_review: true
+  unit: percent
+  format: percent
+  higher_is_better: true
+  strand: prosperous
+  national_indicator: null
+  source: nomis_aps
+  notes:
+    en: Annual Population Survey, July 2025 to June 2026. Sample-based, noisy for small LAs.
+- id: earnings
+  name:
+    en: Median gross weekly earnings, full-time, residence based
+    cy: Enillion wythnosol gros canolrifol, llawn amser, yn ôl preswylfa
+  cy_review: true
+  unit: GBP per week
+  format: gbp
+  higher_is_better: true
+  strand: prosperous
+  national_indicator: null
+  source: nomis_ashe
+  notes:
+    en: ASHE 2025, full-time workers by place of residence.
+- id: affordability
+  name:
+    en: House price to residence-based earnings ratio (median)
+    cy: Cymhareb pris tŷ i enillion yn ôl preswylfa (canolrifol)
+  cy_review: true
+  unit: ratio
+  format: ratio
+  higher_is_better: false
+  strand: cohesive
+  national_indicator: null
+  source: ons_affordability
+  notes:
+    en: Year ending September 2025.
+- id: life_exp
+  name:
+    en: Life expectancy at birth
+    cy: Disgwyliad oes adeg geni
+  cy_review: true
+  unit: years
+  format: years
+  higher_is_better: true
+  strand: healthier
+  national_indicator: null
+  source: ons_life_expectancy_local
+  notes:
+    en: 2022 to 2024. Simple mean of male and female. Healthy life expectancy is not available by Welsh LA.
+- id: emissions_head
+  name:
+    en: Territorial greenhouse gas emissions per person
+    cy: Allyriadau nwyon tŷ gwydr tiriogaethol y pen
+  cy_review: true
+  unit: tonnes CO2e per person
+  format: decimal1
+  higher_is_better: false
+  strand: global
+  national_indicator: null
+  source: desnz_la_ghg
+  notes:
+    en: 2024, all sectors including net land use. Heavy-industry LAs (Neath Port Talbot) are far above the rest.
+- id: renewables
+  name:
+    en: Installed renewable electricity capacity per person
+    cy: Capasiti trydan adnewyddadwy wedi'i osod y pen
+  cy_review: true
+  unit: kW per person
+  format: decimal2
+  higher_is_better: true
+  strand: global
+  national_indicator: null
+  source: desnz_renewables_la
+  notes:
+    en: End 2025 capacity divided by mid-2025 population.
+- id: renewables_mw
+  name:
+    en: Installed renewable electricity capacity
+    cy: Capasiti trydan adnewyddadwy wedi'i osod
+  cy_review: true
+  unit: MW
+  format: integer
+  higher_is_better: true
+  strand: global
+  national_indicator: null
+  source: desnz_renewables_la
+  notes:
+    en: End 2025, all technologies. Wales value is the sum of the 22 LAs.
+- id: flood_exposure
+  name:
+    en: Residential properties at risk of flooding, per 100 households
+    cy: Eiddo preswyl mewn perygl o lifogydd, fesul 100 o aelwydydd
+  cy_review: true
+  unit: per 100 households
+  format: percent
+  higher_is_better: false
+  strand: resilient
+  national_indicator: null
+  source: statswales_flood
+  notes:
+    en: Sum over rivers, sea and surface water, so a property exposed to two sources counts twice. Use for ranking and relative change, not as
+      a unique property count.
+- id: greenspace_access
+  name:
+    en: Residential properties within 300m of accessible natural green space
+    cy: Eiddo preswyl o fewn 300m i fannau gwyrdd naturiol hygyrch
+  cy_review: true
+  unit: percent
+  format: percent
+  higher_is_better: true
+  strand: resilient
+  national_indicator: null
+  source: statswales_wimd2025_la
+  notes:
+    en: WIMD 2025 indicator. Stands in for woodland cover, which has no open LA table.
+- id: gp_travel_public
+  name:
+    en: Average return travel time to a GP surgery by public transport
+    cy: Amser teithio dychwel cyfartalog i feddygfa ar gludiant cyhoeddus
+  cy_review: true
+  unit: minutes
+  format: decimal1
+  higher_is_better: false
+  strand: cohesive
+  national_indicator: null
+  source: statswales_wimd2025_la
+  notes:
+    en: WIMD 2025 indicator. The only LA-level public transport access measure found; stands in for bus access.
+- id: poor_housing
+  name:
+    en: Poor quality housing
+    cy: Tai o ansawdd gwael
+  cy_review: true
+  unit: percent of residential properties
+  format: percent
+  higher_is_better: false
+  strand: equal
+  national_indicator: null
+  source: statswales_wimd2025_la
+  notes:
+    en: WIMD 2025 indicator. Stands in for housing quality / EPC band, which has no open LA table.

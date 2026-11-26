@@ -1,0 +1,196 @@
+generated: '2026-11-26'
+rule: score = 10 * (value - floor) / (goal - floor), clamped 0 to 10, floor and goal fixed for the whole game
+bands:
+  gva_head:
+    floor: 12380.0945
+    goal: 67600.6432
+    higher_is_better: true
+    reason: 'Goal: best UK nation or region today: London. Floor: worst of UK nations/regions and the 22 Welsh LAs (17400.1444), pushed out a
+      further 10% of the band.'
+    source: ons_regional_gdp_la
+  employment:
+    floor: 63.7
+    goal: 79.1
+    higher_is_better: true
+    reason: 'Goal: best UK nation or region today: E12000009. Floor: worst of UK nations/regions and the 22 Welsh LAs (65.1), pushed out a further
+      10% of the band.'
+    source: nomis_aps
+  earnings:
+    floor: 635.73
+    goal: 902.7
+    higher_is_better: true
+    reason: 'Goal: best UK nation or region today: E12000007. Floor: worst of UK nations/regions and the 22 Welsh LAs (660.0), pushed out a further
+      10% of the band.'
+    source: nomis_ashe
+  affordability:
+    floor: 11.991
+    goal: 4.94
+    higher_is_better: false
+    reason: 'Goal: best UK nation or region today: E12000001. Floor: worst of UK nations/regions and the 22 Welsh LAs (11.35), pushed out a further
+      10% of the band.'
+    source: ons_affordability
+  life_exp:
+    floor: 76.825
+    goal: 82.6
+    higher_is_better: true
+    reason: 'Goal: best UK nation or region today: London. Floor: worst of UK nations/regions and the 22 Welsh LAs (77.35), pushed out a further
+      10% of the band.'
+    source: ons_life_expectancy_local
+  age65:
+    floor: 31.2816
+    goal: 12.6332
+    higher_is_better: false
+    reason: 'Goal: best UK nation or region today: E12000007. Floor: worst of UK nations/regions and the 22 Welsh LAs (29.5863), pushed out a
+      further 10% of the band.'
+    source: ons_mye_nomis
+  young_adults:
+    floor: 12.2134
+    goal: 25.7234
+    higher_is_better: true
+    reason: 'Goal: best UK nation or region today: E12000007. Floor: worst of UK nations/regions and the 22 Welsh LAs (13.4416), pushed out a
+      further 10% of the band.'
+    source: ons_mye_nomis
+  welsh_speakers:
+    floor: 3.5367
+    goal: 33.1326
+    higher_is_better: true
+    reason: 'Goal: Cymraeg 2050 milestone of a million Welsh speakers, taken as 1,000,000 of the 3,018,172 Wales residents aged 3 and over in
+      Census 2021. Floor: worst of UK nations/regions and the 22 Welsh LAs (6.2272), pushed out a further 10% of the band.'
+    source: cymraeg_2050
+  deprivation:
+    floor: 40.6521
+    goal: 0.0
+    higher_is_better: false
+    reason: 'Goal: no small areas in the most deprived fifth (zero is the ideal; WIMD is a rank index so Wales is 20 by construction). Floor:
+      worst of UK nations/regions and the 22 Welsh LAs (36.9565), pushed out a further 10% of the band.'
+    source: wimd_2025
+  emissions_head:
+    floor: 31.8613
+    goal: 0.0
+    higher_is_better: false
+    reason: 'Goal: net zero by 2050 (Wales legal target under the Environment (Wales) Act 2016 carbon budgets). Floor: worst of UK nations/regions
+      and the 22 Welsh LAs (28.9648), pushed out a further 10% of the band.'
+    source: desnz_la_ghg
+  renewables:
+    floor: 0.0
+    goal: 3.224
+    higher_is_better: true
+    reason: 'Goal: best UK nation or region today: Scotland. Floor: worst of UK nations/regions and the 22 Welsh LAs (0.0779), pushed out a further
+      10% of the band. Floor held at zero because capacity cannot be negative.'
+    source: desnz_renewables_la
+  flood_exposure:
+    floor: 53.9581
+    goal: 0.0
+    higher_is_better: false
+    reason: 'Goal: no properties at risk is the ideal; no UK nation comparator on the same definition exists. Floor: worst of UK nations/regions
+      and the 22 Welsh LAs (53.9581), pushed out a further 0% of the band. ADJUSTED in the acceptance check: no push-out, because the summed-sources
+      measure already overstates the worst LA and the resilient flow score otherwise landed above 6.'
+    source: statswales_flood
+gap_band:
+  goal_gap: 0.0
+  floor_gap: 5.0
+  reason: 'equal strand: the gap between the five worst-off LAs and the Wales median, in 0 to 10 score points, is scored 10 at no gap and 0 at
+    a 5 point gap. ADJUSTED in the acceptance check: with a 10 point scale the equal flow score landed at 6.75, above 6.'
+comparators:
+  gva_head:
+    North East: 26345.702
+    North West: 32965.2775
+    Yorkshire and The Humber: 30253.8603
+    East Midlands: 28324.3837
+    West Midlands: 30252.1139
+    East: 32816.5995
+    London: 67600.6432
+    South East: 38902.6502
+    South West: 33563.3679
+    Wales: 27438.8129
+    Scotland: 35358.8491
+    Northern Ireland: 31024.6362
+  employment:
+    E12000001: 71.8
+    E12000002: 74.3
+    E12000003: 74.0
+    E12000004: 75.6
+    E12000005: 73.5
+    E12000006: 78.0
+    E12000007: 74.5
+    E12000008: 78.8
+    E12000009: 79.1
+    S92000003: 74.4
+    N92000002: 73.7
+    W92000004: 73.3
+  earnings:
+    E12000001: 692.1
+    E12000002: 734.8
+    E12000003: 711.6
+    E12000004: 720.8
+    E12000005: 731.0
+    E12000006: 804.9
+    E12000007: 902.7
+    E12000008: 815.2
+    E12000009: 734.0
+    S92000003: 775.6
+    N92000002: 715.6
+    W92000004: 719.3
+  age65:
+    E12000001: 21.3321
+    E12000002: 19.1402
+    E12000003: 19.7231
+    E12000004: 20.2256
+    E12000005: 19.1329
+    E12000006: 20.2919
+    E12000007: 12.6332
+    E12000008: 20.1854
+    E12000009: 23.2215
+    S92000003: 21.0038
+    N92000002: 18.4856
+    W92000004: 22.2055
+  young_adults:
+    E12000001: 18.7197
+    E12000002: 19.5494
+    E12000003: 19.2087
+    E12000004: 18.5113
+    E12000005: 19.0368
+    E12000006: 17.4586
+    E12000007: 25.7234
+    E12000008: 17.2944
+    E12000009: 17.6024
+    S92000003: 19.1929
+    N92000002: 17.6409
+    W92000004: 18.1783
+  affordability:
+    W92000004: 5.86
+    E12000001: 4.94
+    E12000002: 5.9
+    E12000003: 5.97
+    E12000004: 6.91
+    E12000005: 6.8
+    E12000006: 8.52
+    E12000007: 11.35
+    E12000008: 9.2
+    E12000009: 8.26
+  life_exp:
+    North East: 79.65
+    North West: 79.9
+    Yorkshire and The Humber: 80.3
+    East Midlands: 80.9
+    West Midlands: 80.75
+    East of England: 82.15
+    London: 82.6
+    South East: 82.55
+    South West: 82.2
+    England: 81.4
+    United Kingdom: 81.1
+    Northern Ireland: 80.7
+    Scotland: 79.15
+    Wales: 80.25
+  renewables:
+    North East: 0.6672
+    North West: 0.5046
+    East Midlands: 0.9331
+    West Midlands: 0.3293
+    London: 0.0779
+    South East: 0.6097
+    South West: 0.8728
+    Scotland: 3.224
+    Northern Ireland: 1.0838
+    Wales: 1.3196
