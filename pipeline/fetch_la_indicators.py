@@ -331,7 +331,9 @@ def main():
     steps = [("population", lambda: population()), ("welsh", welsh), ("deprivation", deprivation),
              ("employment/earnings", employment_earnings), ("affordability", affordability),
              ("life_exp", life_exp), ("emissions", emissions), ("flood", flood),
-             ("wimd indicators", wimd_indicators), ("coal tips", coal_tips)]
+             ("wimd indicators", wimd_indicators)]
+    # coal_tips is not fetched: the Welsh Government count table states no open licence
+    # (see docs/data-licences.md). Re-add ("coal tips", coal_tips) once it is confirmed OGL.
     pop_latest = None
     for name, fn in steps:
         print("==", name)

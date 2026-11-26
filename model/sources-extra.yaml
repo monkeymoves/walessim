@@ -20,6 +20,8 @@ sources:
     publisher: Welsh Government and Office for National Statistics
     url: https://www.gov.wales/subnational-population-projections
     year: 2024
+    licence: Open Government Licence v3.0 (via the gov.wales copyright statement)
+    licence_url: https://www.gov.wales/copyright-statement
   - id: ukcp18
     title: UK Climate Projections (UKCP18)
     publisher: Met Office
@@ -35,6 +37,8 @@ sources:
     publisher: Office for National Statistics
     url: https://www.ons.gov.uk/census
     year: 2022
+    licence: Open Government Licence v3.0 (ONS Crown copyright)
+    licence_url: https://www.ons.gov.uk/help/termsandconditions
   - id: wg-welsh-projections
     title: Welsh language projections and the trajectory to a million speakers by 2050
     publisher: Welsh Government
@@ -68,11 +72,16 @@ sources:
     url: https://www.gov.wales/coal-tip-safety
     year: 2026
     note: Counts by authority and category. The disused coal tips register itself is personal use only and is not used.
+    licence: Open Government Licence v3.0 (assumed, via the gov.wales copyright statement; counts only)
+    licence_url: https://www.gov.wales/copyright-statement
+    licence_problem: true
+    licence_problem_note: Counts-only use is assumed to be open, but the underlying register is restricted (personal use only) and the page states no licence for the counts; confirm with Welsh Government.
   - id: bgs-landslide
     title: National Landslide Database
     publisher: British Geological Survey
     url: https://www.bgs.ac.uk/datasets/national-landslide-database/
-    licence: OGL v3.0
+    licence: Open Government Licence v3.0 (BGS landslide index via OGC API; see licence note in docs/data-licences.md)
+    licence_url: https://ogcapi.bgs.ac.uk/collections/landslideindex?f=json
   - id: retrofit-eval
     title: Evaluations of home energy efficiency programmes in Wales (body of evaluations)
     publisher: Welsh Government
@@ -95,6 +104,8 @@ sources:
     title: Internal migration by age, local authority moves in England and Wales
     publisher: Office for National Statistics
     url: https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/migrationwithintheuk
+    licence: Open Government Licence v3.0
+    licence_url: https://www.ons.gov.uk/help/termsandconditions
   - id: language-housing
     title: Second homes, developing new policies in Wales (independent report)
     publisher: Welsh Government
@@ -123,7 +134,8 @@ sources:
     title: Supply, Use and Input-Output Tables 2022, Table 5 (indicative economic multipliers)
     publisher: Welsh Government
     url: https://www.gov.wales/supply-and-use-tables-and-input-output-tables-2022
-    licence: OGL v3.0
+    licence: Open Government Licence v3.0
+    licence_url: https://www.gov.wales/copyright-statement
     year: 2022
   - id: inward-investment
     title: Evaluations of inward investment and large employer incentives (body of evaluations)
@@ -154,6 +166,8 @@ sources:
     title: UK local authority and regional greenhouse gas emissions statistics
     publisher: Department for Energy Security and Net Zero
     url: https://www.gov.uk/government/collections/uk-local-authority-and-regional-greenhouse-gas-emissions-national-statistics
+    licence: Open Government Licence v3.0
+    licence_url: https://www.gov.uk/government/statistics/uk-local-authority-and-regional-greenhouse-gas-emissions-statistics-2005-to-2024
   - id: game-rule
     title: Design rule of the game, not evidence
     publisher: Etifeddiaeth

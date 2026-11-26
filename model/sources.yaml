@@ -4,7 +4,8 @@ sources:
   publisher: Office for National Statistics, via Nomis
   url: https://www.nomisweb.co.uk/query/construct/summary.asp?mode=construct&version=0&dataset=2002
   api_url: https://www.nomisweb.co.uk/api/v01/dataset/NM_2002_1.data.csv
-  licence: Open Government Licence v3.0 (ONS data; Nomis reproduces them under the same terms, verify on the Nomis terms page)
+  licence: Open Government Licence v3.0 (ONS Crown copyright)
+  licence_url: https://www.nomisweb.co.uk/home/copyright.asp
   accessed: '2026-11-26'
   notes: Mid-2025 estimates. Ages 65+ is Nomis age code 209, ages 20 to 34 is codes 6+7+8, 2015 is the comparison year for
     the 10 year change.
@@ -13,7 +14,8 @@ sources:
   publisher: Office for National Statistics, via Nomis
   url: https://www.nomisweb.co.uk/census/2021/ts033
   api_url: https://www.nomisweb.co.uk/api/v01/dataset/NM_2051_1.data.csv
-  licence: Open Government Licence v3.0 (verify on Nomis terms page)
+  licence: Open Government Licence v3.0 (ONS Crown copyright)
+  licence_url: https://www.nomisweb.co.uk/home/copyright.asp
   accessed: '2026-11-26'
   notes: Share of usual residents aged 3 and over who can speak Welsh. Census day 21 March 2021.
 - id: nomis_census_ts041
@@ -21,7 +23,8 @@ sources:
   publisher: Office for National Statistics, via Nomis
   url: https://www.nomisweb.co.uk/census/2021/ts041
   api_url: https://www.nomisweb.co.uk/api/v01/dataset/NM_2059_1.data.csv
-  licence: Open Government Licence v3.0 (verify on Nomis terms page)
+  licence: Open Government Licence v3.0 (ONS Crown copyright)
+  licence_url: https://www.nomisweb.co.uk/home/copyright.asp
   accessed: '2026-11-26'
   notes: Used only as the denominator for flood_exposure.
 - id: nomis_aps
@@ -29,7 +32,8 @@ sources:
   publisher: Office for National Statistics, via Nomis
   url: https://www.nomisweb.co.uk/sources/aps
   api_url: https://www.nomisweb.co.uk/api/v01/dataset/NM_17_5.data.csv
-  licence: Open Government Licence v3.0 (verify on Nomis terms page)
+  licence: Open Government Licence v3.0 (ONS Crown copyright)
+  licence_url: https://www.nomisweb.co.uk/home/copyright.asp
   accessed: '2026-11-26'
   notes: 'Variable 45, employment rate aged 16 to 64, period July 2025 to June 2026. Sample survey: LA estimates carry sampling
     error, ONS publishes confidence intervals.'
@@ -38,7 +42,8 @@ sources:
   publisher: Office for National Statistics, via Nomis
   url: https://www.nomisweb.co.uk/sources/ashe
   api_url: https://www.nomisweb.co.uk/api/v01/dataset/NM_30_1.data.csv
-  licence: Open Government Licence v3.0 (verify on Nomis terms page)
+  licence: Open Government Licence v3.0 (ONS Crown copyright)
+  licence_url: https://www.nomisweb.co.uk/home/copyright.asp
   accessed: '2026-11-26'
   notes: Median weekly gross pay, full-time workers (sex code 8), by place of residence, 2025.
 - id: ons_regional_gdp_la
@@ -46,6 +51,7 @@ sources:
   publisher: Office for National Statistics
   url: https://www.ons.gov.uk/economy/grossdomesticproductgdp/datasets/regionalgrossdomesticproductlocalauthorities
   licence: Open Government Licence v3.0
+  licence_url: https://www.ons.gov.uk/help/termsandconditions
   accessed: '2026-11-26'
   notes: gva_head is GVA(B) at current basic prices (Table 1, GBP million) divided by ONS resident population (Table 6), 2024.
     Wales value is the sum of the 22 LAs divided by their summed population. Dataset carries a notice about a 23 September
@@ -55,6 +61,7 @@ sources:
   publisher: Office for National Statistics
   url: https://www.ons.gov.uk/peoplepopulationandcommunity/housing/datasets/ratioofhousepricetoresidencebasedearningslowerquartileandmedian
   licence: Open Government Licence v3.0
+  licence_url: https://www.ons.gov.uk/help/termsandconditions
   accessed: '2026-11-26'
   notes: Median ratio, table 5c column 2025 (house prices year ending September 2025, earnings April 2025). Wales value from
     table 1c.
@@ -63,6 +70,7 @@ sources:
   publisher: Office for National Statistics
   url: https://www.ons.gov.uk/peoplepopulationandcommunity/healthandsocialcare/healthandlifeexpectancies/datasets/lifeexpectancyforlocalareasoftheuk
   licence: Open Government Licence v3.0
+  licence_url: https://www.ons.gov.uk/help/termsandconditions
   accessed: '2026-11-26'
   notes: Period life expectancy at birth, 2022 to 2024. ONS publishes male and female separately; the indicator is their simple
     mean (not a population-weighted persons figure). Healthy life expectancy is not published at Welsh LA level in a current
@@ -71,7 +79,8 @@ sources:
   title: UK local authority and regional greenhouse gas emissions statistics, 2005 to 2024 (CSV dataset)
   publisher: Department for Energy Security and Net Zero
   url: https://www.gov.uk/government/statistics/uk-local-authority-and-regional-greenhouse-gas-emissions-statistics-2005-to-2024
-  licence: Open Government Licence v3.0 (as listed for the series on data.gov.uk)
+  licence: Open Government Licence v3.0
+  licence_url: https://www.gov.uk/government/statistics/uk-local-authority-and-regional-greenhouse-gas-emissions-statistics-2005-to-2024
   accessed: '2026-11-26'
   notes: Territorial emissions, all sectors including net LULUCF, in tonnes CO2e per resident for calendar year 2024, using
     the mid-year population in the dataset. Fluorinated gases are not included at LA level.
@@ -79,7 +88,8 @@ sources:
   title: 'Regional renewable statistics: renewable electricity by local authority, 2014 to 2025'
   publisher: Department for Energy Security and Net Zero
   url: https://www.gov.uk/government/statistics/regional-renewable-statistics
-  licence: Open Government Licence v3.0 (DESNZ statistics standard licence, verify)
+  licence: Open Government Licence v3.0
+  licence_url: https://www.gov.uk/government/statistics/regional-renewable-statistics
   accessed: '2026-11-26'
   notes: Installed capacity in MW at the end of 2025, all technologies (sheet 'LA - Capacity, 2025', column Total). Wales
     value is the sum of the 22 LAs. renewables is kW per person using ONS mid-2025 population.
@@ -88,7 +98,8 @@ sources:
   publisher: Welsh Government, DataMapWales; Nomis for the lookup
   url: https://datamap.gov.wales/layers/geonode:wimd2025_overall
   api_url: https://datamap.gov.wales/geoserver/ows (typeNames geonode:wimd2025_overall)
-  licence: not stated, believed OGL, verify
+  licence: Open Government Licence v3.0
+  licence_url: https://datamap.gov.wales/layers/geonode:wimd2025_overall
   accessed: '2026-11-26'
   notes: 1917 LSOAs. deprivation is the share of an LA's LSOAs in the most deprived fifth of Wales (quintile 1); deprivation_10
     uses decile 1. WIMD 2025 replaces WIMD 2019 as the latest open release.
@@ -96,7 +107,8 @@ sources:
   title: WIMD 2025 indicator data for local authorities and Wales
   publisher: Welsh Government via StatsWales
   url: https://stats.gov.wales/en-GB/c28ab0ec-5893-46c2-a372-98d4058ba415
-  licence: not stated on the dataset page, believed OGL, verify
+  licence: Open Government Licence v3.0 (Welsh Government, via the gov.wales copyright statement; the StatsWales dataset page states no licence of its own)
+  licence_url: https://www.gov.wales/copyright-statement
   accessed: '2026-11-26'
   notes: Source of greenspace_access, gp_travel_public and poor_housing. StatsWales is in beta; the pipeline reads the dataset
     pages (500 rows per page).
@@ -104,7 +116,8 @@ sources:
   title: Properties at risk of flooding in Wales (Flood Risk Assessment Wales, National Receptor Database 2025)
   publisher: Welsh Government via StatsWales, from Natural Resources Wales data
   url: https://stats.gov.wales/en-GB/44557520-6234-4a77-9263-cabfc00f4d72
-  licence: not stated on the dataset page, believed OGL, verify
+  licence: Open Government Licence v3.0 (Welsh Government, via the gov.wales copyright statement; the StatsWales dataset page states no licence of its own; data provider Natural Resources Wales)
+  licence_url: https://www.gov.wales/copyright-statement
   accessed: '2026-11-26'
   notes: Residential properties at risk, all risk bands, defended, year 2025, summed over rivers, sea and surface water. A
     property exposed to more than one source is counted once per source, so the sum double counts. Divided by Census 2021
@@ -114,7 +127,10 @@ sources:
   publisher: Welsh Government
   url: https://www.gov.wales/coal-tip-safety
   api_url: https://www.gov.wales/sites/default/files/inline-documents/2026-03/Annex%201.pdf
-  licence: not stated on the annex, believed OGL, verify
+  licence: Open Government Licence v3.0 (assumed, via the gov.wales copyright statement; the annex itself states no licence)
+  licence_url: https://www.gov.wales/copyright-statement
+  licence_problem: true
+  licence_problem_note: The annex states no licence and its counts derive from the coal tips dataset whose booklet carries Landmark Information Group and Mining Remediation Authority all-rights-reserved credits and a restricted use grant; confirm with Welsh Government that the count table may be reused, or drop the figures.
   accessed: '2026-11-26'
   notes: Published count table only (PDF). The DataMapWales coal tip map dataset is personal-use only and was NOT downloaded.
     16 LAs are listed; the other six (Gwynedd, Conwy, Denbighshire, Ceredigion, Vale of Glamorgan, Newport) are absent and
@@ -123,6 +139,7 @@ sources:
   title: 'Cymraeg 2050: a million Welsh speakers'
   publisher: Welsh Government
   url: https://www.gov.wales/cymraeg-2050-welsh-language-strategy
-  licence: not stated, believed OGL, verify
+  licence: Open Government Licence v3.0 (via the gov.wales copyright statement)
+  licence_url: https://www.gov.wales/copyright-statement
   accessed: '2026-11-26'
   notes: Policy milestone used as the goal of the welsh_speakers band. Not a data source.
