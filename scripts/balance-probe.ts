@@ -2,7 +2,8 @@
  * Balance probe (design lead, see docs/design/balance-decision.md). Plays every bot and judges each
  * game by the decided result: net strand pips changed since 2026, the lower of Lived and Left,
  * with Lived taken over the terms the player shaped. It computes this from the engine's published
- * end result, so it works before and after the engine adopts the formula.
+ * end result, so it works before and after the engine adopts the formula (after: it reads the engine's
+ * own judged values). scripts/balance.ts now carries these targets.
  *
  *   npx tsx scripts/balance-probe.ts [--seeds 200] [--runs 30] [--bots a,b] [--ceiling 0] [--paths]
  */
@@ -43,6 +44,10 @@ const band = (v: number) => BANDS.filter((b) => v >= b[0]).pop()![1];
 export interface Judged { lived: number; left: number; result: number; which: "lived" | "left"; wt: number[]; start: { lived: number; left: number }; strandLived: number[]; strandLeft: number[] }
 export function judge(g: GameState): Judged {
   const e = g.result!;
+  // the engine now publishes the judged change itself (result v2); use it when present
+  if (typeof (e as { livedLevel?: number }).livedLevel === "number") {
+    return { lived: e.lived.value, left: e.left.value, result: e.result.value, which: e.result.which, wt: e.wellbeingByTerm, start: e.start, strandLived: e.perStrand.map((p) => p.lived), strandLeft: e.perStrand.map((p) => p.left) };
+  }
   const n = Object.keys(e.weights).length;
   const wt = e.wellbeingByTerm.slice(FIRST);
   const mean = wt.reduce((a, b) => a + b, 0) / wt.length;

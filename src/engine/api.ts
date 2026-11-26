@@ -1,7 +1,13 @@
 /**
  * The engine's public surface. The UI imports from this file only.
  *
- * CHANGES (newest first; every change is backward compatible):
+ * CHANGES (newest first; every change is backward compatible in shape):
+ * - v2.0 (result v2, balance decision 14): `EndResult.lived`, `left` and `result` now carry the change
+ *   since 2026 in net strand pips (bands -4, -1, +1, +4 from `game.judged_change`), Lived counts terms
+ *   2 to 6 with the dip rule. Added `livedLevel`, `leftLevel`, `dippedBelowStart`, `vsCaretaker` and
+ *   per-strand `livedLevel`/`leftLevel`; per-strand `lived`/`left` are changes; `caretakerGhost` is in
+ *   change units; `worstTerm` is the lowest counted term. The letter uses the change bands. A shock is
+ *   prepared only if a response card has landed in an authority the shock reaches.
  * - v1.2: the engine fills tuning fields missing from an older model.json (no NaN from a stale build);
  *   upkeep that ends is stored as term 9999, not Infinity, so GameState survives JSON. Rebuild with
  *   `npm run model:build` after pulling.
@@ -608,21 +614,41 @@ export interface Letter {
   named: { kind: NamedThingKind; id: string | null; year: number | null };
 }
 
-/** The end screen. */
+/**
+ * The end screen. Since v2 (balance decision 14) `lived`, `left` and `result` are judged as the
+ * change since 2026 in net strand pips (seven times the weighted change): show them rounded to
+ * whole pips with "about", "level with 2026" between -0.5 and +0.5. The 0 to 10 levels for the
+ * woven bands are `livedLevel`, `leftLevel` and `start`.
+ */
 export interface EndResult {
   weights: Record<StrandId, number>;
+  /** Change since 2026 in net strand pips: terms 2 to 6, less a share of any dip below 2026. */
   lived: Score;
+  /** Change since 2026 in net strand pips of what is handed on (stocks in 2050, debt priced). */
   left: Score;
   /** The lower of the two. */
   result: Score & { which: "lived" | "left" };
-  perStrand: { strand: StrandId; lived: number; left: number; lower: "lived" | "left" }[];
-  /** W_t for each of the six terms. */
+  /** The Lived level (0 to 10) behind `lived`: draw the woven band from this. */
+  livedLevel: number;
+  /** The Left level (0 to 10) behind `left`. */
+  leftLevel: number;
+  /**
+   * Per strand: `lived` and `left` are that strand's own change in pips since 2026 (no factor of
+   * seven), `lower` by change; `livedLevel` and `leftLevel` are its 0 to 10 levels.
+   */
+  perStrand: { strand: StrandId; lived: number; left: number; lower: "lived" | "left"; livedLevel: number; leftLevel: number }[];
+  /** W_t (weighted flow level) for each of the six terms. Term 1 is inherited (not counted). */
   wellbeingByTerm: number[];
+  /** Index of the lowest counted term (2 to 6). */
   worstTerm: number;
-  /** 2026 starting marks. */
+  /** A counted term fell below the 2026 start (mark it in rust). */
+  dippedBelowStart: boolean;
+  /** 2026 starting levels (weighted flow and stock, 0 to 10). */
   start: { lived: number; left: number };
-  /** "Wales under a caretaker" on the same seed (null if disabled). */
+  /** "Wales under a caretaker" on the same seed, in the same change units (null if disabled). */
   caretakerGhost: { lived: number; left: number; result: number } | null;
+  /** How far the player finished from the caretaker: result.value minus the ghost's result (net pips). */
+  vsCaretaker: number | null;
   letter: Letter;
   ledger: Ledger;
   inThePost: PostItem[];

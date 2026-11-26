@@ -64,17 +64,9 @@ response_multiplier: { absorb: 1.0, respond1: 0.5, respond2: 0.25, prepared: 0.7
 fragile_infrastructure: { below: 4, multiplier: 1.25 }
 debt: { interest: 1, clear_cost: 3, max_tokens: 3, left_penalty: 0.15, left_penalty_cap: 0.45 }
 caretaker: { return_trust: 40, return_budget_penalty: 1, contingency: 2, shadow_pledge_bonus: 5 }
-lived: { mean_weight: 0.75, min_weight: 0.25 }
-result_bands:
-  - { min: 0, name: { en: "Diminished", cy: "Wedi'i leihau", cy_review: true } }
-  - { min: 3.0, name: { en: "Held, just", cy: "Wedi'i ddal, prin", cy_review: true } }
-  - { min: 4.5, name: { en: "Handed on", cy: "Wedi'i drosglwyddo", cy_review: true } }
-  - { min: 6.0, name: { en: "Handed on better", cy: "Wedi'i drosglwyddo'n well", cy_review: true } }
-  - { min: 7.5, name: { en: "A gift", cy: "Rhodd", cy_review: true } }
-letter_bands: { low: 4.5, high: 6.0 }
 # Design decision 14 (docs/design/balance-decision.md): the result is judged as change since 2026, in
 # net strand pips (number of strands x weighted change), the lower of Lived and Left. The engine reads
-# this block once it implements the decision; until then result_bands and letter_bands above still apply.
+# this block (the build copies the bands to result_bands for older readers).
 judged_change:
   # first term counted in Lived (1-based): the first term is inherited, so the player's terms start at 2
   lived_first_term: 2

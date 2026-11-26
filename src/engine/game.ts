@@ -749,16 +749,54 @@ function toPassing(ctx: Ctx, state: A.GameState): A.GameState {
   return state;
 }
 
+/** Authorities a shock reaches: its effects' areas, plus the tips or the heartland for its special events. */
+export function shockReach(ctx: Ctx, shockId: string): number[] {
+  const sh = ctx.curveballs.get(shockId)?.shock;
+  if (!sh) return [];
+  const reach = new Set<number>();
+  for (const e of [...sh.effects, ...(sh.branches ?? []).flatMap((b) => b.effects)]) {
+    if (e.target === "budget" || e.target === "trust" || e.target === "card_cost") continue;
+    if (e.where?.in_scope) continue;
+    maskWeights(ctx, e.where, e.emphasis).forEach((w, i) => w > 0 && reach.add(i));
+  }
+  for (const sp of sh.special ?? []) {
+    if (sp === "tip_may_move") ctx.flagLas.coal_valley.forEach((i) => reach.add(i));
+    if (sp === "heartland_drop") ctx.flagLas.heartland.forEach((i) => reach.add(i));
+  }
+  // a shock with no area (only budget or Trust) reaches all of Wales
+  if (!reach.size) ctx.las.forEach((_, i) => reach.add(i));
+  return [...reach];
+}
+
+/**
+ * Cards that make you ready for a shock (decision 14): a listed response card whose main effect has
+ * landed (not merely been played) in an authority the shock reaches.
+ */
 function preparedBy(ctx: Ctx, state: A.GameState, shockId: string): string[] {
   const cb = ctx.curveballs.get(shockId)!;
   const s = sim(state);
-  const inPlay = new Set<string>();
+  const reach = new Set(shockReach(ctx, shockId));
+  const ready = new Set<string>();
   for (const p of s.plays) {
-    if (p.term === state.term || state.post.some((x) => x.card === p.card && x.playedTerm === p.term && x.arrivesTerm > state.term)) inPlay.add(p.card);
-    // still in force: played in the last two terms
-    if (state.term - p.term <= 2) inPlay.add(p.card);
+    if (!cb.responses.includes(p.card)) continue;
+    const card = ctx.cards.get(p.card);
+    if (!card) continue;
+    const mains = card.effects.filter((e) => !e.side && e.target !== "trust" && e.target !== "budget" && e.target !== "card_cost");
+    if (!mains.length) {
+      // a card with no effects of its own (the compact) is ready once played, where it was played
+      if (p.term <= state.term && p.las.some((i) => reach.has(i))) ready.add(p.card);
+      continue;
+    }
+    for (const e of mains) {
+      if (p.term + effectDelay(ctx, card, e) > state.term) continue;
+      const lands = maskWeights(ctx, e.where, e.emphasis, e.where?.in_scope === false ? null : p.las);
+      if (lands.some((w, i) => w > 0 && reach.has(i))) {
+        ready.add(p.card);
+        break;
+      }
+    }
   }
-  return cb.responses.filter((r) => inPlay.has(r));
+  return cb.responses.filter((r) => ready.has(r));
 }
 
 function fragileMultiplier(ctx: Ctx, state: A.GameState): number {
@@ -1483,64 +1521,86 @@ export function recomputeResult(model: CompiledModel, state: A.GameState, weight
 }
 
 function resultBand(model: CompiledModel, v: number): A.ResultBand {
-  const bands = model.game.result_bands;
+  const bands = makeContext(model).model.game.judged_change.bands;
   let i = 0;
   bands.forEach((b, k) => {
     if (v >= b.min) i = k;
   });
-  return { band: (i + 1) as A.ResultBand["band"], name: bands[i]!.name };
+  return { band: Math.min(5, i + 1) as A.ResultBand["band"], name: bands[i]!.name };
 }
 
+/**
+ * The end result (balance decision 14): judged as the change since 2026 in net strand pips.
+ *   counted     = W_F .. W_6 (F = judged_change.lived_first_term)
+ *   lived_level = mean(counted) - dip_weight * max(0, W_0 - min(counted))
+ *   left_level  = weighted 2050 stocks, with cards in the post by 2058, minus the debt penalty
+ *   lived = n (lived_level - W_0), left = n (left_level - S_0), result = the lower
+ * Each run is judged the same way (against the same W_0 and S_0) for the p10 to p90 edge.
+ */
 function computeResult(ctx: Ctx, state: A.GameState, weights: Record<StrandId, number>): A.EndResult {
   const model = ctx.model;
   const g = model.game;
+  const jc = g.judged_change;
   const s = sim(state);
-  const W = (flows: number[]) => STRAND_IDS.reduce((a, id, i) => a + weights[id] * flows[i]!, 0);
+  const n = STRAND_IDS.length;
+  const W = (vals: number[]) => STRAND_IDS.reduce((a, id, i) => a + weights[id] * vals[i]!, 0);
   const debtPenalty = Math.min(g.debt.left_penalty_cap, g.debt.left_penalty * state.debts.length);
   const lastTerm = g.years.length - 1;
   const postUntil = Math.floor((g.post_counts_until - g.years[0]!) / 4);
+  const first = Math.max(0, Math.min(lastTerm, jc.lived_first_term - 1));
+  const W0 = W(s.start.flow);
+  const S0 = W(s.start.stock);
+  /** Lived level from a series of term values and its own start. */
+  const livedLevelOf = (series: number[], start: number) => {
+    const counted = series.slice(first);
+    const mean = counted.reduce((a, b) => a + b, 0) / counted.length;
+    return mean - jc.dip_weight * Math.max(0, start - Math.min(...counted));
+  };
 
   // per run: Lived from its own terms; Left from 2050 stocks plus cards in the post by 2058
   const perRun = s.runs.map((r, i) => {
-    const wt = r.flowHist.map(W);
-    const lived = g.lived.mean_weight * (wt.reduce((a, b) => a + b, 0) / wt.length) + g.lived.min_weight * Math.min(...wt);
     const proj = cloneRun(r);
     landOnly(ctx, proj, s.params[i]!, i, s.deliveries.filter((d) => d.landTerm > lastTerm && d.landTerm <= postUntil), state.seed);
     const stock = runStrands(ctx, proj).stock;
-    const left = W(stock) - debtPenalty;
-    return { lived, left, stock, flowTerms: r.flowHist };
+    const lived = n * (livedLevelOf(r.flowHist.map(W), W0) - W0);
+    const left = n * (W(stock) - debtPenalty - S0);
+    return { lived, left, stock };
   });
   // the median world
   const medFlowTerms = s.runs[0]!.flowHist.map((_, t) => STRAND_IDS.map((_, k) => median(s.runs.map((r) => r.flowHist[t]![k]!))));
   const medStock = STRAND_IDS.map((_, k) => median(perRun.map((p) => p.stock[k]!)));
   const wt = medFlowTerms.map(W);
-  const livedV = g.lived.mean_weight * (wt.reduce((a, b) => a + b, 0) / wt.length) + g.lived.min_weight * Math.min(...wt);
-  const leftV = W(medStock) - debtPenalty;
-  const livedRuns = perRun.map((p) => p.lived);
-  const leftRuns = perRun.map((p) => p.left);
-  const resultRuns = perRun.map((p) => Math.min(p.lived, p.left));
+  const livedLevel = livedLevelOf(wt, W0);
+  const leftLevel = W(medStock) - debtPenalty;
+  const livedV = n * (livedLevel - W0);
+  const leftV = n * (leftLevel - S0);
   const score = (v: number, xs: number[]): A.Score => ({ value: v, p10: quantile(xs, 0.1), p90: quantile(xs, 0.9), band: resultBand(model, v) });
-  const lived = score(livedV, livedRuns);
-  const left = score(leftV, leftRuns);
+  const lived = score(livedV, perRun.map((p) => p.lived));
+  const left = score(leftV, perRun.map((p) => p.left));
   const which = livedV <= leftV ? "lived" : "left";
-  const worstTerm = wt.indexOf(Math.min(...wt));
+  const result = { ...score(Math.min(livedV, leftV), perRun.map((p) => Math.min(p.lived, p.left))), which } as A.EndResult["result"];
+  const counted = wt.slice(first);
+  const worstTerm = first + counted.indexOf(Math.min(...counted));
   const perStrand = STRAND_IDS.map((id, k) => {
     const ft = medFlowTerms.map((f) => f[k]!);
-    const lv = g.lived.mean_weight * (ft.reduce((a, b) => a + b, 0) / ft.length) + g.lived.min_weight * Math.min(...ft);
-    return { strand: id, lived: lv, left: medStock[k]!, lower: (lv <= medStock[k]! ? "lived" : "left") as "lived" | "left" };
+    const f0 = s.start.flow[k]!, k0 = s.start.stock[k]!;
+    const lvLevel = livedLevelOf(ft, f0);
+    const lv = lvLevel - f0;
+    const lf = medStock[k]! - k0;
+    return { strand: id, lived: lv, left: lf, lower: (lv <= lf ? "lived" : "left") as "lived" | "left", livedLevel: lvLevel, leftLevel: medStock[k]! };
   });
 
-  // the letter
+  // the letter, chosen from the change bands
   const equalIdx = STRAND_IDS.indexOf("equal");
-  const neglectedTwice = state.history.some((h) => h.events.filter((e) => e.kind === "neglect").length > 0) && state.history.filter((h) => h.events.some((e) => e.kind === "neglect")).length >= 2;
-  const uneven = (medFlowTerms[medFlowTerms.length - 1]![equalIdx]! < 4) || neglectedTwice;
+  const neglectedTerms = state.history.filter((h) => h.events.some((e) => e.kind === "neglect")).length;
+  const uneven = medFlowTerms[medFlowTerms.length - 1]![equalIdx]! < 4 || neglectedTerms >= 2;
   const archetype = archetypeOf(level(model, livedV), level(model, leftV), uneven);
   const named = namedThing(ctx, state, archetype);
   const la = mostMovedLa(ctx, s);
   const letter = writeLetter(ctx, state.seed, archetype, named, la, g.years[worstTerm]!, state.ledger.lostTerms[0] ?? null);
 
   const squares = (vals: number[]) => {
-    // ten squares per band, shared out by weighted strand share (no numbers)
+    // ten squares per band from the real levels, shared out by weighted strand share (no numbers)
     const total = vals.reduce((a, v, i) => a + v * weights[STRAND_IDS[i]!], 0);
     const filled = Math.round(total);
     const shares = STRAND_IDS.map((id, i) => ({ id, v: vals[i]! * weights[id] }));
@@ -1556,16 +1616,20 @@ function computeResult(ctx: Ctx, state: A.GameState, weights: Record<StrandId, n
     weights,
     lived,
     left,
-    result: { ...(which === "lived" ? lived : left), which },
+    result,
+    livedLevel,
+    leftLevel,
     perStrand,
     wellbeingByTerm: wt,
     worstTerm,
-    start: { lived: W(s.start.flow), left: W(s.start.stock) },
+    dippedBelowStart: Math.min(...counted) < W0,
+    start: { lived: W0, left: S0 },
     caretakerGhost: s.ghost,
+    vsCaretaker: s.ghost ? result.value - s.ghost.result : null,
     letter,
     ledger: state.ledger,
     inThePost: s.deliveries.length ? postItemsLeft(ctx, state) : [],
-    squares: { lived: squares(perStrand.map((p) => p.lived)), left: squares(perStrand.map((p) => p.left)) },
+    squares: { lived: squares(perStrand.map((p) => p.livedLevel)), left: squares(perStrand.map((p) => p.leftLevel)) },
     seedLabel: state.seedLabel,
     modified: state.modified,
     archetype,

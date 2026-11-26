@@ -85,7 +85,8 @@ export function openingVoice(ctx: Ctx, seed: number, term: number, strand: Stran
 export type Level = "low" | "middle" | "high";
 
 export function level(model: CompiledModel, v: number): Level {
-  const b = model.game.letter_bands;
+  // net strand pips changed since 2026 (balance decision 14)
+  const b = model.game.judged_change?.letter_bands ?? { low: -1, high: 1 };
   return v < b.low ? "low" : v >= b.high ? "high" : "middle";
 }
 

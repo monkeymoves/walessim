@@ -37,9 +37,16 @@ the same game. The UI imports only `api.ts`, which documents every type and func
    file header). Strand medians, sharp or fuzzy, pips with hysteresis, Trust, slips and the voice follow.
 6. `continue`, `next`: the election sets next term's card limit or starts a caretaker term.
 
-After six terms `finish` computes Lived (0.75 mean plus 0.25 worst term of weighted flow), Left
-(weighted stocks in 2050 with cards in the post by 2058, minus debt), the result (the lower), the letter
-archetype and named thing, and the caretaker ghost on the same seed.
+After six terms `finish` judges the inheritance by how it changed (balance decision 14), in net
+strand pips (seven times the weighted change since 2026): Lived is the mean of terms 2 to 6 (term 1
+is inherited) less a quarter of any fall below the 2026 start; Left is the change in weighted stocks
+in 2050, with cards in the post by 2058 and debt priced in. The result is the lower, banded at -4,
+-1, +1, +4 (`game.judged_change`). Each run is judged the same way for the fuzzy edge. The end
+result also carries the 0 to 10 levels for the woven bands, the letter (archetype from the change
+bands), and the caretaker ghost on the same seed in the same units (`vsCaretaker`).
+
+A shock counts as prepared only if a listed response card has landed (its delay has passed) in an
+authority the shock reaches (`shockReach`).
 
 ## Traces
 

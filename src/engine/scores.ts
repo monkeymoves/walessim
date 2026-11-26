@@ -83,6 +83,18 @@ export function withTuningDefaults(model: CompiledModel): CompiledModel {
       gap_scale: num(g.gap_scale, 2.5),
       hysteresis: num(g.hysteresis, 0.1),
       regional_size_step: num(g.regional_size_step, 1),
+      judged_change: g.judged_change ?? {
+        lived_first_term: 2,
+        dip_weight: 0.25,
+        bands: [
+          { min: -99, name: { en: "Diminished", cy: "Wedi'i leihau", cy_review: true } },
+          { min: -4, name: { en: "Held, just", cy: "Wedi'i ddal, prin", cy_review: true } },
+          { min: -1, name: { en: "Handed on", cy: "Wedi'i drosglwyddo", cy_review: true } },
+          { min: 1, name: { en: "Handed on better", cy: "Wedi'i drosglwyddo'n well", cy_review: true } },
+          { min: 4, name: { en: "A gift", cy: "Rhodd", cy_review: true } },
+        ],
+        letter_bands: { low: -1, high: 1 },
+      },
       curveballs: { ...cb, slow_scale: num(cb.slow_scale, 0.4), shock_scale: num(cb.shock_scale, 0.5), ripple_weight: num(cb.ripple_weight, 2), ripple_shock_bonus: num(cb.ripple_shock_bonus, 0.1) },
     },
   };

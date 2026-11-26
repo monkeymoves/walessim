@@ -1,10 +1,11 @@
 /**
- * Balance check (game-design 11.2): run every bot over many seeds and print the result
- * distributions against the targets.
+ * Balance check (balance decision 14, game-design 11.2 as restated): play every bot over many seeds
+ * and judge each game by the engine's result, the change since 2026 in net strand pips (the lower of
+ * Lived over terms 2 to 6 and Left). Prints every target with ok or MISS.
  *
  *   npx tsx scripts/balance.ts [--seeds 200] [--runs 30] [--ceiling 5000] [--bots thoughtful,average]
  *
- * Runs use fewer uncertainty runs than play (default 30) for speed; the median result is stable.
+ * Uncertainty runs are fewer than in play (default 30) for speed; medians are stable.
  */
 import { compileFromDisk } from "./model-files";
 import { ALL_BOTS, playBot, randomBot, type Bot } from "../src/engine/bots";
@@ -27,101 +28,109 @@ if (!r.model) {
 const m = r.model;
 const q = (xs: number[], p: number) => {
   const s = [...xs].sort((a, b) => a - b);
-  return s[Math.min(s.length - 1, Math.max(0, Math.round((s.length - 1) * p)))]!;
+  return s.length ? s[Math.min(s.length - 1, Math.max(0, Math.round((s.length - 1) * p)))]! : NaN;
 };
-const f = (x: number) => x.toFixed(2);
+const f = (x: number) => (x >= 0 ? "+" : "") + x.toFixed(1);
+const bandName = (v: number) => m.game.judged_change.bands.filter((b) => v >= b.min).pop()!.name.en;
 
-const TARGETS: Record<string, [number, number]> = {
-  caretaker: [3.3, 3.9],
-  careless: [2.5, 3.5],
-  average: [4.2, 5.0],
-  thoughtful: [5.8, 6.8],
-};
-
-export interface BotStats {
-  id: string;
-  results: number[];
-  lived: number[];
-  left: number[];
-  livedLower: number;
-  caretakerTerms: number;
-  wells: number;
-  games: Summary[];
-}
+/** Targets of decision 14, medians over the seeds, in net strand pips since 2026. */
+const TARGETS: Record<string, [number, number]> = { caretaker: [-3.5, -1.5], careless: [-10, -4], average: [-1, 1], thoughtful: [1.5, 3.5] };
+const WHOLE = ["growth-only", "green-only", "borrower", "prevention-only"];
+const WHOLE_GAP = 1.5;
+const HABIT_ALLOW = 0.3;
 
 /** What the report needs from a game (full states are too large to keep thousands of). */
 interface Summary {
   result: number;
-  cards: string[];
+  lived: number;
+  left: number;
+  which: "lived" | "left";
+  lost: number;
+  wells: number;
+  neglect: number;
+  shocks: number;
+  prepared: number;
+  plays: Record<string, number>;
 }
-const summarise = (g: GameState): Summary => ({ result: g.result!.result.value, cards: [...new Set(g.history.flatMap((h) => h.plays.cards.map((c) => c.card)))] });
-
-function runBot(bot: Bot): BotStats {
-  const res: NonNullable<GameState["result"]>[] = [];
-  const games: Summary[] = [];
-  let lost = 0, wells = 0;
-  for (let seed = 1; seed <= SEEDS; seed++) {
-    const g = playBot(m, bot, seed, { runs: RUNS, previewRuns: 5 });
-    res.push(g.result!);
-    games.push(summarise(g));
-    lost += g.ledger.lostTerms.length;
-    wells += g.ledger.grades.filter((x) => x.grade === "well").length;
-  }
+const summarise = (g: GameState): Summary => {
+  const e = g.result!;
+  const plays: Record<string, number> = {};
+  for (const h of g.history) for (const c of h.plays.cards) plays[c.card] = (plays[c.card] ?? 0) + 1;
   return {
-    id: bot.id,
-    results: res.map((x) => x.result.value),
-    lived: res.map((x) => x.lived.value),
-    left: res.map((x) => x.left.value),
-    livedLower: res.filter((x) => x.result.which === "lived").length / res.length,
-    caretakerTerms: lost / SEEDS,
-    wells: wells / SEEDS,
-    games,
+    result: e.result.value,
+    lived: e.lived.value,
+    left: e.left.value,
+    which: e.result.which,
+    lost: g.ledger.lostTerms.length,
+    wells: g.ledger.grades.filter((x) => x.grade === "well").length,
+    neglect: g.history.reduce((a, h) => a + h.events.filter((x) => x.kind === "neglect").length, 0),
+    shocks: g.history.filter((h) => h.shock).length,
+    prepared: g.history.filter((h) => h.shock?.prepared).length,
+    plays,
   };
-}
+};
 
 const bots = ALL_BOTS.filter((b) => !ONLY || ONLY.split(",").includes(b.id));
-const stats: BotStats[] = [];
+const games = new Map<string, Summary[]>();
 const t0 = Date.now();
-console.log(`seeds ${SEEDS}, runs ${RUNS}\n`);
-console.log("bot                median   p10    p90    lived  left   lived-lower  caretaker/game  wells/game  target");
+const lines: string[] = [];
+const say = (s: string) => {
+  console.log(s);
+  lines.push(s);
+};
+say(`seeds ${SEEDS}, runs ${RUNS}. Unit: net strand pips changed since 2026 (lower of Lived, terms 2 to 6, and Left)\n`);
+say("bot                  median    p10    p90  lived   left  lived-lower  lost-terms  wells  neglect  prepared  band               target");
 for (const bot of bots) {
-  const s = runBot(bot);
-  stats.push(s);
+  const gs: Summary[] = [];
+  for (let seed = 1; seed <= SEEDS; seed++) gs.push(summarise(playBot(m, bot, seed, { runs: RUNS, previewRuns: 5 })));
+  games.set(bot.id, gs);
+  const res = gs.map((g) => g.result);
+  const med = q(res, 0.5);
   const t = TARGETS[bot.id];
-  const med = q(s.results, 0.5);
-  const ok = t ? (med >= t[0] && med <= t[1] ? "ok" : "MISS") : "";
-  console.log(
-    `${bot.id.padEnd(18)} ${f(med)}   ${f(q(s.results, 0.1))}   ${f(q(s.results, 0.9))}   ${f(q(s.lived, 0.5))}   ${f(q(s.left, 0.5))}   ${(s.livedLower * 100).toFixed(0).padStart(5)}%       ${s.caretakerTerms.toFixed(2)}            ${s.wells.toFixed(2)}        ${t ? `${t[0]} to ${t[1]} ${ok}` : ""}`,
+  const shocks = gs.reduce((a, g) => a + g.shocks, 0);
+  const prep = shocks ? gs.reduce((a, g) => a + g.prepared, 0) / shocks : 0;
+  say(
+    `${bot.id.padEnd(20)} ${f(med).padStart(6)} ${f(q(res, 0.1)).padStart(6)} ${f(q(res, 0.9)).padStart(6)} ${f(q(gs.map((g) => g.lived), 0.5)).padStart(6)} ${f(q(gs.map((g) => g.left), 0.5)).padStart(6)}  ${((gs.filter((g) => g.which === "lived").length / gs.length) * 100).toFixed(0).padStart(6)}%     ${(gs.reduce((a, g) => a + g.lost, 0) / SEEDS).toFixed(2).padStart(6)}   ${(gs.reduce((a, g) => a + g.wells, 0) / SEEDS).toFixed(1).padStart(4)}   ${(gs.reduce((a, g) => a + g.neglect, 0) / SEEDS).toFixed(1).padStart(5)}    ${(prep * 100).toFixed(0).padStart(4)}%   ${bandName(med).padEnd(18)} ${t ? `${f(t[0])} to ${f(t[1])} ${med >= t[0] && med <= t[1] ? "ok" : "MISS"}` : ""}`,
   );
 }
-const th = stats.find((s) => s.id === "thoughtful");
-const av = stats.find((s) => s.id === "average");
-if (th && av) {
-  const thMed = q(th.results, 0.5);
-  const avTop = q(av.results, 0.9);
-  console.log(`\nsingle-strategy bots must be at least 0.7 below thoughtful (${f(thMed - 0.7)}) and not above average's top (p90 ${f(avTop)}):`);
-  for (const s of stats.filter((x) => !TARGETS[x.id])) {
-    const med = q(s.results, 0.5);
-    console.log(`  ${s.id.padEnd(18)} ${f(med)} ${med <= thMed - 0.7 && med <= avTop ? "ok" : "MISS"}`);
+
+const med = (id: string) => q((games.get(id) ?? []).map((g) => g.result), 0.5);
+const th = games.get("thoughtful");
+if (th) {
+  const thMed = med("thoughtful");
+  const share = (id: string, w: "lived" | "left") => {
+    const gs = games.get(id) ?? [];
+    return gs.length ? gs.filter((g) => g.which === w).length / gs.length : NaN;
+  };
+  say(`\nLived is the lower in ${(share("thoughtful", "lived") * 100).toFixed(0)}% of thoughtful games (target 50 to 80): ${share("thoughtful", "lived") >= 0.5 && share("thoughtful", "lived") <= 0.8 ? "ok" : "MISS"}`);
+  if (games.has("average")) say(`Left is the lower in ${(share("average", "left") * 100).toFixed(0)}% of average games (target at least 60): ${share("average", "left") >= 0.6 ? "ok" : "MISS"}`);
+  const ct = games.get("caretaker");
+  if (ct) {
+    const d = th.map((g, i) => g.result - ct[i]!.result);
+    say(`thoughtful minus caretaker on the same seed: median ${f(q(d, 0.5))}, p10 ${f(q(d, 0.1))} (target median at least +4, p10 at least +2): ${q(d, 0.5) >= 4 && q(d, 0.1) >= 2 ? "ok" : "MISS"}`);
   }
-  console.log(`\nLived is the lower in ${(th.livedLower * 100).toFixed(0)}% of thoughtful games (target 35 to 65)`);
+  say(`whole-game strategies must be at least ${WHOLE_GAP} below thoughtful (${f(thMed - WHOLE_GAP)}):`);
+  for (const id of WHOLE) if (games.has(id)) say(`  ${id.padEnd(20)} ${f(med(id)).padStart(6)}  ${med(id) <= thMed - WHOLE_GAP ? "ok" : "MISS"}`);
+  say(`one-habit bots must not beat thoughtful by more than ${HABIT_ALLOW}; the cost of the habit at the median and in bad games (p10):`);
+  const thP10 = q(th.map((g) => g.result), 0.1);
+  for (const [id, gs] of games) {
+    if (TARGETS[id] || WHOLE.includes(id) || id.startsWith("flow") || id.startsWith("thoughtful")) continue;
+    say(`  ${id.padEnd(20)} ${f(med(id)).padStart(6)}  cost ${f(thMed - med(id))} median, ${f(thP10 - q(gs.map((g) => g.result), 0.1))} p10  ${med(id) <= thMed + HABIT_ALLOW ? "ok" : "MISS"}`);
+  }
 }
 
-// the ceiling: best of many random-search games; card use in their top decile
-const randomGames: Summary[] = [];
+// the ceiling, and card use (plays per game) in its top decile
 if (CEILING > 0) {
-  for (let k = 0; k < CEILING; k++) randomGames.push(summarise(playBot(m, randomBot(k), (k % SEEDS) + 1, { runs: 5, previewRuns: 1 })));
-  const best = Math.max(...randomGames.map((g) => g.result));
-  console.log(`\nceiling: best of ${CEILING} random-search games ${f(best)} (target at most 8.0) ${best <= 8 ? "ok" : "MISS"}`);
+  const rs: Summary[] = [];
+  for (let k = 0; k < CEILING; k++) rs.push(summarise(playBot(m, randomBot(k), (k % SEEDS) + 1, { runs: 5, previewRuns: 1 })));
+  const best = Math.max(...rs.map((g) => g.result));
+  const gift = rs.filter((g) => g.result >= 4).length / rs.length;
+  say(`\nceiling: best of ${CEILING} random-search games ${f(best)} (target at most +6) ${best <= 6 ? "ok" : "MISS"}; share reaching A gift ${(gift * 100).toFixed(1)}% (target under 5) ${gift < 0.05 ? "ok" : "MISS"}`);
+  const top = [...rs].sort((a, b) => b.result - a.result).slice(0, Math.max(1, Math.floor(rs.length / 10)));
+  say(`card use in the top decile of random-search games (${top.length}), plays per game: none above 1.6, none below 0.2`);
+  for (const c of m.cards) {
+    const per = top.reduce((a, g) => a + (g.plays[c.id] ?? 0), 0) / top.length;
+    say(`  ${c.id.padEnd(28)} ${per.toFixed(2)} ${per > 1.6 || per < 0.2 ? "MISS" : ""}`);
+  }
 }
-const pool = randomGames.length ? randomGames : stats.flatMap((s) => s.games);
-const sorted = [...pool].sort((a, b) => b.result - a.result);
-const top = sorted.slice(0, Math.max(1, Math.floor(sorted.length / 10)));
-const counts = new Map<string, number>();
-for (const g of top) for (const id of g.cards) counts.set(id, (counts.get(id) ?? 0) + 1);
-console.log(`\ncard use in the top decile of ${randomGames.length ? "random-search" : "bot"} games (${top.length}): every card at least 10%, none above 70%`);
-for (const c of m.cards) {
-  const share = (counts.get(c.id) ?? 0) / top.length;
-  console.log(`  ${c.id.padEnd(28)} ${(share * 100).toFixed(0).padStart(3)}% ${share > 0.7 || share < 0.1 ? "MISS" : ""}`);
-}
-console.log(`\n${((Date.now() - t0) / 1000).toFixed(0)} s`);
+say(`\n${((Date.now() - t0) / 1000).toFixed(0)} s`);

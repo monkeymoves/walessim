@@ -195,8 +195,50 @@ Other checks, 200 seeds:
 - **One-habit costs are small** (0.3 to 0.8 of a pip at the median). I have accepted this and changed
   the target: see the reasons in `balance-decision.md`. The south-east-only figure means nothing
   until the thoughtful bot really rotates regions.
-- **The engine still scores levels.** Until the formula in `balance-decision.md` is implemented, the
-  game shows the old result, and one test in `src/engine/bots.test.ts` fails ("defeats growth only
-  and borrowing by a clear margin": the borrower is 1.8 net pips below thoughtful, which meets the new
-  target, but the test asks for 0.4 of a level point, which is 2.8 pips). All other tests pass.
+- **The engine still scores levels.** Resolved: the engine now judges the change (see "Decision 14 in the engine" below), and the bots test is restated in net pips.
 - **Welsh.** Eight new shock notes in `model/curveballs.yaml` are drafts marked `cy_review`.
+
+## Decision 14 in the engine (results, 200 seeds, 30 runs)
+
+Implemented: the judged result (change since 2026 in net strand pips, Lived over terms 2 to 6 with the
+dip rule, Left as change in stock level), letter bands from `judged_change`, the landed-and-reached
+preparation rule, region rotation in the thoughtful bot (a region with no card last term gets one now,
+by moving a chosen regional card, adding one or swapping the least valuable choice), and the card-use
+check as plays per game. `npx tsx scripts/balance.ts --seeds 200 --runs 30 --ceiling 5000`:
+
+| Bot | Median | p10 | p90 | Lived | Left | Lived lower | Neglect region-terms | Prepared shocks | Target |
+|---|---|---|---|---|---|---|---|---|---|
+| caretaker | -2.8 | -4.5 | -1.5 | -1.8 | -2.3 | 39% | 9.2 | 53% | -3.5 to -1.5: ok |
+| careless | -6.8 | -9.4 | -4.3 | -3.2 | -6.8 | 5% | 10.9 | 43% | -10 to -4: ok |
+| average | -0.6 | -3.5 | +1.9 | +1.4 | -0.3 | 26% | 6.2 | 66% | -1 to +1: ok |
+| thoughtful (rotates) | +0.2 | -2.0 | +2.3 | +1.4 | +0.8 | 44% | 0.5 | 66% | +1.5 to +3.5: MISS |
+| thoughtful without rotation (diagnostic) | +2.3 | +0.3 | +3.5 | +2.5 | +4.1 | 77% | 9.6 | 65% | (would pass) |
+| growth-only | -5.7 | | | | | | | | 1.5 below thoughtful: ok |
+| green-only | -4.2 | | | | | | | | ok |
+| borrower | -3.2 | | | | | | | | ok |
+| prevention-only | -0.8 | | | | | | | | MISS (1.0 below) |
+| south-east-only | +1.9 | +0.2 | +3.1 | | | 96% | 10.2 | | not above thoughtful +0.3: MISS (1.8 above) |
+| ignore-places | -0.4 | -2.3 | | | | | | | ok (costs 0.6 at the median, 0.3 at p10) |
+| no-contingency | +0.1 | -2.6 | | | | | | | ok (0.0 median, 0.6 p10) |
+| end-game-dumper | -0.1 | -2.1 | | | | | | | ok (0.3, 0.1) |
+
+- Thoughtful minus caretaker, same seed: median +3.0, p10 +0.9 (target +4 and +2): miss.
+- Lived the lower in 44% of thoughtful games (target 50 to 80): miss, close. Left the lower in 75% of
+  average games (target at least 60): ok.
+- Ceiling: best of 5,000 random-search games +4.0 (at most +6): ok; A gift reached in 0.0% (under 5): ok.
+- Card use, plays per game in the top decile of random games: 0.62 to 1.42, all within 0.2 to 1.6: ok.
+- Preparation: shocks met prepared fell from about 85 per cent to 53 to 66 per cent.
+
+**Finding: rotating regions costs about two net pips, and concentrating on the South East wins.**
+The rotation works (neglect falls from about ten region-terms a game to 0.5), but every card moved to
+Mid or the North is diluted by population weighting, so the thoughtful bot drops from +2.3 to +0.2,
+and south-east-only (+1.9) beats it by 1.8 pips despite ten neglect penalties. Tried and reverted, as
+tune values cannot close it: Trust `neglect` -8 (south-east-only still +1.4 against -0.1; it only
+costs it 0.5 lost terms) and `regional_size_step` 2 (lifts every regional play; south-east-only
+still 1.3 ahead). No YAML values were changed in this round. The counterweight the design relies on,
+`equal` being unweighted, does not bite: its gap components are measured on the five worst-off
+authorities, four of which are in the South East, and no card moves `deprivation`, the only
+unweighted-by-place component. Options for the design lead: weight some strands by region rather than
+by population (each region a quarter), add a "spread" component to `equal` or `cohesive` (share of
+regions that gained), or make Trust neglect bite on the card limit. Any of these needs a design
+decision, not tuning.
