@@ -9,3 +9,4 @@ playwright-report/
 *.local
 .firebase/
 __pycache__/
+public/data/

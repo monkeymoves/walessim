@@ -9,12 +9,13 @@
     "dev": "npm run model:build && vite",
     "build": "npm run model:build && vite build",
     "preview": "vite preview",
-    "model:build": "tsx scripts/build-model.ts",
+    "model:build": "tsx scripts/build-geo.ts && tsx scripts/build-model.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "e2e": "npm run build && playwright test",
-    "deploy": "npm run build && firebase deploy --only hosting:etifeddiaeth"
+    "deploy": "npm run build && firebase deploy --only hosting:etifeddiaeth",
+    "geo:build": "tsx scripts/build-geo.ts"
   },
   "dependencies": {
     "@fontsource-variable/archivo": "^5.3.0",
