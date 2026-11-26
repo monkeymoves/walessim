@@ -201,9 +201,9 @@
  "cause.upkeep": "Upkeep left unpaid on {name}",
  "cause.event": "{name}",
  "cause.caretaker": "{name}, played by the caretaker",
- "event.R12": "A tip moved in the storm",
- "event.R20": "A heartland dropped below half Welsh-speaking",
- "event.R28": "A big employer left",
+ "event.R12": "A tip moving in the storm",
+ "event.R20": "A heartland falling below half Welsh-speaking",
+ "event.R28": "A big employer leaving",
  "trace.title": "Pull the thread",
  "trace.why": "Why {strand} moved",
  "trace.why_stock": "Why what {strand} hands on moved",
@@ -393,5 +393,7 @@
  "bar.new_confirm": "Yes, replace this game",
  "bar.new_cancel": "Keep playing",
  "foot.honesty": "A thinking tool, not a forecast.",
- "foot.attrib": "Boundaries ONS (OGL). Terrain AWS Terrain Tiles. Places: OpenStreetMap contributors (ODbL), BGS (OGL), NRW, WIMD."
+ "foot.attrib": "Boundaries ONS (OGL). Terrain AWS Terrain Tiles. Places: OpenStreetMap contributors (ODbL), BGS (OGL), NRW, WIMD.",
+ "plan.ghost_up": "This card would lift it",
+ "plan.ghost_down": "This card would wear it down"
 }

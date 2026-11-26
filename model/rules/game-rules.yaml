@@ -1,0 +1,38 @@
+# Game rules: design rules, not evidence. Badged "game rule" and never presented as claims about Wales.
+rules:
+  - id: R30
+    theme: game
+    name: { en: Doing the same thing again does less, cy: Mae gwneud yr un peth eto yn gwneud llai, cy_review: true }
+    note: { en: "A card played again within two terms of its last play delivers only part of its effect. A design rule, not evidence.", cy: "Mae cerdyn a chwaraeir eto o fewn dau dymor i'w chwarae diwethaf yn cyflawni dim ond rhan o'i effaith. Rheol ddylunio, nid tystiolaeth.", cy_review: true }
+    kind: saturating
+    saturate: repeat
+    window: 2
+    inputs: [any card]
+    outputs: [card effects]
+    lag: 0
+    params:
+      coef: { default: 0.6, min: 0.5, max: 0.8, unit: { en: share of the effect delivered, cy: cyfran yr effaith a gyflawnir, cy_review: true }, adjustable: true }
+    sources: [game-rule]
+    confidence: low
+    evidence: expert
+    placeholder: false
+    game_rule: true
+
+  - id: R35
+    theme: game
+    name: { en: Borrowing now is paid for later, cy: Mae benthyg nawr yn cael ei dalu'n ddiweddarach, cy_review: true }
+    note: { en: "Each loan is a debt token: one pip of interest every term until it is cleared for three pips. Tokens left in 2050 count against what is handed on. No pound figures are implied.", cy: "Mae pob benthyciad yn docyn dyled: un pip o log bob tymor nes ei glirio am dri phip. Mae tocynnau sydd ar ôl yn 2050 yn cyfrif yn erbyn yr hyn a drosglwyddir. Nid oes ffigurau punnoedd ymhlyg.", cy_review: true }
+    kind: stock
+    stock: debt
+    inputs: [borrow-to-invest, repayments]
+    outputs: [debt tokens]
+    lag: 0
+    params:
+      interest: { default: 1, min: 1, max: 1, unit: { en: pips per token per term, cy: pipiau fesul tocyn y tymor, cy_review: true }, adjustable: false }
+      clear_cost: { default: 3, min: 3, max: 3, unit: { en: pips to clear a token, cy: pipiau i glirio tocyn, cy_review: true }, adjustable: false }
+      left_penalty: { default: 0.5, min: 0.5, max: 0.5, unit: { en: Left points per token in 2050, cy: pwyntiau Wedi'i adael fesul tocyn yn 2050, cy_review: true }, adjustable: false }
+    sources: [game-rule]
+    confidence: low
+    evidence: expert
+    placeholder: false
+    game_rule: true

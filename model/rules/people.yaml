@@ -1,0 +1,161 @@
+# Rules about people: ageing, health, homes, young people and the Welsh language.
+# Fixed kinds only (ADR 0002). Coefficients are in score points (0 to 10, higher is better), so a rule
+# that worsens a "lower is better" indicator has a negative coefficient on its score.
+rules:
+  - id: R01
+    theme: people
+    name: { en: An older Wales needs more care, cy: Mae Cymru hŷn angen mwy o ofal, cy_review: true }
+    note: { en: "As the population ages, pressure on care rises every term, most in the rural north, mid and south west.", cy: "Wrth i'r boblogaeth heneiddio, mae'r pwysau ar ofal yn codi bob tymor, fwyaf yng nghefn gwlad y gogledd, y canolbarth a'r de-orllewin.", cy_review: true }
+    kind: linear
+    drive: clock
+    inputs: [clock, age65]
+    outputs: [care_pressure]
+    lag: 0
+    emphasis: [{ flags: [rural], factor: 1.3 }]
+    params:
+      coef: { default: -0.45, min: -0.5, max: -0.2, unit: { en: points per term, cy: pwyntiau y tymor, cy_review: true }, adjustable: true }
+    sources: [ons-snpp]
+    confidence: high
+    evidence: assessed
+    placeholder: false
+
+  - id: R04
+    theme: people
+    name: { en: Welsh speakers drift down without help, cy: Mae nifer y siaradwyr Cymraeg yn llithro heb gymorth, cy_review: true }
+    note: { en: "Births, migration and transmission at home: at baseline the stock of speakers and the share who speak Welsh slip a little each term.", cy: "Genedigaethau, mudo a throsglwyddo yn y cartref: ar y llinell sylfaen mae stoc y siaradwyr a'r gyfran sy'n siarad Cymraeg yn llithro ychydig bob tymor.", cy_review: true }
+    kind: stock
+    stock: clock
+    inputs: [clock]
+    outputs: [speakers_stock, welsh_speakers]
+    lag: 0
+    params:
+      rate: { default: -0.3, min: -0.3, max: 0, unit: { en: points per term, cy: pwyntiau y tymor, cy_review: true }, adjustable: true }
+    sources: [census-2021-welsh, wg-welsh-projections]
+    confidence: medium
+    evidence: assessed
+    placeholder: false
+
+  - id: R14
+    theme: people
+    name: { en: Warm homes and prevention mean longer lives, cy: Mae cartrefi cynnes ac atal yn golygu bywydau hirach, cy_review: true }
+    note: { en: "Less fuel poverty and more prevention built up add to life expectancy a term later.", cy: "Mae llai o dlodi tanwydd a mwy o atal wedi'i gronni yn ychwanegu at ddisgwyliad oes dymor yn ddiweddarach.", cy_review: true }
+    kind: linear
+    drive: change
+    input: [fuel_poverty, health_stock]
+    inputs: [fuel_poverty, health_stock]
+    outputs: [life_exp]
+    lag: 1
+    params:
+      coef: { default: 0.35, min: 0.05, max: 0.4, unit: { en: points per point, cy: pwyntiau y pwynt, cy_review: true }, adjustable: true }
+    sources: [cold-homes-health, prevention-returns]
+    confidence: medium
+    evidence: published
+    placeholder: false
+
+  - id: R15
+    theme: people
+    name: { en: Prevention builds up slowly, cy: Mae atal yn cronni'n araf, cy_review: true }
+    note: { en: "Moving money into prevention and warm homes builds a stock of health that erodes by a tenth each term if not renewed.", cy: "Mae symud arian i atal a chartrefi cynnes yn adeiladu stoc o iechyd sy'n erydu un rhan o ddeg bob tymor os na chaiff ei adnewyddu.", cy_review: true }
+    kind: stock
+    stock: decay
+    inputs: [health-before-hospital, warm-homes]
+    outputs: [health_stock]
+    lag: 3
+    params:
+      floor_share: { default: 0.4, min: 0.4, max: 0.8, unit: { en: share of the 2026 stock that existing provision keeps up, cy: cyfran o stoc 2026 y mae'r ddarpariaeth bresennol yn ei chynnal, cy_review: true }, adjustable: true, placeholder: true, tune: true }
+      coef: { default: 2.0, min: 1.0, max: 3.0, unit: { en: points per play, cy: pwyntiau y chwarae, cy_review: true }, adjustable: true, placeholder: true }
+      outflow: { default: 0.1, min: 0.05, max: 0.15, unit: { en: fraction per term, cy: ffracsiwn y tymor, cy_review: true }, adjustable: true }
+    sources: [prevention-returns]
+    confidence: low
+    evidence: expert
+    placeholder: true
+
+  - id: R17
+    theme: people
+    name: { en: Young people stay where they can afford to and find work, cy: Mae pobl ifanc yn aros lle gallant fforddio a chael gwaith, cy_review: true }
+    note: { en: "Better affordability and more jobs keep more people aged 20 to 34 a term later.", cy: "Mae gwell fforddiadwyedd a mwy o swyddi yn cadw mwy o bobl 20 i 34 oed dymor yn ddiweddarach.", cy_review: true }
+    kind: linear
+    drive: change
+    input: [affordability, employment]
+    inputs: [affordability, employment]
+    outputs: [young_adults]
+    lag: 1
+    params:
+      coef: { default: 0.4, min: 0.1, max: 0.5, unit: { en: points per point, cy: pwyntiau y pwynt, cy_review: true }, adjustable: true, placeholder: true }
+    sources: [ons-internal-migration]
+    confidence: low
+    evidence: expert
+    placeholder: true
+
+  - id: R18
+    theme: people
+    name: { en: Homes and young people hold the heartland, cy: Cartrefi a phobl ifanc sy'n cynnal y cadarnleoedd, cy_review: true }
+    note: { en: "In the heartland authorities, young adults staying and homes they can afford hold up Welsh as a community language.", cy: "Yn awdurdodau'r cadarnleoedd, mae oedolion ifanc yn aros a chartrefi y gallant eu fforddio yn cynnal y Gymraeg fel iaith gymunedol.", cy_review: true }
+    kind: linear
+    drive: change
+    input: [young_adults, affordability]
+    inputs: [young_adults, affordability]
+    outputs: [heartland, speakers_stock]
+    where: { flags: [heartland] }
+    lag: 1
+    params:
+      coef: { default: 0.25, min: 0.1, max: 0.5, unit: { en: points per point, cy: pwyntiau y pwynt, cy_review: true }, adjustable: true, placeholder: true }
+    sources: [language-housing]
+    confidence: low
+    evidence: expert
+    placeholder: true
+
+  - id: R19
+    theme: people
+    name: { en: Welsh-medium early years make speakers, cy: Mae'r blynyddoedd cynnar Cymraeg yn creu siaradwyr, cy_review: true }
+    note: { en: "Welsh-medium childcare adds to the stock of speakers and, later, to the share who speak Welsh.", cy: "Mae gofal plant cyfrwng Cymraeg yn ychwanegu at stoc y siaradwyr ac, yn ddiweddarach, at y gyfran sy'n siarad Cymraeg.", cy_review: true }
+    kind: stock
+    stock: card
+    inputs: [welsh-medium-childcare]
+    outputs: [speakers_stock, welsh_speakers]
+    lag: 3
+    params:
+      coef: { default: 1.0, min: 0.5, max: 1.5, unit: { en: points per play, cy: pwyntiau y chwarae, cy_review: true }, adjustable: true }
+    sources: [welsh-medium-transmission]
+    confidence: medium
+    evidence: published
+    placeholder: false
+
+  - id: R20
+    theme: people
+    name: { en: When a heartland authority falls below half, cy: Pan fo awdurdod cadarnle yn disgyn o dan hanner, cy_review: true }
+    note: { en: "If the share able to speak Welsh in a heartland authority falls below the level, the language strand takes a hit and people notice.", cy: "Os yw'r gyfran sy'n gallu siarad Cymraeg mewn awdurdod cadarnle yn disgyn o dan y lefel, mae llinyn yr iaith yn cael ergyd ac mae pobl yn sylwi.", cy_review: true }
+    kind: threshold
+    event: heartland_drop
+    inputs: [welsh_speakers]
+    outputs: [heartland, welsh_speakers]
+    lag: 0
+    params:
+      level: { default: 50, min: 45, max: 55, unit: { en: per cent able to speak Welsh, cy: y cant sy'n gallu siarad Cymraeg, cy_review: true }, adjustable: true, placeholder: true }
+      trust: { default: -4, min: -4, max: -4, unit: { en: Trust points, cy: pwyntiau Ymddiriedaeth, cy_review: true }, adjustable: false }
+    sources: [welsh-threshold, census-2021-welsh]
+    confidence: low
+    evidence: expert
+    placeholder: true
+
+  - id: R32
+    theme: people
+    name: { en: A good start narrows the gap later, cy: Mae dechrau da yn cau'r bwlch yn ddiweddarach, cy_review: true }
+    note: { en: "Family support in the five worst-off authorities builds a stock that, a generation of terms later, narrows their gap in pay and health.", cy: "Mae cymorth i deuluoedd yn y pum awdurdod tlotaf yn adeiladu stoc sydd, ymhen termau, yn cau eu bwlch mewn cyflog ac iechyd.", cy_review: true }
+    kind: stock
+    stock: card
+    drive: change
+    input: early_years_stock
+    inputs: [early-years, early_years_stock]
+    outputs: [early_years_stock, earnings, life_exp]
+    where: { flags: [worst5] }
+    lag: 3
+    change_lag: 1
+    params:
+      coef: { default: 2.0, min: 1.0, max: 3.0, unit: { en: points per play, cy: pwyntiau y chwarae, cy_review: true }, adjustable: true, placeholder: true }
+      coef_earnings: { default: 0.5, min: 0.1, max: 0.5, unit: { en: points per point, cy: pwyntiau y pwynt, cy_review: true }, adjustable: true, placeholder: true }
+      coef_life_exp: { default: 0.5, min: 0.1, max: 0.5, unit: { en: points per point, cy: pwyntiau y pwynt, cy_review: true }, adjustable: true, placeholder: true }
+    sources: [early-intervention]
+    confidence: low
+    evidence: expert
+    placeholder: true

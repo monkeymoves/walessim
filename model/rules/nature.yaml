@@ -1,0 +1,155 @@
+# Rules about nature, water, climate and carbon. The SoNaRR Fuzzy Cognitive Map (FCM) sits behind
+# R03 and R29: pressures move ecosystem condition. FCM iterations are never time; R03 carries the clock.
+rules:
+  - id: R02
+    theme: nature
+    name: { en: A wetter climate puts more homes at risk, cy: Mae hinsawdd wlypach yn rhoi mwy o gartrefi mewn perygl, cy_review: true }
+    note: { en: "On the climate path, the share of homes at flood risk rises each term, most in the valleys and on the coast.", cy: "Ar lwybr yr hinsawdd, mae cyfran y cartrefi mewn perygl o lifogydd yn codi bob tymor, fwyaf yn y cymoedd ac ar yr arfordir.", cy_review: true }
+    kind: linear
+    drive: clock
+    inputs: [clock]
+    outputs: [flood_exposure]
+    lag: 0
+    emphasis: [{ flags: [valley, coast], factor: 1.3 }]
+    params:
+      coef: { default: -0.35, min: -0.4, max: -0.1, unit: { en: points per term, cy: pwyntiau y tymor, cy_review: true }, adjustable: true }
+    sources: [ukcp18, nrw-flood-risk]
+    confidence: medium
+    evidence: assessed
+    placeholder: false
+
+  - id: R03
+    theme: nature
+    name: { en: Nature moves towards what the pressures allow, cy: Mae natur yn symud tuag at yr hyn mae'r pwysau'n ei ganiatáu, cy_review: true }
+    note: { en: "Each term nature's condition closes part of the gap to the equilibrium the SoNaRR map gives for today's pressures. The climate driver creeps up each term. The rate is judgement.", cy: "Bob tymor mae cyflwr natur yn cau rhan o'r bwlch i'r cydbwysedd y mae map SoNaRR yn ei roi ar gyfer pwysau heddiw. Mae'r sbardun hinsawdd yn cripian i fyny bob tymor. Barn yw'r gyfradd.", cy_review: true }
+    kind: stock
+    stock: approach_fcm
+    inputs: ["fcm:pressures"]
+    outputs: [nature_condition]
+    lag: 0
+    params:
+      rate: { default: 0.25, min: 0.15, max: 0.4, unit: { en: share of the gap closed per term, cy: cyfran y bwlch a gaeir y tymor, cy_review: true }, adjustable: true, placeholder: true }
+      climate_drift: { default: 0.05, min: 0.01, max: 0.05, unit: { en: FCM scale per term on the climate driver, cy: graddfa FCM y tymor ar y sbardun hinsawdd, cy_review: true }, adjustable: true, placeholder: true, tune: true }
+    sources: [sonarr-2025]
+    confidence: medium
+    evidence: assessed
+    placeholder: true
+
+  - id: R06
+    theme: nature
+    name: { en: Re-wetting restores peat, with diminishing returns, cy: Mae ail-wlychu yn adfer mawn, gydag enillion lleihaol, cy_review: true }
+    note: { en: "Each restoration play raises peat condition; after three plays the easy bogs are done and each play does half as much.", cy: "Mae pob chwarae adfer yn codi cyflwr y mawn; ar ôl tri chwarae mae'r corsydd hawdd wedi'u gwneud ac mae pob chwarae yn gwneud hanner cymaint.", cy_review: true }
+    kind: saturating
+    saturate: plays
+    after_plays: 3
+    inputs: [restore-upland-peat]
+    outputs: [peat_condition]
+    lag: 2
+    params:
+      ageing: { default: -0.1, min: -0.2, max: 0, unit: { en: points per term as drained peat oxidises, cy: pwyntiau y tymor wrth i fawn wedi'i ddraenio ocsideiddio, cy_review: true }, adjustable: true, placeholder: true, tune: true }
+      coef: { default: 1.0, min: 0.5, max: 1.5, unit: { en: points per play, cy: pwyntiau y chwarae, cy_review: true }, adjustable: true }
+    sources: [npap]
+    confidence: medium
+    evidence: published
+    placeholder: false
+
+  - id: R07
+    theme: nature
+    name: { en: Wet peat stops leaking carbon, cy: Mae mawn gwlyb yn peidio â gollwng carbon, cy_review: true }
+    note: { en: "Better peat condition lowers emissions and protects the carbon budget.", cy: "Mae cyflwr mawn gwell yn gostwng allyriadau ac yn diogelu'r gyllideb garbon.", cy_review: true }
+    kind: linear
+    drive: change
+    input: peat_condition
+    inputs: [peat_condition]
+    outputs: [emissions_head, carbon_budget]
+    lag: 0
+    params:
+      coef: { default: 0.15, min: 0.05, max: 0.3, unit: { en: points per point, cy: pwyntiau y pwynt, cy_review: true }, adjustable: true }
+    sources: [peat-inventory]
+    confidence: medium
+    evidence: published
+    placeholder: false
+
+  - id: R08
+    theme: nature
+    name: { en: Slowing the flow upstream lowers flood risk, up to a point, cy: Mae arafu'r llif i fyny'r afon yn lleihau perygl llifogydd, hyd at bwynt, cy_review: true }
+    note: { en: "Leaky dams, wet woodland and re-wetted peat cut flood risk downstream, but the total effect in any one authority has a ceiling. Woodland's part is not modelled separately in v1.", cy: "Mae argaeau sy'n gollwng, coetir gwlyb a mawn wedi'i ail-wlychu yn lleihau perygl llifogydd i lawr yr afon, ond mae nenfwd i'r effaith gyfan mewn unrhyw awdurdod. Nid yw rhan coetir yn cael ei modelu ar wahân yn v1.", cy_review: true }
+    kind: saturating
+    saturate: ceiling
+    cards: [slow-the-flow, restore-upland-peat]
+    inputs: [slow-the-flow, restore-upland-peat]
+    outputs: [flood_exposure]
+    lag: 2
+    params:
+      coef: { default: 1.0, min: 0.4, max: 1.6, unit: { en: scale on the card effect, cy: graddfa ar effaith y cerdyn, cy_review: true }, adjustable: true, placeholder: true }
+      ceiling: { default: 1.5, min: 0.5, max: 2.5, unit: { en: points in total per authority, cy: pwyntiau i gyd fesul awdurdod, cy_review: true }, adjustable: true, placeholder: true }
+    sources: [nfm-evidence]
+    confidence: low
+    evidence: published
+    placeholder: true
+
+  - id: R09
+    theme: nature
+    name: { en: Hard defences protect the homes behind them, cy: Mae amddiffynfeydd caled yn diogelu'r cartrefi y tu ôl iddynt, cy_review: true }
+    note: { en: "Flood walls cut the share of homes at risk in their region at once.", cy: "Mae waliau llifogydd yn lleihau cyfran y cartrefi mewn perygl yn eu rhanbarth ar unwaith.", cy_review: true }
+    kind: linear
+    drive: card
+    inputs: [build-flood-walls]
+    outputs: [flood_exposure]
+    lag: 0
+    params:
+      coef: { default: 2.0, min: 1.5, max: 2.5, unit: { en: points per play, cy: pwyntiau y chwarae, cy_review: true }, adjustable: true }
+    sources: [fcerm-appraisal]
+    confidence: high
+    evidence: assessed
+    placeholder: false
+
+  - id: R29
+    theme: nature
+    name: { en: Land, farming and building move the pressures on nature, cy: Mae tir, ffermio ac adeiladu yn symud y pwysau ar natur, cy_review: true }
+    note: { en: "Some cards and trends push SoNaRR pressures up or down on the map's own scale; the map then works out what that does to each ecosystem.", cy: "Mae rhai cardiau a thueddiadau yn gwthio pwysau SoNaRR i fyny neu i lawr ar raddfa'r map ei hun; yna mae'r map yn cyfrifo beth mae hynny'n ei wneud i bob ecosystem.", cy_review: true }
+    kind: fcm
+    inputs: [pay-farms-for-nature, build-social-homes, grid-and-big-renewables, restore-upland-peat, slow-the-flow, build-flood-walls, tourism-pays-its-way, rivers-in-trouble]
+    outputs: ["fcm:pressures"]
+    lag: 1
+    params:
+      coef: { default: 1.0, min: 0.5, max: 1.5, unit: { en: scale on the pressure change, cy: graddfa ar y newid pwysau, cy_review: true }, adjustable: true }
+    sources: [sonarr-2025]
+    confidence: medium
+    evidence: assessed
+    placeholder: false
+
+  - id: R31
+    theme: nature
+    name: { en: Healthy nature gives back, cy: Mae natur iach yn rhoi'n ôl, cy_review: true }
+    note: { en: "Better nature condition lifts what nature provides (clean water, pollination, places to walk) and, weakly, health.", cy: "Mae cyflwr natur gwell yn codi'r hyn mae natur yn ei ddarparu (dŵr glân, peillio, lleoedd i gerdded) ac, yn wan, iechyd.", cy_review: true }
+    kind: linear
+    drive: change
+    input: nature_condition
+    inputs: [nature_condition]
+    outputs: [nature_services, life_exp]
+    lag: 1
+    params:
+      coef: { default: 0.7, min: 0.3, max: 0.7, unit: { en: points per point, cy: pwyntiau y pwynt, cy_review: true }, adjustable: true }
+      coef_life_exp: { default: 0.1, min: 0, max: 0.2, unit: { en: points per point, cy: pwyntiau y pwynt, cy_review: true }, adjustable: true, placeholder: true }
+    sources: [sonarr-2025, greenspace-health]
+    confidence: medium
+    evidence: assessed
+    placeholder: true
+
+  - id: R34
+    theme: nature
+    name: { en: Every term's emissions count against the carbon budget, cy: Mae allyriadau pob tymor yn cyfrif yn erbyn y gyllideb garbon, cy_review: true }
+    note: { en: "The carbon budget falls when emissions sit above a straight path to net zero in 2050 and rises when they beat it. The straight path is a stated assumption.", cy: "Mae'r gyllideb garbon yn gostwng pan fo allyriadau uwchlaw llwybr syth at sero net yn 2050 ac yn codi pan fônt yn ei guro. Rhagdybiaeth a nodwyd yw'r llwybr syth.", cy_review: true }
+    kind: stock
+    stock: accumulate
+    input: emissions_head
+    inputs: [emissions_head]
+    outputs: [carbon_budget]
+    lag: 0
+    params:
+      coef: { default: 0.3, min: 0.3, max: 0.3, unit: { en: budget points per point off the path, cy: pwyntiau cyllideb y pwynt oddi ar y llwybr, cy_review: true }, adjustable: false }
+    sources: [desnz-la-emissions, ccc-wales]
+    confidence: high
+    evidence: assessed
+    placeholder: false

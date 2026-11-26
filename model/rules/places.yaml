@@ -1,0 +1,87 @@
+# Rules about places and what is built: defences, upkeep, coal tips, homes and warmth.
+rules:
+  - id: R10
+    theme: places
+    name: { en: Upkeep skipped is condition lost, cy: Cynnal wedi'i hepgor yw cyflwr wedi'i golli, cy_review: true }
+    note: { en: "Each unpaid round of upkeep on walls, roads and pipes, and each deferred repair, lowers the condition of what has been built. While it is low, shocks hit harder.", cy: "Mae pob rownd o gynnal heb ei thalu ar waliau, ffyrdd a phibellau, a phob atgyweiriad wedi'i ohirio, yn gostwng cyflwr yr hyn a adeiladwyd. Tra bo'n isel, mae siociau'n taro'n galetach.", cy_review: true }
+    kind: stock
+    stock: upkeep
+    inputs: [build-flood-walls, defer-maintenance]
+    outputs: [infrastructure_condition]
+    lag: 0
+    params:
+      ageing: { default: -0.25, min: -0.3, max: -0.1, unit: { en: points per term as assets age, cy: pwyntiau y tymor wrth i asedau heneiddio, cy_review: true }, adjustable: true, placeholder: true, tune: true }
+      coef: { default: 1.0, min: 0.5, max: 1.5, unit: { en: points per unpaid upkeep, cy: pwyntiau fesul cynnal heb ei dalu, cy_review: true }, adjustable: true, placeholder: true }
+    sources: [asset-condition]
+    confidence: medium
+    evidence: expert
+    placeholder: true
+
+  - id: R11
+    theme: places
+    name: { en: Making tips safe lowers the liability, cy: Mae gwneud tomenni'n ddiogel yn lleihau'r atebolrwydd, cy_review: true }
+    note: { en: "Draining, regrading and monitoring coal tips cuts the liability in the coal valley authorities, scaled by how well the Rhondda choice was made.", cy: "Mae draenio, ail-raddio a monitro tomenni glo yn lleihau'r atebolrwydd yn awdurdodau'r cymoedd glo, wedi'i raddio yn ôl pa mor dda y gwnaed dewis y Rhondda.", cy_review: true }
+    kind: stock
+    stock: card
+    inputs: [make-coal-tips-safe, rhondda grade]
+    outputs: [tip_liability]
+    lag: 1
+    params:
+      coef: { default: 2.0, min: 1.5, max: 2.5, unit: { en: points per play before the grade, cy: pwyntiau y chwarae cyn y radd, cy_review: true }, adjustable: true, placeholder: true }
+    sources: [coal-tip-safety]
+    confidence: low
+    evidence: expert
+    placeholder: true
+
+  - id: R12
+    theme: places
+    name: { en: In a storm, an unmade tip may move, cy: Mewn storm, gall tomen heb ei gwneud symud, cy_review: true }
+    note: { en: "When a storm winter lands, each coal valley authority with tips still unmade risks a tip moving: the chance rises with the risk step, which the wet decade raises. Tips made safe lower it.", cy: "Pan ddaw gaeaf stormus, mae pob awdurdod cwm glo gyda thomenni heb eu gwneud mewn perygl o weld tomen yn symud: mae'r siawns yn codi gyda'r cam risg, y mae'r degawd gwlyb yn ei godi. Mae tomenni a wnaed yn ddiogel yn ei ostwng.", cy_review: true }
+    kind: threshold
+    event: tip_movement
+    inputs: [tip_liability, wet-decade, risk step]
+    outputs: [access, tip_liability]
+    lag: 0
+    params:
+      chance1: { default: 0.1, min: 0.0, max: 0.2, unit: { en: chance at risk step 1, cy: siawns ar gam risg 1, cy_review: true }, adjustable: true, placeholder: true }
+      chance2: { default: 0.25, min: 0.15, max: 0.35, unit: { en: chance at risk step 2, cy: siawns ar gam risg 2, cy_review: true }, adjustable: true, placeholder: true }
+      chance3: { default: 0.45, min: 0.35, max: 0.55, unit: { en: chance at risk step 3, cy: siawns ar gam risg 3, cy_review: true }, adjustable: true, placeholder: true }
+      trust: { default: -4, min: -4, max: -4, unit: { en: Trust points per tip moved, cy: pwyntiau Ymddiriedaeth fesul tomen a symudodd, cy_review: true }, adjustable: false }
+    sources: [bgs-landslide]
+    confidence: low
+    evidence: expert
+    placeholder: true
+
+  - id: R13
+    theme: places
+    name: { en: Insulating the coldest homes cuts fuel poverty, cy: Mae inswleiddio'r cartrefi oeraf yn lleihau tlodi tanwydd, cy_review: true }
+    note: { en: "Retrofitting the coldest homes first lowers fuel poverty two terms on. With too few skilled installers it does half as much.", cy: "Mae ôl-osod y cartrefi oeraf yn gyntaf yn gostwng tlodi tanwydd ddau dymor yn ddiweddarach. Gyda rhy ychydig o osodwyr medrus mae'n gwneud hanner cymaint.", cy_review: true }
+    kind: linear
+    drive: card
+    inputs: [warm-homes, skills_stock]
+    outputs: [fuel_poverty]
+    lag: 2
+    params:
+      coef: { default: 1.0, min: 0.5, max: 1.5, unit: { en: points per play, cy: pwyntiau y chwarae, cy_review: true }, adjustable: true }
+    sources: [retrofit-eval]
+    confidence: medium
+    evidence: published
+    placeholder: false
+
+  - id: R16
+    theme: places
+    name: { en: More homes held locally ease prices, up to a point, cy: Mae mwy o gartrefi mewn dwylo lleol yn lleddfu prisiau, hyd at bwynt, cy_review: true }
+    note: { en: "Social homes and limits on second homes improve affordability a term later, with a ceiling on the total in any authority.", cy: "Mae cartrefi cymdeithasol a chyfyngiadau ar ail gartrefi yn gwella fforddiadwyedd dymor yn ddiweddarach, gyda nenfwd ar y cyfanswm mewn unrhyw awdurdod.", cy_review: true }
+    kind: saturating
+    saturate: ceiling
+    cards: [build-social-homes, homes-for-locals]
+    inputs: [housing_stock, homes-for-locals]
+    outputs: [affordability]
+    lag: 1
+    params:
+      coef: { default: 1.0, min: 0.6, max: 1.4, unit: { en: scale on the card effect, cy: graddfa ar effaith y cerdyn, cy_review: true }, adjustable: true }
+      ceiling: { default: 2.0, min: 1.0, max: 3.0, unit: { en: points in total per authority, cy: pwyntiau i gyd fesul awdurdod, cy_review: true }, adjustable: true }
+    sources: [housing-elasticity]
+    confidence: medium
+    evidence: published
+    placeholder: false

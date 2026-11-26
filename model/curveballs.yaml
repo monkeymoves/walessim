@@ -1,0 +1,198 @@
+# The twelve curveballs (game-design section 7). Each is a slow trend (applied every term while active,
+# at game.curveballs.slow_scale of its size) with an optional shock form. Trend ids and ripples are the
+# horizon-scan trend ids (links_out). Shock effects with `duration` are a hit for that many terms.
+curveballs:
+  - id: wet-decade
+    name: { en: The wet decade, cy: Y degawd gwlyb, cy_review: true }
+    description: { en: "Wetter winters and heavier rain. Rivers rise faster and old tips grow restless.", cy: "Gaeafau gwlypach a glaw trymach. Mae afonydd yn codi'n gynt ac mae hen domenni'n anesmwytho.", cy_review: true }
+    trends: [climate-instability]
+    where_note: { en: "All of Wales; strongest in the South East valleys and on the North coast.", cy: "Cymru gyfan; cryfaf yng nghymoedd y De-ddwyrain ac ar arfordir y Gogledd.", cy_review: true }
+    slow:
+      - { target: flood_exposure, size: S, sign: -1, emphasis: [{ flags: [valley], factor: 1.5 }, { regions: [north], flags: [coast], factor: 1.5 }] }
+    slow_special: [tip_risk_up]
+    shock:
+      name: { en: Storm winter, cy: Gaeaf stormus, cy_review: true }
+      description: { en: "Storm after storm. Roads shut, homes flood, and an unmade tip may move.", cy: "Storm ar ôl storm. Ffyrdd ar gau, cartrefi dan ddŵr, a gall tomen heb ei gwneud symud.", cy_review: true }
+      effects:
+        - { target: flood_exposure, size: L, sign: -1, duration: 1, emphasis: [{ flags: [valley, coast], factor: 1.3 }] }
+        - { target: access, size: M, sign: -1, duration: 1 }
+      special: [tip_may_move]
+    ripples_to: [nature-depletion, health-profiles-and-need, housing-demand]
+    responses: [slow-the-flow, build-flood-walls, make-coal-tips-safe, restore-upland-peat]
+
+  - id: hot-summers
+    name: { en: Hot summers, cy: Hafau poeth, cy_review: true }
+    description: { en: "Heat that the cities and the old were not built for.", cy: "Gwres nad oedd y dinasoedd na'r hen wedi'u hadeiladu ar ei gyfer.", cy_review: true }
+    trends: [health-profiles-and-need]
+    where_note: { en: "All of Wales; strongest in Cardiff, Newport and Wrexham.", cy: "Cymru gyfan; cryfaf yng Nghaerdydd, Casnewydd a Wrecsam.", cy_review: true }
+    slow:
+      - { target: life_exp, size: S, sign: -1, emphasis: [{ flags: [city], factor: 1.5 }] }
+      - { target: care_pressure, size: S, sign: -1 }
+    shock:
+      name: { en: Heatwave, cy: Tywydd poeth eithafol, cy_review: true }
+      description: { en: "Weeks of heat. Hospitals fill and rivers run low.", cy: "Wythnosau o wres. Mae ysbytai'n llenwi ac afonydd yn isel.", cy_review: true }
+      effects:
+        - { target: life_exp, size: M, sign: -1, duration: 1, emphasis: [{ flags: [city], factor: 1.5 }] }
+        - { target: nature_services, size: S, sign: -1, duration: 1 }
+    ripples_to: [unemployment-levels, infrastructure-investment]
+    responses: [health-before-hospital, warm-homes, plant-woodland]
+
+  - id: older-wales
+    name: { en: An older Wales, cy: Cymru hŷn, cy_review: true }
+    description: { en: "More people living longer, fewer of working age, and care stretched thin.", cy: "Mwy o bobl yn byw'n hirach, llai o oedran gweithio, a gofal wedi'i ymestyn.", cy_review: true }
+    trends: [ageing-population]
+    where_note: { en: "Strongest in Mid, North and the South West.", cy: "Cryfaf yn y Canolbarth, y Gogledd a'r De-orllewin.", cy_review: true }
+    slow:
+      - { target: care_pressure, size: S, sign: -1, emphasis: [{ regions: [mid, north, southwest], factor: 1.5 }] }
+      - { target: budget, amount: -1, sign: 1, condition: { from_year: 2038, if_below: { component: health_stock, value: 5 } }, note: { en: "Care costs crowd the budget", cy: "Mae costau gofal yn gwasgu'r gyllideb", cy_review: true } }
+    ripples_to: [health-profiles-and-need, housing-demand]
+    responses: [health-before-hospital, connect-buses-rail, build-social-homes]
+
+  - id: price-of-a-home
+    name: { en: The price of a home, cy: Pris cartref, cy_review: true }
+    description: { en: "Prices pull away from local pay; young people look elsewhere.", cy: "Mae prisiau'n tynnu oddi wrth gyflogau lleol; mae pobl ifanc yn edrych yn rhywle arall.", cy_review: true }
+    trends: [housing-demand]
+    where_note: { en: "Strongest in the North, the South West and Cardiff.", cy: "Cryfaf yn y Gogledd, y De-orllewin a Chaerdydd.", cy_review: true }
+    slow:
+      - { target: affordability, size: S, sign: -1, emphasis: [{ regions: [north, southwest], factor: 1.5 }, { las: [W06000015], factor: 1.5 }] }
+      - { target: young_adults, size: S, sign: -1 }
+    shock:
+      name: { en: Buying rush, cy: Rhuthr prynu, cy_review: true }
+      description: { en: "Houses go in a fortnight, mostly to people who will not live in them.", cy: "Mae tai'n mynd mewn pythefnos, gan amlaf i bobl na fyddant yn byw ynddynt.", cy_review: true }
+      effects:
+        - { target: heartland, size: M, sign: -1, duration: 1, where: { regions: [north, southwest] } }
+        - { target: affordability, size: S, sign: -1, duration: 1, where: { regions: [north, southwest] } }
+    ripples_to: [welsh-language-growth, slow-poverty-reduction, competing-demands]
+    responses: [homes-for-locals, build-social-homes, tourism-pays-its-way]
+
+  - id: language-at-the-edge
+    name: { en: The language at the edge, cy: Yr iaith ar y dibyn, cy_review: true }
+    description: { en: "Fewer homes where Welsh is passed on, fewer streets where it is heard.", cy: "Llai o gartrefi lle trosglwyddir y Gymraeg, llai o strydoedd lle caiff ei chlywed.", cy_review: true }
+    trends: [welsh-language-growth]
+    where_note: { en: "North, Mid and the South West.", cy: "Y Gogledd, y Canolbarth a'r De-orllewin.", cy_review: true }
+    slow:
+      - { target: speakers_stock, size: S, sign: -1, where: { regions: [north, mid, southwest] } }
+    shock:
+      name: { en: A heartland tips, cy: Cadarnle'n troi, cy_review: true }
+      description: { en: "A heartland authority falls below half Welsh-speaking.", cy: "Mae awdurdod cadarnle yn disgyn o dan hanner yn siarad Cymraeg.", cy_review: true }
+      effects:
+        - { target: trust, amount: -4, sign: 1 }
+      special: [heartland_drop]
+    ripples_to: []
+    responses: [welsh-medium-childcare, homes-for-locals, community-owned-energy]
+
+  - id: rivers-in-trouble
+    name: { en: Rivers in trouble, cy: Afonydd mewn trafferth, cy_review: true }
+    description: { en: "Run-off, sewage and warmer water push the rivers towards collapse.", cy: "Dŵr ffo, carthion a dŵr cynhesach yn gwthio'r afonydd tuag at chwalu.", cy_review: true }
+    trends: [nature-depletion]
+    where_note: { en: "Strongest in Mid and the South West.", cy: "Cryfaf yn y Canolbarth a'r De-orllewin.", cy_review: true }
+    slow:
+      - { target: "fcm:pressure:water_pollution", size: S, sign: 1, rule: R29 }
+    shock:
+      name: { en: A river collapses, cy: Afon yn chwalu, cy_review: true }
+      description: { en: "Fish die in their thousands; the visitors and anglers stay away.", cy: "Mae pysgod yn marw yn eu miloedd; mae'r ymwelwyr a'r pysgotwyr yn cadw draw.", cy_review: true }
+      effects:
+        - { target: nature_services, size: M, sign: -1, duration: 1 }
+        - { target: gva_head, size: S, sign: -1, duration: 1, where: { regions: [mid, southwest] } }
+    ripples_to: [climate-instability, health-profiles-and-need, resilience-economy]
+    responses: [pay-farms-for-nature, slow-the-flow, restore-upland-peat]
+
+  - id: work-rewritten
+    name: { en: Work rewritten, cy: Gwaith wedi'i ailysgrifennu, cy_review: true }
+    description: { en: "Machines learn office work; output rises and some jobs go.", cy: "Mae peiriannau'n dysgu gwaith swyddfa; mae allbwn yn codi a rhai swyddi'n mynd.", cy_review: true }
+    trends: [ai-and-machine-learning, changing-nature-of-work]
+    where_note: { en: "Strongest in the South East cities.", cy: "Cryfaf yn ninasoedd y De-ddwyrain.", cy_review: true }
+    slow:
+      - { target: gva_head, size: S, sign: 1, emphasis: [{ flags: [city], factor: 1.5 }] }
+      - { target: employment, size: S, sign: -1, where: { flags: [worst5, city] } }
+    shock:
+      name: { en: Office layoffs, cy: Diswyddiadau swyddfa, cy_review: true }
+      description: { en: "Back offices empty across the South East.", cy: "Mae swyddfeydd cefn yn gwagio ar draws y De-ddwyrain.", cy_review: true }
+      effects:
+        - { target: employment, size: M, sign: -1, duration: 1, where: { regions: [southeast] } }
+    ripples_to: [unemployment-levels, protected-characteristics-gaps]
+    responses: [skills-and-apprenticeships, everyone-online, early-years]
+
+  - id: downturn
+    name: { en: Downturn ahead, cy: Dirwasgiad ar y gorwel, cy_review: true }
+    description: { en: "The signs of a recession. Nothing yet, but it is on the table.", cy: "Arwyddion dirwasgiad. Dim byd eto, ond mae ar y bwrdd.", cy_review: true }
+    trends: [recession-threat]
+    where_note: { en: "All of Wales.", cy: "Cymru gyfan.", cy_review: true }
+    warning_only: true
+    slow: []
+    shock:
+      name: { en: Recession, cy: Dirwasgiad, cy_review: true }
+      description: { en: "Budgets cut, jobs lost, fragile employers leave. Debts hurt more.", cy: "Cyllidebau wedi'u torri, swyddi wedi'u colli, cyflogwyr bregus yn gadael. Mae dyledion yn brifo mwy.", cy_review: true }
+      effects:
+        - { target: budget, amount: -2, sign: 1 }
+        - { target: employment, size: M, sign: -1, duration: 1 }
+      special: [employers_leave, debt_hurts]
+    ripples_to: [unemployment-levels, slow-poverty-reduction]
+    responses: [skills-and-apprenticeships]
+
+  - id: energy-squeeze
+    name: { en: The energy squeeze, cy: Y wasgfa ynni, cy_review: true }
+    description: { en: "Conflict abroad keeps fuel prices high and jumpy.", cy: "Mae gwrthdaro dramor yn cadw prisiau tanwydd yn uchel ac yn ansefydlog.", cy_review: true }
+    trends: [geopolitical-conflicts]
+    where_note: { en: "All of Wales; strongest off the gas grid in Mid and the North.", cy: "Cymru gyfan; cryfaf oddi ar y grid nwy yn y Canolbarth a'r Gogledd.", cy_review: true }
+    slow:
+      - { target: fuel_poverty, size: S, sign: -1, emphasis: [{ flags: [off_gas], factor: 1.5 }] }
+    shock:
+      name: { en: Price spike, cy: Naid mewn prisiau, cy_review: true }
+      description: { en: "Bills double over a winter.", cy: "Mae biliau'n dyblu dros aeaf.", cy_review: true }
+      effects:
+        - { target: fuel_poverty, size: L, sign: -1, duration: 1, emphasis: [{ flags: [off_gas], factor: 1.3 }] }
+        - { target: trust, amount: -4, sign: 1 }
+    ripples_to: [energy-independence, supply-chain-vulnerability, recession-threat]
+    responses: [warm-homes, community-owned-energy, grid-and-big-renewables]
+
+  - id: broken-chains
+    name: { en: Broken chains, cy: Cadwyni wedi torri, cy_review: true }
+    description: { en: "Trade routes and supply chains snap and reroute.", cy: "Mae llwybrau masnach a chadwyni cyflenwi yn torri ac yn ailgyfeirio.", cy_review: true }
+    trends: [supply-chain-vulnerability, international-trade-relations]
+    where_note: { en: "Anglesey, Flintshire, Wrexham, Pembrokeshire, Neath Port Talbot and Newport.", cy: "Ynys Môn, Sir y Fflint, Wrecsam, Sir Benfro, Castell-nedd Port Talbot a Chasnewydd.", cy_review: true }
+    slow:
+      - { target: gva_head, size: S, sign: -1, where: { flags: [port] } }
+    shock:
+      name: { en: A trade route closes, cy: Llwybr masnach yn cau, cy_review: true }
+      description: { en: "A port falls quiet; the plants that fed it lay people off.", cy: "Mae porthladd yn tawelu; mae'r gweithfeydd oedd yn ei fwydo yn diswyddo pobl.", cy_review: true }
+      effects:
+        - { target: employment, size: M, sign: -1, duration: 1, where: { flags: [port] } }
+      special: [employers_leave]
+    ripples_to: [recession-threat, competing-demands]
+    responses: [skills-and-apprenticeships, regional-compact, community-owned-energy]
+
+  - id: left-offline
+    name: { en: Left offline, cy: Wedi'u gadael all-lein, cy_review: true }
+    description: { en: "Services move online faster than people and places can follow.", cy: "Mae gwasanaethau'n symud ar-lein yn gynt nag y gall pobl a lleoedd eu dilyn.", cy_review: true }
+    trends: [digital-divide, digitalisation-of-society]
+    where_note: { en: "Mid, the North and the South East valleys.", cy: "Y Canolbarth, y Gogledd a chymoedd y De-ddwyrain.", cy_review: true }
+    slow:
+      - { target: employment, size: S, sign: -1, where: { flags: [worst5] } }
+      - { target: access, size: S, sign: -1, where: { flags: [rural, valley] } }
+    ripples_to: [protected-characteristics-gaps, widening-inequality-gap]
+    responses: [everyone-online, connect-buses-rail]
+
+  - id: power-rush
+    name: { en: The power rush, cy: Y rhuthr pŵer, cy_review: true }
+    description: { en: "Investors want Welsh wind, water and grid. An opportunity, if you are ready for it.", cy: "Mae buddsoddwyr eisiau gwynt, dŵr a grid Cymru. Cyfle, os ydych yn barod amdano.", cy_review: true }
+    trends: [energy-policies, energy-independence]
+    where_note: { en: "All of Wales; strongest in the North, Mid and the South West.", cy: "Cymru gyfan; cryfaf yn y Gogledd, y Canolbarth a'r De-orllewin.", cy_review: true }
+    opportunity: true
+    slow:
+      - { target: card_cost, amount: -1, sign: 1, tag: energy, note: { en: "Energy cards cost one pip less", cy: "Mae cardiau ynni yn costio un pip yn llai", cy_review: true } }
+    shock:
+      name: { en: Investment wave, cy: Ton fuddsoddi, cy_review: true }
+      description: { en: "Money arrives for energy. Where you are ready it builds; where you are not it is built over you.", cy: "Mae arian yn cyrraedd ar gyfer ynni. Lle rydych yn barod mae'n adeiladu; lle nad ydych mae'n cael ei adeiladu drosoch.", cy_review: true }
+      effects: []
+      branches:
+        - condition: { if_any_card_in_play: [grid-and-big-renewables, community-owned-energy] }
+          effects:
+            - { target: gva_head, size: M, sign: 1, where: { in_scope: true } }
+            - { target: renewables, size: M, sign: 1, where: { in_scope: true } }
+          note: { en: "You were ready: the wave builds where your energy cards are.", cy: "Roeddech yn barod: mae'r don yn adeiladu lle mae eich cardiau ynni.", cy_review: true }
+        - effects:
+            - { target: community_assets, size: S, sign: -1, where: { regions: [north, mid, southwest] } }
+          note: { en: "Built over local heads.", cy: "Wedi'i godi dros bennau pobl leol.", cy_review: true }
+    ripples_to: [resilience-economy, electric-and-autonomous-vehicles]
+    responses: [grid-and-big-renewables, community-owned-energy, skills-and-apprenticeships]

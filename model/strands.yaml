@@ -1,0 +1,283 @@
+# The seven strands and the components they average (game-design section 3).
+# Every component is scored 0 to 10 per authority, higher is better. Indicator components start from
+# real 2026 values through their reference band (model/bands.yaml); the rest start from `initial`,
+# marked illustrative until a dataset backs them.
+
+components:
+  # ---- flow: how people are faring now (Lived)
+  - id: gva_head
+    name: { en: Output per person, cy: Allbwn y pen, cy_review: true }
+    note: { en: "GVA per head, scored against its reference band.", cy: "GYC y pen, wedi'i sgorio yn erbyn ei fand cyfeirio.", cy_review: true }
+    role: flow
+    aggregate: pop
+    indicator: gva_head
+    initial: 4
+  - id: employment
+    name: { en: Work, cy: Gwaith, cy_review: true }
+    note: { en: "Employment rate, ages 16 to 64.", cy: "Cyfradd cyflogaeth, oed 16 i 64.", cy_review: true }
+    role: flow
+    aggregate: pop
+    indicator: employment
+    initial: 4.5
+  - id: earnings
+    name: { en: Pay, cy: Cyflog, cy_review: true }
+    note: { en: "Median weekly earnings of residents.", cy: "Enillion wythnosol canolrifol preswylwyr.", cy_review: true }
+    role: flow
+    aggregate: pop
+    indicator: earnings
+    initial: 4
+  - id: flood_exposure
+    name: { en: Safe from floods, cy: Yn ddiogel rhag llifogydd, cy_review: true }
+    note: { en: "Share of homes at flood risk, inverted: a higher score means fewer homes at risk.", cy: "Cyfran y cartrefi sydd mewn perygl o lifogydd, wedi'i gwrthdroi: mae sgôr uwch yn golygu llai o gartrefi mewn perygl.", cy_review: true }
+    role: flow
+    aggregate: pop
+    indicator: flood_exposure
+    initial: 4
+  - id: nature_services
+    name: { en: What nature gives, cy: Yr hyn mae natur yn ei roi, cy_review: true }
+    note: { en: "The SoNaRR service nodes (cultural, provisioning, regulating), moved by nature condition through rule R31. Starts at the band middle: illustrative.", cy: "Nodau gwasanaeth SoNaRR (diwylliannol, darparu, rheoleiddio), wedi'u symud gan gyflwr natur drwy reol R31. Yn dechrau yng nghanol y band: enghreifftiol.", cy_review: true }
+    role: flow
+    aggregate: pop
+    initial: 5
+    illustrative: true
+    sources: [sonarr-2025]
+  - id: life_exp
+    name: { en: Long lives, cy: Bywydau hir, cy_review: true }
+    note: { en: "Life expectancy at birth.", cy: "Disgwyliad oes adeg geni.", cy_review: true }
+    role: flow
+    aggregate: pop
+    indicator: life_exp
+    initial: 4.5
+  - id: fuel_poverty
+    name: { en: Warm homes, cy: Cartrefi cynnes, cy_review: true }
+    note: { en: "Share of households in fuel poverty, inverted. Where no authority values exist the Wales value is used everywhere, and marked.", cy: "Cyfran yr aelwydydd mewn tlodi tanwydd, wedi'i gwrthdroi. Lle nad oes gwerthoedd awdurdod, defnyddir gwerth Cymru ym mhobman, a'i farcio.", cy_review: true }
+    role: flow
+    aggregate: pop
+    indicator: fuel_poverty
+    initial: 5
+  - id: care_pressure
+    name: { en: Care to go round, cy: Digon o ofal, cy_review: true }
+    note: { en: "Pressure on care from an older population (share aged 65 and over), inverted.", cy: "Pwysau ar ofal o boblogaeth hŷn (cyfran 65 oed a hŷn), wedi'i wrthdroi.", cy_review: true }
+    role: flow
+    aggregate: pop
+    indicator: age65
+    initial: 5
+  - id: earnings_gap
+    name: { en: Pay gap between places, cy: Bwlch cyflog rhwng lleoedd, cy_review: true }
+    note: { en: "Gap in pay between the five worst-off authorities and the Wales median, inverted: a smaller gap scores higher. Starts at 4 (illustrative) and moves as the 2026 gap narrows or widens.", cy: "Y bwlch cyflog rhwng y pum awdurdod tlotaf a chanolrif Cymru, wedi'i wrthdroi: mae bwlch llai yn sgorio'n uwch.", cy_review: true }
+    role: flow
+    aggregate: gap
+    of: earnings
+    initial: 4
+    illustrative: true
+  - id: employment_gap
+    name: { en: Work gap between places, cy: Bwlch gwaith rhwng lleoedd, cy_review: true }
+    note: { en: "Gap in employment between the five worst-off authorities and the Wales median, inverted.", cy: "Y bwlch cyflogaeth rhwng y pum awdurdod tlotaf a chanolrif Cymru, wedi'i wrthdroi.", cy_review: true }
+    role: flow
+    aggregate: gap
+    of: employment
+    initial: 4
+    illustrative: true
+  - id: life_exp_gap
+    name: { en: Health gap between places, cy: Bwlch iechyd rhwng lleoedd, cy_review: true }
+    note: { en: "Gap in life expectancy between the five worst-off authorities and the Wales median, inverted.", cy: "Y bwlch disgwyliad oes rhwng y pum awdurdod tlotaf a chanolrif Cymru, wedi'i wrthdroi.", cy_review: true }
+    role: flow
+    aggregate: gap
+    of: life_exp
+    initial: 4
+    illustrative: true
+  - id: deprivation
+    name: { en: Fewer places left behind, cy: Llai o leoedd ar ôl, cy_review: true }
+    note: { en: "Share of small areas in the most deprived fifth, inverted. Every authority counts once.", cy: "Cyfran yr ardaloedd bach yn y pumed mwyaf difreintiedig, wedi'i gwrthdroi. Mae pob awdurdod yn cyfrif unwaith.", cy_review: true }
+    role: flow
+    aggregate: mean
+    indicator: deprivation
+    initial: 4
+  - id: affordability
+    name: { en: A home you can afford, cy: Cartref fforddiadwy, cy_review: true }
+    note: { en: "House price to earnings ratio, inverted.", cy: "Cymhareb pris tŷ i enillion, wedi'i gwrthdroi.", cy_review: true }
+    role: flow
+    aggregate: pop
+    indicator: affordability
+    initial: 5
+  - id: young_adults
+    name: { en: Young people stay, cy: Pobl ifanc yn aros, cy_review: true }
+    note: { en: "Share of people aged 20 to 34.", cy: "Cyfran y bobl 20 i 34 oed.", cy_review: true }
+    role: flow
+    aggregate: pop
+    indicator: young_adults
+    initial: 5
+  - id: access
+    name: { en: Getting about, cy: Mynd o le i le, cy_review: true }
+    note: { en: "Reach of services and transport. No authority baseline exists: starts at the band middle, a placeholder.", cy: "Cyrhaeddiad gwasanaethau a thrafnidiaeth. Nid oes llinell sylfaen awdurdod: yn dechrau yng nghanol y band, dalfan.", cy_review: true }
+    role: flow
+    aggregate: pop
+    initial: 5
+    illustrative: true
+  - id: welsh_speakers
+    name: { en: Welsh spoken, cy: Cymraeg ar lafar, cy_review: true }
+    note: { en: "Share aged 3 and over able to speak Welsh (Census 2021).", cy: "Cyfran 3 oed a hŷn sy'n gallu siarad Cymraeg (Cyfrifiad 2021).", cy_review: true }
+    role: flow
+    aggregate: pop
+    indicator: welsh_speakers
+    initial: 4
+  - id: heartland
+    name: { en: Welsh in the heartland, cy: Cymraeg yn y cadarnleoedd, cy_review: true }
+    note: { en: "Whether the heartland authorities hold their 2021 speaker share: the mean over Gwynedd, Anglesey, Ceredigion and Carmarthenshire. Starts at the band middle: illustrative.", cy: "A yw'r awdurdodau cadarnle yn dal eu cyfran siaradwyr 2021: y cymedr dros Wynedd, Môn, Ceredigion a Sir Gaerfyrddin. Yn dechrau yng nghanol y band: enghreifftiol.", cy_review: true }
+    role: flow
+    aggregate: heartland
+    initial: 5
+    illustrative: true
+  - id: emissions_head
+    name: { en: Low emissions, cy: Allyriadau isel, cy_review: true }
+    note: { en: "Territorial emissions per person, inverted.", cy: "Allyriadau tiriogaethol y pen, wedi'u gwrthdroi.", cy_review: true }
+    role: flow
+    aggregate: pop
+    indicator: emissions_head
+    initial: 4
+  - id: renewables
+    name: { en: Clean power, cy: Pŵer glân, cy_review: true }
+    note: { en: "Installed renewable capacity per person.", cy: "Capasiti adnewyddadwy wedi'i osod y pen.", cy_review: true }
+    role: flow
+    aggregate: pop
+    indicator: renewables
+    initial: 4
+
+  # ---- stock: what is handed on (Left)
+  - id: skills_stock
+    name: { en: Skills built up, cy: Sgiliau wedi'u cronni, cy_review: true }
+    note: { en: "Training and qualifications built up, eroding 15 per cent a term (R21). Illustrative start.", cy: "Hyfforddiant a chymwysterau wedi'u cronni, yn erydu 15 y cant y tymor (R21). Man cychwyn enghreifftiol.", cy_review: true }
+    role: stock
+    aggregate: pop
+    initial: 4.5
+    illustrative: true
+  - id: infrastructure_condition
+    name: { en: Roads, pipes and defences, cy: Ffyrdd, pibellau ac amddiffynfeydd, cy_review: true }
+    note: { en: "Condition of what has been built. Falls with unpaid upkeep and deferred repairs (R10). Illustrative start.", cy: "Cyflwr yr hyn a adeiladwyd. Yn gostwng gyda chynnal heb ei dalu ac atgyweiriadau wedi'u gohirio (R10). Man cychwyn enghreifftiol.", cy_review: true }
+    role: stock
+    aggregate: pop
+    initial: 5
+    illustrative: true
+  - id: nature_condition
+    name: { en: Nature's condition, cy: Cyflwr natur, cy_review: true }
+    note: { en: "Mean of the 11 SoNaRR ecosystem and resource states, from the Fuzzy Cognitive Map (R03), times ten.", cy: "Cymedr 11 cyflwr ecosystem ac adnodd SoNaRR, o'r Map Gwybyddol Niwlog (R03), wedi'i luosi â deg.", cy_review: true }
+    role: stock
+    aggregate: pop
+    initial: 4.4
+    sources: [sonarr-2025]
+  - id: woodland_stock
+    name: { en: Woodland, cy: Coetir, cy_review: true }
+    note: { en: "Woodland cover, maturing slowly.", cy: "Gorchudd coetir, yn aeddfedu'n araf.", cy_review: true }
+    role: stock
+    aggregate: pop
+    indicator: woodland
+    initial: 4
+  - id: peat_condition
+    name: { en: Peat bogs, cy: Corsydd mawn, cy_review: true }
+    note: { en: "Condition of upland peat. Most Welsh peat is drained or damaged: illustrative start.", cy: "Cyflwr mawn yr ucheldir. Mae'r rhan fwyaf o fawn Cymru wedi'i ddraenio neu ei ddifrodi: man cychwyn enghreifftiol.", cy_review: true }
+    role: stock
+    aggregate: pop
+    initial: 3.5
+    illustrative: true
+    sources: [npap]
+  - id: health_stock
+    name: { en: Prevention built up, cy: Atal wedi'i gronni, cy_review: true }
+    note: { en: "Health protected before hospital, eroding 10 per cent a term (R15). Illustrative start.", cy: "Iechyd wedi'i warchod cyn yr ysbyty, yn erydu 10 y cant y tymor (R15). Man cychwyn enghreifftiol.", cy_review: true }
+    role: stock
+    aggregate: pop
+    initial: 4.5
+    illustrative: true
+  - id: early_years_stock
+    name: { en: A good start, cy: Dechrau da, cy_review: true }
+    note: { en: "Family support and childcare in the hardest-pressed places (R32). Illustrative start.", cy: "Cymorth i deuluoedd a gofal plant yn y lleoedd dan y pwysau mwyaf (R32). Man cychwyn enghreifftiol.", cy_review: true }
+    role: stock
+    aggregate: mean
+    initial: 4
+    illustrative: true
+  - id: housing_stock
+    name: { en: Homes that stay affordable, cy: Cartrefi sy'n aros yn fforddiadwy, cy_review: true }
+    note: { en: "Social and locally held homes. Illustrative start.", cy: "Cartrefi cymdeithasol ac mewn dwylo lleol. Man cychwyn enghreifftiol.", cy_review: true }
+    role: stock
+    aggregate: mean
+    initial: 4
+    illustrative: true
+  - id: community_assets
+    name: { en: Things the community owns, cy: Pethau sy'n eiddo i'r gymuned, cy_review: true }
+    note: { en: "Halls, hydro, shops and land held locally, eroding 5 per cent a term (R33). Illustrative start.", cy: "Neuaddau, hydro, siopau a thir mewn dwylo lleol, yn erydu 5 y cant y tymor (R33). Man cychwyn enghreifftiol.", cy_review: true }
+    role: stock
+    aggregate: pop
+    initial: 4.5
+    illustrative: true
+  - id: tip_liability
+    name: { en: Tips made safe, cy: Tomenni wedi'u gwneud yn ddiogel, cy_review: true }
+    note: { en: "Coal tip liability, inverted. Lower in the coal valley authorities, where the high-category tips are. Illustrative scores, counts from the Welsh Government coal tip safety statistics.", cy: "Atebolrwydd tomenni glo, wedi'i wrthdroi. Yn is yn awdurdodau'r cymoedd glo, lle mae'r tomenni categori uchel. Sgoriau enghreifftiol, cyfrifon o ystadegau diogelwch tomenni glo Llywodraeth Cymru.", cy_review: true }
+    role: stock
+    aggregate: pop
+    initial: 9
+    initial_by_flag: { coal_valley: 3 }
+    illustrative: true
+  - id: speakers_stock
+    name: { en: Speakers for the future, cy: Siaradwyr i'r dyfodol, cy_review: true }
+    note: { en: "Welsh speakers and child transmission against the path to a million speakers by 2050. Illustrative start.", cy: "Siaradwyr Cymraeg a throsglwyddo i blant yn erbyn y llwybr at filiwn o siaradwyr erbyn 2050. Man cychwyn enghreifftiol.", cy_review: true }
+    role: stock
+    aggregate: pop
+    initial: 4.5
+    illustrative: true
+  - id: carbon_budget
+    name: { en: Carbon budget kept, cy: Cyllideb garbon wedi'i chadw, cy_review: true }
+    note: { en: "Cumulative emissions 2026 to 2050 against a straight path to net zero (R34). The straight path is a stated assumption.", cy: "Allyriadau cronnus 2026 i 2050 yn erbyn llwybr syth at sero net (R34). Rhagdybiaeth a nodwyd yw'r llwybr syth.", cy_review: true }
+    role: stock
+    aggregate: pop
+    initial: 5
+    illustrative: true
+
+strands:
+  - id: prosperous
+    name: { en: Prosperous, cy: Llewyrchus, cy_review: true }
+    description: { en: "Good work and fair pay, built on skills and sound infrastructure.", cy: "Gwaith da a chyflog teg, wedi'i adeiladu ar sgiliau a seilwaith cadarn.", cy_review: true }
+    colour: --strand-prosperous
+    flow: [gva_head, employment, earnings]
+    stock: [skills_stock, infrastructure_condition]
+    expected_2026: 4
+  - id: resilient
+    name: { en: Resilient, cy: Cydnerth, cy_review: true }
+    description: { en: "Healthy nature that holds water and gives back, and homes safe from floods.", cy: "Natur iach sy'n dal dŵr ac yn rhoi'n ôl, a chartrefi'n ddiogel rhag llifogydd.", cy_review: true }
+    colour: --strand-resilient
+    flow: [flood_exposure, nature_services]
+    stock: [nature_condition, woodland_stock, peat_condition]
+    expected_2026: 4
+  - id: healthier
+    name: { en: Healthier, cy: Iachach, cy_review: true }
+    description: { en: "Long lives in warm homes, with care to go round.", cy: "Bywydau hir mewn cartrefi cynnes, gyda digon o ofal i bawb.", cy_review: true }
+    colour: --strand-healthier
+    flow: [life_exp, fuel_poverty, care_pressure]
+    stock: [health_stock]
+    expected_2026: 5
+  - id: equal
+    name: { en: More equal, cy: Mwy cyfartal, cy_review: true }
+    description: { en: "No place left far behind. Every authority counts once.", cy: "Dim lle wedi'i adael ymhell ar ôl. Mae pob awdurdod yn cyfrif unwaith.", cy_review: true }
+    colour: --strand-equal
+    flow: [earnings_gap, employment_gap, life_exp_gap, deprivation]
+    stock: [early_years_stock, housing_stock]
+    expected_2026: 4
+  - id: cohesive
+    name: { en: Cohesive communities, cy: Cymunedau cydlynus, cy_review: true }
+    description: { en: "Places young people can afford to stay in and get about from, with things they own together.", cy: "Lleoedd y gall pobl ifanc fforddio aros ynddynt a theithio ohonynt, gyda phethau maen nhw'n berchen arnynt gyda'i gilydd.", cy_review: true }
+    colour: --strand-cohesive
+    flow: [affordability, young_adults, access]
+    stock: [community_assets, tip_liability]
+    expected_2026: 5
+  - id: culture
+    name: { en: Culture and Welsh, cy: Diwylliant a'r Gymraeg, cy_review: true }
+    description: { en: "A living culture where Welsh thrives, in the heartland and beyond.", cy: "Diwylliant byw lle mae'r Gymraeg yn ffynnu, yn y cadarnleoedd a thu hwnt.", cy_review: true }
+    colour: --strand-culture
+    flow: [welsh_speakers, heartland]
+    stock: [speakers_stock]
+    expected_2026: 5
+  - id: global
+    name: { en: Globally responsible, cy: Cyfrifol yn fyd-eang, cy_review: true }
+    description: { en: "Clean power and falling emissions, keeping to a fair share of carbon.", cy: "Pŵer glân ac allyriadau'n gostwng, gan gadw at gyfran deg o garbon.", cy_review: true }
+    colour: --strand-global
+    flow: [emissions_head, renewables]
+    stock: [carbon_budget, peat_condition]
+    expected_2026: 4

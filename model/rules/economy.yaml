@@ -1,0 +1,175 @@
+# Rules about work, skills, energy, transport and community wealth.
+rules:
+  - id: R05
+    theme: economy
+    name: { en: The grid gets cleaner anyway, cy: Mae'r grid yn mynd yn lanach beth bynnag, cy_review: true }
+    note: { en: "UK grid decarbonisation lowers emissions per person each term with no action in Wales. The score rises because lower emissions are better.", cy: "Mae datgarboneiddio grid y DU yn gostwng allyriadau y pen bob tymor heb weithredu yng Nghymru. Mae'r sgôr yn codi gan fod allyriadau is yn well.", cy_review: true }
+    kind: linear
+    drive: clock
+    inputs: [clock]
+    outputs: [emissions_head]
+    lag: 0
+    params:
+      coef: { default: 0.15, min: 0.1, max: 0.4, unit: { en: points per term, cy: pwyntiau y tymor, cy_review: true }, adjustable: true, tune: true }
+    sources: [ccc-wales]
+    confidence: medium
+    evidence: assessed
+    placeholder: false
+
+  - id: R21
+    theme: economy
+    name: { en: Training builds skills that fade if not renewed, cy: Mae hyfforddiant yn adeiladu sgiliau sy'n pylu os na chânt eu hadnewyddu, cy_review: true }
+    note: { en: "Skills and apprenticeships add to the stock of skills, which loses 15 per cent of its gains each term as people move and work changes.", cy: "Mae sgiliau a phrentisiaethau yn ychwanegu at stoc y sgiliau, sy'n colli 15 y cant o'i enillion bob tymor wrth i bobl symud ac i waith newid.", cy_review: true }
+    kind: stock
+    stock: decay
+    inputs: [skills-and-apprenticeships]
+    outputs: [skills_stock]
+    lag: 2
+    params:
+      floor_share: { default: 0.4, min: 0.4, max: 0.8, unit: { en: share of the 2026 stock that existing provision keeps up, cy: cyfran o stoc 2026 y mae'r ddarpariaeth bresennol yn ei chynnal, cy_review: true }, adjustable: true, placeholder: true, tune: true }
+      coef: { default: 1.0, min: 0.5, max: 1.5, unit: { en: points per play, cy: pwyntiau y chwarae, cy_review: true }, adjustable: true }
+      outflow: { default: 0.15, min: 0.1, max: 0.2, unit: { en: fraction per term, cy: ffracsiwn y tymor, cy_review: true }, adjustable: true }
+    sources: [apprenticeship-outcomes]
+    confidence: medium
+    evidence: published
+    placeholder: false
+
+  - id: R22
+    theme: economy
+    name: { en: Skills raise pay, cy: Mae sgiliau'n codi cyflog, cy_review: true }
+    note: { en: "A higher stock of skills lifts median earnings a term later.", cy: "Mae stoc uwch o sgiliau yn codi enillion canolrifol dymor yn ddiweddarach.", cy_review: true }
+    kind: linear
+    drive: change
+    input: skills_stock
+    inputs: [skills_stock]
+    outputs: [earnings]
+    lag: 1
+    params:
+      coef: { default: 0.4, min: 0.1, max: 0.4, unit: { en: points per point, cy: pwyntiau y pwynt, cy_review: true }, adjustable: true }
+    sources: [returns-qualifications]
+    confidence: medium
+    evidence: published
+    placeholder: false
+
+  - id: R23
+    theme: economy
+    name: { en: Getting about opens up work, cy: Mae gallu teithio yn agor gwaith, cy_review: true }
+    note: { en: "Better access to services and transport raises employment a term later.", cy: "Mae gwell mynediad at wasanaethau a thrafnidiaeth yn codi cyflogaeth dymor yn ddiweddarach.", cy_review: true }
+    kind: linear
+    drive: change
+    input: access
+    inputs: [access]
+    outputs: [employment]
+    lag: 1
+    params:
+      coef: { default: 0.3, min: 0.05, max: 0.4, unit: { en: points per point, cy: pwyntiau y pwynt, cy_review: true }, adjustable: true, placeholder: true }
+    sources: [transport-labour]
+    confidence: low
+    evidence: expert
+    placeholder: true
+
+  - id: R24
+    theme: economy
+    name: { en: Buses, trains and connection improve access, cy: Mae bysiau, trenau a chysylltiad yn gwella mynediad, cy_review: true }
+    note: { en: "Connecting services raise access; getting everyone online raises it by half as much. Unpaid upkeep lets it lapse. There is no authority baseline for access.", cy: "Mae cysylltu gwasanaethau yn codi mynediad; mae cael pawb ar-lein yn ei godi hanner cymaint. Mae cynnal heb ei dalu yn gadael iddo ddod i ben. Nid oes llinell sylfaen awdurdod ar gyfer mynediad.", cy_review: true }
+    kind: linear
+    drive: card
+    inputs: [connect-buses-rail, everyone-online]
+    outputs: [access]
+    lag: 1
+    params:
+      coef: { default: 1.0, min: 0.5, max: 1.5, unit: { en: points per play (connect), cy: pwyntiau y chwarae (cysylltu), cy_review: true }, adjustable: true, placeholder: true }
+    sources: [transport-labour]
+    confidence: low
+    evidence: placeholder
+    placeholder: true
+
+  - id: R25
+    theme: economy
+    name: { en: Spending creates jobs for a while, cy: Mae gwario'n creu swyddi am gyfnod, cy_review: true }
+    note: { en: "A card's spend creates jobs through supply chains and wages, by its sector's employment multiplier, this term and next only. Confidence is medium to 2034 and low after.", cy: "Mae gwariant cerdyn yn creu swyddi drwy gadwyni cyflenwi a chyflogau, yn ôl lluosydd cyflogaeth ei sector, y tymor hwn a'r nesaf yn unig. Mae'r hyder yn ganolig hyd at 2034 ac yn isel wedi hynny.", cy_review: true }
+    kind: io
+    medium_until: 2034
+    inputs: [card cost, card sector]
+    outputs: [employment]
+    lag: 0
+    params:
+      band1: { default: 0.2, min: 0.1, max: 0.3, unit: { en: points per pip, low band, cy: pwyntiau y pip, band isel, cy_review: true }, adjustable: true }
+      band2: { default: 0.4, min: 0.2, max: 0.6, unit: { en: points per pip, middle band, cy: pwyntiau y pip, band canol, cy_review: true }, adjustable: true }
+      band3: { default: 0.6, min: 0.3, max: 0.9, unit: { en: points per pip, high band, cy: pwyntiau y pip, band uchel, cy_review: true }, adjustable: true }
+      scale: { default: 1.0, min: 1.0, max: 1.0, unit: { en: share of the spend reaching the authorities in scope, cy: cyfran y gwariant sy'n cyrraedd yr awdurdodau dan sylw, cy_review: true }, adjustable: false, tune: true }
+    sources: [wg-io-2022]
+    confidence: medium
+    evidence: assessed
+    placeholder: false
+
+  - id: R26
+    theme: economy
+    name: { en: A big employer brings output and jobs at once, cy: Mae cyflogwr mawr yn dod ag allbwn a swyddi ar unwaith, cy_review: true }
+    note: { en: "A large plant or office raises output per person and employment at once, pay less so.", cy: "Mae gwaith neu swyddfa fawr yn codi allbwn y pen a chyflogaeth ar unwaith, cyflog yn llai felly.", cy_review: true }
+    kind: linear
+    drive: card
+    inputs: [land-a-big-employer]
+    outputs: [gva_head, employment, earnings]
+    lag: 0
+    params:
+      coef: { default: 1.0, min: 0.5, max: 1.5, unit: { en: points per play, cy: pwyntiau y chwarae, cy_review: true }, adjustable: true }
+    sources: [inward-investment]
+    confidence: medium
+    evidence: published
+    placeholder: false
+
+  - id: R27
+    theme: economy
+    name: { en: New renewables add clean power, up to the goal, cy: Mae ynni adnewyddadwy newydd yn ychwanegu pŵer glân, hyd at y nod, cy_review: true }
+    note: { en: "Big renewables add a lot of capacity, community schemes a little; emissions fall as clean power rises. Capacity cannot pass the band goal through this rule.", cy: "Mae ynni adnewyddadwy mawr yn ychwanegu llawer o gapasiti, cynlluniau cymunedol ychydig; mae allyriadau'n gostwng wrth i bŵer glân godi. Ni all capasiti fynd heibio nod y band drwy'r rheol hon.", cy_review: true }
+    kind: saturating
+    saturate: band_goal
+    drive: change
+    input: renewables
+    inputs: [grid-and-big-renewables, community-owned-energy, renewables]
+    outputs: [renewables, emissions_head]
+    lag: 2
+    change_lag: 0
+    params:
+      coef: { default: 2.0, min: 1.5, max: 2.5, unit: { en: points per play (big renewables), cy: pwyntiau y chwarae (adnewyddadwy mawr), cy_review: true }, adjustable: true }
+      coef_emissions_head: { default: 0.4, min: 0.25, max: 0.5, unit: { en: emissions points per capacity point, cy: pwyntiau allyriadau y pwynt capasiti, cy_review: true }, adjustable: true }
+    sources: [energy-gen-wales]
+    confidence: high
+    evidence: assessed
+    placeholder: false
+
+  - id: R28
+    theme: economy
+    name: { en: Branch plants leave when trade or recession bites, cy: Mae gweithfeydd cangen yn gadael pan fo masnach neu ddirwasgiad yn brathu, cy_review: true }
+    note: { en: "A fragile employer may leave on a trade or recession shock, taking its jobs and a little more.", cy: "Gall cyflogwr bregus adael yn sgil sioc masnach neu ddirwasgiad, gan fynd â'i swyddi ac ychydig mwy.", cy_review: true }
+    kind: threshold
+    event: employer_leaves
+    inputs: [land-a-big-employer, downturn, broken-chains]
+    outputs: [gva_head, employment, earnings]
+    lag: 0
+    params:
+      chance: { default: 0.6, min: 0.4, max: 0.8, unit: { en: chance per fragile employer, cy: siawns fesul cyflogwr bregus, cy_review: true }, adjustable: true, placeholder: true }
+      extra: { default: -0.5, min: -0.75, max: -0.25, unit: { en: employment points beyond the reversal, cy: pwyntiau cyflogaeth y tu hwnt i'r gwrthdroad, cy_review: true }, adjustable: true, placeholder: true }
+    sources: [plant-closure]
+    confidence: low
+    evidence: expert
+    placeholder: true
+
+  - id: R33
+    theme: economy
+    name: { en: Community ownership builds up, cy: Mae perchnogaeth gymunedol yn cronni, cy_review: true }
+    note: { en: "Community energy, a visitor levy spent locally and a well-handled visit add to what communities own, which wears 5 per cent a term.", cy: "Mae ynni cymunedol, ardoll ymwelwyr a werir yn lleol ac ymweliad sydd wedi'i drin yn dda yn ychwanegu at yr hyn mae cymunedau'n berchen arno, sy'n gwisgo 5 y cant y tymor.", cy_review: true }
+    kind: stock
+    stock: decay
+    inputs: [community-owned-energy, tourism-pays-its-way, bethesda grade]
+    outputs: [community_assets]
+    lag: 1
+    params:
+      floor_share: { default: 0.4, min: 0.4, max: 0.8, unit: { en: share of the 2026 stock that existing provision keeps up, cy: cyfran o stoc 2026 y mae'r ddarpariaeth bresennol yn ei chynnal, cy_review: true }, adjustable: true, placeholder: true, tune: true }
+      coef: { default: 1.0, min: 0.5, max: 1.5, unit: { en: points per play, cy: pwyntiau y chwarae, cy_review: true }, adjustable: true, placeholder: true }
+      outflow: { default: 0.05, min: 0.02, max: 0.1, unit: { en: fraction per term, cy: ffracsiwn y tymor, cy_review: true }, adjustable: true }
+    sources: [community-energy]
+    confidence: low
+    evidence: expert
+    placeholder: true

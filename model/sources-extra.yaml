@@ -1,0 +1,160 @@
+# Sources cited by rules (model/rules/*.yaml) that model/sources.yaml does not hold.
+# Written by the engine lead; model/sources.yaml belongs to the data agent and is never edited here.
+# If an id here also appears in sources.yaml, the build keeps the sources.yaml entry and warns.
+# Where a source is a body of literature rather than one publication, the title says so and the
+# rule's confidence reflects it. "to check" marks a reference that a reviewer should confirm.
+sources:
+  - id: sonarr-2025
+    title: State of Natural Resources Report (SoNaRR) 2025
+    publisher: Natural Resources Wales
+    url: https://naturalresources.wales/evidence-and-data/research-and-reports/state-of-natural-resources-report-sonarr-for-wales/
+    year: 2025
+    note: DPSIR structure extracted from the SoNaRR portal spreadsheets into model/data/sonarr-dpsir.json.
+  - id: npap
+    title: Evidence base of the national peatland restoration programme for Wales
+    publisher: Natural Resources Wales
+    year: 2024
+    note: Restoration extent and condition evidence. to check
+  - id: ons-snpp
+    title: Subnational population projections for Wales (2021-based)
+    publisher: Welsh Government and Office for National Statistics
+    url: https://www.gov.wales/subnational-population-projections
+    year: 2024
+  - id: ukcp18
+    title: UK Climate Projections (UKCP18)
+    publisher: Met Office
+    url: https://www.metoffice.gov.uk/research/approach/collaboration/ukcp
+    year: 2018
+  - id: nrw-flood-risk
+    title: Flood risk assessment Wales
+    publisher: Natural Resources Wales
+    year: 2019
+    note: Properties at risk now and under climate change. to check
+  - id: census-2021-welsh
+    title: Census 2021, Welsh language (TS032 and TS033) and Census 2011 comparison
+    publisher: Office for National Statistics
+    url: https://www.ons.gov.uk/census
+    year: 2022
+  - id: wg-welsh-projections
+    title: Welsh language projections and the trajectory to a million speakers by 2050
+    publisher: Welsh Government
+    year: 2017
+    note: Technical report behind the 2050 milestone path. to check
+  - id: ccc-wales
+    title: Advice on Wales's carbon budgets and the Wales net zero pathway
+    publisher: Climate Change Committee
+    url: https://www.theccc.org.uk/
+    year: 2025
+  - id: peat-inventory
+    title: UK greenhouse gas inventory, peatland emissions and removals
+    publisher: Department for Energy Security and Net Zero, UK Centre for Ecology and Hydrology
+    year: 2024
+  - id: nfm-evidence
+    title: Working with natural processes, evidence directory (natural flood management)
+    publisher: Environment Agency
+    year: 2018
+    note: Effects at catchment scale are uncertain and context specific.
+  - id: fcerm-appraisal
+    title: Flood and coastal erosion risk management appraisal guidance
+    publisher: Welsh Government
+    year: 2023
+  - id: asset-condition
+    title: Asset condition and maintenance backlog reports for Welsh infrastructure (body of reports)
+    publisher: Various (local authority highway and flood asset reports)
+    note: Used for the direction and rough size of decline under deferred upkeep only. to check
+  - id: coal-tip-safety
+    title: Coal tip safety in Wales, inspection and categorisation statistics
+    publisher: Welsh Government
+    url: https://www.gov.wales/coal-tip-safety
+    year: 2026
+    note: Counts by authority and category. The disused coal tips register itself is personal use only and is not used.
+  - id: bgs-landslide
+    title: National Landslide Database
+    publisher: British Geological Survey
+    url: https://www.bgs.ac.uk/datasets/national-landslide-database/
+    licence: OGL v3.0
+  - id: retrofit-eval
+    title: Evaluations of home energy efficiency programmes in Wales (body of evaluations)
+    publisher: Welsh Government
+    note: Bill and fuel poverty effects of insulation and heating upgrades. to check
+  - id: cold-homes-health
+    title: Excess winter deaths and illness and the health risks associated with cold homes (NG6)
+    publisher: National Institute for Health and Care Excellence
+    url: https://www.nice.org.uk/guidance/ng6
+    year: 2015
+  - id: prevention-returns
+    title: Making a difference, investing in sustainable health and well-being for the people of Wales
+    publisher: Public Health Wales
+    year: 2016
+    note: Return on investment of prevention. Effect sizes are wide.
+  - id: housing-elasticity
+    title: Housing supply and affordability, studies of supply elasticity (body of literature)
+    publisher: Various
+    note: to check
+  - id: ons-internal-migration
+    title: Internal migration by age, local authority moves in England and Wales
+    publisher: Office for National Statistics
+    url: https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/migrationwithintheuk
+  - id: language-housing
+    title: Second homes, developing new policies in Wales (independent report)
+    publisher: Welsh Government
+    year: 2021
+    note: Links between housing pressure and Welsh-speaking communities. to check
+  - id: welsh-medium-transmission
+    title: Welsh-medium education and language transmission, school census and Welsh language use survey
+    publisher: Welsh Government
+    year: 2023
+  - id: welsh-threshold
+    title: Sociolinguistic research on community language thresholds (contested, body of literature)
+    publisher: Various
+    note: The idea that a community language needs a majority of speakers is contested.
+  - id: apprenticeship-outcomes
+    title: Apprenticeship learner outcomes and earnings returns in Wales
+    publisher: Welsh Government
+    note: to check
+  - id: returns-qualifications
+    title: Returns to qualifications, labour market studies (body of literature)
+    publisher: Various
+  - id: transport-labour
+    title: Transport access and labour market participation studies (body of literature)
+    publisher: Various
+    note: Placeholder strength. to check
+  - id: wg-io-2022
+    title: Supply, Use and Input-Output Tables 2022, Table 5 (indicative economic multipliers)
+    publisher: Welsh Government
+    url: https://www.gov.wales/supply-and-use-tables-and-input-output-tables-2022
+    licence: OGL v3.0
+    year: 2022
+  - id: inward-investment
+    title: Evaluations of inward investment and large employer incentives (body of evaluations)
+    publisher: Various
+    note: to check
+  - id: energy-gen-wales
+    title: Energy Generation in Wales
+    publisher: Welsh Government
+    url: https://www.gov.wales/energy-generation-wales
+    year: 2024
+  - id: plant-closure
+    title: Plant closure case studies, branch plant economies in Wales (body of literature)
+    publisher: Various
+    note: Placeholder. to check
+  - id: greenspace-health
+    title: Reviews of green space and health
+    publisher: Various (including the World Health Organization Europe review, 2016)
+    note: Weak link, placeholder.
+  - id: early-intervention
+    title: Longitudinal studies of early intervention and life outcomes (body of literature)
+    publisher: Various
+    note: Placeholder strengths.
+  - id: community-energy
+    title: Community energy and asset transfer evidence for Wales (body of reports)
+    publisher: Various
+    note: Placeholder. to check
+  - id: desnz-la-emissions
+    title: UK local authority and regional greenhouse gas emissions statistics
+    publisher: Department for Energy Security and Net Zero
+    url: https://www.gov.uk/government/collections/uk-local-authority-and-regional-greenhouse-gas-emissions-national-statistics
+  - id: game-rule
+    title: Design rule of the game, not evidence
+    publisher: Etifeddiaeth
+    note: Shown with the "game rule" badge. No claim about the world is made.

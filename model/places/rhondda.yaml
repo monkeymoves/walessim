@@ -1,0 +1,32 @@
+# The Rhondda: which tips first (game-design 8.1). Tips are not listed here: the build reads
+# model/data/places/rhondda.json and computes each tip's facts with src/engine/place-analysis.ts
+# ("below" = within 1,000 m and at least 10 m lower).
+id: rhondda
+name: { en: The Rhondda, cy: Y Rhondda }
+kind: tips_triage
+la: W06000016
+applies_to_flag: coal_valley
+trigger_cards: [make-coal-tips-safe, slow-the-flow, connect-buses-rail]
+threads: 3
+exposure_share: 0.4
+deprived_rank: 191
+# Base risk step from open proxies (judgement, low confidence): a tip with a BGS landslide record on it is
+# step 2 if it stands at least steep_drop_m above the lowest ground within 1 km with steep_buildings or more
+# below, or has many_buildings or more below; otherwise step 1. The wet decade raises every step by one.
+risk_rule: { steep_drop_m: 200, steep_buildings: 125, many_buildings: 300 }
+prompt: { en: "The money covers three tips this term. There are more tips than thread.", cy: "Mae'r arian yn talu am dair tomen y tymor hwn. Mae mwy o domenni nag o edau.", cy_review: true }
+why_hard: { en: "The biggest tips by homes are not the riskiest, the riskiest are not above the poorest streets, and the school and railway sit under others again.", cy: "Nid y tomenni mwyaf o ran cartrefi yw'r rhai mwyaf peryglus, nid yw'r rhai mwyaf peryglus uwchben y strydoedd tlotaf, ac mae'r ysgol a'r rheilffordd o dan eraill eto.", cy_review: true }
+tests:
+  - id: exposure
+    name: { en: Exposure, cy: Amlygiad, cy_review: true }
+    description: { en: "Your threads cover at least two fifths of the risk-weighted homes below all the tips.", cy: "Mae eich edafedd yn cwmpasu o leiaf dwy ran o bump o'r cartrefi, wedi'u pwysoli yn ôl risg, o dan yr holl domenni.", cy_review: true }
+  - id: fairness
+    name: { en: Fairness, cy: Tegwch, cy_review: true }
+    description: { en: "At least one thread protects a neighbourhood in the most deprived tenth of Wales.", cy: "Mae o leiaf un edau yn diogelu cymdogaeth yn y degfed mwyaf difreintiedig o Gymru.", cy_review: true }
+  - id: lifelines
+    name: { en: Lifelines, cy: Achubiaeth, cy_review: true }
+    description: { en: "No tip left at the top risk step sits above a school or the railway.", cy: "Nid oes tomen a adawyd ar y cam risg uchaf uwchben ysgol neu'r rheilffordd.", cy_review: true }
+data_note: { en: "Tip locations are open proxies: BGS landslide records that mention a tip and OpenStreetMap spoil heaps. The official disused tips register is not open and is not used. Confidence: low.", cy: "Dirprwyon agored yw lleoliadau'r tomenni: cofnodion tirlithriad BGS sy'n sôn am domen a thomenni rwbel OpenStreetMap. Nid yw cofrestr swyddogol y tomenni segur yn agored ac ni chaiff ei defnyddio. Hyder: isel.", cy_review: true }
+data_file: places/rhondda.json
+confidence: low
+sources: [bgs-landslide, coal-tip-safety]

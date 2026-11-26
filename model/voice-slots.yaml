@@ -1,0 +1,15 @@
+# Fillers for the {who} and {season} slots in voice templates. A role, never a name.
+who:
+  - { en: a bus driver, cy: gyrrwr bws, cy_review: true }
+  - { en: a mother of two, cy: mam i ddau, cy_review: true }
+  - { en: a retired miner, cy: glöwr wedi ymddeol, cy_review: true }
+  - { en: a care worker, cy: gweithiwr gofal, cy_review: true }
+  - { en: a farmer, cy: ffermwr, cy_review: true }
+  - { en: a shop owner, cy: perchennog siop, cy_review: true }
+  - { en: a teacher, cy: athro, cy_review: true }
+  - { en: an apprentice, cy: prentis, cy_review: true }
+seasons:
+  - { en: spring, cy: gwanwyn, cy_review: true }
+  - { en: summer, cy: haf, cy_review: true }
+  - { en: autumn, cy: hydref, cy_review: true }
+  - { en: winter, cy: gaeaf, cy_review: true }

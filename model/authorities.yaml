@@ -1,0 +1,27 @@
+# The 22 local authorities: names, region, flags used by cards and curveballs, and towns for voices.
+# Population is a fallback only: the engine weights by `pop` from model/data/la-indicators.json when present.
+# Flags: coal_valley and slate are the place types of section 8; heartland is the Welsh-speaking heartland;
+# port lists the port and manufacturing authorities of broken-chains; worst5 is assigned at game start.
+authorities:
+  - { code: W06000001, name: { en: Isle of Anglesey, cy: Ynys Môn }, region: north, population: 69000, flags: [slate, heartland, rural, port, coast, off_gas], towns: [{ en: Holyhead, cy: Caergybi }, { en: Llangefni, cy: Llangefni }] }
+  - { code: W06000002, name: { en: Gwynedd, cy: Gwynedd }, region: north, population: 118000, flags: [slate, heartland, rural, coast, off_gas], towns: [{ en: Bethesda, cy: Bethesda }, { en: Blaenau Ffestiniog, cy: Blaenau Ffestiniog }, { en: Dolgellau, cy: Dolgellau }] }
+  - { code: W06000003, name: { en: Conwy, cy: Conwy }, region: north, population: 115000, flags: [slate, coast], towns: [{ en: Llandudno, cy: Llandudno }, { en: Abergele, cy: Abergele }] }
+  - { code: W06000004, name: { en: Denbighshire, cy: Sir Ddinbych }, region: north, population: 97000, flags: [rural, coast], towns: [{ en: Rhyl, cy: Y Rhyl }, { en: Denbigh, cy: Dinbych }] }
+  - { code: W06000005, name: { en: Flintshire, cy: Sir y Fflint }, region: north, population: 156000, flags: [port], towns: [{ en: Shotton, cy: Shotton }, { en: Mold, cy: Yr Wyddgrug }] }
+  - { code: W06000006, name: { en: Wrexham, cy: Wrecsam }, region: north, population: 136000, flags: [port, city], towns: [{ en: Wrexham, cy: Wrecsam }, { en: Rhosllanerchrugog, cy: Rhosllannerchrugog }] }
+  - { code: W06000008, name: { en: Ceredigion, cy: Ceredigion }, region: mid, population: 71000, flags: [slate, heartland, rural, coast, off_gas], towns: [{ en: Aberystwyth, cy: Aberystwyth }, { en: Cardigan, cy: Aberteifi }] }
+  - { code: W06000023, name: { en: Powys, cy: Powys }, region: mid, population: 134000, flags: [rural, off_gas], towns: [{ en: Newtown, cy: Y Drenewydd }, { en: Brecon, cy: Aberhonddu }, { en: Llanidloes, cy: Llanidloes }] }
+  - { code: W06000009, name: { en: Pembrokeshire, cy: Sir Benfro }, region: southwest, population: 124000, flags: [port, rural, coast], towns: [{ en: Pembroke Dock, cy: Doc Penfro }, { en: Haverfordwest, cy: Hwlffordd }] }
+  - { code: W06000010, name: { en: Carmarthenshire, cy: Sir Gaerfyrddin }, region: southwest, population: 191000, flags: [slate, heartland, rural], towns: [{ en: Carmarthen, cy: Caerfyrddin }, { en: Llanelli, cy: Llanelli }] }
+  - { code: W06000011, name: { en: Swansea, cy: Abertawe }, region: southwest, population: 243000, flags: [city, coast], towns: [{ en: Swansea, cy: Abertawe }, { en: Morriston, cy: Treforys }] }
+  - { code: W06000012, name: { en: Neath Port Talbot, cy: Castell-nedd Port Talbot }, region: southwest, population: 143000, flags: [coal_valley, port, valley], towns: [{ en: Port Talbot, cy: Port Talbot }, { en: Neath, cy: Castell-nedd }] }
+  - { code: W06000013, name: { en: Bridgend, cy: Pen-y-bont ar Ogwr }, region: southeast, population: 148000, flags: [coal_valley, valley], towns: [{ en: Maesteg, cy: Maesteg }, { en: Bridgend, cy: Pen-y-bont ar Ogwr }] }
+  - { code: W06000014, name: { en: Vale of Glamorgan, cy: Bro Morgannwg }, region: southeast, population: 136000, flags: [coast], towns: [{ en: Barry, cy: Y Barri }, { en: Penarth, cy: Penarth }] }
+  - { code: W06000015, name: { en: Cardiff, cy: Caerdydd }, region: southeast, population: 374000, flags: [city, coast], towns: [{ en: Grangetown, cy: Grangetown }, { en: Splott, cy: Sblot }] }
+  - { code: W06000016, name: { en: Rhondda Cynon Taf, cy: Rhondda Cynon Taf }, region: southeast, population: 242000, flags: [coal_valley, valley], towns: [{ en: Treorchy, cy: Treorci }, { en: Aberdare, cy: Aberdâr }, { en: Tylorstown, cy: Pendyrus }] }
+  - { code: W06000018, name: { en: Caerphilly, cy: Caerffili }, region: southeast, population: 176000, flags: [coal_valley, valley], towns: [{ en: Bargoed, cy: Bargod }, { en: Caerphilly, cy: Caerffili }] }
+  - { code: W06000019, name: { en: Blaenau Gwent, cy: Blaenau Gwent }, region: southeast, population: 67000, flags: [coal_valley, valley], towns: [{ en: Ebbw Vale, cy: Glynebwy }, { en: Tredegar, cy: Tredegar }] }
+  - { code: W06000020, name: { en: Torfaen, cy: Tor-faen }, region: southeast, population: 93000, flags: [coal_valley, valley], towns: [{ en: Pontypool, cy: Pont-y-pŵl }, { en: Blaenavon, cy: Blaenafon }] }
+  - { code: W06000021, name: { en: Monmouthshire, cy: Sir Fynwy }, region: southeast, population: 95000, flags: [rural], towns: [{ en: Abergavenny, cy: Y Fenni }, { en: Monmouth, cy: Trefynwy }] }
+  - { code: W06000022, name: { en: Newport, cy: Casnewydd }, region: southeast, population: 164000, flags: [city, port, coast], towns: [{ en: Newport, cy: Casnewydd }, { en: Pill, cy: Pill }] }
+  - { code: W06000024, name: { en: Merthyr Tydfil, cy: Merthyr Tudful }, region: southeast, population: 59000, flags: [coal_valley, valley], towns: [{ en: Merthyr Tydfil, cy: Merthyr Tudful }, { en: Dowlais, cy: Dowlais }] }
