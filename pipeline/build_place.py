@@ -1,33 +1,59 @@
-"""Build design/mockups/data/rhondda.js: a zoomed-in real-data view of the Rhondda valleys.
+"""Build a place data file for Etifeddiaeth: model/data/places/<id>.json (zoomed real-data view of one place).
 
-Throwaway mockup data. Same local km frame as wales.js (build_mock_data.py):
+Generalised from design/scripts/build_rhondda_data.py. Same km frame as the national map
+(design/scripts/build_mock_data.py):
   x_km = (lon + 5.40) * 111.32 * cos(radians(52.4))
-  y_km = (53.50 - lat) * 111.2
-Inputs (all downloaded 2026-11-26 into design/raw/rhondda/):
+  y_km = (53.50 - lat) * 111.2        (y grows southward)
+
+Usage:
+  python3 -I build_place.py <place_id> <lat_s> <lon_w> <lat_n> <lon_e> [--fetch] [--raw DIR] [--out FILE]
+
+Raw inputs live in pipeline/raw/<place_id>/ (gitignored). With --fetch, missing files are downloaded
+(generic User-Agent, backoff on Overpass); otherwise they must already exist:
   tiles13/t_<x>_<y>.png          AWS Terrain Tiles, terrarium encoding, zoom 13
-  osm.json, osm2.json, osm3.json  Overpass API extracts (OpenStreetMap, ODbL); osm3 = stations, bus stops, routes
+  osm.json osm2.json osm3.json   Overpass extracts (OpenStreetMap, ODbL): osm3 = stations, bus stops, routes
   bgs_landslides.json            BGS National Landslide Database index (OGL)
-  wfs_NRW_FLOODZONE_RIVERS.json  NRW Flood Map for Planning, river flood zones (DataMapWales WFS)
+  wfs_NRW_FLOODZONE_RIVERS.json  NRW Flood Map for Planning river zones (DataMapWales WFS)
   wfs_wimd2019_overall.json      WIMD 2019 overall rank by LSOA (DataMapWales WFS)
-Usage: python3 -I build_rhondda_data.py <raw_dir> <out_js>
+  wfs_NRW_MINING_WASTE_CLOSED_SITES.json  NRW closed mining waste inventory (may be empty)
+The PROFILE (coal for rhondda, slate otherwise) sets the industrial-heritage focus and the notes.
 """
+import argparse
 import json
 import math
+import os
 import re
-import sys
+import time
+import urllib.parse
+import urllib.request
 
 import numpy as np
 from PIL import Image
 from shapely.geometry import LineString, MultiPolygon, Point, Polygon, box
 from shapely.ops import linemerge, polygonize, unary_union
 
-RAW, OUT = sys.argv[1], sys.argv[2]
-FETCHED = "2026-11-26"
+ap = argparse.ArgumentParser()
+ap.add_argument("place_id")
+ap.add_argument("lat_s", type=float)
+ap.add_argument("lon_w", type=float)
+ap.add_argument("lat_n", type=float)
+ap.add_argument("lon_e", type=float)
+ap.add_argument("--fetch", action="store_true")
+ap.add_argument("--raw")
+ap.add_argument("--out")
+ARGS = ap.parse_args()
+PID = ARGS.place_id
+HERE = os.path.dirname(os.path.abspath(__file__))
+RAW = ARGS.raw or os.path.join(HERE, "raw", PID)
+OUT = ARGS.out or os.path.join(HERE, "..", "model", "data", "places", PID + ".json")
+FETCHED = time.strftime("%Y-%m-%d")
+UA = "etifeddiaeth-pipeline/0.1"
+PROFILE = "coal" if PID == "rhondda" else "slate"
 
 # ---- frame ------------------------------------------------------------------
 KX = 111.32 * math.cos(math.radians(52.4))
 KY = 111.2
-LON_W, LON_E, LAT_S, LAT_N = -3.61, -3.36, 51.585, 51.715
+LON_W, LON_E, LAT_S, LAT_N = ARGS.lon_w, ARGS.lon_e, ARGS.lat_s, ARGS.lat_n
 
 
 def proj(lon, lat):
@@ -38,6 +64,115 @@ X0, Y0 = proj(LON_W, LAT_N)  # top-left (north-west)
 X1, Y1 = proj(LON_E, LAT_S)  # bottom-right (south-east)
 CLIP = box(X0, Y0, X1, Y1)
 R3 = lambda v: round(v, 3)  # noqa: E731
+Z = 13
+N = 2 ** Z
+
+
+def tile_xy(lon, lat):
+    return (int((lon + 180) / 360 * N),
+            int((1 - math.asinh(math.tan(math.radians(lat))) / math.pi) / 2 * N))
+
+
+TX0, TY0 = tile_xy(LON_W, LAT_N)
+TX1, TY1 = tile_xy(LON_E, LAT_S)
+
+
+# ---- fetch ---------------------------------------------------------------------
+def http(url, data=None, tries=6, timeout=300):
+    wait = 20
+    for i in range(tries):
+        req = urllib.request.Request(url, data=data, headers={"User-Agent": UA})
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return r.read()
+        except Exception as ex:  # noqa: BLE001
+            print("  retry", i + 1, str(ex)[:100], flush=True)
+            time.sleep(wait)
+            wait = min(wait * 2, 240)
+    raise RuntimeError("failed: " + url[:100])
+
+
+def overpass_queries():
+    bb = f"{LAT_S},{LON_W},{LAT_N},{LON_E}"
+    q1 = f"""[out:json][timeout:240][bbox:{bb}];
+(
+  way["building"];
+  way["highway"];
+  way["railway"]; way["disused:railway"]; way["abandoned:railway"];
+  way["waterway"];
+  way["natural"="water"]; relation["natural"="water"];
+  way["landuse"]; relation["landuse"];
+  way["natural"~"^(wood|grassland|heath|scrub|scree|bare_rock|wetland)$"]; relation["natural"~"^(wood|grassland|heath|scrub|wetland)$"];
+  nwr["man_made"="spoil_heap"];
+  nwr["historic"~"^(mine|mine_shaft|colliery|mine_adit|quarry)$"];
+  nwr["man_made"~"^(mineshaft|adit|winding_wheel|headframe)$"];
+  nwr["landuse"="industrial"]["industrial"="mine"];
+  node["place"~"^(town|village|suburb|hamlet|neighbourhood|locality)$"];
+  nwr["amenity"~"^(school|hospital|clinic|doctors|place_of_worship|community_centre|library|social_centre)$"];
+  nwr["building"~"^(school|hospital|church|chapel)$"]["name"];
+  nwr["name"~"(Institute|Workmen|Miners|Welfare)"];
+);
+out geom qt;
+"""
+    q2 = f"""[out:json][timeout:120][bbox:{bb}];
+(
+  nwr["name"~"Colliery|Glofa|Pit$|Tip$|Tips$|Heritage Park|Level$|Quarry|Chwarel|Slate|Llechi"];
+  nwr["historic"];
+  nwr["tourism"="museum"];
+  nwr["disused:man_made"]; nwr["abandoned:man_made"];
+  nwr["disused:landuse"]; nwr["abandoned:landuse"];
+  nwr["landuse"="landfill"];
+  nwr["natural"="bare_rock"];
+  node["place"="city"];
+);
+out geom qt;
+"""
+    q3 = f"""[out:json][timeout:180][bbox:{bb}];
+(
+  nwr["railway"~"^(station|halt)$"];
+  nwr["public_transport"="station"];
+  node["highway"="bus_stop"];
+  nwr["public_transport"="platform"]["bus"="yes"];
+  relation["route"="bus"];
+  relation["route"~"^(train|railway|tracks)$"];
+);
+out geom({bb}) qt;
+"""
+    return {"osm.json": q1, "osm2.json": q2, "osm3.json": q3}
+
+
+def fetch_all():
+    os.makedirs(f"{RAW}/tiles13", exist_ok=True)
+    for tx in range(TX0, TX1 + 1):
+        for ty in range(TY0, TY1 + 1):
+            f = f"{RAW}/tiles13/t_{tx}_{ty}.png"
+            if not os.path.exists(f):
+                open(f, "wb").write(http(f"https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{Z}/{tx}/{ty}.png"))
+    for fn, q in overpass_queries().items():
+        f = f"{RAW}/{fn}"
+        if not os.path.exists(f):
+            print("overpass", fn, flush=True)
+            body = http("https://overpass-api.de/api/interpreter", urllib.parse.urlencode({"data": q}).encode())
+            json.loads(body)
+            open(f, "wb").write(body)
+            time.sleep(10)
+    bbox_wfs = f"{LON_W - 0.01},{LAT_S - 0.01},{LON_E + 0.01},{LAT_N + 0.01},EPSG:4326"
+    for layer, fn in (("inspire-nrw:NRW_FLOODZONE_RIVERS", "wfs_NRW_FLOODZONE_RIVERS.json"),
+                      ("inspire-wg:wimd2019_overall", "wfs_wimd2019_overall.json"),
+                      ("inspire-nrw:NRW_MINING_WASTE_CLOSED_SITES", "wfs_NRW_MINING_WASTE_CLOSED_SITES.json")):
+        f = f"{RAW}/{fn}"
+        if not os.path.exists(f):
+            qs = urllib.parse.urlencode({"service": "WFS", "version": "1.0.0", "request": "GetFeature", "typeName": layer,
+                                         "outputFormat": "application/json", "srsName": "EPSG:4326", "bbox": bbox_wfs})
+            open(f, "wb").write(http("https://datamap.gov.wales/geoserver/ows?" + qs))
+    f = f"{RAW}/bgs_landslides.json"
+    if not os.path.exists(f):
+        qs = urllib.parse.urlencode({"f": "json", "limit": 5000, "bbox": f"{LON_W},{LAT_S},{LON_E},{LAT_N}"})
+        open(f, "wb").write(http("https://ogcapi.bgs.ac.uk/collections/landslideindex/items?" + qs))
+
+
+if ARGS.fetch:
+    fetch_all()
 
 
 def ring_out(coords):
@@ -90,9 +225,6 @@ def poly_rings(p, min_hole=0.0):
 
 
 # ---- elevation ----------------------------------------------------------------
-Z = 13
-N = 2 ** Z
-TX0, TX1, TY0, TY1 = 4013, 4019, 2716, 2721
 mosaic = np.zeros(((TY1 - TY0 + 1) * 256, (TX1 - TX0 + 1) * 256))
 for tx in range(TX0, TX1 + 1):
     for ty in range(TY0, TY1 + 1):
@@ -111,6 +243,7 @@ px = (lon + 180) / 360 * N * 256 - TX0 * 256 - 0.5
 py = (1 - np.arcsinh(np.tan(np.radians(lat))) / math.pi) / 2 * N * 256 - TY0 * 256 - 0.5
 PX, PY = np.meshgrid(px, py)
 ix, iy = np.floor(PX).astype(int), np.floor(PY).astype(int)
+ix, iy = np.clip(ix, 0, mosaic.shape[1] - 2), np.clip(iy, 0, mosaic.shape[0] - 2)  # edge pixels clamp to the mosaic
 fx, fy = PX - ix, PY - iy
 m = mosaic
 elev = (m[iy, ix] * (1 - fx) * (1 - fy) + m[iy, ix + 1] * fx * (1 - fy)
@@ -201,15 +334,17 @@ LANDUSE_CLASS = {
     ("landuse", "cemetery"): "cemetery", ("landuse", "allotments"): "allotments",
     ("landuse", "recreation_ground"): "recreation",
 }
-RAIL_STATUS = {"rail": "active", "disused": "disused", "abandoned": "abandoned", "dismantled": "dismantled",
+RAIL_STATUS = {"rail": "active", "preserved": "heritage", "disused": "disused", "abandoned": "abandoned", "dismantled": "dismantled",
                "razed": "dismantled", "construction": "construction", "light_rail": "active", "narrow_gauge": "active"}
 WATERWAYS = {"river", "stream", "canal", "derelict_canal", "drain", "ditch"}
-PLACE_KINDS = {"town", "village", "suburb", "hamlet", "neighbourhood"}
+PLACE_KINDS = {"city", "town", "village", "suburb", "hamlet", "neighbourhood"}
 FAC_AMENITY = {"school": "school", "hospital": "hospital", "clinic": "clinic", "doctors": "doctors",
                "place_of_worship": "place_of_worship", "community_centre": "community_centre",
                "social_centre": "community_centre", "library": "library"}
 INSTITUTE_RE = re.compile(r"Institute|Workmen|Workmens|Miners|Welfare", re.I)
 COLLIERY_RE = re.compile(r"Colliery|Glofa", re.I)
+QUARRY_RE = re.compile(r"Quarry|Quarries|Chwarel|\bSlate\b|\bLlechi\b|\bMine\b|\bLevel$", re.I)
+TIPNAME_RE = re.compile(r"\btips?\b|\bwaste\b|tomen|spoil|rubbish", re.I)
 
 seen_fac = []
 counts_dropped = {"small_buildings": 0}
@@ -247,11 +382,20 @@ for e in elements:
                         o = {"class": cls_, "pts": c}
                         if t.get("ref"):
                             o["ref"] = t["ref"]
-                        if t.get("name") and cls_ in ("major", "minor"):
+                        if t.get("name") and (cls_ in ("major", "minor") or hw == "cycleway" or t.get("ncn_ref")):
                             o["name"] = t["name"]
+                        if hw == "cycleway" or t.get("ncn_ref") or t.get("route") == "bicycle":
+                            o["cycle"] = True
+                            if t.get("ncn_ref"):
+                                o["ncn"] = t["ncn_ref"]
                         roads.append(o)
     # rail ------------------------------------------------------------------------
     rw = t.get("railway")
+    lifecycle = None
+    if rw is None and e["type"] == "way":  # lifecycle-prefixed tags: disused:railway=rail etc.
+        for pre, st in (("disused:railway", "disused"), ("abandoned:railway", "abandoned")):
+            if t.get(pre):
+                rw, lifecycle = st, st
     if rw in RAIL_STATUS and e["type"] == "way":
         pts = way_xy(e)
         if len(pts) >= 2:
@@ -259,6 +403,10 @@ for e in elements:
                 c = line_out(ln.simplify(0.003).coords)
                 if len(c) >= 2:
                     o = {"status": RAIL_STATUS[rw], "railway": rw, "pts": c}
+                    if t.get("disused:railway") or t.get("abandoned:railway"):
+                        o["was"] = t.get("disused:railway") or t.get("abandoned:railway")
+                    if t.get("gauge"):
+                        o["gauge"] = t["gauge"]
                     if t.get("service"):
                         o["service"] = t["service"]
                     if t.get("usage"):
@@ -342,10 +490,14 @@ for e in elements:
                 facilities.append(o)
                 seen_fac.append(o)
     # collieries (OSM only; thin) -------------------------------------------------------
-    is_coll = (t.get("historic") in ("mine", "colliery", "mine_shaft") and "heap" not in (t.get("man_made") or "")) \
-        or (t.get("man_made") in ("mineshaft", "adit") and COLLIERY_RE.search(name)) \
-        or (COLLIERY_RE.search(name) and "building" in t) \
-        or COLLIERY_RE.search(t.get("addr:housename", ""))
+    if PROFILE == "coal":
+        is_coll = (t.get("historic") in ("mine", "colliery", "mine_shaft") and "heap" not in (t.get("man_made") or "")) \
+            or (t.get("man_made") in ("mineshaft", "adit") and COLLIERY_RE.search(name)) \
+            or (COLLIERY_RE.search(name) and "building" in t) \
+            or COLLIERY_RE.search(t.get("addr:housename", ""))
+    else:  # slate: quarries, mines, adits (points and polygons; polygons reduced to a representative point)
+        is_coll = (t.get("historic") in ("quarry", "mine", "mine_shaft", "mine_adit") or t.get("man_made") in ("adit", "mineshaft")
+                   or (QUARRY_RE.search(name) and ("building" in t or t.get("landuse") == "quarry" or t.get("historic"))))
     if is_coll and "highway" not in t and t.get("man_made") != "street_cabinet":
         pt = point_of(e)
         if pt is not None and CLIP.contains(pt):
@@ -356,7 +508,27 @@ for e in elements:
                 o["feature"] = "building"
             if t.get("addr:housename"):
                 o["note"] = f"OSM addr:housename '{t['addr:housename']}' (site of the colliery)"
+            if t.get("historic"):
+                o["historic"] = t["historic"]
             collieries.append(o)
+    # slate profile: quarry polygons and named tips -> tips ----
+    if PROFILE == "slate" and e["type"] != "node" and "highway" not in t and "building" not in t and (
+            t.get("landuse") == "quarry" or t.get("disused:landuse") == "quarry" or t.get("abandoned:landuse") == "quarry"
+            or (t.get("name") and TIPNAME_RE.search(t["name"]) and (t.get("natural") or t.get("landuse") or t.get("historic")))):
+        g = area_geom(e)
+        if g is not None:
+            gp = polys_of(g.intersection(CLIP).simplify(0.006, preserve_topology=True))
+            if gp:
+                big = max(gp, key=lambda p: p.area)
+                if big.area >= 0.002:
+                    c = big.representative_point()
+                    live = t.get("landuse") == "quarry"
+                    o = {"source": "OSM", "kind": "quarry_osm" if live else "disused_quarry_osm",
+                         "osm": f"{e['type']}/{e['id']}", "name": t.get("name"), "rings": poly_rings(big, min_hole=0.002),
+                         "x": R3(c.x), "y": R3(c.y), "areaHa": round(big.area * 100, 1),
+                         "attrs": {k: v for k, v in t.items() if k in ("landuse", "disused:landuse", "abandoned:landuse", "natural", "name",
+                                                                       "name:cy", "resource", "operator", "historic", "description", "note")}}
+                    tips.append(o)
     # OSM spoil heaps -> tips ---------------------------------------------------------------
     if t.get("man_made") == "spoil_heap" or t.get("man_made:material") == "spoil_heap" or (
             t.get("man_made") == "heap" and t.get("historic") == "mine"):
@@ -455,6 +627,38 @@ for f in bgs:
                   "precision_m": p.get("plus_or_minus_metres")},
     })
 
+# ---- NRW closed mining waste inventory (may be empty for a place) ------------------------------
+mw_path = f"{RAW}/wfs_NRW_MINING_WASTE_CLOSED_SITES.json"
+mw_n = 0
+if os.path.exists(mw_path):
+    try:
+        mw = json.load(open(mw_path)).get("features", [])
+    except ValueError:
+        mw = []
+    for f in mw:
+        g = f.get("geometry")
+        if not g:
+            continue
+        if g["type"] == "Point":
+            x, y = proj(*g["coordinates"][:2])
+            o = {"x": R3(x), "y": R3(y)}
+        else:
+            polys = g["coordinates"] if g["type"] == "MultiPolygon" else [g["coordinates"]]
+            u = unary_union([Polygon([proj(lo, la) for lo, la, *_ in pl[0]]).buffer(0) for pl in polys])
+            u = u.intersection(CLIP).simplify(0.004, preserve_topology=True)
+            gp = polys_of(u)
+            if not gp:
+                continue
+            big = max(gp, key=lambda p: p.area)
+            c = big.representative_point()
+            o = {"rings": poly_rings(big), "x": R3(c.x), "y": R3(c.y), "areaHa": round(big.area * 100, 1)}
+        if not CLIP.contains(Point(o["x"], o["y"])):
+            continue
+        o.update({"source": "NRW Inventory of Closed Mining Waste Facilities", "kind": "mining_waste_closed_site",
+                  "attrs": {k: v for k, v in f.get("properties", {}).items() if v not in (None, "")}})
+        tips.append(o)
+        mw_n += 1
+
 # ---- NRW flood zones (rivers) -------------------------------------------------------------
 fz = json.load(open(f"{RAW}/wfs_NRW_FLOODZONE_RIVERS.json"))["features"]
 by_zone = {}
@@ -493,10 +697,14 @@ for f in json.load(open(f"{RAW}/wfs_wimd2019_overall.json"))["features"]:
                       "wimdRank": p["rank"], "decile": p["decile"], "x": R3(c.x), "y": R3(c.y), "polys": parts})
 
 # ---- write --------------------------------------------------------------------------------------
+PLACE_NAMES = {"rhondda": ("Rhondda", "Y Rhondda"), "bethesda": ("Bethesda and Dyffryn Ogwen", "Bethesda a Dyffryn Ogwen")}
+PNAME = PLACE_NAMES.get(PID, (PID, PID))
 note = {
-    "status": "MOCKUP DATA, real sources, simplified. Not for any decision about real tips or flood risk.",
+    "status": "Prototype data from real sources, simplified. Not for any decision about real tips, quarries or flood risk.",
+    "place": {"id": PID, "en": PNAME[0], "cy": PNAME[1], "profile": PROFILE},
     "fetched": FETCHED,
-    "frame": "Same km frame as wales.js: x=(lon+5.40)*111.32*cos(52.4 deg), y=(53.50-lat)*111.2. "
+    "builtBy": "pipeline/build_place.py",
+    "frame": "Same km frame as the national map: x=(lon+5.40)*111.32*cos(52.4 deg), y=(53.50-lat)*111.2. "
              "y grows southward. Polygon rings are implicitly closed (last point not repeated). "
              "Coordinates rounded to 0.001 km.",
     "sources": [
@@ -504,9 +712,10 @@ note = {
          "url": "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png",
          "licence": "Open; attribution per https://github.com/tilezen/joerd/blob/master/docs/attribution.md "
                     "(GB coverage includes Copernicus EU-DEM / SRTM derived data)"},
-        {"layers": "buildings, roads, rail, rivers, water, landuse, places, facilities, collieries, tips[source=OSM], "
-               "stations, busStops, busRoutes",
-         "what": "OpenStreetMap via Overpass API (two queries)", "url": "https://overpass-api.de/api/interpreter",
+        {"layers": "buildings, roads, rail, rivers, water, landuse, places, facilities, "
+                   + ("collieries" if PROFILE == "coal" else "quarries")
+                   + ", tips[source=OSM], stations, busStops, busRoutes",
+         "what": "OpenStreetMap via Overpass API (three queries)", "url": "https://overpass-api.de/api/interpreter",
          "licence": "ODbL 1.0", "attribution": "© OpenStreetMap contributors, ODbL"},
         {"layers": "tips[source=BGS National Landslide Database]",
          "what": "BGS National Landslide Database index, records whose name or locality mentions a tip or spoil. "
@@ -514,8 +723,7 @@ note = {
          "url": "https://ogcapi.bgs.ac.uk/collections/landslideindex",
          "licence": "Open Government Licence v3.0 (per BGS)",
          "attribution": "Contains British Geological Survey materials © UKRI 2026"},
-        {"layers": "flood", "what": "NRW Flood Map for Planning: River Flood Zones 2 and 3 (pub_date 2026-05-21), "
-                                    "dissolved and simplified",
+        {"layers": "flood", "what": "NRW Flood Map for Planning: River Flood Zones 2 and 3, dissolved and simplified",
          "url": "https://datamap.gov.wales/geoserver/ows (layer inspire-nrw:NRW_FLOODZONE_RIVERS)",
          "licence": "DataMapWales licence field blank; NRW attribution statement applies (believed OGL, verify)",
          "attribution": "Contains Natural Resources Wales information © Natural Resources Wales and database right. "
@@ -525,15 +733,24 @@ note = {
          "licence": "Welsh Government statistics, Open Government Licence (licence field blank on DataMapWales)",
          "attribution": "Welsh Government, WIMD 2019. Contains OS data © Crown copyright and database right."},
     ],
-    "coalTips": "The official Welsh Government / Mining Remediation Authority 'Disused Coal Tips in Wales' dataset "
-                "(DataMapWales map 7548, updated Nov 2026, attributes UID, Category D/C/B/A/R, Authority, Last Inspected) "
-                "is marked PERSONAL USE ONLY, not an open dataset, viewing only. It was NOT downloaded or used. "
-                "tips[] holds only OSM spoil heaps and BGS tip-related landslide records, each labelled by source.",
-    "busRoutes": "Only the bus route relations mapped in OSM. Coverage is incomplete: no Rhondda Fach (Ferndale, "
-                 "Maerdy), Gilfach Goch or Ogmore valley service is mapped as a route, and busStops are sparse outside "
-                 "Tonypandy, Porth, Aberdare and Cwmaman (almost none in Maerdy, Ferndale, Treherbert). Each direction "
-                 "or variant is its own entry. rail[].status keeps OSM railway=razed as 'dismantled'.",
+    "busRoutes": "Only the bus route relations mapped in OSM. Coverage is incomplete. Each direction or variant is "
+                 "its own entry. busStops are whatever OSM has. rail[].status keeps OSM railway=razed as 'dismantled'; "
+                 "disused:railway and abandoned:railway ways are kept with status disused/abandoned and a 'was' field.",
 }
+if PROFILE == "coal":
+    note["coalTips"] = (
+        "The official Welsh Government / Mining Remediation Authority 'Disused Coal Tips in Wales' dataset "
+        "(DataMapWales map 7548) is marked PERSONAL USE ONLY, not an open dataset, viewing only. It was NOT "
+        "downloaded or used. tips[] holds only OSM spoil heaps and BGS tip-related landslide records, each labelled "
+        "by source.")
+else:
+    note["slateTips"] = (
+        "No open polygon dataset of slate waste tips was used. tips[] holds, each labelled by source: OSM "
+        "landuse=quarry polygons (kind quarry_osm, live or mapped as quarry) and disused/abandoned quarry polygons or "
+        "named tip features (disused_quarry_osm), OSM man_made=spoil_heap (spoil_heap_osm), BGS landslide records that "
+        "mention a tip or spoil, and NRW closed mining waste inventory sites if any fall in the area "
+        "(" + str(mw_n) + " found). Quarry outlines are NOT tip outlines: a quarry polygon often includes the working "
+        "pit and its waste. Treat counts and areas as indicative only.")
 data = {
     "_note": note,
     "bbox": {"x0": R3(X0), "y0": R3(Y0), "x1": R3(X1), "y1": R3(Y1),
@@ -548,7 +765,7 @@ data = {
     "water": water,
     "landuse": landuse,
     "tips": tips,
-    "collieries": collieries,
+    ("collieries" if PROFILE == "coal" else "quarries"): collieries,
     "places": places,
     "stations": stations,
     "busStops": bus_stops,
@@ -557,12 +774,11 @@ data = {
     "flood": flood,
     "lsoas": lsoas,
 }
+os.makedirs(os.path.dirname(os.path.abspath(OUT)), exist_ok=True)
 with open(OUT, "w") as fh:
-    fh.write("// Generated by design/scripts/build_rhondda_data.py. Mockup data only. See _note for sources.\n")
-    fh.write("window.RHONDDA = ")
     json.dump(data, fh, separators=(",", ":"), ensure_ascii=False)
-    fh.write(";\n")
+print("wrote", OUT, os.path.getsize(OUT) // 1024, "KB")
 print("grid", GW, "x", GH, "elev", grid.min(), grid.max(), "dropped", counts_dropped)
-for k in ("buildings", "roads", "rail", "rivers", "water", "landuse", "tips", "collieries", "places", "facilities",
-          "flood", "lsoas", "stations", "busStops", "busRoutes"):
+for k in ("buildings", "roads", "rail", "rivers", "water", "landuse", "tips", "collieries" if PROFILE == "coal" else "quarries",
+          "places", "facilities", "flood", "lsoas", "stations", "busStops", "busRoutes"):
     print(k, len(data[k]), len(json.dumps(data[k], separators=(",", ":"))) // 1024, "KB")
