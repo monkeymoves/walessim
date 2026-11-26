@@ -1,0 +1,840 @@
+# Voice templates. One line, spoken, from a real place. Illustrative voices, not real quotes.
+# Written by the content writer; every Welsh line is a fresh draft awaiting a fluent reviewer (cy_review: true).
+
+- id: visit-tonypandy-rhondda-poorly
+  event: visit
+  place: rhondda
+  grade: poorly
+  towns:
+    - { en: "Tonypandy", cy: "Tonypandy" }
+  text:
+    en: "They put the threads where the cameras could see them. The tip over the school is still just a hill that might move."
+    cy: "Rhoddwyd yr edafedd lle gallai'r camerâu eu gweld. Mae'r domen uwchben yr ysgol yn dal yn fryn a allai symud."
+    cy_review: true
+- id: visit-pentre-rhondda-poorly
+  event: visit
+  place: rhondda
+  grade: poorly
+  towns:
+    - { en: "Pentre", cy: "Pentre" }
+  text:
+    en: "Fairness is a big word. The streets with least money are the ones still looking up."
+    cy: "Gair mawr yw tegwch. Y strydoedd sydd â'r lleiaf o arian yw'r rhai sy'n dal i edrych i fyny."
+    cy_review: true
+- id: visit-ferndale-rhondda-adequately
+  event: visit
+  place: rhondda
+  grade: adequately
+  towns:
+    - { en: "Ferndale", cy: "Glynrhedynog" }
+  text:
+    en: "Two of the three were the right ones. The one that wasn't, we can see from the back bedroom."
+    cy: "Roedd dwy o'r tair yn rhai iawn. Yr un nad oedd, gallwn ei gweld o'r llofft gefn."
+    cy_review: true
+- id: visit-treherbert-rhondda-well
+  event: visit
+  place: rhondda
+  grade: well
+  towns:
+    - { en: "Treherbert", cy: "Treherbert" }
+  text:
+    en: "Somebody looked at where the school is, and where the railway is, and did those first. That's all we asked."
+    cy: "Edrychodd rhywun ar ble mae'r ysgol, ac ar ble mae'r rheilffordd, a gwneud y rheiny'n gyntaf. Dyna'r cyfan ofynnon ni amdano."
+    cy_review: true
+- id: visit-maerdy-rhondda-well
+  event: visit
+  place: rhondda
+  grade: well
+  towns:
+    - { en: "Maerdy", cy: "Maerdy" }
+  text:
+    en: "Forty years I've looked up at that tip. First time I've slept without keeping an eye on the rain."
+    cy: "Ers deugain mlynedd dw i wedi edrych i fyny ar y domen yna. Dyma'r tro cyntaf i mi gysgu heb gadw llygad ar y glaw."
+    cy_review: true
+- id: visit-bethesda-bethesda-poorly
+  event: visit
+  place: bethesda
+  grade: poorly
+  towns:
+    - { en: "Bethesda", cy: "Bethesda" }
+  text:
+    en: "They'll tell you the quarry's open to everyone. It is. But our children can't afford to live next to it."
+    cy: "Fe ddywedan nhw fod y chwarel yn agored i bawb. Mae hi. Ond all ein plant ni ddim fforddio byw wrth ei hymyl."
+    cy_review: true
+- id: visit-tregarth-bethesda-poorly
+  event: visit
+  place: bethesda
+  grade: poorly
+  towns:
+    - { en: "Tregarth", cy: "Tregarth" }
+  text:
+    en: "Lorries on the High Street and nobody's house any cheaper. I counted nine before school."
+    cy: "Lorïau ar y stryd fawr, a thŷ neb ddim yn rhatach. Cyfrais naw cyn amser ysgol."
+    cy_review: true
+- id: visit-deiniolen-bethesda-adequately
+  event: visit
+  place: bethesda
+  grade: adequately
+  towns:
+    - { en: "Deiniolen", cy: "Deiniolen" }
+  text:
+    en: "Some got a flat above the chapel. Some got the lorries. Depends which end of the village you ask."
+    cy: "Cafodd rhai fflat uwchben y capel. Cafodd rhai y lorïau. Mae'n dibynnu pa ben o'r pentref y gofynnwch."
+    cy_review: true
+- id: visit-bethesda-bethesda-well
+  event: visit
+  place: bethesda
+  grade: well
+  towns:
+    - { en: "Bethesda", cy: "Bethesda" }
+  text:
+    en: "My daughter's looking at a house two streets from mine. She rang the agent in Welsh and he answered in Welsh."
+    cy: "Mae fy merch yn edrych ar dŷ ddwy stryd oddi wrtha i. Ffoniodd yr asiant yn Gymraeg, ac atebodd yntau yn Gymraeg."
+    cy_review: true
+- id: visit-tregarth-bethesda-well
+  event: visit
+  place: bethesda
+  grade: well
+  towns:
+    - { en: "Tregarth", cy: "Tregarth" }
+  text:
+    en: "The river came up in the autumn and stayed in its bed. Somebody had thought about the bottom of the High Street."
+    cy: "Cododd yr afon yn yr hydref ac aros yn ei gwely. Roedd rhywun wedi meddwl am waelod y stryd fawr."
+    cy_review: true
+- id: shock-rhyl-wet-decade-ready
+  event: shock
+  curveball: wet-decade
+  response: ready
+  towns:
+    - { en: "Rhyl", cy: "Y Rhyl" }
+  text:
+    en: "The water came up to the new wall and stopped. I stood and watched it stop."
+    cy: "Cododd y dŵr at y wal newydd ac aros. Sefais i yno'n gwylio'r dŵr yn stopio."
+    cy_review: true
+- id: shock-llanrwst-wet-decade-responded
+  event: shock
+  curveball: wet-decade
+  response: responded
+  towns:
+    - { en: "Llanrwst", cy: "Llanrwst" }
+  text:
+    en: "They had sandbags and a digger here by the second night. Not early, but not never."
+    cy: "Roedd ganddyn nhw fagiau tywod a pheiriant cloddio yma erbyn yr ail noson. Nid yn gynnar, ond nid byth chwaith."
+    cy_review: true
+- id: shock-pontypridd-wet-decade-absorbed
+  event: shock
+  curveball: wet-decade
+  response: absorbed
+  towns:
+    - { en: "Pontypridd", cy: "Pontypridd" }
+  text:
+    en: "Three days with the ground floor under. The insurance man said he'd seen our street's name before."
+    cy: "Tridiau, a'r llawr gwaelod dan ddŵr. Dywedodd y dyn yswiriant ei fod wedi gweld enw ein stryd o'r blaen."
+    cy_review: true
+- id: shock-cardiff-grangetown-hot-summers-absorbed
+  event: shock
+  curveball: hot-summers
+  response: absorbed
+  towns:
+    - { en: "Cardiff (Grangetown)", cy: "Caerdydd (Grangetown)" }
+  text:
+    en: "My nan's flat was thirty-three degrees at midnight. The trees they planted are still sticks."
+    cy: "Roedd fflat fy nain yn dri deg tri gradd am hanner nos. Dim ond ffyn yw'r coed a blannwyd o hyd."
+    cy_review: true
+- id: shock-newport-hot-summers-responded
+  event: shock
+  curveball: hot-summers
+  response: responded
+  towns:
+    - { en: "Newport", cy: "Casnewydd" }
+  text:
+    en: "They opened the library till ten for the old folks. Hardly a fix, but somebody had thought of it."
+    cy: "Agorwyd y llyfrgell tan ddeg i'r hen bobl. Prin yw hynny'n ateb, ond roedd rhywun wedi meddwl amdano."
+    cy_review: true
+- id: shock-pwllheli-price-of-a-home-absorbed
+  event: shock
+  curveball: price-of-a-home
+  response: absorbed
+  towns:
+    - { en: "Pwllheli", cy: "Pwllheli" }
+  text:
+    en: "Three houses on our street went in a fortnight. None of them to anyone who'll be here in January."
+    cy: "Gwerthwyd tri thŷ ar ein stryd ni mewn pythefnos. Dim un i neb fydd yma ym mis Ionawr."
+    cy_review: true
+- id: shock-caernarfon-language-at-the-edge-absorbed
+  event: shock
+  curveball: language-at-the-edge
+  response: absorbed
+  towns:
+    - { en: "Caernarfon", cy: "Caernarfon" }
+  text:
+    en: "At the till this morning I spoke Welsh to four people and got English back from three. Nobody was rude."
+    cy: "Wrth y til bore 'ma siaradais Gymraeg â phedwar o bobl a chael Saesneg yn ôl gan dri. Doedd neb yn anghwrtais."
+    cy_review: true
+- id: shock-builth-wells-rivers-in-trouble-absorbed
+  event: shock
+  curveball: rivers-in-trouble
+  response: absorbed
+  towns:
+    - { en: "Builth Wells", cy: "Llanfair-ym-Muallt" }
+  text:
+    en: "The anglers stopped coming first, then fewer people booked the B&Bs. The river looks fine. That's what's odd."
+    cy: "Rhoddodd y pysgotwyr y gorau i ddod gyntaf, yna llai o bobl yn archebu'r gwely a brecwast. Mae'r afon yn edrych yn iawn. Dyna sy'n od."
+    cy_review: true
+- id: shock-cwmbran-work-rewritten
+  event: shock
+  curveball: work-rewritten
+  towns:
+    - { en: "Cwmbran", cy: "Cwmbrân" }
+  text:
+    en: "Forty went from the back office on a Thursday. They had trained the thing that replaced them."
+    cy: "Aeth deugain o'r swyddfa gefn ar ddydd Iau. Roedden nhw wedi hyfforddi'r peth a'u disodlodd."
+    cy_review: true
+- id: shock-merthyr-tydfil-downturn
+  event: shock
+  curveball: downturn
+  towns:
+    - { en: "Merthyr Tydfil", cy: "Merthyr Tudful" }
+  text:
+    en: "Everyone's gone quiet the way they did in 2008. Nobody says the word, they just stop buying rounds."
+    cy: "Mae pawb wedi tawelu fel y gwnaethon nhw yn 2008. Does neb yn dweud y gair, maen nhw jest yn rhoi'r gorau i brynu rownd."
+    cy_review: true
+- id: shock-dolgellau-energy-squeeze-absorbed
+  event: shock
+  curveball: energy-squeeze
+  response: absorbed
+  towns:
+    - { en: "Dolgellau", cy: "Dolgellau" }
+  text:
+    en: "We've got the burner going in one room and the six of us in it. The meter's by the door, so I can't forget."
+    cy: "Mae'r llosgwr ymlaen mewn un ystafell a'r chwech ohonon ni ynddi. Mae'r mesurydd wrth y drws, felly alla i ddim anghofio."
+    cy_review: true
+- id: shock-holyhead-broken-chains-absorbed
+  event: shock
+  curveball: broken-chains
+  response: absorbed
+  towns:
+    - { en: "Holyhead", cy: "Caergybi" }
+  text:
+    en: "The port's quiet in a way I've not heard since I was a boy. Nobody's told us what's next."
+    cy: "Mae'r porthladd yn dawel mewn ffordd na chlywais i ers pan oeddwn i'n fachgen. Does neb wedi dweud wrthon ni beth sy nesaf."
+    cy_review: true
+- id: shock-port-talbot-broken-chains-responded
+  event: shock
+  curveball: broken-chains
+  response: responded
+  towns:
+    - { en: "Port Talbot", cy: "Port Talbot" }
+  text:
+    en: "They found places for the apprentices. The men over fifty are on the sofa. Nobody's got a plan for that."
+    cy: "Daethon nhw o hyd i lefydd i'r prentisiaid. Mae'r dynion dros hanner cant ar y soffa. Does dim cynllun ar gyfer hynny."
+    cy_review: true
+- id: shock-pembroke-dock-power-rush-absorbed
+  event: shock
+  curveball: power-rush
+  response: absorbed
+  towns:
+    - { en: "Pembroke Dock", cy: "Doc Penfro" }
+  text:
+    en: "You can see the turbines from the kitchen. The bills came from somewhere else, same as ever."
+    cy: "Gallwch weld y tyrbinau o'r gegin. Daeth y biliau o rywle arall, fel arfer."
+    cy_review: true
+- id: shock-machynlleth-power-rush-ready
+  event: shock
+  curveball: power-rush
+  response: ready
+  towns:
+    - { en: "Machynlleth", cy: "Machynlleth" }
+  text:
+    en: "The hydro paid for the new hall roof. Strange to say it out loud, but the river did something for us."
+    cy: "Talodd y cynllun hydro am do newydd y neuadd. Rhyfedd dweud hyn, ond gwnaeth yr afon rywbeth drosom ni."
+    cy_review: true
+- id: trend-treorchy-wet-decade
+  event: trend
+  curveball: wet-decade
+  towns:
+    - { en: "Treorchy", cy: "Treorci" }
+  text:
+    en: "The tip over the school moved again in the February rain. We just want to know which one they'll do first."
+    cy: "Symudodd y domen uwchben yr ysgol eto yng nglaw mis Chwefror. Y cyfan hoffen ni wybod yw pa un fyddan nhw'n ei gwneud gyntaf."
+    cy_review: true
+- id: trend-llandrindod-wells-older-wales
+  event: trend
+  curveball: older-wales
+  towns:
+    - { en: "Llandrindod Wells", cy: "Llandrindod" }
+  text:
+    en: "The bus to the hospital goes twice a day now. Half the street has learned to be ill on a Tuesday."
+    cy: "Dim ond ddwywaith y dydd mae'r bws i'r ysbyty bellach. Mae hanner y stryd wedi dysgu mynd yn sâl ar ddydd Mawrth."
+    cy_review: true
+- id: trend-tregaron-left-offline
+  event: trend
+  curveball: left-offline
+  towns:
+    - { en: "Tregaron", cy: "Tregaron" }
+  text:
+    en: "The form says apply online. The signal on our farm lives at the top of the barn."
+    cy: "Mae'r ffurflen yn dweud gwneud cais ar-lein. Mae'r signal ar ein fferm ni'n byw ar ben y sgubor."
+    cy_review: true
+- id: trend-tenby-price-of-a-home
+  event: trend
+  curveball: price-of-a-home
+  towns:
+    - { en: "Tenby", cy: "Dinbych-y-pysgod" }
+  text:
+    en: "Lights on in July, lights off in February. You'd think the town was lovely. It is, it's just lovely and empty."
+    cy: "Goleuadau ymlaen ym mis Gorffennaf, i ffwrdd ym mis Chwefror. Byddech chi'n meddwl bod y dref yn hyfryd. Mae hi, ond mae hi'n hyfryd ac yn wag."
+    cy_review: true
+- id: arrival-aberystwyth-welsh-medium-childcare
+  event: arrival
+  card: welsh-medium-childcare
+  towns:
+    - { en: "Aberystwyth", cy: "Aberystwyth" }
+  text:
+    en: "She came home from the cylch correcting my mutations. I'll take that."
+    cy: "Daeth hi adref o'r cylch yn cywiro fy nhreigladau. Dw i'n fodlon â hynny."
+    cy_review: true
+- id: arrival-llanelli-warm-homes
+  event: arrival
+  card: warm-homes
+  towns:
+    - { en: "Llanelli", cy: "Llanelli" }
+  text:
+    en: "First winter I've not had the coat on indoors. Took them long enough."
+    cy: "Y gaeaf cyntaf heb gadw'r cot amdanaf y tu mewn. Cymerodd hi ddigon o amser iddyn nhw."
+    cy_review: true
+- id: arrival-blaenau-ffestiniog-tourism-pays-its-way
+  event: arrival
+  card: tourism-pays-its-way
+  towns:
+    - { en: "Blaenau Ffestiniog", cy: "Blaenau Ffestiniog" }
+  text:
+    en: "The visitors still come for the wires and the trains. Difference is some of it stays now."
+    cy: "Mae'r ymwelwyr yn dal i ddod am y gwifrau a'r trenau. Y gwahaniaeth yw bod peth ohono'n aros nawr."
+    cy_review: true
+- id: arrival-aberaeron-community-owned-energy
+  event: arrival
+  card: community-owned-energy
+  towns:
+    - { en: "Aberaeron", cy: "Aberaeron" }
+  text:
+    en: "The turbine on the hill is ours, on paper and in the post. Strange, getting a letter from your own electricity."
+    cy: "Mae'r tyrbin ar y bryn yn eiddo i ni, ar bapur ac yn y post. Rhyfedd cael llythyr gan eich trydan eich hun."
+    cy_review: true
+- id: arrival-cwmbran-build-social-homes
+  event: arrival
+  card: build-social-homes
+  towns:
+    - { en: "Cwmbran", cy: "Cwmbrân" }
+  text:
+    en: "My boy's got a key to a place with his name on the rent book. He's twenty-six and acts like he's won something."
+    cy: "Mae gan fy mab allwedd i le sydd â'i enw ar y llyfr rhent. Mae'n chwech ar hugain ac yn ymddwyn fel petai wedi ennill rhywbeth."
+    cy_review: true
+- id: arrival-ebbw-vale-connect-buses-rail
+  event: arrival
+  card: connect-buses-rail
+  towns:
+    - { en: "Ebbw Vale", cy: "Glynebwy" }
+  text:
+    en: "I can get to the hospital in Cardiff without asking anyone for a lift. I'd forgotten that was a thing."
+    cy: "Alla i gyrraedd yr ysbyty yng Nghaerdydd heb ofyn i neb am lifft. Roeddwn i wedi anghofio bod hynny'n bosib."
+    cy_review: true
+- id: arrival-tredegar-early-years
+  event: arrival
+  card: early-years
+  towns:
+    - { en: "Tredegar", cy: "Tredegar" }
+  text:
+    en: "The health visitor knows the baby's name now, and mine. She comes up the stairs without the form first."
+    cy: "Mae'r ymwelydd iechyd yn gwybod enw'r babi erbyn hyn, a fy enw i. Mae hi'n dod i fyny'r grisiau heb y ffurflen yn gyntaf."
+    cy_review: true
+- id: arrival-welshpool-everyone-online
+  event: arrival
+  card: everyone-online
+  towns:
+    - { en: "Welshpool", cy: "Y Trallwng" }
+  text:
+    en: "Dad did his tax return himself. He's eighty-one. He wants everyone to know."
+    cy: "Gwnaeth Dad ei ffurflen dreth ei hun. Mae'n un a phedwar ugain. Mae eisiau i bawb wybod."
+    cy_review: true
+- id: arrival-rhayader-plant-woodland
+  event: arrival
+  card: plant-woodland
+  towns:
+    - { en: "Rhayader", cy: "Rhaeadr Gwy" }
+  text:
+    en: "The saplings on the hill are over my head. It's surprised me how pleased I am."
+    cy: "Mae'r coed ifanc ar y bryn dros fy mhen i. Mae wedi fy synnu pa mor falch ydw i."
+    cy_review: true
+- id: arrival-llanwrtyd-wells-restore-upland-peat
+  event: arrival
+  card: restore-upland-peat
+  towns:
+    - { en: "Llanwrtyd Wells", cy: "Llanwrtyd" }
+  text:
+    en: "The hill's gone wet again and the sheep are grumbling. The stream below ran clear for the first time since I was a girl."
+    cy: "Mae'r mynydd wedi gwlychu eto a'r defaid yn grwgnach. Rhedodd y nant islaw yn glir am y tro cyntaf ers pan oeddwn i'n ferch."
+    cy_review: true
+- id: arrival-abersoch-homes-for-locals
+  event: arrival
+  card: homes-for-locals
+  towns:
+    - { en: "Abersoch", cy: "Abersoch" }
+  text:
+    en: "The house next door has a family in it in February. I nearly took them a cake and forgot why."
+    cy: "Mae teulu yn y tŷ drws nesaf ym mis Chwefror. Bu bron i mi fynd â chacen draw, ac anghofio pam."
+    cy_review: true
+- id: arrival-haverfordwest-health-before-hospital
+  event: arrival
+  card: health-before-hospital
+  towns:
+    - { en: "Haverfordwest", cy: "Hwlffordd" }
+  text:
+    en: "My GP rang me. I didn't ring her. I sat on the bed and thought, has somebody died?"
+    cy: "Ffoniodd fy meddyg teulu fi. Wnes i ddim ei ffonio hi. Eisteddais ar y gwely a meddwl, ydy rhywun wedi marw?"
+    cy_review: true
+- id: arrival-bridgend-skills-and-apprenticeships
+  event: arrival
+  card: skills-and-apprenticeships
+  towns:
+    - { en: "Bridgend", cy: "Pen-y-bont ar Ogwr" }
+  text:
+    en: "Our lad's finishing a trade with a firm that has work booked past his apprenticeship. He said it twice to make sure I'd heard."
+    cy: "Mae ein mab ni'n gorffen dysgu crefft gyda chwmni sydd â gwaith wedi'i drefnu y tu hwnt i'w brentisiaeth. Dywedodd hynny ddwywaith i wneud yn siŵr fy mod wedi clywed."
+    cy_review: true
+- id: arrival-llandeilo-pay-farms-for-nature
+  event: arrival
+  card: pay-farms-for-nature
+  towns:
+    - { en: "Llandeilo", cy: "Llandeilo" }
+  text:
+    en: "The hedge along the top field has birds in it. Dad calls it a mess. He's stopped asking for it to be cut."
+    cy: "Mae adar yn y clawdd ar hyd y cae top. Mae Dad yn ei alw'n llanast. Mae wedi rhoi'r gorau i ofyn am ei dorri."
+    cy_review: true
+- id: arrival-tylorstown-make-coal-tips-safe
+  event: arrival
+  card: make-coal-tips-safe
+  towns:
+    - { en: "Tylorstown", cy: "Tylorstown" }
+  text:
+    en: "The lorries have gone and there's grass where the fence was. Mam stood at the window and cried a bit, then went to put the kettle on."
+    cy: "Mae'r lorïau wedi mynd, a glaswellt sydd lle'r oedd y ffens. Safodd Mam wrth y ffenest ac wylo ychydig, yna mynd i roi'r tegell ymlaen."
+    cy_review: true
+- id: arrival-chepstow-build-flood-walls
+  event: arrival
+  card: build-flood-walls
+  towns:
+    - { en: "Chepstow", cy: "Cas-gwent" }
+  text:
+    en: "The wall's grey and ugly. It also stood there in November. I'll take ugly."
+    cy: "Mae'r wal yn llwyd ac yn hyll. Safodd yno ym mis Tachwedd hefyd. Dw i'n fodlon ar hyll."
+    cy_review: true
+- id: arrival-neath-grid-and-big-renewables
+  event: arrival
+  card: grid-and-big-renewables
+  towns:
+    - { en: "Neath", cy: "Castell-nedd" }
+  text:
+    en: "The pylons marched over the ridge in a month. Half the village got a job for a year. The other half got a view."
+    cy: "Cerddodd y peilonau dros y grib mewn mis. Cafodd hanner y pentref swydd am flwyddyn. Cafodd yr hanner arall olygfa."
+    cy_review: true
+- id: arrival-crickhowell-slow-the-flow
+  event: arrival
+  card: slow-the-flow
+  towns:
+    - { en: "Crickhowell", cy: "Crughywel" }
+  text:
+    en: "They built a pile of sticks in the stream and told us it would stop the town flooding. In March we all went to look at it."
+    cy: "Adeiladon nhw bentwr o ffyn yn y nant a dweud y byddai'n atal y dref rhag boddi. Ym mis Mawrth aeth pawb ohonon ni i edrych arno."
+    cy_review: true
+- id: played-wrexham-land-a-big-employer
+  event: played
+  card: land-a-big-employer
+  towns:
+    - { en: "Wrexham", cy: "Wrecsam" }
+  text:
+    en: "Six hundred jobs, they say. My dad heard that about the last place, mind."
+    cy: "Chwe chant o swyddi, medden nhw. Clywodd fy nhad hynny am y lle diwethaf, cofiwch."
+    cy_review: true
+- id: played-brecon-regional-compact
+  event: played
+  card: regional-compact
+  towns:
+    - { en: "Brecon", cy: "Aberhonddu" }
+  text:
+    en: "The council, the health board, the farmers' union, all in the one room. We'll believe it when there's one phone number."
+    cy: "Y cyngor, y bwrdd iechyd, undeb y ffermwyr, i gyd yn yr un ystafell. Fe gredwn ni hynny pan fydd un rhif ffôn."
+    cy_review: true
+- id: played-pontypool-defer-maintenance
+  event: played
+  card: defer-maintenance
+  towns:
+    - { en: "Pontypool", cy: "Pont-y-pŵl" }
+  text:
+    en: "The pothole outside the chapel has its own ring of paint round it now. Someone's given it a name."
+    cy: "Mae cylch o baent o amgylch y twll yn y ffordd y tu allan i'r capel erbyn hyn. Mae rhywun wedi rhoi enw iddo."
+    cy_review: true
+- id: played-mold-borrow-to-invest
+  event: played
+  card: borrow-to-invest
+  towns:
+    - { en: "Mold", cy: "Yr Wyddgrug" }
+  text:
+    en: "Nice new roundabout. Somebody asked who pays for it, and everybody looked at their shoes."
+    cy: "Cylchfan newydd braf. Gofynnodd rhywun pwy sy'n talu amdani, ac edrychodd pawb ar eu hesgidiau."
+    cy_review: true
+- id: played-beaumaris-homes-for-locals
+  event: played
+  card: homes-for-locals
+  towns:
+    - { en: "Beaumaris", cy: "Biwmares" }
+  text:
+    en: "Some say it'll empty the shops of summer people. Some of us say good, we could do with shops open in January."
+    cy: "Mae rhai'n dweud y bydd yn gwagio'r siopau o bobl yr haf. Mae rhai ohonon ni'n dweud da iawn, byddai siopau ar agor ym mis Ionawr yn handi."
+    cy_review: true
+- id: played-bala-plant-woodland
+  event: played
+  card: plant-woodland
+  towns:
+    - { en: "Bala", cy: "Y Bala" }
+  text:
+    en: "They've bought the farm next to ours for trees. Our boy was meant to have a look at it when he was older."
+    cy: "Maen nhw wedi prynu'r fferm drws nesaf i ni ar gyfer coed. Roedd ein mab i fod i gael golwg arni pan fyddai'n hŷn."
+    cy_review: true
+- id: upkeep_unpaid-merthyr-tydfil-connect-buses-rail
+  event: upkeep_unpaid
+  card: connect-buses-rail
+  towns:
+    - { en: "Merthyr Tydfil", cy: "Merthyr Tudful" }
+  text:
+    en: "They gave us the bus and we built our shifts round it. Now it's Tuesdays and Fridays."
+    cy: "Rhoddon nhw'r bws i ni ac fe drefnon ni ein shifftiau o'i gwmpas. Nawr dim ond dydd Mawrth a dydd Gwener ydyw."
+    cy_review: true
+- id: upkeep_unpaid-prestatyn-build-flood-walls
+  event: upkeep_unpaid
+  card: build-flood-walls
+  towns:
+    - { en: "Prestatyn", cy: "Prestatyn" }
+  text:
+    en: "The pump by the wall's been making a noise since spring. The council says it's on the list. So is everything."
+    cy: "Mae'r pwmp wrth y wal wedi bod yn gwneud sŵn ers y gwanwyn. Dywed y cyngor ei fod ar y rhestr. Felly mae popeth arall."
+    cy_review: true
+- id: strand-llangefni-prosperous-up
+  event: strand
+  strand: prosperous
+  direction: up
+  towns:
+    - { en: "Llangefni", cy: "Llangefni" }
+  text:
+    en: "There's a Saturday job going in every window. The cafe's looking for two. It was empty in the spring."
+    cy: "Mae swydd Sadwrn ymhob ffenest. Mae'r caffi'n chwilio am ddau. Roedd yn wag yn y gwanwyn."
+    cy_review: true
+- id: strand-newtown-prosperous-down
+  event: strand
+  strand: prosperous
+  direction: down
+  towns:
+    - { en: "Newtown", cy: "Y Drenewydd" }
+  text:
+    en: "Fourth shop shut on the high street since the summer. Same sign in each window. They must buy them in bulk."
+    cy: "Y bedwaredd siop i gau ar y stryd fawr ers yr haf. Yr un arwydd ymhob ffenest. Mae'n rhaid eu bod nhw'n eu prynu nhw mewn swmp."
+    cy_review: true
+- id: strand-conwy-resilient-up
+  event: strand
+  strand: resilient
+  direction: up
+  towns:
+    - { en: "Conwy", cy: "Conwy" }
+  text:
+    en: "The brook behind the school's been brown every wet week of my life. Last month it ran clean."
+    cy: "Mae'r nant tu ôl i'r ysgol wedi bod yn frown bob wythnos wlyb o'm bywyd. Fis diwethaf rhedodd yn lân."
+    cy_review: true
+- id: strand-cardigan-resilient-down
+  event: strand
+  strand: resilient
+  direction: down
+  towns:
+    - { en: "Cardigan", cy: "Aberteifi" }
+  text:
+    en: "Every second field's standing water by November. The geese like it. Nobody else I know does."
+    cy: "Mae dŵr yn sefyll ym mhob ail gae erbyn mis Tachwedd. Mae'r gwyddau'n ei hoffi. Does neb arall dw i'n ei nabod yn ei hoffi."
+    cy_review: true
+- id: strand-ammanford-healthier-up
+  event: strand
+  strand: healthier
+  direction: up
+  towns:
+    - { en: "Ammanford", cy: "Rhydaman" }
+  text:
+    en: "I got an appointment the same week I rang. I keep telling people in case they don't believe me."
+    cy: "Cefais apwyntiad yr un wythnos ag y ffoniais. Dw i'n dal i ddweud wrth bobl rhag ofn nad ydyn nhw'n fy nghredu."
+    cy_review: true
+- id: strand-holywell-healthier-down
+  event: strand
+  strand: healthier
+  direction: down
+  towns:
+    - { en: "Holywell", cy: "Treffynnon" }
+  text:
+    en: "The waiting list's longer than the road to the hospital. Mam's knee has become a family subject."
+    cy: "Mae'r rhestr aros yn hirach na'r ffordd i'r ysbyty. Mae pen-glin Mam wedi dod yn bwnc teuluol."
+    cy_review: true
+- id: strand-newport-equal-up
+  event: strand
+  strand: equal
+  direction: up
+  towns:
+    - { en: "Newport", cy: "Casnewydd" }
+  text:
+    en: "Kids on our street go to the same sixth form as the kids from up the hill. Nobody's mentioned it, which is how you know."
+    cy: "Mae plant ein stryd ni'n mynd i'r un chweched dosbarth â phlant y bryn. Does neb wedi sôn amdano, a dyna sut rydych chi'n gwybod."
+    cy_review: true
+- id: strand-cardiff-equal-down
+  event: strand
+  strand: equal
+  direction: down
+  towns:
+    - { en: "Cardiff", cy: "Caerdydd" }
+  text:
+    en: "Same city, twenty minutes by bus, and a different idea of how long you'll live. It's on a poster at the surgery."
+    cy: "Yr un ddinas, ugain munud ar y bws, a disgwyliad gwahanol o ba mor hir y byddwch chi'n byw. Mae ar boster yn y feddygfa."
+    cy_review: true
+- id: strand-llangollen-cohesive-up
+  event: strand
+  strand: cohesive
+  direction: up
+  towns:
+    - { en: "Llangollen", cy: "Llangollen" }
+  text:
+    en: "The hall's full on a Thursday and nobody can say what for. Somebody brought a cake, so there was a reason."
+    cy: "Mae'r neuadd yn llawn ar nos Iau ac ni all neb ddweud pam. Daeth rhywun â chacen, felly roedd rheswm."
+    cy_review: true
+- id: strand-blaenavon-cohesive-down
+  event: strand
+  strand: cohesive
+  direction: down
+  towns:
+    - { en: "Blaenavon", cy: "Blaenafon" }
+  text:
+    en: "The pub, the post office and the chapel all went in one year. Now we meet at funerals."
+    cy: "Aeth y dafarn, y swyddfa bost a'r capel i gyd mewn un flwyddyn. Nawr rydyn ni'n cyfarfod mewn angladdau."
+    cy_review: true
+- id: strand-lampeter-culture-up
+  event: strand
+  strand: culture
+  direction: up
+  towns:
+    - { en: "Lampeter", cy: "Llanbedr Pont Steffan" }
+  text:
+    en: "The kids sang at the eisteddfod without being made to. Their nain wept into the programme."
+    cy: "Canodd y plant yn yr eisteddfod heb gael eu gorfodi. Wylodd eu nain i mewn i'r rhaglen."
+    cy_review: true
+- id: strand-fishguard-culture-down
+  event: strand
+  strand: culture
+  direction: down
+  towns:
+    - { en: "Fishguard", cy: "Abergwaun" }
+  text:
+    en: "The choir's down to eleven and three of them drive in from Cardigan. I'm not complaining, I'm counting."
+    cy: "Mae'r côr i lawr i un ar ddeg a thri ohonyn nhw'n gyrru o Aberteifi. Dw i ddim yn cwyno, dw i'n cyfri."
+    cy_review: true
+- id: strand-swansea-global-up
+  event: strand
+  strand: global
+  direction: up
+  towns:
+    - { en: "Swansea", cy: "Abertawe" }
+  text:
+    en: "The council's stopped buying the cheap stuff that's made badly in places we never see. It costs more. I'm told that's the point."
+    cy: "Mae'r cyngor wedi rhoi'r gorau i brynu'r pethau rhad sy'n cael eu gwneud yn wael mewn llefydd na welwn ni byth. Mae'n costio mwy. Dywedir wrtha i mai dyna'r pwynt."
+    cy_review: true
+- id: strand-milford-haven-global-down
+  event: strand
+  strand: global
+  direction: down
+  towns:
+    - { en: "Milford Haven", cy: "Aberdaugleddau" }
+  text:
+    en: "The ships come in and the money goes out, and what they burn goes up into somebody else's sky. We're the doorstep, never the house."
+    cy: "Daw'r llongau i mewn a'r arian allan, ac mae'r hyn maen nhw'n ei losgi yn mynd i awyr rhywun arall. Ni yw'r stepen drws, byth y tŷ."
+    cy_review: true
+- id: opening-wrexham-prosperous
+  event: opening
+  strand: prosperous
+  towns:
+    - { en: "Wrexham", cy: "Wrecsam" }
+  text:
+    en: "Promise us work that's still here when the apprentices finish."
+    cy: "Addewch i ni waith sy'n dal yma pan fydd y prentisiaid wedi gorffen."
+    cy_review: true
+- id: opening-llandudno-resilient
+  event: opening
+  strand: resilient
+  towns:
+    - { en: "Llandudno", cy: "Llandudno" }
+  text:
+    en: "Promise us the sea stays on its own side of the road."
+    cy: "Addewch i ni y bydd y môr yn aros ar ei ochr ei hun o'r ffordd."
+    cy_review: true
+- id: opening-carmarthen-healthier
+  event: opening
+  strand: healthier
+  towns:
+    - { en: "Carmarthen", cy: "Caerfyrddin" }
+  text:
+    en: "Promise us a doctor we can see this month, not this season."
+    cy: "Addewch i ni feddyg y gallwn ei weld y mis hwn, nid y tymor hwn."
+    cy_review: true
+- id: opening-rhyl-equal
+  event: opening
+  strand: equal
+  towns:
+    - { en: "Rhyl", cy: "Y Rhyl" }
+  text:
+    en: "Promise us the children here start from the same place as the children over there."
+    cy: "Addewch i ni y bydd plant yma'n dechrau o'r un lle â phlant y tu draw."
+    cy_review: true
+- id: opening-maesteg-cohesive
+  event: opening
+  strand: cohesive
+  towns:
+    - { en: "Maesteg", cy: "Maesteg" }
+  text:
+    en: "Promise us somewhere to meet that isn't a pub or a funeral."
+    cy: "Addewch i ni rywle i gyfarfod nad yw'n dafarn nac yn angladd."
+    cy_review: true
+- id: opening-dolgellau-culture
+  event: opening
+  strand: culture
+  towns:
+    - { en: "Dolgellau", cy: "Dolgellau" }
+  text:
+    en: "Promise us our children will be able to live their lives in Welsh if they want to."
+    cy: "Addewch i ni y bydd ein plant yn gallu byw eu bywydau yn Gymraeg os ydyn nhw eisiau."
+    cy_review: true
+- id: opening-barry-global
+  event: opening
+  strand: global
+  towns:
+    - { en: "Barry", cy: "Y Barri" }
+  text:
+    en: "Promise us we won't leave the bill to people who've never heard of Barry."
+    cy: "Addewch i ni na fyddwn ni'n gadael y bil i bobl nad ydyn nhw erioed wedi clywed am y Barri."
+    cy_review: true
+- id: opening-abergavenny-
+  event: opening
+  towns:
+    - { en: "Abergavenny", cy: "Y Fenni" }
+  text:
+    en: "Tell us the one thing, then do the one thing. We can forgive the rest."
+    cy: "Dywedwch wrthon ni'r un peth, ac yna gwnewch yr un peth. Gallwn faddau'r gweddill."
+    cy_review: true
+- id: pledge-pontypool-true
+  event: pledge
+  kept: true
+  towns:
+    - { en: "Pontypool", cy: "Pont-y-pŵl" }
+  text:
+    en: "You said the buses and there are buses. I'm not going to make a speech. I got to work on time."
+    cy: "Dywedoch chi y bysiau ac mae yna fysiau. Wna i ddim araith. Cyrhaeddais y gwaith ar amser."
+    cy_review: true
+- id: pledge-flint-true
+  event: pledge
+  kept: true
+  towns:
+    - { en: "Flint", cy: "Y Fflint" }
+  text:
+    en: "You said you'd mind the river. It's still a river."
+    cy: "Dywedoch chi y byddech chi'n gofalu am yr afon. Afon yw hi o hyd."
+    cy_review: true
+- id: pledge-cardigan-false
+  event: pledge
+  kept: false
+  towns:
+    - { en: "Cardigan", cy: "Aberteifi" }
+  text:
+    en: "We were promised one thing. We got a leaflet. It's by the kettle if you need it."
+    cy: "Addawyd un peth i ni. Cawsom daflen. Mae wrth y tegell os oes ei hangen arnoch."
+    cy_review: true
+- id: pledge-bridgend-false
+  event: pledge
+  kept: false
+  towns:
+    - { en: "Bridgend", cy: "Pen-y-bont ar Ogwr" }
+  text:
+    en: "Remember when they said they'd do it? I do. So does everyone in the shop."
+    cy: "Cofio pan ddywedon nhw y bydden nhw'n ei wneud? Dw i'n cofio. Felly hefyd bawb yn y siop."
+    cy_review: true
+- id: neglect-newtown-mid
+  event: neglect
+  region: mid
+  towns:
+    - { en: "Newtown", cy: "Y Drenewydd" }
+  text:
+    en: "We read about all the plans. They seem to stop at the Brecon side of the mountain."
+    cy: "Rydyn ni'n darllen am yr holl gynlluniau. Mae'n ymddangos eu bod nhw'n stopio ar ochr Aberhonddu i'r mynydd."
+    cy_review: true
+- id: neglect-llanidloes-mid
+  event: neglect
+  region: mid
+  towns:
+    - { en: "Llanidloes", cy: "Llanidloes" }
+  text:
+    en: "Nobody's come up from Cardiff in years, or from Aber, or from anywhere. It's not a complaint. It's a headcount."
+    cy: "Does neb wedi dod i fyny o Gaerdydd ers blynyddoedd, nac o Aber, nac o unman. Nid cwyn yw hyn. Cyfrif pennau ydyw."
+    cy_review: true
+- id: neglect-amlwch-north
+  event: neglect
+  region: north
+  towns:
+    - { en: "Amlwch", cy: "Amlwch" }
+  text:
+    en: "Another plan for the south. We watched it go past, like the bus that doesn't stop."
+    cy: "Cynllun arall i'r de. Gwyliom ef yn mynd heibio, fel y bws nad yw'n stopio."
+    cy_review: true
+- id: neglect-denbigh-north
+  event: neglect
+  region: north
+  towns:
+    - { en: "Denbigh", cy: "Dinbych" }
+  text:
+    en: "Somebody told me the North was well looked after. I asked which bit. They said Chester. That tells you."
+    cy: "Dywedodd rhywun wrtha i fod y Gogledd yn cael gofal da. Gofynnais pa ran. Dywedon nhw Gaer. Mae hynny'n dweud y cyfan."
+    cy_review: true
+- id: neglect-st-davids-southwest
+  event: neglect
+  region: southwest
+  towns:
+    - { en: "St Davids", cy: "Tyddewi" }
+  text:
+    en: "Everyone's heard of us. Nobody's come out to look."
+    cy: "Mae pawb wedi clywed amdanon ni. Does neb wedi dod allan i edrych."
+    cy_review: true
+- id: neglect-narberth-southwest
+  event: neglect
+  region: southwest
+  towns:
+    - { en: "Narberth", cy: "Arberth" }
+  text:
+    en: "Plans arrive in Swansea and sit down for a rest."
+    cy: "Mae cynlluniau'n cyrraedd Abertawe ac yn eistedd i lawr i gael hoe."
+    cy_review: true
+- id: neglect-abertillery-southeast
+  event: neglect
+  region: southeast
+  towns:
+    - { en: "Abertillery", cy: "Abertyleri" }
+  text:
+    en: "Cardiff is in everything. The valleys are in a footnote."
+    cy: "Mae Caerdydd ym mhopeth. Mae'r cymoedd mewn nodyn troed."
+    cy_review: true
+- id: neglect-caerphilly-southeast
+  event: neglect
+  region: southeast
+  towns:
+    - { en: "Caerphilly", cy: "Caerffili" }
+  text:
+    en: "The valley's gone years without a visit. We've started leaving the porch light on."
+    cy: "Mae'r cwm wedi mynd blynyddoedd heb ymweliad. Dechreuon ni adael golau'r porth ymlaen."
+    cy_review: true

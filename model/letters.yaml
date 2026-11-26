@@ -1,0 +1,310 @@
+# Letter archetypes from 2050 (game-design section 9.2). Slots: {place}, {year}, {thing}, {worst_year}, {lost_year}.
+# {thing} is a card title, a pledged thing or a region name depending on the named kind; every line reads without grammar tied to it.
+# Every Welsh line is a fresh draft awaiting a fluent reviewer (cy_review: true).
+
+- archetype: feast
+  title: { en: "The feast", cy: "Y wledd", cy_review: true }
+  salutation:
+    - { en: "{place}, 2050.", cy: "{place}, 2050.", cy_review: true }
+    - { en: "{place}, the first week of 2050.", cy: "{place}, wythnos gyntaf 2050.", cy_review: true }
+    - { en: "{place}, 2050. To you.", cy: "{place}, 2050. Atoch chi.", cy_review: true }
+  lived:
+    - { en: "My parents talk about your years as the good ones, and I believe them. Wages up, the town busy.", cy: "Mae fy rhieni'n sôn am eich blynyddoedd chi fel y blynyddoedd da, ac rwy'n eu credu. Cyflogau'n codi, y dref yn brysur.", cy_review: true }
+    - { en: "Mam says even {worst_year}, the thin one, was better than most she can remember.", cy: "Mae Mam yn dweud bod hyd yn oed {worst_year}, y flwyddyn deneuaf, yn well na'r rhan fwyaf a gofia.", cy_review: true }
+    - { en: "People here had a good run. Nobody argues with that.", cy: "Cafodd pobl yma rediad da. Does neb yn dadlau â hynny.", cy_review: true }
+  left:
+    - { en: "I was born into the bill. The river my father fished is a ditch, and the walls need work nobody budgeted for.", cy: "Cefais fy ngeni i mewn i'r bil. Ffos yw'r afon y byddai fy nhad yn pysgota ynddi, ac mae angen gwaith ar y waliau na chyllidodd neb ar ei gyfer.", cy_review: true }
+    - { en: "What was spent on them was taken from us. I can see the gap on the shelf where the savings should be.", cy: "Yr hyn a wariwyd arnyn nhw, fe'i cymerwyd oddi wrthym ni. Gallaf weld y bwlch ar y silff lle dylai'r cynilion fod.", cy_review: true }
+    - { en: "The land is tired, the pipes are old, and the young have left to find what was spent.", cy: "Mae'r tir wedi blino, mae'r pibau'n hen, ac mae'r ifanc wedi gadael i chwilio am yr hyn a wariwyd.", cy_review: true }
+  named:
+    debt:
+      - { en: "We are still paying the loan you took in {year}.", cy: "Rydyn ni'n dal i dalu'r benthyciad a gymerwyd gennych yn {year}.", cy_review: true }
+      - { en: "The loan from {year} is still on our books. I have never met anyone who can say what it bought.", cy: "Mae'r benthyciad o {year} yn dal ar ein llyfrau. Dw i erioed wedi cyfarfod neb sy'n gallu dweud beth a brynodd.", cy_review: true }
+      - { en: "Every month a little of what I earn goes to {year}. I would like to have been asked.", cy: "Bob mis mae ychydig o'r hyn dw i'n ei ennill yn mynd i {year}. Byddwn i wedi hoffi cael fy holi.", cy_review: true }
+    tip:
+      - { en: "The tip above the school is still there. Nobody got to it, and we look at it every morning.", cy: "Mae'r domen uwchben yr ysgol yno o hyd. Chyrhaeddodd neb ati, ac rydyn ni'n edrych arni bob bore.", cy_review: true }
+      - { en: "There was money for everything except the hill behind the school. It is still behind the school.", cy: "Roedd arian ar gyfer popeth ond y bryn y tu ôl i'r ysgol. Mae'n dal y tu ôl i'r ysgol.", cy_review: true }
+      - { en: "You did not get to the tips. They are the one thing in this town that has not changed.", cy: "Wnaethoch chi ddim cyrraedd y tomenni. Dyma'r unig beth yn y dref hon nad yw wedi newid.", cy_review: true }
+    arrival:
+      - { en: "{thing} only arrived in {year}, after you had gone. I do not know whether to thank you or the person who came next.", cy: "Cyrhaeddodd {thing} yn {year}, ar ôl i chi fynd. Wn i ddim ai chi ynteu'r un a ddaeth nesaf sydd i'w ddiolch.", cy_review: true }
+      - { en: "Something you started finally turned up in {year}: {thing}. It was late. It was real.", cy: "Cyrhaeddodd rhywbeth a ddechreuwyd gennych o'r diwedd yn {year}: {thing}. Roedd yn hwyr. Roedd yn real.", cy_review: true }
+      - { en: "There is one thing from your time that held: {thing}, arriving in {year}. I use it every week.", cy: "Mae un peth o'ch cyfnod chi a safodd: {thing}, yn cyrraedd yn {year}. Dw i'n ei ddefnyddio bob wythnos.", cy_review: true }
+    pledge:
+      - { en: "You made us a promise: {thing}. I know you meant it. It is not quite what we got.", cy: "Gwnaethoch addewid i ni: {thing}. Gwn eich bod yn ei olygu. Nid yw'n union yr hyn a gawsom.", cy_review: true }
+      - { en: "Everyone remembers the promise: {thing}. Nobody remembers the wages, which says something.", cy: "Mae pawb yn cofio'r addewid: {thing}. Does neb yn cofio'r cyflogau, sy'n dweud rhywbeth.", cy_review: true }
+      - { en: "You promised us this: {thing}. We were comfortable enough not to notice when it slipped.", cy: "Addawoch hyn i ni: {thing}. Roedden ni'n ddigon cyfforddus i beidio sylwi pan lithrodd.", cy_review: true }
+    lost_term:
+      - { en: "The term you lost the seat, in {lost_year}, is the one people mention first. Odd, given the rest.", cy: "Y tymor y collwyd y sedd, yn {lost_year}, yw'r un mae pobl yn sôn amdano gyntaf. Od, o ystyried y gweddill.", cy_review: true }
+      - { en: "Somebody else minded things in {lost_year}. My parents hardly noticed. That is rather the point.", cy: "Roedd rhywun arall wrth y llyw yn {lost_year}. Prin y sylwodd fy rhieni. Dyna'r pwynt, braidd.", cy_review: true }
+      - { en: "You were away in {lost_year} and the good times carried on without you. I found that funny.", cy: "Roeddech chi i ffwrdd yn {lost_year} ac aeth y cyfnod da yn ei flaen hebddoch. Roeddwn i'n gweld hynny'n ddoniol.", cy_review: true }
+    repairs:
+      - { en: "The repairs you put off in {year} are ours now, and twice the size.", cy: "Mae'r atgyweiriadau a ohiriwyd gennych yn {year} yn eiddo i ni bellach, a dwywaith y maint.", cy_review: true }
+      - { en: "Every road I drive on has a patch from the years after {year}. We are paying for the gaps.", cy: "Mae clytiau o'r blynyddoedd ar ôl {year} ar bob ffordd dw i'n gyrru arni. Rydyn ni'n talu am y bylchau.", cy_review: true }
+      - { en: "Nobody saw the cost of putting repairs off in {year}. We are the ones holding the receipt.", cy: "Welodd neb gost gohirio'r atgyweiriadau yn {year}. Ni yw'r rhai sy'n dal y dderbynneb.", cy_review: true }
+    neglect:
+      - { en: "One part of the country waited the whole time: {thing}. We are still waiting.", cy: "Bu un rhan o'r wlad yn aros drwy'r amser: {thing}. Rydyn ni'n dal i aros.", cy_review: true }
+      - { en: "You were kind to most of us. {thing} would like you to know it was not kind to all.", cy: "Roeddech chi'n garedig wrth y rhan fwyaf ohonon ni. Hoffai {thing} i chi wybod nad oedd yn garedig wrth bawb.", cy_review: true }
+      - { en: "Good years, but not everywhere: {thing} did not get a look in.", cy: "Blynyddoedd da, ond nid ymhobman: ni chafodd {thing} gyfle.", cy_review: true }
+    none:
+      - { en: "I cannot point to the one thing you did wrong. That is why it took so long to see.", cy: "Alla i ddim pwyntio at yr un peth a wnaethoch o'i le. Dyna pam y cymerodd gymaint o amser i'w weld.", cy_review: true }
+      - { en: "No single mistake. Just a long afternoon of nice things, and a bill with no name on it.", cy: "Dim un camgymeriad. Dim ond prynhawn hir o bethau braf, a bil heb enw arno.", cy_review: true }
+      - { en: "There is no villain in this letter. It is a kind of weather you made.", cy: "Does dim dihiryn yn y llythyr hwn. Rhyw fath o dywydd a wnaethoch chi ydyw.", cy_review: true }
+  signoff:
+    - { en: "You were kind to them. I wish you had been curious about me.", cy: "Roeddech chi'n garedig wrthyn nhw. Hoffwn pe baech chi wedi bod yn chwilfrydig amdana i.", cy_review: true }
+    - { en: "Thank you for the good years. Next time, spare a thought for the ones who pay for them.", cy: "Diolch am y blynyddoedd da. Y tro nesaf, meddyliwch am y rhai sy'n talu amdanyn nhw.", cy_review: true }
+    - { en: "I do not blame you for enjoying it. I would have too.", cy: "Dw i ddim yn eich beio am fwynhau. Byddwn i wedi gwneud yr un fath.", cy_review: true }
+- archetype: long_winter
+  title: { en: "The long winter", cy: "Y gaeaf hir", cy_review: true }
+  salutation:
+    - { en: "{place}, 2050.", cy: "{place}, 2050.", cy_review: true }
+    - { en: "{place}, 2050. A cold morning, as it happens.", cy: "{place}, 2050. Bore oer, fel mae'n digwydd.", cy_review: true }
+    - { en: "{place}, 2050. To you.", cy: "{place}, 2050. Atoch chi.", cy_review: true }
+  lived:
+    - { en: "Mam says she nearly gave up on you. Ten years of nothing to show, she says, and the buses worse.", cy: "Mae Mam yn dweud iddi bron â rhoi'r ffidil yn y to arnoch chi. Deng mlynedd heb ddim i'w ddangos, meddai hi, a'r bysiau'n waeth.", cy_review: true }
+    - { en: "My parents call it the lean time. {worst_year} was the worst of it, and they still go quiet about it.", cy: "Mae fy rhieni'n galw'r cyfnod hwnnw'n amser main. {worst_year} oedd y gwaethaf, ac maen nhw'n dal i dawelu wrth sôn amdano.", cy_review: true }
+    - { en: "It was hard going. The shop shutters, the cold house, the waiting. I was too young to mind, but I remember the cold.", cy: "Roedd yn anodd. Caeadau'r siop, y tŷ oer, yr aros. Roeddwn i'n rhy ifanc i falio, ond dw i'n cofio'r oerfel.", cy_review: true }
+  left:
+    - { en: "But the hill above the school is grass now, the house is warm, and I have work in the valley.", cy: "Ond glaswellt yw'r bryn uwchben yr ysgol erbyn hyn, mae'r tŷ'n gynnes, ac mae gen i waith yn y cwm.", cy_review: true }
+    - { en: "What you planted in the dark years is grown. The river runs clear and there are children in the street.", cy: "Mae'r hyn a blannwyd gennych yn y blynyddoedd tywyll wedi tyfu. Mae'r afon yn rhedeg yn glir ac mae plant yn y stryd.", cy_review: true }
+    - { en: "The country you handed on is sturdier than the one you were given. I did not expect to write that sentence.", cy: "Mae'r wlad a drosglwyddwyd gennych yn gadarnach na'r un a gawsoch. Doeddwn i ddim yn disgwyl ysgrifennu'r frawddeg honno.", cy_review: true }
+  named:
+    debt:
+      - { en: "You took a loan in {year} and it is paid. Mam says that was the one thing she did not mind.", cy: "Cymerasoch fenthyciad yn {year} ac mae wedi'i dalu. Mae Mam yn dweud mai dyna'r un peth nad oedd ots ganddi amdano.", cy_review: true }
+      - { en: "The loan from {year} was a gamble. We were left with less debt than the years suggested.", cy: "Roedd y benthyciad o {year} yn fenter. Cawsom ein gadael â llai o ddyled nag awgrymai'r blynyddoedd.", cy_review: true }
+      - { en: "I looked up the {year} borrowing. It came back down, which is more than anyone promised.", cy: "Edrychais i fyny'r benthyca yn {year}. Daeth i lawr eto, sy'n fwy nag addawodd neb.", cy_review: true }
+    tip:
+      - { en: "The tips above the school are grass now. Mam stood at the fence and could not speak.", cy: "Glaswellt yw'r tomenni uwchben yr ysgol erbyn hyn. Safodd Mam wrth y ffens ac ni allai siarad.", cy_review: true }
+      - { en: "They did the tip behind the school, the one nobody thought they would. It rained all winter and it stayed put.", cy: "Gwnaethon nhw'r domen y tu ôl i'r ysgol, yr un nad oedd neb yn credu y bydden nhw. Bwriodd law drwy'r gaeaf ac arhosodd yn ei lle.", cy_review: true }
+      - { en: "Ten years ago we looked up at the hill and counted the days. Now my little sister plays on it.", cy: "Ddeng mlynedd yn ôl edrychon ni i fyny ar y bryn a chyfri'r dyddiau. Nawr mae fy chwaer fach yn chwarae arno.", cy_review: true }
+    arrival:
+      - { en: "{thing} came in {year}, long after the cheering stopped. It is the best thing in the town.", cy: "Cyrhaeddodd {thing} yn {year}, ymhell ar ôl i'r bloeddio dawelu. Dyma'r peth gorau yn y dref.", cy_review: true }
+      - { en: "Nobody thanked you for {thing}, which arrived in {year}. We use it without thinking, which is the highest praise.", cy: "Ni ddiolchodd neb i chi am {thing}, a gyrhaeddodd yn {year}. Rydyn ni'n ei ddefnyddio heb feddwl, sef y ganmoliaeth uchaf.", cy_review: true }
+      - { en: "What you started arrived in {year}: {thing}. It was a long wait. It was worth it.", cy: "Cyrhaeddodd yr hyn a ddechreuwyd gennych yn {year}: {thing}. Bu'n aros hir. Roedd werth chweil.", cy_review: true }
+    pledge:
+      - { en: "You promised us this: {thing}. We did not believe you. We were wrong.", cy: "Addawoch hyn i ni: {thing}. Doedden ni ddim yn eich credu. Roedden ni'n anghywir.", cy_review: true }
+      - { en: "The promise was {thing}. For years it looked empty. It is the reason I stayed.", cy: "Yr addewid oedd {thing}. Am flynyddoedd roedd yn edrych yn wag. Dyma'r rheswm i mi aros.", cy_review: true }
+      - { en: "You said it, and it took ages, but you did it: {thing}. Mam wrote the date on the calendar.", cy: "Dywedoch chi hynny, a chymerodd oesoedd, ond fe'i gwnaethoch: {thing}. Ysgrifennodd Mam y dyddiad ar y calendr.", cy_review: true }
+    lost_term:
+      - { en: "The term you lost the seat, in {lost_year}, was the bleakest. Somebody kept the lights on until you came back.", cy: "Y tymor y collwyd y sedd, yn {lost_year}, oedd y tywyllaf. Cadwodd rhywun y goleuadau ymlaen nes i chi ddod yn ôl.", cy_review: true }
+      - { en: "{lost_year} is the year we all say we nearly lost faith. You came back, and you did better. Credit where it is due.", cy: "{lost_year} yw'r flwyddyn y dywedwn ni i gyd i ni bron â cholli ffydd. Daethoch yn ôl, a gwneud yn well. Clod lle mae clod yn ddyledus.", cy_review: true }
+      - { en: "They took the pen off you in {lost_year}. It was fair. The pen was in better hands after.", cy: "Cymerwyd y gorlan oddi arnoch yn {lost_year}. Roedd yn deg. Roedd y gorlan mewn dwylo gwell wedyn.", cy_review: true }
+    repairs:
+      - { en: "The repairs you did not put off, from {year} on, are the reason the pipes held. Nobody sees that sort of thing.", cy: "Yr atgyweiriadau na ohiriwyd gennych, o {year} ymlaen, yw'r rheswm i'r pibau ddal. Does neb yn gweld y math yna o beth.", cy_review: true }
+      - { en: "You mended things in {year} that nobody would have noticed breaking. They did not break.", cy: "Trwsiwyd pethau gennych yn {year} na fyddai neb wedi sylwi eu bod yn torri. Wnaethon nhw ddim torri.", cy_review: true }
+      - { en: "The road I walked to school was dug up in {year}. I resented it then. It is a good road now.", cy: "Cloddiwyd y ffordd roeddwn i'n ei cherdded i'r ysgol yn {year}. Roeddwn i'n ei ddigio bryd hynny. Mae'n ffordd dda nawr.", cy_review: true }
+    neglect:
+      - { en: "One part of the country did not feel the lean years pay off: {thing}. Fix that and I will write you a nicer letter.", cy: "Ni theimlodd un rhan o'r wlad fod y blynyddoedd main yn talu ar eu canfed: {thing}. Trwsiwch hynny ac fe ysgrifennaf lythyr brafiach.", cy_review: true }
+      - { en: "It was not good everywhere: {thing} waited the whole time and it is waiting still.", cy: "Nid oedd yn dda ymhobman: bu {thing} yn aros drwy'r amser ac mae'n dal i aros.", cy_review: true }
+      - { en: "I should say that the thanks I owe you are not shared: {thing} has less to thank you for.", cy: "Dylwn ddweud nad yw'r diolch sy'n ddyledus i chi yn cael ei rannu: mae gan {thing} lai i ddiolch i chi amdano.", cy_review: true }
+    none:
+      - { en: "I looked for the one thing that explains it, and could not find it. I think it was just patience.", cy: "Chwiliais am yr un peth sy'n esbonio hyn, a methu dod o hyd iddo. Rwy'n meddwl mai amynedd yn unig ydoedd.", cy_review: true }
+      - { en: "It was a slow turn. No single card did it, and nobody noticed it coming.", cy: "Tro araf ydoedd. Wnaeth yr un cerdyn mohono, a sylwodd neb arno'n dod.", cy_review: true }
+      - { en: "Looking back, I cannot name what changed. I only know I would rather be here than there.", cy: "Wrth edrych yn ôl, alla i ddim enwi'r hyn a newidiodd. Gwn yn unig y byddai'n well gen i fod yma nag acw.", cy_review: true }
+  signoff:
+    - { en: "I think you knew we would thank you and she would not. For what it is worth, she has come round. Mostly.", cy: "Rwy'n credu eich bod yn gwybod y byddem ni'n diolch i chi ac na fyddai hi. Er gwybodaeth, mae hi wedi dod rownd. Gan mwyaf.", cy_review: true }
+    - { en: "I wish you could have had some of the credit while it was hard. Have it now. Diolch.", cy: "Hoffwn pe baech wedi cael peth o'r clod tra oedd hi'n anodd. Cymerwch ef nawr. Diolch.", cy_review: true }
+    - { en: "Come and look at it. Bring a coat, mind.", cy: "Dewch i edrych arno. Dewch â chot, cofiwch.", cy_review: true }
+- archetype: gift
+  title: { en: "The gift", cy: "Yr anrheg", cy_review: true }
+  salutation:
+    - { en: "{place}, 2050.", cy: "{place}, 2050.", cy_review: true }
+    - { en: "{place}, 2050. I am writing this in Welsh first.", cy: "{place}, 2050. Dw i'n ysgrifennu hwn yn Gymraeg yn gyntaf.", cy_review: true }
+    - { en: "{place}, 2050. To you, with thanks.", cy: "{place}, 2050. Atoch chi, gyda diolch.", cy_review: true }
+  lived:
+    - { en: "My parents talk about your years as the time the town got its breath back. Work, warmth, and a bus that came.", cy: "Mae fy rhieni'n sôn am eich blynyddoedd chi fel yr amser y cafodd y dref ei hanadl yn ôl. Gwaith, cynhesrwydd, a bws a ddaeth.", cy_review: true }
+    - { en: "It was not easy. {worst_year} was rough and they say so. But they speak of the whole stretch as theirs, which is rare.", cy: "Doedd hi ddim yn hawdd. Roedd {worst_year} yn arw ac maen nhw'n dweud hynny. Ond maen nhw'n sôn am yr holl gyfnod fel eu cyfnod nhw, sy'n anghyffredin.", cy_review: true }
+    - { en: "I grew up in a good time and was told so. I did not believe it until I was old enough to compare.", cy: "Cefais fy magu mewn cyfnod da a dywedwyd hynny wrtha i. Doeddwn i ddim yn ei gredu nes i mi fod yn ddigon hen i gymharu.", cy_review: true }
+  left:
+    - { en: "There is a home I can afford on the street I grew up on. The hills behind hold water again.", cy: "Mae yna gartref y gallaf ei fforddio ar y stryd y cefais fy magu arni. Mae'r bryniau y tu cefn yn dal dŵr eto.", cy_review: true }
+    - { en: "The river runs clean, the school is full, and my children will not have to leave to be taken seriously.", cy: "Mae'r afon yn lân, mae'r ysgol yn llawn, ac ni fydd rhaid i'm plant adael i gael eu cymryd o ddifrif.", cy_review: true }
+    - { en: "You left the land better than you found it and, as far as I can see, you left the people better too.", cy: "Gadawsoch y tir yn well nag y daethoch o hyd iddo ac, hyd y gallaf weld, gadawsoch y bobl yn well hefyd.", cy_review: true }
+  named:
+    debt:
+      - { en: "You left one debt and I can see what it bought. That is more than most can say.", cy: "Gadawsoch un ddyled a gallaf weld beth a brynodd. Mae hynny'n fwy nag y gall y rhan fwyaf ei ddweud.", cy_review: true }
+      - { en: "The loan from {year} is small now, and what it built stands where I can see it from my window.", cy: "Mae'r benthyciad o {year} yn fach erbyn hyn, ac mae'r hyn a adeiladodd yn sefyll lle gallaf ei weld o fy ffenest.", cy_review: true }
+      - { en: "I know about the borrowing in {year}. I would borrow for that again.", cy: "Gwn am y benthyca yn {year}. Byddwn i'n benthyca ar gyfer hynny eto.", cy_review: true }
+    tip:
+      - { en: "They made the tips safe. I never knew the hill as anything but green. My grandmother says that is the gift.", cy: "Gwnaethon nhw'r tomenni'n ddiogel. Wnes i erioed adnabod y bryn fel dim ond gwyrdd. Mae fy nain yn dweud mai dyna'r anrheg.", cy_review: true }
+      - { en: "The tip above the school is a park. I walked my daughter up it last Sunday and did not think about it once.", cy: "Parc yw'r domen uwchben yr ysgol. Cerddais fy merch i fyny hi ddydd Sul diwethaf heb feddwl amdani unwaith.", cy_review: true }
+      - { en: "You chose which tips to do and you chose well. The ones that mattered are the ones that are green.", cy: "Dewisoch pa domenni i'w gwneud a dewisoch yn dda. Y rhai a oedd yn bwysig yw'r rhai sy'n wyrdd.", cy_review: true }
+    arrival:
+      - { en: "{thing} arrived in {year}. You had gone by then, but it was your doing, and we all know it.", cy: "Cyrhaeddodd {thing} yn {year}. Roeddech chi wedi mynd erbyn hynny, ond eich gwaith chi ydoedd, ac mae pawb ohonon ni'n gwybod hynny.", cy_review: true }
+      - { en: "I was a child when {thing} was started and I am an adult who uses it. It came in {year}. Diolch.", cy: "Roeddwn i'n blentyn pan ddechreuwyd {thing} ac rwy'n oedolyn sy'n ei ddefnyddio. Daeth yn {year}. Diolch.", cy_review: true }
+      - { en: "The best thing came late: {thing}, in {year}. Whoever told you it could not be done at once was nearly right.", cy: "Daeth y peth gorau'n hwyr: {thing}, yn {year}. Roedd pwy bynnag a ddywedodd wrthych na ellid ei wneud i gyd ar unwaith bron yn iawn.", cy_review: true }
+    pledge:
+      - { en: "You made us a promise: {thing}. You kept it. People here will tell you so for a long time.", cy: "Gwnaethoch addewid i ni: {thing}. Fe'i cadwoch. Bydd pobl yma'n dweud hynny wrthych am amser hir.", cy_review: true }
+      - { en: "{thing}. That was the promise, and I am standing in the middle of it.", cy: "{thing}. Dyna oedd yr addewid, ac rwy'n sefyll yn ei ganol.", cy_review: true }
+      - { en: "What you said you would do was {thing}. Nobody says that about promises any more. They do about yours.", cy: "Yr hyn a ddywedoch y byddech yn ei wneud oedd {thing}. Does neb yn dweud hynny am addewidion bellach. Maen nhw'n ei ddweud am eich addewid chi.", cy_review: true }
+    lost_term:
+      - { en: "You lost the seat in {lost_year}, and the work carried on without you. That says something good about how it was built.", cy: "Collwyd y sedd gennych yn {lost_year}, ac aeth y gwaith yn ei flaen hebddoch. Mae hynny'n dweud rhywbeth da am sut yr adeiladwyd ef.", cy_review: true }
+      - { en: "{lost_year} was the gap. Someone minded the shop. When you came back there was a shop to come back to.", cy: "{lost_year} oedd y bwlch. Roedd rhywun yn gofalu am y siop. Pan ddaethoch yn ôl roedd siop i ddod yn ôl ati.", cy_review: true }
+      - { en: "I have heard about {lost_year} from three people, each differently. All of them end by saying you came back.", cy: "Dw i wedi clywed am {lost_year} gan dri pherson, pob un yn wahanol. Mae pob un yn gorffen drwy ddweud i chi ddod yn ôl.", cy_review: true }
+    repairs:
+      - { en: "You kept up the pipes, the roads and the walls from {year} on. Boring work. It is why we are dry.", cy: "Cadwoch y pibau, y ffyrdd a'r waliau mewn cyflwr o {year} ymlaen. Gwaith diflas. Dyna pam rydyn ni'n sych.", cy_review: true }
+      - { en: "Nothing you did was grander than the repairs of {year}. Nothing was more useful.", cy: "Doedd dim a wnaethoch yn fwy mawreddog nag atgyweiriadau {year}. Doedd dim yn fwy defnyddiol.", cy_review: true }
+      - { en: "The year {year} you mended everything, and we have not had a bad winter since. Thank whoever signed off.", cy: "Yn {year} trwsioch bopeth, ac ni chawsom aeaf gwael ers hynny. Diolchwch i bwy bynnag a lofnododd.", cy_review: true }
+    neglect:
+      - { en: "It is not perfect. {thing} had a smaller share, and I would not want you to think nobody noticed.", cy: "Dydy hi ddim yn berffaith. Cafodd {thing} gyfran lai, ac ni fyddwn eisiau i chi feddwl na sylwodd neb.", cy_review: true }
+      - { en: "One more thing, because you would want to know: {thing} did not feel the gift as much as we did.", cy: "Un peth arall, gan y byddech eisiau gwybod: ni theimlodd {thing} yr anrheg gymaint â ni.", cy_review: true }
+      - { en: "Most of us did well. {thing} did not. I only say it so the next one knows.", cy: "Gwnaeth y rhan fwyaf ohonon ni'n dda. Wnaeth {thing} ddim. Dw i ond yn dweud er mwyn i'r nesaf wybod.", cy_review: true }
+    none:
+      - { en: "There is no one thing I can point to. There is only a long run of choices that came out right.", cy: "Does dim un peth y gallaf bwyntio ato. Dim ond rhediad hir o ddewisiadau a drodd allan yn iawn.", cy_review: true }
+      - { en: "I could not pick a favourite. That is the strange part: it all held.", cy: "Allwn i ddim dewis hoff beth. Dyna'r rhan ryfedd: daliodd y cyfan.", cy_review: true }
+      - { en: "Ask me what you did and I say: you looked after it. Everything else comes from that.", cy: "Gofynnwch i mi beth a wnaethoch a dywedaf: gofalu amdano. Daw popeth arall o hynny.", cy_review: true }
+  signoff:
+    - { en: "Whoever told you it could not all be done at once was nearly right. Diolch.", cy: "Roedd pwy bynnag a ddywedodd wrthych na ellid ei wneud i gyd ar unwaith bron yn iawn. Diolch.", cy_review: true }
+    - { en: "Come and see it. I will put the kettle on, and tell you which bits were yours.", cy: "Dewch i'w weld. Rhoddaf y tegell ymlaen, a dweud wrthych pa ddarnau oedd eich rhai chi.", cy_review: true }
+    - { en: "Thank you. I do not say that easily, but there is nothing else to say.", cy: "Diolch. Dw i ddim yn dweud hynny'n hawdd, ond does dim byd arall i'w ddweud.", cy_review: true }
+- archetype: hollow
+  title: { en: "The hollow years", cy: "Y blynyddoedd gwag", cy_review: true }
+  salutation:
+    - { en: "{place}, 2050.", cy: "{place}, 2050.", cy_review: true }
+    - { en: "{place}, 2050. I have tried to write this fairly.", cy: "{place}, 2050. Rwyf wedi ceisio ysgrifennu hwn yn deg.", cy_review: true }
+    - { en: "{place}, 2050. To whoever had the pen.", cy: "{place}, 2050. At bwy bynnag oedd â'r gorlan.", cy_review: true }
+  lived:
+    - { en: "The storms were not your doing, nor the downturn. {worst_year} would have beaten anybody.", cy: "Nid chi achosodd y stormydd, na'r dirwasgiad. Byddai {worst_year} wedi trechu unrhyw un.", cy_review: true }
+    - { en: "My parents do not talk about those years. When they do it is about money, and who went first.", cy: "Dydy fy rhieni ddim yn sôn am y blynyddoedd hynny. Pan maen nhw'n gwneud, mae'n ymwneud ag arian, a phwy aeth gyntaf.", cy_review: true }
+    - { en: "I was a child in the middle of it. I remember cold rooms and quiet adults, and nothing you said.", cy: "Roeddwn i'n blentyn yng nghanol y cyfan. Dw i'n cofio ystafelloedd oer ac oedolion tawel, a dim byd a ddywedoch chi.", cy_review: true }
+  left:
+    - { en: "The repairs put off are ours now, twice the size, and I cannot find the thing you built instead.", cy: "Ni sydd biau'r atgyweiriadau a ohiriwyd bellach, dwywaith y maint, ac alla i ddim dod o hyd i'r hyn a adeiladwyd gennych yn eu lle.", cy_review: true }
+    - { en: "We inherited a country that was thinner than the one you were given. Fewer of us, fewer shops, less water.", cy: "Etifeddon ni wlad a oedd yn deneuach na'r un a gawsoch. Llai ohonon ni, llai o siopau, llai o ddŵr.", cy_review: true }
+    - { en: "Everything seems to have been postponed into our lifetime. I am sorry to be blunt. I have been saving the bluntness.", cy: "Mae'n ymddangos bod popeth wedi'i ohirio i'n hoes ni. Mae'n ddrwg gen i fod mor blaen. Rydw i wedi cadw'r plaendra.", cy_review: true }
+  named:
+    debt:
+      - { en: "There is the debt from {year}. It is a small number now, and a large worry.", cy: "Dyna'r ddyled o {year}. Mae'n rhif bach nawr, a phryder mawr.", cy_review: true }
+      - { en: "The loan you took in {year} is still on us, and I have looked hard for what it built.", cy: "Mae'r benthyciad a gymerwyd gennych yn {year} yn dal arnom, ac rwyf wedi chwilio'n galed am yr hyn a adeiladodd.", cy_review: true }
+      - { en: "In {year} you borrowed. I would like to see the receipt.", cy: "Yn {year} fe fenthycoch. Hoffwn weld y dderbynneb.", cy_review: true }
+    tip:
+      - { en: "The tips above the school are still there. We have drawn a line on the wall of the classroom to show where the water goes.", cy: "Mae'r tomenni uwchben yr ysgol yno o hyd. Rydyn ni wedi tynnu llinell ar wal yr ystafell ddosbarth i ddangos ble mae'r dŵr yn mynd.", cy_review: true }
+      - { en: "Nobody dealt with the tip. We watch the weather more than we would like.", cy: "Ni wnaeth neb ddelio â'r domen. Rydyn ni'n gwylio'r tywydd yn fwy nag y dymunwn.", cy_review: true }
+      - { en: "The hill is where it was. So are we. The only change is that we are older and the clay is wetter.", cy: "Mae'r bryn lle'r oedd. Felly hefyd ni. Yr unig newid yw ein bod yn hŷn a'r clai'n wlypach.", cy_review: true }
+    arrival:
+      - { en: "Even the good thing, {thing}, only arrived in {year}, and by then it was too small to notice.", cy: "Hyd yn oed y peth da, {thing}, dim ond yn {year} y cyrhaeddodd, ac erbyn hynny roedd yn rhy fach i sylwi arno.", cy_review: true }
+      - { en: "{thing} turned up in {year}. It was something. I will not pretend it was enough.", cy: "Cyrhaeddodd {thing} yn {year}. Roedd yn rhywbeth. Wnaf i ddim cymryd arnaf ei fod yn ddigon.", cy_review: true }
+      - { en: "There was {thing}, in {year}. I would like to say it changed things. It did not, yet.", cy: "Roedd {thing}, yn {year}. Hoffwn ddweud iddo newid pethau. Ni wnaeth, eto.", cy_review: true }
+    pledge:
+      - { en: "You made us a promise: {thing}. I would like to know what you thought it would cost to keep.", cy: "Gwnaethoch addewid i ni: {thing}. Hoffwn wybod beth oeddech chi'n meddwl fyddai'n ei gostio i'w gadw.", cy_review: true }
+      - { en: "The promise was {thing}. It is the only thing anyone here remembers about you.", cy: "Yr addewid oedd {thing}. Dyma'r unig beth mae unrhyw un yma'n ei gofio amdanoch.", cy_review: true }
+      - { en: "We had one promise: {thing}. We believed it. That is the part I find hard to forgive.", cy: "Roedd gennym un addewid: {thing}. Roedden ni'n ei gredu. Dyna'r rhan dw i'n ei chael hi'n anodd ei maddau.", cy_review: true }
+    lost_term:
+      - { en: "The term you lost the seat, in {lost_year}, was not the worst of them. I would like to know what you thought you were saving it for.", cy: "Nid y tymor y collwyd y sedd, yn {lost_year}, oedd y gwaethaf ohonyn nhw. Hoffwn wybod am beth oeddech chi'n meddwl eich bod yn ei gadw.", cy_review: true }
+      - { en: "I do not blame you for {lost_year}. I blame the years before it, which are the ones that cost you the seat.", cy: "Dw i ddim yn eich beio am {lost_year}. Rwy'n beio'r blynyddoedd cyn hynny, sef y rhai a gostiodd y sedd i chi.", cy_review: true }
+      - { en: "They took the pen off you in {lost_year}. By then there was little left to write.", cy: "Cymerwyd y gorlan oddi arnoch yn {lost_year}. Erbyn hynny roedd ychydig ar ôl i'w ysgrifennu.", cy_review: true }
+    repairs:
+      - { en: "The repairs you put off in {year} are ours now, twice the size, and I cannot find the thing you built instead.", cy: "Mae'r atgyweiriadau a ohiriwyd gennych yn {year} yn eiddo i ni bellach, dwywaith y maint, ac alla i ddim dod o hyd i'r hyn a adeiladwyd gennych yn eu lle.", cy_review: true }
+      - { en: "The pipes failed in the winter after {year}. They had been failing in plain sight.", cy: "Methodd y pibau yn y gaeaf ar ôl {year}. Roedden nhw wedi bod yn methu o flaen pawb.", cy_review: true }
+      - { en: "Each pothole is a date. The big ones say {year}.", cy: "Mae pob twll yn y ffordd yn ddyddiad. Mae'r rhai mawr yn dweud {year}.", cy_review: true }
+    neglect:
+      - { en: "Some places were hit harder, and {thing} was one of them. Nobody sent a card for it.", cy: "Cafodd rhai lleoedd eu taro'n galetach, ac roedd {thing} yn un ohonyn nhw. Ni anfonodd neb gerdyn ar ei gyfer.", cy_review: true }
+      - { en: "{thing} had less than the rest, and the rest had little. I do not know how you chose.", cy: "Cafodd {thing} lai na'r gweddill, ac ychydig a gafodd y gweddill. Wn i ddim sut y dewisoch.", cy_review: true }
+      - { en: "A whole part of the country was left to itself: {thing}. It learned to manage.", cy: "Gadawyd rhan gyfan o'r wlad iddi hi ei hun: {thing}. Dysgodd ymdopi.", cy_review: true }
+    none:
+      - { en: "I cannot find the one thing. That is the worst of it: no single act, just a long absence.", cy: "Alla i ddim dod o hyd i'r un peth. Dyna'r gwaethaf: dim un weithred, dim ond absenoldeb hir.", cy_review: true }
+      - { en: "There is nothing I can name that you did. That is the complaint.", cy: "Does dim y gallaf ei enwi a wnaethoch. Dyna'r gŵyn.", cy_review: true }
+      - { en: "If I had to say what you left, I would say a space the shape of a plan.", cy: "Pe bai rhaid i mi ddweud beth a adawoch, byddwn yn dweud bwlch ar ffurf cynllun.", cy_review: true }
+  signoff:
+    - { en: "I would like to know what you thought you were saving it for.", cy: "Hoffwn wybod am beth oeddech chi'n meddwl eich bod yn ei gadw.", cy_review: true }
+    - { en: "I have tried to write this fairly. I hope the next one has an easier letter to write.", cy: "Rwyf wedi ceisio ysgrifennu hwn yn deg. Gobeithio y caiff y nesaf lythyr haws i'w ysgrifennu.", cy_review: true }
+    - { en: "We will manage. We always have. I would have liked not to have to.", cy: "Byddwn yn ymdopi. Rydyn ni bob amser wedi gwneud. Byddwn wedi hoffi peidio â gorfod.", cy_review: true }
+- archetype: steady
+  title: { en: "Held steady", cy: "Dal yn gyson", cy_review: true }
+  salutation:
+    - { en: "{place}, 2050.", cy: "{place}, 2050.", cy_review: true }
+    - { en: "{place}, 2050. A quiet letter.", cy: "{place}, 2050. Llythyr tawel.", cy_review: true }
+    - { en: "{place}, 2050. To you.", cy: "{place}, 2050. Atoch chi.", cy_review: true }
+  lived:
+    - { en: "My parents say your years were fine. Not the best, not the worst. {worst_year} was the one with the long faces.", cy: "Mae fy rhieni'n dweud bod eich blynyddoedd chi'n iawn. Nid y gorau, nid y gwaethaf. {worst_year} oedd yr un â'r wynebau hir.", cy_review: true }
+    - { en: "It was ordinary. I mean that kindly. Nobody went hungry, nobody danced.", cy: "Roedd yn gyffredin. Dw i'n golygu hynny'n garedig. Aeth neb yn llwglyd, ni ddawnsiodd neb.", cy_review: true }
+    - { en: "Things stayed about the same, which people tell me is an achievement given the weather.", cy: "Arhosodd pethau fwy neu lai yr un fath, sydd, medd pobl wrtha i, yn gamp o ystyried y tywydd.", cy_review: true }
+  left:
+    - { en: "You handed on roughly what you were handed, and having seen the weather you had, I know that was work.", cy: "Trosglwyddoch fwy neu lai yr hyn a gawsoch, ac wedi gweld y tywydd a gawsoch, gwn fod hynny'n waith.", cy_review: true }
+    - { en: "What I inherited is the same sort of country with a few repairs done and a few not. I can live there.", cy: "Yr hyn a etifeddais yw'r un math o wlad gyda rhai atgyweiriadau wedi'u gwneud a rhai heb. Gallaf fyw yno.", cy_review: true }
+    - { en: "The farms are thinner than they were. The towns hold. Nothing here is broken and nothing is new.", cy: "Mae'r ffermydd yn deneuach nag oeddent. Mae'r trefi'n dal. Does dim yma wedi torri a does dim yn newydd.", cy_review: true }
+  named:
+    debt:
+      - { en: "There is a small debt from {year}. Nobody curses it and nobody celebrates it.", cy: "Mae dyled fach o {year}. Does neb yn ei melltithio a does neb yn ei dathlu.", cy_review: true }
+      - { en: "The loan of {year} is about the size of an ordinary worry. We carry it.", cy: "Mae benthyciad {year} tua maint pryder cyffredin. Rydyn ni'n ei gario.", cy_review: true }
+      - { en: "We still pay a little for {year}. It is in the budget like the bins.", cy: "Rydyn ni'n dal i dalu ychydig am {year}. Mae yn y gyllideb fel y biniau.", cy_review: true }
+    tip:
+      - { en: "Some of the tips got done, some did not. The school is under one of the ones that did not. We keep an eye on it.", cy: "Cafodd rhai o'r tomenni eu gwneud, rhai heb. Mae'r ysgol o dan un o'r rhai na chafodd. Rydyn ni'n cadw llygad arni.", cy_review: true }
+      - { en: "The tip nearest the school was made safe. The one behind the chapel was not. Make of that what you will.", cy: "Gwnaed y domen agosaf at yr ysgol yn ddiogel. Yr un tu ôl i'r capel ddim. Gwnewch beth a fynnwch o hynny.", cy_review: true }
+      - { en: "They did three of the tips. I know there were more than three. I am not going to complain.", cy: "Gwnaethon nhw dair o'r tomenni. Gwn fod mwy na thair. Dw i ddim am gwyno.", cy_review: true }
+    arrival:
+      - { en: "{thing} came good in {year}, after you had gone. It is one of the few things here I do not worry about.", cy: "Daeth {thing} yn dda yn {year}, ar ôl i chi fynd. Mae'n un o'r ychydig bethau yma dw i ddim yn poeni amdanyn nhw.", cy_review: true }
+      - { en: "The thing that came after you was {thing}, in {year}. I would not call it a gift. I would call it useful.", cy: "Y peth a ddaeth ar eich ôl oedd {thing}, yn {year}. Fyddwn i ddim yn ei alw'n anrheg. Byddwn yn ei alw'n ddefnyddiol.", cy_review: true }
+      - { en: "{thing} landed in {year}. A good piece of work, quietly done, as the best of it tends to be.", cy: "Glaniodd {thing} yn {year}. Darn da o waith, wedi'i wneud yn dawel, fel y mae'r gorau yn tueddu i fod.", cy_review: true }
+    pledge:
+      - { en: "You made us a promise: {thing}. You kept half of it. I will not tell you which half.", cy: "Gwnaethoch addewid i ni: {thing}. Cadwoch hanner ohono. Wna i ddim dweud pa hanner.", cy_review: true }
+      - { en: "You promised {thing}. It happened in a way. Wales has a long history of in a way.", cy: "Addawoch {thing}. Digwyddodd mewn ffordd. Mae gan Gymru hanes hir o mewn ffordd.", cy_review: true }
+      - { en: "There was a promise, {thing}. People remember it with a shrug, which is how people here remember most things.", cy: "Roedd addewid, {thing}. Mae pobl yn ei gofio â chwyrnu, sef sut mae pobl yma'n cofio'r rhan fwyaf o bethau.", cy_review: true }
+    lost_term:
+      - { en: "You lost the seat in {lost_year}. It did not seem to change as much as people expected.", cy: "Collwyd y sedd gennych yn {lost_year}. Doedd dim llawer wedi newid, yn groes i'r disgwyl.", cy_review: true }
+      - { en: "The year {lost_year} you stepped back. The place did not fall down. I do not know whether that is good news.", cy: "Yn {lost_year} camoch yn ôl. Ni syrthiodd y lle. Wn i ddim ai newyddion da yw hynny.", cy_review: true }
+      - { en: "There was a gap in {lost_year}. Everyone says it was fine. Everyone says that.", cy: "Roedd bwlch yn {lost_year}. Mae pawb yn dweud ei fod yn iawn. Mae pawb yn dweud hynny.", cy_review: true }
+    repairs:
+      - { en: "Some repairs you put off in {year} are now ours. They are not twice the size. They are the size they were.", cy: "Mae rhai atgyweiriadau a ohiriwyd gennych yn {year} yn eiddo i ni nawr. Dydyn nhw ddim ddwywaith y maint. Maen nhw'r maint oeddent.", cy_review: true }
+      - { en: "You mended some things and left others in {year}. I could not tell you the pattern.", cy: "Trwsioch rai pethau a gadael eraill yn {year}. Alla i ddim dweud wrthych beth oedd y patrwm.", cy_review: true }
+      - { en: "A road gets patched, a pipe gets forgotten. The year was {year}. That is how it works.", cy: "Mae ffordd yn cael ei chlytio, mae pibell yn cael ei hanghofio. Y flwyddyn oedd {year}. Dyna sut mae'n gweithio.", cy_review: true }
+    neglect:
+      - { en: "One part of the country did not get much: {thing}. They manage, and say little. I would like it noted.", cy: "Ni chafodd un rhan o'r wlad lawer: {thing}. Maen nhw'n ymdopi, ac yn dweud ychydig. Hoffwn i hynny gael ei nodi.", cy_review: true }
+      - { en: "Not everywhere was the same: {thing} was quieter than the rest. You may not have heard why.", cy: "Doedd ddim ymhobman yr un fath: roedd {thing} yn dawelach na'r gweddill. Efallai na chlywsoch pam.", cy_review: true }
+      - { en: "In {thing} they say the plans stopped before they got there. I am only passing it on.", cy: "Yn {thing} maen nhw'n dweud i'r cynlluniau stopio cyn cyrraedd. Dw i ddim ond yn ei basio ymlaen.", cy_review: true }
+    none:
+      - { en: "I could name no single thing you did, which is how it feels when things hold.", cy: "Allwn i ddim enwi un peth a wnaethoch, sef sut mae'n teimlo pan fydd pethau'n dal.", cy_review: true }
+      - { en: "Nothing stands out. In a hard century, that may be the highest praise there is.", cy: "Does dim yn sefyll allan. Mewn canrif galed, dyna efallai'r ganmoliaeth uchaf sydd.", cy_review: true }
+      - { en: "There was no big thing. There was a long middle, and we are standing in it.", cy: "Doedd dim un peth mawr. Roedd canol hir, ac rydyn ni'n sefyll ynddo.", cy_review: true }
+  signoff:
+    - { en: "Nobody here curses your name or blesses it. I would have liked you to want one thing badly.", cy: "Does neb yma'n melltithio eich enw na'i fendithio. Byddwn wedi hoffi i chi fod eisiau un peth yn fawr.", cy_review: true }
+    - { en: "Fair enough. Not a bad hand to have played. Next one, want something.", cy: "Digon teg. Nid llaw wael i'w chwarae. Y nesaf, byddwch eisiau rhywbeth.", cy_review: true }
+    - { en: "Thank you for not breaking it. I mean that sincerely.", cy: "Diolch am beidio â'i dorri. Dw i'n ei olygu'n ddiffuant.", cy_review: true }
+- archetype: uneven
+  title: { en: "The uneven hand", cy: "Y llaw anwastad", cy_review: true }
+  salutation:
+    - { en: "{place}, 2050.", cy: "{place}, 2050.", cy_review: true }
+    - { en: "{place}, 2050. I thought you should hear it from here.", cy: "{place}, 2050. Roeddwn i'n meddwl y dylech glywed hyn o fan hyn.", cy_review: true }
+    - { en: "{place}, 2050. To you, from the other side.", cy: "{place}, 2050. Atoch chi, o'r ochr arall.", cy_review: true }
+  lived:
+    - { en: "I have seen the south and it is as fine as they say. I am glad for them. Here it was a different decade.", cy: "Rwyf wedi gweld y de ac mae mor dda ag y dywedant. Rwy'n falch drostyn nhw. Yma roedd yn ddegawd gwahanol.", cy_review: true }
+    - { en: "Some of my friends talk about your years as the best they had. Mine were {worst_year}, and the wrong end of the map.", cy: "Mae rhai o fy ffrindiau yn sôn am eich blynyddoedd chi fel y gorau a gawsant. Fy rhai i oedd {worst_year}, a phen anghywir y map.", cy_review: true }
+    - { en: "There were two stories told about your years. I heard the one that went quiet when I entered the room.", cy: "Dywedwyd dwy stori am eich blynyddoedd. Clywais yr un a dawelodd pan es i mewn i'r ystafell.", cy_review: true }
+  left:
+    - { en: "The country you left is richer and greener than the one you found. It is also two countries.", cy: "Mae'r wlad a adawsoch yn gyfoethocach ac yn wyrddach na'r un y daethoch o hyd iddi. Mae hefyd yn ddwy wlad.", cy_review: true }
+    - { en: "What you built stands tall in some places, and the places it stands tall are not where I live.", cy: "Mae'r hyn a adeiladwyd gennych yn sefyll yn dal mewn rhai mannau, a'r mannau hynny nid lle dw i'n byw.", cy_review: true }
+    - { en: "There was growth. It went to the places that already had it. We are the people who watched it go.", cy: "Roedd twf. Aeth i'r mannau a oedd eisoes ag ef. Ni yw'r bobl a'i gwyliodd yn mynd.", cy_review: true }
+  named:
+    debt:
+      - { en: "There is a debt from {year}. I am told it paid for things I have not seen.", cy: "Mae dyled o {year}. Dywedir wrtha i iddi dalu am bethau nad ydw i wedi'u gweld.", cy_review: true }
+      - { en: "The borrowing in {year} was spent elsewhere. The interest is spread evenly, which is a kind of joke.", cy: "Gwariwyd y benthyca yn {year} mewn mannau eraill. Mae'r llog wedi'i wasgaru'n gyfartal, sy'n fath o jôc.", cy_review: true }
+      - { en: "We share the loan of {year} equally. We did not share what it bought.", cy: "Rydyn ni'n rhannu benthyciad {year} yn gyfartal. Wnaethon ni ddim rhannu'r hyn a brynodd.", cy_review: true }
+    tip:
+      - { en: "The tips above the school are what the rest of the country forgot about. We have not.", cy: "Y tomenni uwchben yr ysgol yw'r hyn a anghofiodd gweddill y wlad amdano. Dydyn ni ddim wedi.", cy_review: true }
+      - { en: "Some tips were done. The ones by our school were not. I can see mine from the classroom door.", cy: "Gwnaed rhai tomenni. Y rhai ger ein hysgol ni ddim. Gallaf weld fy un i o ddrws yr ystafell ddosbarth.", cy_review: true }
+      - { en: "You chose which tips to do. Looking at the map, I see how it came out. I live under what was left.", cy: "Dewisoch pa domenni i'w gwneud. Wrth edrych ar y map, gwelaf sut y daeth allan. Rwy'n byw o dan yr hyn a adawyd.", cy_review: true }
+    arrival:
+      - { en: "{thing} came in {year}. It reached the south first. It has not reached us yet, though they say it will.", cy: "Cyrhaeddodd {thing} yn {year}. Cyrhaeddodd y de yn gyntaf. Dyw e ddim wedi'n cyrraedd ni eto, er eu bod yn dweud y bydd.", cy_review: true }
+      - { en: "There is {thing} now, since {year}. It is not where I need it.", cy: "Mae {thing} nawr, ers {year}. Nid yw lle mae ei angen arna i.", cy_review: true }
+      - { en: "A good thing came late: {thing}, in {year}. It came to a different valley.", cy: "Daeth peth da'n hwyr: {thing}, yn {year}. Daeth i gwm gwahanol.", cy_review: true }
+    pledge:
+      - { en: "You promised us this: {thing}. We heard it on the radio. We are still looking for it.", cy: "Addawoch hyn i ni: {thing}. Clywsom ef ar y radio. Rydyn ni'n dal i chwilio amdano.", cy_review: true }
+      - { en: "The promise was {thing}. It was a good promise. It was made, I think, to somewhere else.", cy: "Yr addewid oedd {thing}. Roedd yn addewid da. Fe'i gwnaed, rwy'n meddwl, i rywle arall.", cy_review: true }
+      - { en: "{thing}. That was the promise. I am not saying you lied. I am saying we are still waiting.", cy: "{thing}. Dyna oedd yr addewid. Dw i ddim yn dweud eich bod wedi dweud celwydd. Rwy'n dweud ein bod yn dal i aros.", cy_review: true }
+    lost_term:
+      - { en: "When you lost the seat in {lost_year}, nobody here noticed. That tells you how far the seat was.", cy: "Pan gollwyd y sedd gennych yn {lost_year}, ni sylwodd neb yma. Mae hynny'n dweud pa mor bell oedd y sedd.", cy_review: true }
+      - { en: "{lost_year}. I knew the date because the radio told me. We would not have known otherwise.", cy: "{lost_year}. Roeddwn i'n gwybod y dyddiad am i'r radio ddweud wrtha i. Fyddem ni ddim wedi gwybod fel arall.", cy_review: true }
+      - { en: "In {lost_year} the seat went. In the places that had done well, I am told that was a shock. Here it was weather.", cy: "Yn {lost_year} aeth y sedd. Yn y mannau a oedd wedi gwneud yn dda, dywedir wrtha i fod hynny'n sioc. Yma, tywydd ydoedd.", cy_review: true }
+    repairs:
+      - { en: "The repairs put off in {year} landed first on those with the least. That was us.", cy: "Glaniodd yr atgyweiriadau a ohiriwyd yn {year} yn gyntaf ar y rhai â'r lleiaf. Ni oedd y rheiny.", cy_review: true }
+      - { en: "Roads, pipes, walls. In {year} you chose what to leave. We were what you left.", cy: "Ffyrdd, pibau, waliau. Yn {year} dewisoch beth i'w adael. Ni oedd yr hyn a adawyd gennych.", cy_review: true }
+      - { en: "I have the numbers from {year}. Where it is cheap to fix it was fixed. Where it is dear it was not.", cy: "Mae gen i'r rhifau o {year}. Lle mae'n rhad i'w drwsio fe'i trwsiwyd. Lle mae'n ddrud, ni chafodd.", cy_review: true }
+    neglect:
+      - { en: "We waited for a card that never came north. I mean {thing}, if it was not clear.", cy: "Arhoson ni am gerdyn na ddaeth byth i'r gogledd. Rwy'n golygu {thing}, rhag ofn nad oedd yn glir.", cy_review: true }
+      - { en: "{thing}. That is where I am writing from. It was never the headline.", cy: "{thing}. Dyna lle dw i'n ysgrifennu ohono. Nid oedd byth yn y pennawd.", cy_review: true }
+      - { en: "There is a part of the country called {thing}. You may have heard of it. It has heard a lot about you.", cy: "Mae rhan o'r wlad o'r enw {thing}. Efallai eich bod wedi clywed amdani. Mae wedi clywed llawer amdanoch chi.", cy_review: true }
+    none:
+      - { en: "I cannot name one thing. I can name the pattern: the gap between us and them has got wider.", cy: "Alla i ddim enwi un peth. Gallaf enwi'r patrwm: mae'r bwlch rhyngom ni a nhw wedi lledu.", cy_review: true }
+      - { en: "No single act did this. A hundred small decisions did, each looking fair on its own.", cy: "Wnaeth yr un weithred hyn. Gwnaeth cant o benderfyniadau bach, pob un yn edrych yn deg ar ei ben ei hun.", cy_review: true }
+      - { en: "Nothing to point at, and that is why it is hard to fix. It is just where the money went.", cy: "Dim byd i bwyntio ato, a dyna pam mae'n anodd ei drwsio. Dyna'n syml lle'r aeth yr arian.", cy_review: true }
+  signoff:
+    - { en: "Up here we waited for something that never came north. I thought you should hear it from the other one.", cy: "Yma fe arhoson ni am rywbeth na ddaeth byth i'r gogledd. Roeddwn i'n meddwl y dylech glywed hyn gan y llall.", cy_review: true }
+    - { en: "I do not hate the south. I would like to be on the map too.", cy: "Dw i ddim yn casáu'r de. Hoffwn fod ar y map hefyd.", cy_review: true }
+    - { en: "Come and see where it is quiet. You will know it when you see it.", cy: "Dewch i weld lle mae'n dawel. Fe'i hadnabyddwch pan fyddwch yn ei weld.", cy_review: true }
