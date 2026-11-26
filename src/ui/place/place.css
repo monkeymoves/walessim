@@ -1,0 +1,108 @@
+/* Place visits: the board on the rail, the below card and rule card on the stage. */
+
+.pl-visit { display: flex; flex-direction: column; gap: 10px; height: 100%; min-height: 0; }
+.pl-board { padding: 14px 14px 12px 16px; display: flex; flex-direction: column; gap: 8px; min-height: 0; flex: 1; overflow-y: auto; }
+.pl-head { display: grid; gap: 2px; }
+.pl-history { color: var(--ink); }
+.pl-check { font-style: italic; color: var(--thread-deep); text-decoration: underline dotted; text-underline-offset: 2px; }
+.pl-prompt { font-weight: 600; font-size: var(--size-title-3); line-height: 1.3; }
+.pl-dilemma { font-style: italic; }
+.pl-foot { padding: 10px 14px 12px; display: grid; gap: 8px; flex: none; }
+
+/* thread spools */
+.pl-spools { display: flex; align-items: center; gap: 6px; }
+.pl-spool rect { fill: var(--ink); }
+.pl-spool .wind { fill: var(--stitch); }
+.pl-spool.used .wind { fill: var(--paper-2); stroke: var(--rule-strong); stroke-width: 1; stroke-dasharray: 3 2; }
+.pl-spools .label { margin-left: 6px; }
+
+/* the ledger of tips or options */
+.pl-table-wrap { overflow-x: auto; margin: 0 -4px; }
+.pl-ledger { width: 100%; border-collapse: collapse; font-variant-numeric: var(--figures-data); }
+.pl-ledger th[scope="col"] {
+  font-size: var(--size-small); font-stretch: var(--wdth-ticket); font-weight: var(--wght-grot-strong); color: var(--ink-2);
+  text-align: left; padding: 0 4px 4px; border-bottom: 1.5px solid var(--ink); vertical-align: bottom; line-height: 1.1;
+}
+.pl-ledger th.flag, .pl-ledger td.flag { text-align: center; width: 30px; }
+.pl-rhondda .pl-ledger th[scope="row"] { min-width: 172px; }
+.pl-ledger th.num, .pl-ledger td.num { text-align: right; }
+.pl-ledger td, .pl-ledger th[scope="row"] { padding: 0 4px; border-bottom: 1px solid var(--rule); height: 28px; }
+.pl-ledger tbody tr:nth-child(5n) td, .pl-ledger tbody tr:nth-child(5n) th { border-bottom-color: var(--rule-strong); }
+.pl-ledger th[scope="row"] { font-weight: 540; text-align: left; }
+.pl-ledger tr.sel td, .pl-ledger tr.sel th { background: var(--paper-2); }
+.pl-ledger tr.sel th[scope="row"] { box-shadow: inset 3px 0 0 var(--thread); }
+.pl-ledger td.num { position: relative; white-space: nowrap; }
+.pl-bar { position: absolute; right: 4px; bottom: 3px; height: 3px; background: var(--ink); max-width: calc(100% - 8px); }
+.pl-rowbtn {
+  display: flex; align-items: center; gap: 7px; width: 100%; min-height: 26px; border: 0; background: none; padding: 0;
+  text-align: left; font-stretch: var(--wdth-label); font-weight: 540; color: var(--ink); cursor: pointer;
+}
+.pl-name { max-width: 170px; line-height: 1.15; padding: 2px 0; }
+.pl-bethesda .pl-name { white-space: normal; max-width: none; line-height: 1.2; padding: 3px 0; }
+.pl-tag {
+  flex: none; display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 3px;
+  background: var(--ink); color: var(--paper); font-size: var(--size-small); font-weight: var(--wght-grot-strong);
+}
+.pl-tag.stitched { background: var(--stitch-deep); outline: 1.5px dashed var(--paper); outline-offset: -4px; }
+.cut { display: inline-block; width: 9px; height: 9px; background: var(--ink); }
+.cut.off { background: transparent; box-shadow: inset 0 0 0 1px var(--rule-strong); }
+
+/* movement risk: a three-step marker */
+.pl-riskmark { display: inline-flex; gap: 2px; align-items: flex-end; height: 12px; }
+.pl-riskmark i { width: 4px; background: var(--rule); }
+.pl-riskmark i:nth-child(1) { height: 5px; }
+.pl-riskmark i:nth-child(2) { height: 8px; }
+.pl-riskmark i:nth-child(3) { height: 12px; }
+[data-risk="1"] .pl-riskmark i:nth-child(-n+1),
+[data-risk="2"] .pl-riskmark i:nth-child(-n+2),
+[data-risk="3"] .pl-riskmark i:nth-child(-n+3) { background: var(--ink); }
+.pl-riskline { display: flex; gap: 8px; align-items: center; }
+
+.pl-wet { font-size: var(--size-small); }
+.pl-tests-box { border-top: 1px solid var(--rule); padding-top: 6px; }
+.pl-tests-box summary { cursor: pointer; padding: 3px 0; }
+.pl-tests-list { display: grid; gap: 4px; margin: 4px 0 6px; padding-left: 14px; list-style: disc; color: var(--ink); }
+
+/* the below card and the rule card float on the stage */
+.pl-below, .pl-rule {
+  position: absolute; left: 14px; bottom: 14px; width: 320px; max-height: calc(100% - 28px); overflow-y: auto; z-index: 5;
+  padding: 12px 16px 14px; display: grid; gap: 7px; align-content: start;
+}
+.pl-rule { left: 348px; width: 300px; }
+.pl-below-head { display: flex; align-items: center; gap: 10px; }
+.pl-below-head h3 { flex: 1; }
+.pl-facts { display: grid; grid-template-columns: 9.5em 1fr; gap: 4px 12px; font-size: var(--size-ui); }
+.pl-facts dt { color: var(--ink-2); font-stretch: var(--wdth-label); }
+.pl-facts dd { min-width: 0; }
+.pl-fig { font-size: 20px; line-height: 1; }
+.pl-below-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 4px; padding-top: 8px; border-top: 1px solid var(--rule); }
+.pl-flags { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.pl-flags li { display: inline-flex; align-items: center; gap: 6px; }
+.pl-flags li:not(.on) .label { color: var(--ink-2); font-weight: var(--wght-grot-text); }
+
+/* the rule's slider: a slate knob on a ruled paper scale */
+.pl-slider { display: grid; gap: 4px; }
+.pl-slider input[type="range"] { appearance: none; width: 100%; height: 22px; background: transparent; margin: 0; }
+.pl-slider input[type="range"]::-webkit-slider-runnable-track {
+  height: 8px; background: var(--paper-2) repeating-linear-gradient(90deg, rgba(27, 34, 38, 0.55) 0 1px, transparent 1px 8%);
+  box-shadow: inset 0 0 0 1px var(--rule-strong);
+}
+.pl-slider input[type="range"]::-webkit-slider-thumb { appearance: none; width: 14px; height: 22px; margin-top: -7px; background: var(--slate); box-shadow: var(--shadow-slate); }
+.pl-slider input[type="range"]::-moz-range-track { height: 8px; background: var(--paper-2); box-shadow: inset 0 0 0 1px var(--rule-strong); }
+.pl-slider input[type="range"]::-moz-range-thumb { width: 14px; height: 22px; border: 0; border-radius: 0; background: var(--slate); }
+.pl-scale { display: flex; justify-content: space-between; }
+
+/* the grade, judged by the engine after the choice */
+.pl-grade { position: absolute; left: 50%; top: 14%; transform: translateX(-50%); width: min(440px, 86%); z-index: 7; padding: 18px 20px 18px; display: grid; gap: 10px; }
+.pl-grade-stamp { justify-self: start; font-size: 22px; padding: 8px 14px 6px; animation: yf-stamp var(--dur-stamp) var(--ease-press) both; }
+.pl-tests { display: grid; gap: 8px; }
+.pl-tests li { display: grid; grid-template-columns: 14px 1fr; column-gap: 10px; }
+.pl-tests li .small { grid-column: 2; }
+.pl-test-mark { width: 12px; height: 12px; margin-top: 3px; box-shadow: inset 0 0 0 1.5px var(--ink); }
+.pl-test-mark.pass { background: var(--ink); }
+
+@media (max-width: 1360px) {
+  .pl-below { width: 296px; }
+  .pl-rule { left: 320px; width: 280px; }
+  .pl-name { max-width: 128px; }
+}

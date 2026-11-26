@@ -1,0 +1,326 @@
+/* Yfory: the game board. Papur v2 layout (design-system 4.13): top bar, stage and rail,
+   timeline, foot. Materials and tokens only; no new colours. */
+
+.yf {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) var(--timeline-h) var(--foot-h);
+  height: 100vh;
+  min-height: 640px;
+  overflow: hidden;
+}
+.yf-loading { display: grid; place-content: center; gap: 12px; height: 100vh; padding: 24px; text-align: left; }
+
+/* ---------- top bar middle: strands and Trust ------------------------- */
+.yf-bar-middle { display: flex; align-items: stretch; gap: var(--gutter); min-width: 0; }
+.yf-strands { position: relative; flex: 1; min-width: 0; }
+.yf-trust { position: relative; flex: none; }
+.yf-trust .trust.compact { height: 100%; }
+
+/* ---------- main: stage and rail ---------------------------------------- */
+.yf-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--rail-w);
+  gap: var(--gutter);
+  padding: 0 var(--margin);
+  min-height: 0;
+}
+.yf-main.ended { grid-template-columns: minmax(0, 1fr); }
+
+.yf-stage {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--board-deep);
+}
+.yf-map { position: absolute; inset: 0; }
+.yf-map:focus-visible { outline-offset: -4px; }
+.yf-map-loading { position: absolute; left: 16px; bottom: 16px; }
+.yf-stage::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: rgba(27, 34, 38, 0); transition: background var(--dur-slide) var(--ease-paper);
+}
+.yf-stage.dimmed::after { background: rgba(27, 34, 38, 0.45); }
+.yf-main.ended .yf-stage { background: var(--board); box-shadow: none; overflow: auto; }
+.yf-main.ended .yf-map { opacity: 0.35; pointer-events: none; }
+
+/* floating pieces sit 14px in from the stage edge */
+.yf-slip { position: absolute; left: 14px; top: 14px; width: 292px; z-index: 3; }
+.yf-slip .slip { padding-bottom: 22px; }
+.yf-slip-desc { margin-top: 8px; font-size: var(--size-ui); line-height: 1.35; color: var(--on-slate-2); }
+.yf-slip-shock { margin-top: 6px; color: var(--on-slate-2); }
+.yf-slip-more, .yf-slip-peek {
+  display: block; margin-top: 8px; padding: 2px 0; border: 0; background: none; color: var(--on-slate);
+  font-size: var(--size-label); font-stretch: var(--wdth-label); font-weight: var(--wght-grot-strong);
+  text-decoration: underline; text-underline-offset: 3px; text-align: left; cursor: pointer;
+}
+.yf-slip-peek { text-decoration-style: dashed; }
+.yf-slip-list { margin-top: 6px; display: grid; gap: 3px; }
+.yf-slip-list li { display: flex; justify-content: space-between; gap: 8px; color: var(--on-slate); }
+.yf-slip-list .small { color: var(--on-slate-2); }
+.yf-slip-peeked { margin-top: 8px; color: var(--on-slate); font-weight: 540; }
+.yf-on-slate-2 { color: var(--on-slate-2); margin-top: 6px; }
+
+/* the authority panel: touch the real thing */
+.yf-lapanel { position: absolute; left: 14px; bottom: 14px; width: 300px; padding: 14px 16px 16px; z-index: 3; }
+.yf-lapanel-head { display: flex; justify-content: space-between; gap: 8px; align-items: start; }
+.yf-figs { display: grid; gap: 12px; margin-top: 12px; }
+.yf-fig { display: grid; grid-template-columns: auto 1fr; align-items: baseline; column-gap: 10px; row-gap: 4px; }
+.yf-fig .docket-host { grid-column: 1 / -1; }
+
+/* ---------- the rail ------------------------------------------------------ */
+.yf-rail { position: relative; min-height: 0; display: flex; flex-direction: column; }
+.yf-panel { display: flex; flex-direction: column; gap: 10px; min-height: 0; height: 100%; }
+.yf-step { padding: 14px 16px 16px; display: grid; gap: 10px; align-content: start; }
+.yf-step h2 { margin-bottom: 2px; }
+.yf-actions { display: flex; flex-wrap: wrap; gap: 10px 12px; align-items: center; }
+.yf-go { justify-self: start; }
+.yf-list { display: grid; gap: 4px; padding-left: 0; }
+.yf-list li { padding-left: 12px; position: relative; }
+.yf-list li::before { content: ""; position: absolute; left: 0; top: 0.6em; width: 5px; height: 1.5px; background: var(--ink-2); }
+
+/* the hook: the one line, and the seat */
+.yf-hook { padding: 22px 22px 22px; display: grid; gap: 14px; align-content: start; }
+.yf-hook-line { font-size: 24px; line-height: 1.28; font-weight: 600; max-width: 22ch; }
+
+/* voice from a place */
+.yf-voice { padding: 12px 16px 12px; display: grid; gap: 8px; }
+.yf-voice-quote { font-family: var(--font-print); font-style: italic; font-size: var(--size-story); line-height: 1.45; }
+.yf-voice.compact .yf-voice-quote { font-size: var(--size-story-small); }
+.yf-voice-cap { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+
+.yf-pledge-strand { font-size: var(--size-title-2); font-family: var(--font-print); font-weight: 600; }
+.yf-pledged { padding: 0 2px; }
+.yf-strandname { display: inline-flex; align-items: baseline; gap: 8px; }
+.yf-strandname .snip { align-self: center; }
+.yf-strandname-pair { display: inline-grid; }
+
+/* the hand */
+.yf-hand-wrap { display: flex; flex-direction: column; min-height: 0; flex: 1; position: relative; }
+.yf-hand-head { display: flex; justify-content: space-between; align-items: baseline; padding: 0 2px 6px; }
+.yf-hand-title { font-style: italic; font-weight: 400; font-size: var(--size-title-3); }
+.yf-hand {
+  position: relative; display: grid; gap: 10px; align-content: start;
+  overflow-y: auto; overflow-x: visible; min-height: 0; flex: 1;
+  padding: 2px 10px 12px 4px; margin-right: -10px;
+  scrollbar-width: thin;
+}
+.yf-ticket-slot { position: relative; display: grid; gap: 6px; }
+.yf-ticket { width: 100%; }
+.yf-held { position: absolute; right: 34px; bottom: 8px; }
+.yf-where { padding: 10px 12px 12px; display: grid; gap: 8px; margin: 0 6px 4px 18px; box-shadow: var(--lit-edge), var(--shadow-flat); }
+.yf-where-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.yf-region {
+  min-height: var(--target-min); padding: 4px 10px; border: 0; border-radius: 0;
+  background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--ink); color: var(--ink);
+  font-weight: var(--wght-grot-strong); font-stretch: var(--wdth-label); display: inline-flex; align-items: center; gap: 6px;
+}
+.yf-region:hover:not(:disabled) { background: var(--paper-2); }
+.yf-region[aria-pressed="true"], .yf-region[aria-checked="true"] { background: var(--stitch-tint); box-shadow: inset 0 0 0 2px var(--stitch-deep); color: var(--stitch-deep); }
+.yf-region:disabled { background: var(--paper-2) var(--pencil); cursor: not-allowed; }
+.yf-hold { justify-self: start; }
+.yf-why { color: var(--warn); }
+.yf-upgrade { color: var(--ink-2); font-style: italic; }
+
+/* plan foot: budget and the commit stamp */
+.yf-plan-foot { padding: 10px 14px 12px; display: grid; gap: 8px; position: relative; flex: none; }
+.yf-plan-actions { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.yf-plan-actions .btn-why { flex-basis: 100%; margin: 0; order: 3; }
+.yf-dot { margin-left: 4px; color: var(--stitch-deep); }
+.yf-warn-line { color: var(--warn); }
+.yf-budget { display: grid; gap: 5px; }
+.yf-budget-head, .yf-budget-foot { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.yf-pips { display: flex; gap: 4px; padding: 5px; width: max-content; max-width: 100%; flex-wrap: wrap; }
+.yf-pips i { width: 14px; height: 14px; background: var(--ink); box-shadow: 1px 1px 0 rgba(255, 255, 255, 0.35); }
+.yf-pips i.spent { background: transparent; box-shadow: inset 1.5px 1.5px 0 rgba(20, 26, 24, 0.35); }
+.yf-pips i.debt { background: var(--ticket-blue); box-shadow: inset 0 0 0 1.5px var(--ink); width: 10px; }
+.yf-why-link { border: 0; background: none; padding: 0; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; color: var(--ink-2); }
+.yf-budget-why { display: grid; grid-template-columns: 1fr auto; gap: 2px 16px; padding: 6px 0 0; border-top: 1px solid var(--rule); }
+.yf-budget-why dd { text-align: right; }
+
+/* step 6: what changed */
+.yf-panel-changed { overflow-y: auto; padding-right: 8px; margin-right: -8px; }
+.yf-slips { display: grid; gap: 0; }
+.yf-slip-paper { position: relative; padding: 12px 14px 12px; display: grid; gap: 6px; margin-top: calc(var(--i, 0) * -2px); margin-left: calc(var(--i, 0) * 6px); }
+.yf-slip-paper + .yf-slip-paper { margin-top: 8px; }
+.yf-slip-head { display: flex; align-items: center; gap: 8px; }
+.yf-dir { color: var(--ink); display: inline-flex; }
+.yf-unexpected { display: inline-flex; align-items: stretch; background: var(--warn-paper); width: max-content; }
+.yf-unexpected::before { content: ""; width: 16px; background: var(--warn-hatch); margin-right: 8px; }
+.yf-unexpected { padding-right: 8px; }
+.yf-trustwhy { padding: 12px 14px; display: grid; gap: 6px; }
+.yf-panel-foot { padding: 4px 0 2px; }
+.yf-ready, .yf-ready-paper { justify-self: start; font-size: 16px; }
+.yf-ready { color: var(--on-slate); border-color: var(--on-slate); mix-blend-mode: normal; margin-top: 10px; }
+.yf-visit-result { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+/* step 5: the shock over the dimmed map */
+.yf-shock { position: absolute; left: 50%; top: 18%; transform: translateX(-50%); width: min(420px, 80%); z-index: 6; }
+.yf-shock-slip { padding: 22px 20px 28px; }
+.yf-shock-actions { margin-top: 14px; }
+.yf-shock-actions .btn-tab { box-shadow: inset 0 0 0 1.5px var(--ink), 2px 3px 0 rgba(0, 0, 0, 0.3); }
+.yf-shock .btn-stamp { background: var(--paper); color: var(--ink); box-shadow: 2px 3px 0 var(--slate-deep); }
+.yf-shock .btn-stamp:hover:not(:disabled) { background: var(--paper-2); }
+
+/* step 7: the election stamp on the hand area */
+.yf-election { position: relative; }
+.yf-limit-stamp { justify-self: start; font-size: 19px; white-space: nowrap; padding: 7px 12px 5px; margin: 6px 0 4px 8px; }
+.yf-limit-stamp.landed { animation: yf-stamp var(--dur-stamp) var(--ease-press) both; }
+@keyframes yf-stamp { from { transform: rotate(-5deg) scale(1.15); opacity: 0; } to { transform: rotate(-5deg) scale(1); opacity: 1; } }
+
+/* the caretaker term */
+.yf-caretaker { background: var(--ink); color: var(--paper); box-shadow: 2px 3px 0 rgba(40, 46, 42, 0.3); }
+.yf-caretaker .small { color: #C9CCC4; }
+.yf-caretaker .yf-region { box-shadow: inset 0 0 0 1.5px var(--paper); background: transparent; color: var(--paper); }
+.yf-caretaker .yf-region[aria-checked="true"] { background: var(--paper); color: var(--ink); }
+.yf-caretaker :focus-visible { outline: var(--focus-ring-on-slate); }
+.yf-shadow { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* ---------- pull the thread --------------------------------------------- */
+.yf-trace {
+  position: absolute; left: 14px; top: 14px; bottom: 14px; width: 360px; z-index: 5;
+  padding: 14px 16px 14px 18px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto;
+}
+.yf-trace-head { display: flex; justify-content: space-between; align-items: start; }
+.yf-stops { position: relative; display: grid; gap: 0; margin-top: 6px; }
+.yf-stop { position: relative; padding: 8px 0 10px 18px; border-top: 1px solid var(--rule); display: grid; gap: 3px; }
+.yf-stop.first { border-top: 0; }
+.yf-stop-component { border-top: 0; padding-top: 0; }
+.yf-stop::before { content: ""; position: absolute; left: 3px; top: 0; bottom: 0; width: 2px; background: var(--thread); }
+.yf-stop.first::before { top: 14px; }
+.yf-stop-pin { position: absolute; left: -1px; top: 12px; width: 10px; height: 10px; border-radius: var(--radius-round); background: var(--thread); box-shadow: 1px 1px 0 var(--thread-deep); }
+.yf-stop-component .yf-stop-pin { display: none; }
+.yf-stop-label { color: var(--thread-deep); }
+.yf-stop-title { margin-top: 1px; }
+.yf-via { font-style: italic; }
+.yf-params { display: grid; gap: 2px; }
+.yf-rule-marks { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; }
+.yf-gamerule { font-style: italic; }
+.yf-dockets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.yf-trace-end { margin-top: 8px; padding-top: 8px; border-top: 1.5px solid var(--ink); font-style: italic; color: var(--ink); }
+.yf-trace-nav { display: flex; gap: 10px; align-items: center; margin-top: 4px; }
+.yf-trace-map { color: var(--thread-deep); }
+
+/* ---------- the ledger drawer ------------------------------------------- */
+.yf-drawer {
+  position: absolute; top: 0; right: 0; bottom: 0; width: min(480px, calc(100vw - 40px)); z-index: 8;
+  display: flex; flex-direction: column; animation: yf-drawer var(--dur-slide) var(--ease-paper) both;
+}
+@keyframes yf-drawer { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+.yf-drawer-head { display: flex; justify-content: space-between; align-items: start; padding: 16px 16px 8px; border-bottom: 1.5px solid var(--ink); margin: 0 16px; padding-left: 0; padding-right: 0; }
+.yf-drawer-body { overflow-y: auto; padding: 12px 16px 16px; display: grid; gap: 18px; }
+.yf-drawer-body section { display: grid; gap: 8px; }
+.yf-drawer-foot { padding: 10px 16px 14px; border-top: 1px solid var(--rule); }
+.yf-standing { display: grid; gap: 6px; }
+.yf-standing-act { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.yf-ledger-list { display: grid; gap: 4px; }
+.yf-upkeep { display: grid; gap: 4px; padding: 6px 0; border-bottom: 1px solid var(--rule); }
+.yf-grade-line { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.yf-grade-stamp { font-size: 11.5px; }
+
+/* ---------- timeline and post rail ------------------------------------- */
+.yf-timeline { position: relative; margin: 10px var(--margin) 0; background: var(--paper-yfory) var(--grain); }
+.yf-terms { position: absolute; left: 24px; right: 64px; top: 0; bottom: 0; }
+.yf-term { position: absolute; top: 0; bottom: 0; border-left: 1px solid var(--rule-strong); padding: 4px 0 0 6px; }
+.yf-term.past { background: rgba(27, 34, 38, 0.04); }
+.yf-term.now { background: rgba(255, 255, 255, 0.45); }
+.yf-term.worst { background: var(--warn-paper); }
+.yf-term-year { font-size: var(--size-small); color: var(--ink-2); }
+.yf-term-worst { display: block; }
+.yf-envelope { position: absolute; top: 6px; right: 14px; display: grid; justify-items: center; color: var(--ink); }
+.yf-pin { position: absolute; top: 0; bottom: 0; width: 0; transition: left var(--dur-slide) var(--ease-paper); pointer-events: none; }
+.yf-pin.sliding { transition-duration: 1000ms; }
+.yf-pin::before { content: ""; position: absolute; left: -1px; top: 8px; bottom: 0; width: 2px; background: var(--thread); }
+.yf-pin i { position: absolute; left: -5px; top: 2px; width: 10px; height: 10px; border-radius: var(--radius-round); background: var(--thread); box-shadow: 1px 1px 0 var(--thread-deep); }
+.yf-stubs { position: absolute; left: 24px; right: 64px; top: 0; bottom: 0; pointer-events: none; }
+.yf-stub { position: absolute; bottom: 5px; transform: translate(calc(-50% + var(--stack, 0) * 14px), calc(var(--stack, 0) * -6px)); pointer-events: auto; }
+.yf-stub-face {
+  display: inline-flex; align-items: center; gap: 4px; height: 26px; padding: 0 5px 0 0;
+  background: var(--ticket-green) var(--grain); border-radius: var(--radius-worn);
+  box-shadow: var(--lit-edge), var(--shadow-sheet); color: var(--ink);
+}
+.yf-stub-weave { width: 8px; align-self: stretch; background-image: var(--weave); background-size: 12px 12px; image-rendering: pixelated; border-right: 1px solid rgba(27, 34, 38, 0.5); }
+.yf-stub.draft .yf-stub-face { outline: 2px dashed var(--stitch); outline-offset: 1px; animation: yf-arrive var(--dur-stamp) var(--ease-press) both; }
+.yf-stub.after .yf-stub-face { background-color: var(--paper); }
+@keyframes yf-arrive { from { transform: scale(1.15); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* ---------- foot --------------------------------------------------------- */
+.yf-foot { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 0 var(--margin); white-space: nowrap; overflow: hidden; }
+.yf-foot-links { display: flex; gap: 14px; align-items: center; overflow: hidden; text-overflow: ellipsis; }
+.yf-linkbtn { border: 0; background: none; padding: 0; text-decoration: underline; text-underline-offset: 2px; color: var(--ink-2); font-size: inherit; }
+
+/* ---------- guide notes: slate slips pointing at one thing ------------- */
+.yf-note {
+  position: absolute; z-index: 9; width: 260px; padding: 9px 12px 10px;
+  background: var(--slate) var(--grain); background-blend-mode: overlay; color: var(--on-slate);
+  box-shadow: var(--shadow-slate); animation: yf-note var(--dur-slide) var(--ease-paper) both;
+}
+@keyframes yf-note { from { transform: translateY(-8px); opacity: 0; } to { transform: none; opacity: 1; } }
+.yf-note::before { content: ""; position: absolute; border: 7px solid transparent; }
+.yf-note-below::before { top: -7px; left: 22px; border-top: 0; border-bottom-color: var(--slate); }
+.yf-note-above::before { bottom: -7px; left: 22px; border-bottom: 0; border-top-color: var(--slate); }
+.yf-note-text { font-family: var(--font-print); font-stretch: normal; font-size: 14.5px; line-height: 1.35; }
+.yf-note-actions { display: flex; gap: 14px; margin-top: 7px; }
+.yf-note-btn, .yf-note-skip {
+  border: 0; background: none; padding: 2px 0; color: var(--on-slate); cursor: pointer;
+  font-size: var(--size-label); font-stretch: var(--wdth-label); font-weight: var(--wght-grot-strong);
+  text-decoration: underline; text-underline-offset: 3px;
+}
+.yf-note-skip { color: var(--on-slate-2); font-weight: var(--wght-grot-text); }
+.yf-note :focus-visible { outline: var(--focus-ring-on-slate); }
+.yf-note-left::before { right: -7px; top: 18px; border-right: 0; border-left-color: var(--slate); }
+.yf-note-hand, .yf-note-ticket, .yf-note-play { right: calc(100% + 16px); top: 40px; }
+.yf-note-ticket { top: 60px; }
+.yf-note-region { position: relative; width: auto; margin: 4px 0; }
+.yf-note-post { bottom: calc(100% + 10px); left: 30%; }
+.yf-note-commit { bottom: calc(100% + 10px); right: 12px; }
+.yf-note-strands { top: calc(100% + 8px); left: 30%; }
+.yf-note-pull { top: 8px; right: calc(100% + 16px); }
+.yf-note-trust { top: 4px; right: calc(100% + 14px); }
+.yf-note-trust::before { right: -7px; top: 18px; border-right: 0; border-left-color: var(--slate); }
+
+/* tablet and smaller laptop: the rail narrows, tickets shorten (tokens do most of this) */
+@media (max-width: 1360px) {
+  .yf-hook-line { font-size: 21px; }
+  .yf-trace { width: 330px; }
+  .yf-slip { width: 268px; }
+}
+
+/* the ghost on the strand row: the forecast move sits in the meter head, dashed, so it reads as a
+   forecast and not as a change that has happened; fuzzy forecasts get a dotted outline */
+.yf-strands.ghosting .meter-move { outline: 1.5px dashed currentColor; outline-offset: 2px; padding: 0 2px; color: var(--ink); }
+.yf-strands .yarn .ghost { border-width: 2px; background: repeating-linear-gradient(90deg, transparent 0 4px, rgba(255, 255, 255, 0.5) 4px 6px); }
+.yf-strands.fz-0 .meter:nth-child(1) .ghost, .yf-strands.fz-1 .meter:nth-child(2) .ghost,
+.yf-strands.fz-2 .meter:nth-child(3) .ghost, .yf-strands.fz-3 .meter:nth-child(4) .ghost,
+.yf-strands.fz-4 .meter:nth-child(5) .ghost, .yf-strands.fz-5 .meter:nth-child(6) .ghost,
+.yf-strands.fz-6 .meter:nth-child(7) .ghost { border-style: dotted; }
+.yf-strands.fz-0 .meter:nth-child(1) .meter-move, .yf-strands.fz-1 .meter:nth-child(2) .meter-move,
+.yf-strands.fz-2 .meter:nth-child(3) .meter-move, .yf-strands.fz-3 .meter:nth-child(4) .meter-move,
+.yf-strands.fz-4 .meter:nth-child(5) .meter-move, .yf-strands.fz-5 .meter:nth-child(6) .meter-move,
+.yf-strands.fz-6 .meter:nth-child(7) .meter-move { outline-style: dotted; }
+
+/* in the hand the played stamp sits low on the body, clear of the title */
+.yf-ticket .ticket-stamp { top: auto; bottom: 30px; right: 22px; }
+.yf-where .btn-stamp { justify-self: start; }
+
+/* the pulled thread, drawn over everything from the strand meter to the trace sheet */
+.yf-thread-overlay { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 30; overflow: visible; }
+.yf-thread-path { fill: none; stroke: var(--thread); stroke-width: 2; stroke-dasharray: 2000; stroke-dashoffset: 2000; animation: yf-sew var(--dur-stitch-max) linear forwards; }
+.yf-thread-head { fill: var(--thread); }
+@keyframes yf-sew { to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { .yf-thread-path { animation: none; stroke-dashoffset: 0; } }
+
+/* the pressable wrapper round a ticket in the hand (its name comes from what is printed on it) */
+.yf-ticket-press { display: block; cursor: pointer; }
+.yf-ticket-press:focus-visible { outline: none; }
+.yf-ticket-press:focus-visible .ticket { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+.yf-ticket-press:hover .ticket { transform: translate(var(--lift-x), var(--lift-y)); box-shadow: var(--lit-edge), var(--shadow-lifted); }
+
+/* letters received: six envelopes, the ones you have had are inked */
+.yf-letters { display: flex; align-items: center; gap: 6px; padding-top: 10px; border-top: 1px solid var(--rule); flex-wrap: wrap; }
+.yf-letter { color: var(--rule-strong); }
+.yf-letter.got { color: var(--ink); }
+.yf-letters .small { margin-left: 6px; }
+.yf-stops-tail { margin-top: 0; }
+.yf-stops-tail .yf-stop { border-top: 1px solid var(--rule); }
+.yf-stops-tail .yf-stop::before { bottom: auto; height: 14px; }
