@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paper map demo</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap&subset=latin-ext" rel="stylesheet">
+<style>
+  /* Dev page only. The real theme comes from docs/design/tokens.css. */
+  :root { --board: #D8D9D3; --ink: #1F2A30; --paper: #FAFAF6; --font-sans: "Familjen Grotesk", "Helvetica Neue", sans-serif; --font-serif: "Newsreader", Georgia, serif; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--board); color: var(--ink); font: 14px/1.35 var(--font-sans); display: grid; grid-template-rows: auto 1fr auto; }
+  header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 20px; }
+  header h1 { font: 500 22px var(--font-serif); margin: 0 12px 0 0; }
+  button { font: inherit; border: 0; padding: 6px 11px; border-radius: 2px; background: var(--paper); box-shadow: 1px 1.5px 0 #D2D2CA, 1px 3px 4px -2px rgba(0,0,0,.3); cursor: pointer; }
+  button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+  .sep { width: 1px; height: 22px; background: rgba(0,0,0,.15); margin: 0 4px; }
+  #stage { position: relative; margin: 0 20px; border-radius: 3px; background: #7D96A0; box-shadow: inset 0 0 0 1px rgba(20,30,35,.25), inset 2px 3px 8px rgba(10,20,30,.3); min-height: 0; }
+  footer { padding: 6px 20px 10px; font-size: 12px; color: #4E5B63; display: flex; justify-content: space-between; gap: 20px; }
+  #status { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Paper map</h1>
+  <button type="button" data-lens="none" aria-pressed="true">No lens</button>
+  <button type="button" data-lens="seq">Welsh speakers</button>
+  <button type="button" data-lens="div">Welsh speakers vs Wales</button>
+  <span class="sep"></span>
+  <button type="button" data-region="southeast">South East</button>
+  <button type="button" id="stitch">Stitch here</button>
+  <button type="button" id="lang">CY</button>
+  <span class="sep"></span>
+  <button type="button" id="enter">Enter the Rhondda</button>
+  <button type="button" id="zin">+</button>
+  <button type="button" id="zout">&#8722;</button>
+  <button type="button" id="exit">Fold back up</button>
+</header>
+<div id="stage"></div>
+<footer><span id="status">loading</span><span>Dev page. Mockup data, approximate and unverified.</span></footer>
+<script type="module" src="./demo.ts"></script>
+</body>
+</html>
