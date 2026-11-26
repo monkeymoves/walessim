@@ -1,0 +1,179 @@
+// The railway-ticket card (design-system 4.3), after the Edmondson ticket.
+// Weave trim (strands it strengthens) | stub (icon, serial) : body (title pair, pulls, fare) | scope edge.
+// Stock colour says the scope: buff national, green region, pink between regions, blue standing.
+import { For, Show, type JSX } from "solid-js";
+import { pick, Pair, t, tn } from "../../i18n";
+import type { Card, StrandId, Text } from "../../model/schema";
+import { cardIcon, Icon, type IconName } from "./Icon";
+import { Snip } from "./Notice";
+import { weaveUrl } from "./strands";
+
+export type TicketScope = "national" | "region" | "two_regions" | "standing" | "lesson";
+
+export interface TicketCard {
+  id: string;
+  name: Text;
+  cost: number;
+  delay: number;
+  scope?: Card["scope"] | "standing";
+  tags?: string[];
+  needs_partners?: boolean;
+  helps?: StrandId[];
+  frays?: StrandId[];
+}
+
+export interface TicketProps {
+  card: TicketCard;
+  /** Serial number shown in the stub ("0440"). Defaults to a number derived from the id. */
+  serial?: string | number;
+  /** This term's budget, so the weight of the card is plain ("4 of 8 pips"). */
+  budget?: number;
+  /** Override the scope the stock and edge show (for a national_or_region card played regionally). */
+  scope?: TicketScope;
+  /** The chosen region's name, set under the pulls. */
+  where?: Text | null;
+  icon?: IconName;
+  /** Played: the year stamped on it. */
+  played?: number | null;
+  /** Cannot be played: which fare figure blocks it and why. */
+  blocked?: { on: "cost" | "trust"; reason: string } | null;
+  selected?: boolean;
+  /** Under the pointer or keyboard in the hand (lift). */
+  lifted?: boolean;
+  /** Stub only (tablet hand stack, in the post). */
+  stub?: boolean;
+  /** Shown at the top right of the body when selected ("Play this card" stamp). */
+  action?: JSX.Element;
+  onSelect?: () => void;
+  tabIndex?: number;
+  class?: string;
+  id?: string;
+}
+
+/** Serial from a card id: stable, four figures. */
+export function serialOf(id: string): string {
+  let h = 2166136261;
+  for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 16777619);
+  return String((Math.abs(h) % 900) + 100).padStart(4, "0");
+}
+
+export function ticketScope(card: TicketCard, override?: TicketScope): TicketScope {
+  if (override) return override;
+  switch (card.scope) {
+    case "region": return "region";
+    case "two_regions": return "two_regions";
+    case "standing": return "standing";
+    case "national":
+    case "national_or_region": return "national";
+    default: return "lesson";
+  }
+}
+
+const STOCK: Record<TicketScope, string> = {
+  national: "var(--ticket-buff)",
+  region: "var(--ticket-green)",
+  two_regions: "var(--ticket-pink)",
+  standing: "var(--ticket-blue)",
+  lesson: "var(--ticket-white)",
+};
+
+export function Ticket(props: TicketProps): JSX.Element {
+  const scope = () => ticketScope(props.card, props.scope);
+  const helps = () => props.card.helps ?? [];
+  const frays = () => props.card.frays ?? [];
+  const serial = () => `No. ${props.serial ?? serialOf(props.card.id)}`;
+  const budget = () => props.budget ?? 8;
+  const payout = () =>
+    props.card.delay <= 0 ? t("parts.ticket.paysNow") : tn("parts.ticket.terms", props.card.delay);
+  const ariaName = () =>
+    [
+      pick(props.card.name),
+      t(`parts.scope.${scope()}`),
+      t("parts.ticket.costAria", { n: props.card.cost, of: budget() }),
+      props.card.delay <= 0 ? t("parts.ticket.paysNowAria") : t("parts.ticket.paysAria", { when: payout() }),
+      props.played ? t("parts.ticket.playedAria", { year: props.played }) : "",
+      props.blocked ? props.blocked.reason : "",
+    ].filter(Boolean).join(". ");
+  const keydown = (e: KeyboardEvent) => {
+    if (!props.onSelect) return;
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); props.onSelect(); }
+  };
+  return (
+    <article
+      id={props.id}
+      class={`ticket${props.class ? " " + props.class : ""}`}
+      classList={{ selected: !!props.selected, lifted: !!props.lifted, played: !!props.played, stubonly: !!props.stub, pressable: !!props.onSelect }}
+      style={{ "--stock": STOCK[scope()], "--weave": weaveUrl(helps()[0], helps()[1]) }}
+      tabIndex={props.onSelect ? (props.tabIndex ?? 0) : props.tabIndex}
+      role={props.onSelect ? "button" : undefined}
+      aria-pressed={props.onSelect ? !!props.selected : undefined}
+      aria-label={ariaName()}
+      onClick={() => props.onSelect?.()}
+      onKeyDown={keydown}
+    >
+      <div class="ticket-weave" aria-hidden="true" />
+      <div class="ticket-stub">
+        <Icon name={props.icon ?? cardIcon(props.card)} size={38} />
+        <span class="serial">{serial()}</span>
+      </div>
+      <Show when={!props.stub}>
+        <div class="ticket-body">
+          <Pair text={props.card.name} as="h3" class="ticket-title" />
+          <ul class="pulls">
+            <For each={helps()}>
+              {(s) => (
+                <li>
+                  <Snip strand={s} />
+                  {t(`parts.strand.${s}`)}
+                </li>
+              )}
+            </For>
+            <For each={frays()}>
+              {(s) => (
+                <li class="strain">
+                  <Snip strand={s} frays />
+                  {t("parts.ticket.frays", { strand: t(`parts.strand.${s}`) })}
+                </li>
+              )}
+            </For>
+          </ul>
+          <Show when={props.card.needs_partners || props.where}>
+            <p class="ticket-note small">
+              <Show when={props.where}>{pick(props.where)} </Show>
+              <Show when={props.card.needs_partners}><i>{t("parts.ticket.partners")}</i></Show>
+            </p>
+          </Show>
+          <div class="fare">
+            <div classList={{ blocked: props.blocked?.on === "cost" }}>
+              <span class="furniture">{t("parts.ticket.cost")}</span>
+              <b>{props.card.cost}</b>
+              <small>{t("parts.ticket.ofPips", { n: budget() })}</small>
+            </div>
+            <div>
+              <Show
+                when={props.card.delay > 0}
+                fallback={<span class="furniture">{t("parts.ticket.paysOutNow")}</span>}
+              >
+                <span class="furniture">{t("parts.ticket.paysOutIn")}</span>
+                <b>{props.card.delay}</b>
+                <small>{tn("parts.ticket.termWord", props.card.delay)}</small>
+              </Show>
+            </div>
+          </div>
+          <Show when={props.blocked}>
+            <p class="ticket-why small" classList={{ trust: props.blocked!.on === "trust" }}>{props.blocked!.reason}</p>
+          </Show>
+          <Show when={props.played}>
+            <span class="stampmark ticket-stamp">{t("parts.ticket.played", { year: props.played! })}</span>
+          </Show>
+          <Show when={props.selected && props.action}>
+            <div class="ticket-action" onClick={(e) => e.stopPropagation()}>{props.action}</div>
+          </Show>
+        </div>
+        <div class="ticket-edge furniture" aria-hidden="true">
+          <span>{t(`parts.scope.${scope()}`)}</span>
+        </div>
+      </Show>
+    </article>
+  );
+}

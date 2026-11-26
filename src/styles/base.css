@@ -1,0 +1,103 @@
+/* Base styles for every surface. Tokens come first (imported in src/styles/index.ts).
+   Material, type and motion rules: docs/design/design-system.md. */
+
+:root {
+  /* One shared grain tile, multiplied at about 11 per cent, on every stock. */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 .1  0 0 0 0 .12  0 0 0 0 .1  0 0 0 .11 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* The map reads these (src/map/palette.ts). */
+  --font-sans: var(--font-grot);
+  --font-serif: var(--font-print);
+  --pencil: repeating-linear-gradient(45deg, rgba(27, 34, 38, 0.22) 0 1px, transparent 1px 5px);
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body { margin: 0; height: 100%; }
+
+body {
+  background: var(--board) var(--grain);
+  color: var(--ink);
+  font-family: var(--font-grot);
+  font-stretch: var(--wdth-ui);
+  font-weight: var(--wght-grot-text);
+  font-size: var(--size-ui);
+  line-height: var(--lh-ui);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+p, h1, h2, h3, h4, dl, dd, ul, ol, figure, blockquote { margin: 0; padding: 0; }
+ul, ol { list-style: none; }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: inherit; }
+img, svg, canvas { display: block; }
+
+#app { min-height: 100%; }
+
+/* ---------- type styles ------------------------------------------------- */
+.print { font-family: var(--font-print); font-stretch: normal; }
+.t-poster { font-family: var(--font-print); font-stretch: normal; font-weight: var(--wght-print-heavy); font-size: var(--size-poster); line-height: var(--lh-poster); letter-spacing: var(--track-poster); }
+.t-year { font-family: var(--font-print); font-stretch: normal; font-weight: var(--wght-print-heavy); font-size: var(--size-year); line-height: var(--lh-year); letter-spacing: var(--track-year); }
+.t-1 { font-family: var(--font-print); font-stretch: normal; font-weight: 700; font-size: var(--size-title-1); line-height: var(--lh-title-1); letter-spacing: var(--track-title-1); }
+.t-2 { font-family: var(--font-print); font-stretch: normal; font-weight: var(--wght-print-title); font-size: var(--size-title-2); line-height: var(--lh-title-2); }
+.t-3 { font-family: var(--font-print); font-stretch: normal; font-weight: var(--wght-print-title); font-size: var(--size-title-3); line-height: var(--lh-title-3); }
+.story { font-family: var(--font-print); font-stretch: normal; font-size: var(--size-story); line-height: var(--lh-story); max-width: var(--measure-story); }
+.story-small { font-family: var(--font-print); font-stretch: normal; font-size: var(--size-story-small); line-height: var(--lh-story-small); max-width: var(--measure-story); }
+.label { font-size: var(--size-label); line-height: var(--lh-label); font-stretch: var(--wdth-label); font-weight: var(--wght-grot-strong); }
+.small { font-size: var(--size-small); line-height: var(--lh-small); font-stretch: var(--wdth-label); color: var(--ink-2); }
+.furniture { font-size: var(--size-furniture); line-height: 1; font-stretch: var(--wdth-ticket); font-weight: var(--wght-grot-heavy); letter-spacing: var(--track-furniture); text-transform: uppercase; }
+.figure-big { font-family: var(--font-print); font-stretch: normal; font-weight: 700; font-size: var(--size-figure-big); line-height: 1; font-variant-numeric: var(--figures-print); }
+.data { font-variant-numeric: var(--figures-data); }
+.strong { font-weight: var(--wght-grot-strong); }
+
+/* The other-language line: Besley italic at four fifths, beneath, never boxed. */
+.other {
+  display: block;
+  font-family: var(--font-print);
+  font-stretch: normal;
+  font-style: italic;
+  font-weight: 400;
+  font-size: calc(1em * var(--other-lang-scale));
+  line-height: 1.25;
+  color: var(--ink-2);
+  letter-spacing: 0;
+  margin-top: 0.22em;
+}
+.on-slate .other { color: var(--on-slate-2); }
+
+/* ---------- materials ---------------------------------------------------- */
+.sheet { background: var(--paper) var(--grain); box-shadow: var(--lit-edge), var(--shadow-sheet); }
+.sheet-held { background: var(--paper) var(--grain); box-shadow: var(--lit-edge), var(--shadow-held); }
+.strip { background: var(--paper) var(--grain); box-shadow: var(--lit-edge), var(--shadow-flat); }
+.slate { background: var(--slate) var(--grain); background-blend-mode: overlay; color: var(--on-slate); box-shadow: var(--shadow-slate); }
+.well { background: var(--board-deep); box-shadow: var(--shadow-well); }
+
+/* Warning strip: hatch tab, plain words. */
+.warnstrip { display: flex; align-items: stretch; background: var(--warn-paper); color: var(--ink); box-shadow: var(--shadow-flat); }
+.warnstrip::before { content: ""; flex: none; width: 18px; background: var(--warn-hatch); }
+.warnstrip > * { padding: 5px 10px 4px; }
+
+/* Severe notice: black ground, Besley, paper text. */
+.severe { background: var(--severe-ground); color: var(--severe-text); font-family: var(--font-print); font-stretch: normal; padding: 9px 12px 10px; box-shadow: 2px 3px 0 rgba(40, 46, 42, 0.3); }
+
+/* Screen-reader only, still focusable. */
+.sr-only {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0);
+  white-space: nowrap; border: 0;
+}
+
+/* Ink links: running text in the model book. Red underline stays for provenance. */
+.inklink { color: var(--ink); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+
+:where(:focus-visible) { outline: var(--focus-ring); outline-offset: var(--focus-offset); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0ms !important; animation-delay: 0ms !important; transition-duration: 0ms !important; }
+}

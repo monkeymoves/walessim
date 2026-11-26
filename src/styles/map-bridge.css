@@ -1,0 +1,35 @@
+/* Bridge from the design tokens (docs/design/tokens.css) to the custom properties the paper map
+   reads (src/map/README.md). Scoped to the map's host so the tokens keep their own meaning
+   elsewhere: tokens.css has a seven-step --lens-div-1..7 ramp, the map reads a five-step
+   --lens-div-1..5, so inside the map host the five-step values are set as literals. */
+.mapview {
+  --paper-beyond: var(--paper-2);
+  --map-halo: rgba(245, 243, 234, 0.88);
+  --map-warning: var(--warn);
+  --map-rail: var(--ink-2);
+
+  --sea-0: #63808D;
+  --sea-1: #6F8C98;
+  --sea-2: #7F99A4;
+  --sea-3: #93ACB4;
+  --sea-4: #A9BEC4;
+  --sea-5: #C2D2D4;
+
+  --thread-red: var(--thread);
+  --thread-red-dark: var(--thread-deep);
+  --thread-red-hi: #D9767E;
+  --thread-stitch: var(--stitch);
+  --thread-stitch-dark: var(--stitch-deep);
+  --thread-stitch-hi: #6E97E3;
+
+  /* Lens ramps: peat sequential; woad below the middle and peat above for diverging. */
+  --lens-seq-1: #F1EBD8; --lens-seq-2: #E0CFA3; --lens-seq-3: #C9A968; --lens-seq-4: #A67C3C; --lens-seq-5: #6E4A1E;
+  --lens-div-1: #2C5778; --lens-div-2: #7FA3BC; --lens-div-3: #F1EEE2; --lens-div-4: #BF8E45; --lens-div-5: #7A4E1C;
+  --lens-div-neutral-1: #2C5778; --lens-div-neutral-2: #7FA3BC; --lens-div-neutral-3: #F1EEE2; --lens-div-neutral-4: #BF8E45; --lens-div-neutral-5: #7A4E1C;
+  --lens-missing: var(--paper-2);
+  --relief-lens-0: #F8F6EF;
+  --relief-lens-1: #D6D2C4;
+
+  --font-sans: var(--font-grot);
+  --font-serif: var(--font-print);
+}

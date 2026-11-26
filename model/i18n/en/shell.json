@@ -1,0 +1,49 @@
+{
+  "home": "Etifeddiaeth, back to the start",
+  "subtitle": "Inheritance: a game of Wales",
+  "nav.label": "Ways round",
+  "nav.heddiw": "Heddiw",
+  "nav.yfory": "Yfory",
+  "nav.llyfr": "Model book",
+
+  "doc.title": "Etifeddiaeth: Inheritance, a game of Wales",
+  "doc.heddiw": "Heddiw: Wales today. Etifeddiaeth",
+  "doc.yfory": "Yfory: 2026 to 2050. Etifeddiaeth",
+  "doc.llyfr": "The model book. Etifeddiaeth",
+
+  "heddiw.line1": "Wales today",
+  "heddiw.line2": "22 authorities, from the latest open data",
+
+  "modified": "You are playing a modified rule set",
+  "modifiedCount.one": "{n} parameter changed",
+  "modifiedCount.other": "{n} parameters changed",
+  "modifiedReset": "Put the rules back",
+
+  "loading": "Laying out the map.",
+  "error.title": "The model did not load",
+  "error.body": "The map and the model data did not load. Check your connection, then try again.",
+  "error.retry": "Try again",
+
+  "yfory.notReadyTitle": "Yfory is not in this build yet",
+  "yfory.notReadyBody": "The game is still being put together. Wales today and the model book are ready to use.",
+
+  "phone.title": "The game needs a bigger screen",
+  "phone.atlas": "Yfory needs a laptop or a tablet held sideways. Wales today works here, one piece at a time.",
+  "phone.game": "Yfory needs a laptop or a tablet held sideways, so the map and your hand of cards fit side by side. You can explore Wales today on this screen.",
+
+  "title.mapAria": "A paper relief map of Wales and its 22 local authorities",
+  "title.touch": "Open this place in Wales today",
+  "title.hook": "This is Wales in 2026. In 2050 someone will write to you about what you did with it.",
+  "title.play": "Play 2026 to 2050",
+  "title.playNote": "Six Senedd terms, about twenty minutes. The next generation judges what you leave.",
+  "title.resume": "Carry on your game",
+  "title.resumeNote": "Your last game is saved in this browser.",
+  "title.explore": "Explore Wales today",
+  "title.exploreNote": "22 authorities and 21 real measures, each with its source.",
+  "title.read": "Read the model",
+  "title.readNote": "Every rule, number and source, with the dials you can turn.",
+  "title.honest": "A thinking tool, not a forecast. An independent project, not an official view.",
+  "title.lineAria": "A timeline from 2026, now, to 2050, where a sealed letter waits.",
+  "title.letter": "A letter, sealed until 2050",
+  "title.attribution": "Boundaries: ONS (OGL). Terrain: AWS Terrain Tiles. Railways: OpenStreetMap contributors (ODbL)."
+}

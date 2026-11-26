@@ -12,7 +12,7 @@ A web strategy game and atlas of Wales built on real open data. Read `docs/spec.
 - `scripts/build-model.ts`: validates `model/` and writes `public/model.json`.
 
 ## Rules
-- Every user-facing string comes from `model/i18n/{en,cy}.json` or a `{en, cy}` content field. No literal copy in components. Welsh drafts carry `cy_review: true`.
+- Every user-facing string comes from `model/i18n/{en,cy}/<area>.json` or a `{en, cy}` content field. No literal copy in components. Welsh drafts carry `cy_review: true`.
 - Every figure shown traces to a source in `model/sources.yaml`. No invented numbers; illustrative values are labelled "illustrative".
 - No pound figures for costs: pips.
 - Never use the em dash or en dash characters anywhere (code, comments, copy, docs). Use commas, colons, brackets or "to".

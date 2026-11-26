@@ -1,0 +1,174 @@
+/* Heddiw atlas. The stage is a well cut into the board; the map fills it; at most three
+   floating pieces sit on it (lens, key, place panel) plus the explorer drawer. */
+
+.atlas { display: grid; grid-template-rows: 1fr auto; height: 100%; min-height: 0; }
+.stage { position: relative; margin: 0 var(--margin); min-height: 0; overflow: hidden; }
+.mapview { position: absolute; inset: 0; }
+.mapview-host { position: absolute; inset: 0; }
+
+.atlas-foot { display: flex; justify-content: space-between; gap: 24px; padding: 4px var(--margin) 6px; color: var(--ink-2); }
+
+/* ---------- floating pieces ---------- */
+.float-lens { position: absolute; left: 14px; top: 14px; width: 300px; z-index: 14; }
+.float-key { position: absolute; right: 14px; top: 14px; z-index: 11; display: grid; gap: 12px; justify-items: end; transition: right var(--dur-slide) var(--ease-paper); }
+.atlas.drawer .float-key { right: 634px; }
+.float-panel { position: absolute; left: 14px; bottom: 14px; width: 372px; z-index: 13; max-height: calc(100% - 196px); display: flex; }
+
+/* ---------- lens picker ---------- */
+.lenspicker { position: relative; padding: 12px 14px 12px; }
+.lenspicker-lead { color: var(--ink-2); }
+.lenspicker-name { margin-top: 2px; }
+.lenspicker-meta { margin-top: 3px; color: var(--ink-2); }
+.lenspicker-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 10px; }
+.lenslist {
+  position: absolute; left: 0; top: calc(100% + 8px); width: 380px; z-index: 30;
+  max-height: min(620px, calc(100vh - 240px)); overflow: auto;
+  padding: 8px 14px 12px;
+}
+.lensgroup { padding: 8px 0 6px; border-bottom: 1px solid var(--rule); }
+.lensgroup:last-of-type { border-bottom: 0; }
+.lensgroup-head { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
+.lensopt { display: grid; grid-template-columns: 18px 1fr auto; align-items: baseline; gap: 6px; padding: 3px 4px; cursor: pointer; }
+.lensopt:hover { background: var(--paper-2); }
+.lensopt.on { background: var(--paper-2); box-shadow: inset 3px 0 0 var(--ink); }
+.lensopt input { margin: 0; accent-color: var(--ink); width: 14px; height: 14px; translate: 0 2px; }
+.lensopt-year { white-space: nowrap; }
+.lenslist-foot { display: flex; justify-content: flex-end; padding-top: 8px; }
+
+/* ---------- key: a little stack of offcuts ---------- */
+.lenskey { width: 210px; padding: 12px 14px 12px; display: grid; gap: 6px; }
+.offcuts { display: grid; gap: 0; }
+.offcuts li { display: grid; grid-template-columns: 62px auto; justify-content: start; align-items: center; gap: 10px; height: 19px; }
+.offcuts i {
+  display: block; height: 15px;
+  width: calc(36px + var(--k) * 6px);
+  background: var(--sw);
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.4), 2px 2px 0 rgba(27, 34, 38, 0.3);
+}
+.offcuts li.nodata i { width: 36px; background: var(--paper-2) var(--lens-nodata); }
+.offcuts span { font-size: var(--size-label); font-stretch: var(--wdth-label); }
+.lenskey-wales { padding-top: 6px; border-top: 1px solid var(--rule); color: var(--ink); }
+.explorer-open { box-shadow: inset 0 0 0 1.5px var(--ink), var(--shadow-sheet); }
+
+/* ---------- map tooltip ---------- */
+.maptip { position: absolute; z-index: 25; }
+.maptip.kbd { outline: var(--focus-ring-on-slate); outline-offset: 3px; }
+
+/* ---------- place panel ---------- */
+.placepanel { position: relative; width: 100%; padding: 16px 18px 14px; overflow: auto; display: grid; gap: 10px; align-content: start; }
+.placepanel-x { position: absolute; right: 6px; top: 6px; }
+.placepanel-pin { position: absolute; right: -4px; top: 30px; width: 9px; height: 9px; border-radius: var(--radius-round); background: var(--thread); box-shadow: 1px 2px 0 rgba(20, 24, 26, 0.35); }
+.placepanel-name { padding-right: 32px; }
+.placepanel-region { color: var(--ink-2); margin-top: -4px; }
+.bigfigs { display: flex; gap: 26px; padding: 8px 0 10px; border-top: 1.5px solid var(--ink); }
+.bigfigs b { display: block; }
+.bigfigs > div { flex: 1; display: grid; gap: 3px; align-content: start; justify-items: start; min-width: 0; }
+.bigfigs > div.lensrow { box-shadow: inset 3px 0 0 var(--ink); padding-left: 9px; }
+.bigfigs .label { color: var(--ink-2); font-weight: var(--wght-grot-text); }
+.placeledger { width: 100%; border-collapse: collapse; }
+.placeledger th, .placeledger td { border-top: 1px solid var(--rule); padding: 6px 0 6px; vertical-align: top; }
+.placeledger tr:first-child th, .placeledger tr:first-child td { border-top: 0; }
+.placeledger th { text-align: left; font-weight: var(--wght-grot-text); padding-right: 10px; }
+.placeledger td { text-align: right; white-space: nowrap; }
+.pl-name { display: block; font-weight: 540; font-stretch: var(--wdth-label); line-height: 1.25; }
+.pl-sub { display: block; margin-top: 2px; }
+.pl-value { display: block; font-weight: var(--wght-grot-strong); font-size: 15px; line-height: 1.2; }
+.pl-docket { margin-top: 4px; }
+.placeledger tr.lensrow th { box-shadow: inset 3px 0 0 var(--ink); padding-left: 8px; }
+.placenote { background: var(--paper-2); padding: 8px 10px 9px; display: grid; gap: 3px; }
+.placepanel-foot { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; color: var(--ink-2); }
+.placepanel .sourcecard { left: auto; right: 0; }
+
+/* ---------- explorer drawer ---------- */
+.explorer {
+  position: absolute; top: 0; right: 0; bottom: 0; width: 620px; z-index: 20;
+  padding: 16px 18px 14px; display: grid; grid-template-rows: auto minmax(0, 1fr); grid-template-columns: minmax(0, 1fr); gap: 10px; min-height: 0;
+  animation: drawer-in var(--dur-slide) var(--ease-paper);
+}
+@keyframes drawer-in { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+.explorer-head { display: flex; align-items: center; gap: 16px; }
+.explorer-head h2 { flex: 1; }
+.explorer-tabs { display: inline-flex; gap: 3px; padding: 3px; }
+.explorer-table { display: grid; grid-template-rows: auto 1fr; gap: 10px; min-height: 0; }
+.explorer-tools { position: relative; display: flex; align-items: center; gap: 14px; }
+.colchooser { position: absolute; left: 0; top: calc(100% + 8px); z-index: 30; width: 520px; max-height: 520px; overflow: auto; padding: 8px 14px 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 18px; }
+.colgroup { border: 0; margin: 0; padding: 6px 0; min-width: 0; }
+.colgroup legend { display: flex; align-items: center; gap: 8px; padding: 0; margin-bottom: 3px; }
+.colopt { display: grid; grid-template-columns: 18px 1fr; gap: 6px; align-items: baseline; padding: 2px 0; cursor: pointer; }
+.colopt input { margin: 0; accent-color: var(--ink); translate: 0 2px; }
+.ledger-scroll { overflow: auto; min-height: 0; }
+
+.ledger { border-collapse: collapse; font-variant-numeric: var(--figures-data); }
+.explorer-ledger { width: 100%; }
+.explorer-ledger thead th { position: sticky; top: 0; z-index: 2; background: var(--paper) var(--grain); vertical-align: bottom; text-align: right; padding: 0 0 0 10px; border-bottom: 1.5px solid var(--ink); white-space: nowrap; }
+.explorer-ledger th.col-name, .explorer-ledger td.col-name { text-align: left; padding-left: 0; }
+.sorthead {
+  display: inline-grid; justify-items: end; gap: 0; border: 0; background: none; cursor: pointer;
+  padding: 2px 0 5px; color: var(--ink-2);
+  font-size: var(--size-small); line-height: 1.2; font-stretch: var(--wdth-ticket); font-weight: var(--wght-grot-strong);
+  text-align: right; position: relative; min-height: 28px;
+}
+.col-name .sorthead { justify-items: start; text-align: left; }
+.sorthead.on { color: var(--ink); }
+.sorthead-unit { font-weight: var(--wght-grot-text); }
+.sortmark { position: absolute; left: -12px; bottom: 8px; }
+.col-name .sortmark { position: static; display: inline; margin-left: 6px; }
+.explorer-ledger tbody th, .explorer-ledger tbody td { height: 28px; padding: 3px 0 3px 10px; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+.explorer-ledger tbody tr:nth-child(5n) th, .explorer-ledger tbody tr:nth-child(5n) td { border-bottom-color: var(--rule-strong); }
+.explorer-ledger tbody th { text-align: left; padding-left: 0; }
+.rowname { border: 0; background: none; padding: 0 0 0 0; font: inherit; font-stretch: var(--wdth-label); font-weight: 540; text-align: left; cursor: pointer; color: var(--ink); }
+.explorer-ledger tbody tr { cursor: pointer; }
+.explorer-ledger tbody tr.hot > *, .explorer-ledger tbody tr.sel > * { background: var(--paper-2); }
+.explorer-ledger tbody tr.sel th { box-shadow: inset 3px 0 0 var(--thread); padding-left: 8px; }
+.explorer-ledger td { position: relative; }
+.explorer-ledger .cell { display: block; line-height: 1.2; }
+.explorer-ledger .mag { position: absolute; right: 0; bottom: 3px; height: 3px; background: var(--ink); max-width: calc(100% - 10px); opacity: 0.85; }
+.explorer-ledger tfoot th, .explorer-ledger tfoot td { border-top: 1.5px solid var(--ink); padding: 5px 0 3px 10px; text-align: right; font-weight: var(--wght-grot-strong); }
+.explorer-ledger tfoot th { text-align: left; padding-left: 0; }
+
+/* ---------- scatter ---------- */
+.scatter { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; grid-template-columns: minmax(0, 1fr); gap: 8px; min-height: 0; }
+.scatter-axes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; }
+.axispick { display: grid; gap: 3px; min-width: 0; }
+.axispick select { width: 100%; min-width: 0; }
+.axispick select {
+  appearance: none; border: 0; border-radius: 0; background: var(--paper);
+  box-shadow: inset 0 0 0 1.5px var(--rule-strong); padding: 6px 28px 5px 8px; min-height: 32px;
+  font-stretch: var(--wdth-ui);
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink) 50%), linear-gradient(-45deg, transparent 50%, var(--ink) 50%);
+  background-position: right 13px center, right 8px center; background-size: 5px 5px; background-repeat: no-repeat;
+}
+.scatter-box { position: relative; min-height: 0; overflow: hidden; }
+.scatter-svg { position: absolute; left: 0; top: 0; overflow: visible; }
+.scatter-svg .grid line { stroke: var(--rule); stroke-width: 1; }
+.scatter-svg .axis line { stroke: var(--ink); stroke-width: 1.5; }
+.scatter-svg text { font-family: var(--font-grot); font-stretch: var(--wdth-label); font-size: 11.5px; fill: var(--ink-2); font-variant-numeric: var(--figures-data); }
+.scatter-svg .axis-title { fill: var(--ink); font-weight: var(--wght-grot-strong); }
+.scatter-svg .mark { cursor: pointer; outline: none; }
+.scatter-svg .mark .hit { fill: transparent; }
+.scatter-svg .mark .sq { fill: var(--ink); }
+.scatter-svg .mark text { fill: var(--ink); paint-order: stroke; stroke: var(--paper); stroke-width: 3px; stroke-linejoin: round; }
+.scatter-svg .mark.hot .sq, .scatter-svg .mark:focus-visible .sq { transform-box: fill-box; transform-origin: center; transform: scale(1.5); }
+.scatter-svg .mark.hot text, .scatter-svg .mark.sel text { font-weight: var(--wght-grot-heavy); }
+.scatter-svg .mark:focus-visible .hit { stroke: var(--stitch-deep); stroke-width: 2; stroke-dasharray: 4 3; }
+.scatter-svg .selpin { fill: none; stroke: var(--thread); stroke-width: 2; }
+.scatter-svg .wales-mark rect { fill: var(--paper); stroke: var(--ink); stroke-width: 1.5; }
+.scatter-svg .wales-mark text { fill: var(--ink); font-style: italic; font-family: var(--font-print); font-stretch: normal; }
+.scatter-note { color: var(--ink-2); }
+
+/* ---------- keyboard list ---------- */
+.kbdlist { position: absolute; left: 0; top: 0; }
+
+/* ---------- narrow screens: one column ---------- */
+.atlas.narrow { height: auto; }
+.atlas.narrow .stage { overflow: visible; display: flex; flex-direction: column; gap: 14px; background: none; box-shadow: none; margin: 0 14px; }
+.atlas.narrow .atlas-map { position: relative; inset: auto; order: 2; height: max(320px, 92vw); max-height: 560px; box-shadow: var(--shadow-well); background: var(--board-deep); }
+.atlas.narrow .float-lens { position: static; width: auto; order: 1; }
+.atlas.narrow .float-key { position: static; order: 3; justify-items: stretch; }
+.atlas.narrow .lenskey { width: auto; }
+.atlas.narrow .float-panel { position: static; width: auto; max-height: none; order: 4; }
+.atlas.narrow .lenslist { width: min(380px, calc(100vw - 28px)); }
+.atlas.narrow .explorer { position: static; width: auto; order: 5; animation: none; }
+.atlas.narrow .colchooser { width: calc(100vw - 60px); grid-template-columns: 1fr; }
+.atlas.narrow .atlas-foot { flex-direction: column; gap: 4px; }
+.atlas.narrow .maptip { display: none; }
