@@ -1,6 +1,8 @@
 # The twelve curveballs (game-design section 7). Each is a slow trend (applied every term while active,
 # at game.curveballs.slow_scale of its size) with an optional shock form. Trend ids and ripples are the
 # horizon-scan trend ids (links_out). Shock effects with `duration` are a hit for that many terms.
+# Shock effects without `duration` are lasting scars on a stock: an absorbed shock is still there in 2050,
+# a response or preparation shrinks it with the rest of the hit (balance-log, design decision 14).
 curveballs:
   - id: wet-decade
     name: { en: The wet decade, cy: Y degawd gwlyb, cy_review: true }
@@ -16,6 +18,7 @@ curveballs:
       effects:
         - { target: flood_exposure, size: L, sign: -1, duration: 1, emphasis: [{ flags: [valley, coast], factor: 1.3 }] }
         - { target: access, size: M, sign: -1, duration: 1 }
+        - { target: infrastructure_condition, size: M, sign: -1, rule: R10, note: { en: "Roads, culverts and bridges stay damaged", cy: "Mae ffyrdd, cwlfertau a phontydd yn aros wedi'u difrodi", cy_review: true } }
       special: [tip_may_move]
     ripples_to: [nature-depletion, health-profiles-and-need, housing-demand]
     responses: [slow-the-flow, build-flood-walls, make-coal-tips-safe, restore-upland-peat]
@@ -34,6 +37,7 @@ curveballs:
       effects:
         - { target: life_exp, size: M, sign: -1, duration: 1, emphasis: [{ flags: [city], factor: 1.5 }] }
         - { target: nature_services, size: S, sign: -1, duration: 1 }
+        - { target: health_stock, size: M, sign: -1, rule: R15, note: { en: "Frail people do not get back what the heat took", cy: "Nid yw pobl fregus yn cael yn ôl yr hyn a gymerodd y gwres", cy_review: true } }
     ripples_to: [unemployment-levels, infrastructure-investment]
     responses: [health-before-hospital, warm-homes, plant-woodland]
 
@@ -62,6 +66,7 @@ curveballs:
       effects:
         - { target: heartland, size: M, sign: -1, duration: 1, where: { regions: [north, southwest] } }
         - { target: affordability, size: S, sign: -1, duration: 1, where: { regions: [north, southwest] } }
+        - { target: housing_stock, size: M, sign: -1, where: { regions: [north, southwest] }, note: { en: "Homes lost to the holiday market stay lost", cy: "Mae cartrefi a gollwyd i'r farchnad wyliau yn aros ar goll", cy_review: true } }
     ripples_to: [welsh-language-growth, slow-poverty-reduction, competing-demands]
     responses: [homes-for-locals, build-social-homes, tourism-pays-its-way]
 
@@ -94,6 +99,7 @@ curveballs:
       effects:
         - { target: nature_services, size: M, sign: -1, duration: 1 }
         - { target: gva_head, size: S, sign: -1, duration: 1, where: { regions: [mid, southwest] } }
+        - { target: "fcm:pressure:water_pollution", size: M, sign: 1, rule: R29, note: { en: "The river stays poisoned for years", cy: "Mae'r afon yn aros wedi'i gwenwyno am flynyddoedd", cy_review: true } }
     ripples_to: [climate-instability, health-profiles-and-need, resilience-economy]
     responses: [pay-farms-for-nature, slow-the-flow, restore-upland-peat]
 
@@ -110,6 +116,7 @@ curveballs:
       description: { en: "Back offices empty across the South East.", cy: "Mae swyddfeydd cefn yn gwagio ar draws y De-ddwyrain.", cy_review: true }
       effects:
         - { target: employment, size: M, sign: -1, duration: 1, where: { regions: [southeast] } }
+        - { target: skills_stock, size: M, sign: -1, rule: R21, where: { regions: [southeast] }, note: { en: "Skills go stale out of work", cy: "Mae sgiliau'n mynd yn hen heb waith", cy_review: true } }
     ripples_to: [unemployment-levels, protected-characteristics-gaps]
     responses: [skills-and-apprenticeships, everyone-online, early-years]
 
@@ -126,6 +133,7 @@ curveballs:
       effects:
         - { target: budget, amount: -2, sign: 1 }
         - { target: employment, size: M, sign: -1, duration: 1 }
+        - { target: skills_stock, size: M, sign: -1, rule: R21, note: { en: "Training is the first thing cut", cy: "Hyfforddiant yw'r peth cyntaf i'w dorri", cy_review: true } }
       special: [employers_leave, debt_hurts]
     ripples_to: [unemployment-levels, slow-poverty-reduction]
     responses: [skills-and-apprenticeships]
@@ -142,6 +150,7 @@ curveballs:
       description: { en: "Bills double over a winter.", cy: "Mae biliau'n dyblu dros aeaf.", cy_review: true }
       effects:
         - { target: fuel_poverty, size: L, sign: -1, duration: 1, emphasis: [{ flags: [off_gas], factor: 1.3 }] }
+        - { target: health_stock, size: M, sign: -1, rule: R15, note: { en: "A cold winter leaves its mark on health", cy: "Mae gaeaf oer yn gadael ei ôl ar iechyd", cy_review: true } }
         - { target: trust, amount: -4, sign: 1 }
     ripples_to: [energy-independence, supply-chain-vulnerability, recession-threat]
     responses: [warm-homes, community-owned-energy, grid-and-big-renewables]
@@ -158,6 +167,7 @@ curveballs:
       description: { en: "A port falls quiet; the plants that fed it lay people off.", cy: "Mae porthladd yn tawelu; mae'r gweithfeydd oedd yn ei fwydo yn diswyddo pobl.", cy_review: true }
       effects:
         - { target: employment, size: M, sign: -1, duration: 1, where: { flags: [port] } }
+        - { target: community_assets, size: M, sign: -1, rule: R33, where: { flags: [port] }, note: { en: "Port towns lose clubs, shops and halls", cy: "Mae trefi porthladd yn colli clybiau, siopau a neuaddau", cy_review: true } }
       special: [employers_leave]
     ripples_to: [recession-threat, competing-demands]
     responses: [skills-and-apprenticeships, regional-compact, community-owned-energy]

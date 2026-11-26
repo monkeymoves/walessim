@@ -16,7 +16,7 @@ cards:
     upgraded_by: { en: Lesson of the drained uplands, cy: Gwers yr ucheldir a ddraeniwyd, cy_review: true }
     side_note: { en: "Upland farm income dips for a term.", cy: "Mae incwm ffermydd yr ucheldir yn gostwng am dymor.", cy_review: true }
     effects:
-      - { target: peat_condition, size: M, sign: 1, rule: R06 }
+      - { target: peat_condition, size: S, sign: 1, rule: R06 }
       - { target: "fcm:pressure:drainage", size: M, sign: -1, rule: R29 }
       - { target: flood_exposure, size: S, sign: 1, rule: R08 }
       - { target: earnings, size: S, sign: -1, side: true, duration: 1, note: { en: "Upland farm income, for one term", cy: "Incwm ffermydd yr ucheldir, am un tymor", cy_review: true } }
@@ -34,7 +34,7 @@ cards:
     upgraded_by: { en: "Coal: the tips stayed", cy: "Glo: arhosodd y tomenni", cy_review: true }
     side_note: { en: "The heaviest ticket: it crowds out a whole hand. The jobs ripple is brief.", cy: "Y tocyn trymaf: mae'n gwthio llaw gyfan allan. Mae'r crychdon swyddi yn fyr.", cy_review: true }
     effects:
-      - { target: tip_liability, size: L, sign: 1, rule: R11, where: { flags: [coal_valley] } }
+      - { target: tip_liability, size: M, sign: 1, rule: R11, where: { flags: [coal_valley] } }
       - { target: access, size: S, sign: 1, where: { flags: [coal_valley] } }
       - { target: life_exp, size: S, sign: 1, where: { flags: [coal_valley] } }
 
@@ -52,7 +52,7 @@ cards:
     upgraded_by: { en: The miners' institutes, cy: Neuaddau'r glowyr, cy_review: true }
     side_note: { en: "Needs partners: half strength without a regional compact or a well-handled visit. Slower than commercial build.", cy: "Angen partneriaid: hanner cryfder heb gompact rhanbarthol neu ymweliad wedi'i drin yn dda. Arafach nag adeiladu masnachol.", cy_review: true }
     effects:
-      - { target: community_assets, size: M, sign: 1, rule: R33, condition: { needs_partners: true } }
+      - { target: community_assets, size: S, sign: 1, rule: R33, condition: { needs_partners: true } }
       - { target: renewables, size: S, sign: 1, rule: R27, condition: { needs_partners: true } }
       - { target: earnings, size: S, sign: 1, condition: { needs_partners: true } }
       - { target: heartland, size: S, sign: 1, where: { flags: [heartland] }, condition: { needs_partners: true }, note: { en: "Income that stays in Welsh-speaking villages", cy: "Incwm sy'n aros mewn pentrefi Cymraeg", cy_review: true } }
@@ -69,7 +69,7 @@ cards:
     upgraded_by: { en: The Sunday schools, cy: Yr Ysgolion Sul, cy_review: true }
     side_note: { en: "Employment dips for a term where staff are short; weaker without skills and apprenticeships.", cy: "Mae cyflogaeth yn gostwng am dymor lle mae prinder staff; gwannach heb sgiliau a phrentisiaethau.", cy_review: true }
     effects:
-      - { target: speakers_stock, size: M, sign: 1, rule: R19, condition: { half_without_card: skills-and-apprenticeships } }
+      - { target: speakers_stock, size: S, sign: 1, rule: R19, condition: { half_without_card: skills-and-apprenticeships } }
       - { target: welsh_speakers, size: S, sign: 1, rule: R19, condition: { half_without_card: skills-and-apprenticeships } }
       - { target: early_years_stock, size: S, sign: 1, rule: R32 }
       - { target: employment, size: S, sign: -1, side: true, duration: 1, note: { en: "Staff are short, for one term", cy: "Prinder staff, am un tymor", cy_review: true } }
@@ -100,7 +100,7 @@ cards:
     upgraded_by: { en: Garden villages, cy: Pentrefi gardd, cy_review: true }
     side_note: { en: "Land take presses on nature; building spends carbon.", cy: "Mae defnyddio tir yn pwyso ar natur; mae adeiladu'n gwario carbon.", cy_review: true }
     effects:
-      - { target: housing_stock, size: M, sign: 1 }
+      - { target: housing_stock, size: S, sign: 1 }
       - { target: affordability, size: S, sign: 1, rule: R16 }
       - { target: young_adults, size: S, sign: 1 }
       - { target: "fcm:pressure:built_development_and_infrastructure", size: S, sign: 1, rule: R29, side: true }
@@ -263,7 +263,7 @@ cards:
     upgraded_by: { en: The conifer plantations, cy: Y planhigfeydd conwydd, cy_review: true }
     side_note: { en: "In the North, Mid and South West, farms bought for trees thin the heartland unless partners are in place.", cy: "Yn y Gogledd, y Canolbarth a'r De-orllewin, mae ffermydd a brynwyd ar gyfer coed yn teneuo'r cadarnleoedd oni bai bod partneriaid yn eu lle.", cy_review: true }
     effects:
-      - { target: woodland_stock, size: M, sign: 1 }
+      - { target: woodland_stock, size: S, sign: 1 }
       - { target: carbon_budget, size: S, sign: 1 }
       - { target: heartland, size: S, sign: -1, side: true, where: { regions: [north, mid, southwest], flags: [heartland] }, condition: { unless_card_in_force: regional-compact }, note: { en: "Farms bought for trees", cy: "Ffermydd a brynwyd ar gyfer coed", cy_review: true } }
 
@@ -278,7 +278,7 @@ cards:
     upgraded_by: { en: The medical aid societies, cy: Y cymdeithasau cymorth meddygol, cy_review: true }
     side_note: { en: "Waiting lists lengthen for a term while money moves, and nothing shows for three terms.", cy: "Mae rhestrau aros yn hwy am dymor tra bo arian yn symud, a does dim i'w weld am dri thymor.", cy_review: true }
     effects:
-      - { target: health_stock, size: L, sign: 1, rule: R15 }
+      - { target: health_stock, size: S, sign: 1, rule: R15 }
       - { target: care_pressure, size: S, sign: 1 }
       - { target: life_exp, size: S, sign: -1, side: true, duration: 1, delay: 0, note: { en: "Waiting lists, for one term", cy: "Rhestrau aros, am un tymor", cy_review: true } }
 
@@ -293,7 +293,7 @@ cards:
     upgraded_by: { en: The school boards, cy: Y byrddau ysgol, cy_review: true }
     side_note: { en: "Slow. It does nothing for the median place, so there is no national cheer.", cy: "Araf. Nid yw'n gwneud dim i'r lle canolrifol, felly does dim bloedd genedlaethol.", cy_review: true }
     effects:
-      - { target: early_years_stock, size: L, sign: 1, rule: R32, where: { flags: [worst5] } }
+      - { target: early_years_stock, size: M, sign: 1, rule: R32, where: { flags: [worst5] } }
       - { target: earnings, size: S, sign: 1, where: { flags: [worst5] } }
 
   - id: regional-compact

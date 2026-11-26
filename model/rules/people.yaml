@@ -64,7 +64,7 @@ rules:
     params:
       floor_share: { default: 0.4, min: 0.4, max: 0.8, unit: { en: share of the 2026 stock that existing provision keeps up, cy: cyfran o stoc 2026 y mae'r ddarpariaeth bresennol yn ei chynnal, cy_review: true }, adjustable: true, placeholder: true, tune: true }
       coef: { default: 2.0, min: 1.0, max: 3.0, unit: { en: points per play, cy: pwyntiau y chwarae, cy_review: true }, adjustable: true, placeholder: true }
-      outflow: { default: 0.1, min: 0.05, max: 0.15, unit: { en: fraction per term, cy: ffracsiwn y tymor, cy_review: true }, adjustable: true }
+      outflow: { default: 0.15, min: 0.05, max: 0.15, unit: { en: fraction per term, cy: ffracsiwn y tymor, cy_review: true }, adjustable: true }
     sources: [prevention-returns]
     confidence: low
     evidence: expert

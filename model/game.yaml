@@ -4,7 +4,7 @@ years: [2026, 2030, 2034, 2038, 2042, 2046]
 end_year: 2050
 post_counts_until: 2058
 budget: 8
-contingency_carry: 1
+contingency_carry: 2
 peek_cost: 1
 hand_size: 5
 first_hand_size: 4
@@ -12,7 +12,7 @@ hold_over: 1
 sizes: { S: 1.5, M: 2.5, L: 4.0 }
 fcm_sizes: { S: 0.1, M: 0.2, L: 0.3 }
 regional_size_step: 1
-grade_multiplier: { poorly: 0.6, adequately: 1.0, well: 1.3 }
+grade_multiplier: { poorly: 0.5, adequately: 1.0, well: 1.5 }
 runs: 200
 preview_runs: 50
 sharp_share: 0.8
@@ -56,13 +56,13 @@ curveballs:
   # slow trend effects are applied every term at this fraction of their size
   slow_scale: 0.3
   # shock effects apply at this fraction of their size before the response multiplier
-  shock_scale: 0.5
+  shock_scale: 1.0
   first_trend: wet-decade
   first_game_order: [wet-decade, price-of-a-home]
   first_game_shock: { term: 3, curveball: downturn }
-response_multiplier: { absorb: 1.0, respond1: 0.5, respond2: 0.25, prepared: 0.5 }
+response_multiplier: { absorb: 1.0, respond1: 0.5, respond2: 0.25, prepared: 0.7 }
 fragile_infrastructure: { below: 4, multiplier: 1.25 }
-debt: { interest: 1, clear_cost: 3, max_tokens: 3, left_penalty: 0.5, left_penalty_cap: 1.5 }
+debt: { interest: 1, clear_cost: 3, max_tokens: 3, left_penalty: 0.15, left_penalty_cap: 0.45 }
 caretaker: { return_trust: 40, return_budget_penalty: 1, contingency: 2, shadow_pledge_bonus: 5 }
 lived: { mean_weight: 0.75, min_weight: 0.25 }
 result_bands:
@@ -72,3 +72,19 @@ result_bands:
   - { min: 6.0, name: { en: "Handed on better", cy: "Wedi'i drosglwyddo'n well", cy_review: true } }
   - { min: 7.5, name: { en: "A gift", cy: "Rhodd", cy_review: true } }
 letter_bands: { low: 4.5, high: 6.0 }
+# Design decision 14 (docs/design/balance-decision.md): the result is judged as change since 2026, in
+# net strand pips (number of strands x weighted change), the lower of Lived and Left. The engine reads
+# this block once it implements the decision; until then result_bands and letter_bands above still apply.
+judged_change:
+  # first term counted in Lived (1-based): the first term is inherited, so the player's terms start at 2
+  lived_first_term: 2
+  # Lived level = mean of the counted terms, less this share of the deepest fall below the 2026 start
+  dip_weight: 0.25
+  # band edges in net strand pips changed since 2026 (the first band has no lower edge)
+  bands:
+    - { min: -99, name: { en: "Diminished", cy: "Wedi'i leihau", cy_review: true } }
+    - { min: -4, name: { en: "Held, just", cy: "Wedi'i ddal, prin", cy_review: true } }
+    - { min: -1, name: { en: "Handed on", cy: "Wedi'i drosglwyddo", cy_review: true } }
+    - { min: 1, name: { en: "Handed on better", cy: "Wedi'i drosglwyddo'n well", cy_review: true } }
+    - { min: 4, name: { en: "A gift", cy: "Rhodd", cy_review: true } }
+  letter_bands: { low: -1, high: 1 }

@@ -10,7 +10,7 @@ rules:
     outputs: [infrastructure_condition]
     lag: 0
     params:
-      ageing: { default: -0.25, min: -0.3, max: -0.1, unit: { en: points per term as assets age, cy: pwyntiau y tymor wrth i asedau heneiddio, cy_review: true }, adjustable: true, placeholder: true, tune: true }
+      ageing: { default: -0.2, min: -0.3, max: -0.1, unit: { en: points per term as assets age, cy: pwyntiau y tymor wrth i asedau heneiddio, cy_review: true }, adjustable: true, placeholder: true, tune: true }
       coef: { default: 1.0, min: 0.5, max: 1.5, unit: { en: points per unpaid upkeep, cy: pwyntiau fesul cynnal heb ei dalu, cy_review: true }, adjustable: true, placeholder: true }
     sources: [asset-condition]
     confidence: medium

@@ -100,3 +100,103 @@ need much harsher penalties than section 4.2 sets.
    +6, shock -6) are each worth about 0.1 to 0.2 of a result. Either accept a smaller gap for these
    three or make the habits costlier (for example a larger grade multiplier).
 3. **Card dominance.** Thoughtful-style play leans on the cheap, broad cards; see the card table above.
+
+---
+
+# Design lead's decision, 26 November 2026 (decision 14)
+
+*Full decision, formula, targets and the engine spec: `balance-decision.md`. This section records the
+reasoning and the numbers. Check: `npx tsx scripts/balance-probe.ts --seeds 200 --ceiling 5000`.*
+
+## What was really wrong
+
+The engine lead's diagnosis is right, and the cause goes one step further. The 0 to 10 scale runs from
+the worst UK region to a national milestone, and Wales starts on it from real data. A strand averages
+about three indicators and the result averages seven strands, so one national card moves the result by
+about a twentieth of a point whatever the effect sizes are. Raising S, M and L does not help, because
+trends, shocks and side effects use the same sizes: I tried S 2.0, M 3.0 and thoughtful play got
+slightly worse. Honest change over 24 years is a pip or two a strand. The old result hid that under
+five points of level that no player chose, so a thoughtful game and a caretaker game looked alike.
+
+Three other things were found on the way:
+
+- **Stocks were on a different scale from flows.** Thoughtful play gained about 9 net strand pips of
+  Left and 1.5 of Lived; health stock reached 10 out of 10. Left could never bind for a good player.
+- **The worst-term rule punished investment.** On a rising path the worst term is the first, so a
+  quarter of Lived was "the term before your cards landed".
+- **Two bot habits are not what they say.** The thoughtful bot neglects regions as often as the
+  south-east-only bot (about ten region-terms a game), and about 85 per cent of shocks count as
+  "prepared", so the no-contingency bot rarely absorbs a full hit. These are bot and engine matters
+  (see the spec), not tune values.
+
+## The decision, in short
+
+Judge the change since 2026, in net strand pips (seven times the weighted change), the lower of Lived
+and Left. Lived is the mean of terms 2 to 6, less a quarter of the deepest fall below the 2026 start.
+Bands: Diminished below -4, Held, just to -1, Handed on to +1, Handed on better to +4, A gift from +4.
+The caretaker ghost is shown beside it ("about 5 pips ahead of a caretaker's Wales") but is not in the
+score. Stocks were retuned in YAML to the scale of flows, shocks leave lasting scars, and debt is
+priced at about a pip of Left a token.
+
+I chose the change since 2026 over "relative to the caretaker" for the score because 2026 is the same
+real number in every game and the ghost varies with the seed; the ghost does its work as a mark and a
+sentence. I chose net strand pips over a rescaled 0 to 10 index because a rescaled index would be a
+made-up number, and pips are what the player has watched all game.
+
+## Changes 14a to 14j
+
+Listed with from, to and why in `balance-decision.md` ("Done in YAML already"). Tried and put back:
+effect sizes S 2.0, M 3.0; Trust neglect -7 (the thoughtful bot lost the seat in 0.3 games);
+`floor_share` 0.6 and faster outflows of 0.25 to 0.3 (both moved every bot together, so they bought no
+spread); early years stock at S (no effect).
+
+## Numbers
+
+Old measure (level, lower of Lived and Left), before any of this, 200 seeds: caretaker 4.52,
+careless 3.60, average 5.07, thoughtful 5.20, ceiling 5.35. Spread caretaker to thoughtful: 0.68 of
+a point on a scale of ten.
+
+New measure, net strand pips since 2026, medians:
+
+| Bot | Before (old tuning, judged over terms 2 to 6 as change, 30 seeds) | After (200 seeds) | p10 | p90 | Lived | Left | Lived is lower | Lost terms | Target |
+|---|---|---|---|---|---|---|---|---|---|
+| caretaker | -1.5 | -2.8 | -4.6 | -1.5 | -1.8 | -2.2 | 40% | 0.54 | -3.5 to -1.5: ok (Held, just) |
+| careless | -5.8 | -6.9 | -9.5 | -4.3 | -3.1 | -6.9 | 5% | 0.86 | -10 to -4: ok (Diminished) |
+| average | +0.7 | -0.4 | -3.4 | +2.1 | +1.4 | -0.1 | 27% | 0.04 | -1 to +1: ok (Handed on) |
+| thoughtful | +1.5 | +2.3 | +0.4 | +3.5 | +2.5 | +4.2 | 78% | 0.01 | +1.5 to +3.5: ok (Handed on better) |
+| growth-only | -4.8 | -6.2 | -8.1 | -4.4 | -2.9 | -6.2 | 8% | 1.00 | 1.5 below thoughtful: ok |
+| green-only | -3.0 | -3.9 | -5.2 | -2.8 | -3.6 | -3.1 | 64% | 0.47 | ok |
+| borrower | -0.2 | +0.5 | -3.6 | +2.9 | +2.0 | +1.0 | 35% | 0.12 | ok (1.8 below) |
+| prevention-only | -0.2 | 0.0 | -2.1 | +1.5 | 0.0 | +5.0 | 100% | 0.14 | ok (2.3 below) |
+| south-east-only | +1.3 | +2.0 | +0.2 | +3.1 | +2.0 | +5.3 | 97% | 0.03 | not above thoughtful: ok; cost 0.3 (bot fix needed, see spec) |
+| ignore-places | +1.2 | +1.6 | -0.2 | +2.8 | +1.6 | +4.1 | 90% | 0.07 | ok; cost 0.8 at the median, 0.6 at p10 |
+| no-contingency | +1.6 | +2.0 | -0.2 | +3.5 | +2.2 | +4.5 | 88% | 0.07 | ok; cost 0.3 at the median, 0.6 at p10 |
+| end-game-dumper | +1.5 | +1.9 | -0.1 | +3.2 | +2.1 | +3.5 | 78% | 0.03 | ok; cost 0.4 |
+| flow-greedy (diagnostic) | +1.7 | -0.2 | -2.9 | +2.4 | +2.8 | -0.2 | 8% | 0.01 | chasing Lived now costs 2.5 pips through Left |
+
+Other checks, 200 seeds:
+
+- Thoughtful minus caretaker on the same seed: median +5.0, p10 +3.1 (target at least +4, and p10 at
+  least +2): ok. Before: +3.0. That is two bands apart, where before it was a fraction of one.
+- Lived is the lower in 78 per cent of thoughtful games (target 50 to 80: ok, but near the edge) and
+  Left is the lower in 73 per cent of average games (target at least 60: ok). Before, Lived was the
+  lower in 99 to 100 per cent of thoughtful games.
+- Ceiling: best of 5,000 random-search games +3.8 (target at most +6: ok). No random-search game
+  reaches A gift (+4); the thoughtful bot's 90th percentile is +3.5, so A gift is rare and just
+  within reach of better play than the bot's.
+- Trust: thoughtful play loses the seat in 1 game in 100, the caretaker in about half its games,
+  growth-only in every game. Well grades per game: thoughtful 3.6, average 1.6.
+
+## What is still weak, honestly
+
+- **Lived share, 78 per cent.** Good play is still limited by Lived more often than I would like.
+  The next lever is the thoughtful bot's own weights (it values flow twice as much as stock) and the
+  preparation rule, not more tuning.
+- **One-habit costs are small** (0.3 to 0.8 of a pip at the median). I have accepted this and changed
+  the target: see the reasons in `balance-decision.md`. The south-east-only figure means nothing
+  until the thoughtful bot really rotates regions.
+- **The engine still scores levels.** Until the formula in `balance-decision.md` is implemented, the
+  game shows the old result, and one test in `src/engine/bots.test.ts` fails ("defeats growth only
+  and borrowing by a clear margin": the borrower is 1.8 net pips below thoughtful, which meets the new
+  target, but the test asks for 0.4 of a level point, which is 2.8 pips). All other tests pass.
+- **Welsh.** Eight new shock notes in `model/curveballs.yaml` are drafts marked `cy_review`.

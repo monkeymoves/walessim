@@ -185,6 +185,8 @@ The dial, the band, the limit ("3 cards next term"), and after each term the two
 
 ### 5.1 Computation
 
+> **Superseded in part by `balance-decision.md` (decision 14).** The result is now judged as the change since 2026 in net strand pips, Lived counts terms 2 to 6, the worst-term rule is restated as a dip below the 2026 start, and the bands are -4, -1, +1, +4. The text below is the original and is kept for the record.
+
 Let `w_s` be the strand weights (default one seventh each, player-adjustable before the game and on the end screen, always displayed). All values from the median run.
 
 - **Term wellbeing** `W_t` = sum over strands of `w_s` x flow score at the end of term t.
@@ -422,6 +424,8 @@ Honesty rules for the engine: FCM iterations are never time (R03 carries the clo
 | End-game dumping (term 6 short-term cards only) | The lower-of rule; in-the-post cards count in Left |
 
 ### 11.2 Targets, enforced by bot tests
+
+> **Superseded by `balance-decision.md` (decision 14):** the targets are restated in net strand pips since 2026. The table below is the original.
 
 The engine agent writes six bots and runs each over 200 seeds. These are acceptance tests.
 
