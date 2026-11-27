@@ -55,6 +55,8 @@ export interface TicketProps {
   fare?: JSX.Element;
   /** A line under the pulls, e.g. "First effects in 1 term, the rest in 2". */
   note?: string;
+  /** The year it is played (now): the face says the year it works from, never a count of terms (plain-wales 1.1). */
+  year?: number;
   /** Shown at the top right of the body when selected ("Play this card" stamp). */
   action?: JSX.Element;
   onSelect?: () => void;
@@ -98,10 +100,12 @@ export function Ticket(props: TicketProps): JSX.Element {
   const helps = () => [...(props.card.helps ?? []), ...(props.card.mixed ?? []).filter((s) => !(props.card.helps ?? []).includes(s))];
   const mixed = (s: StrandId) => mixedSet().has(s);
   const frays = () => (props.card.frays ?? []).filter((s) => !helps().includes(s));
-  const serial = () => `${t("parts.ticket.no")} ${props.serial ?? serialOf(props.card.id)}`;
+  const serial = () => `${props.serial ?? serialOf(props.card.id)}`;
+  /** The year it works from, when the play year is known. */
+  const worksYear = () => (props.year != null && props.card.delay > 0 ? props.year + 4 * props.card.delay : null);
   const budget = () => props.budget ?? 8;
   const payout = () =>
-    props.card.delay <= 0 ? t("parts.ticket.paysNow") : tn("parts.ticket.terms", props.card.delay);
+    props.card.delay <= 0 ? t("play.card.works_now") : props.year != null ? t("play.card.works_from", { year: props.year + 4 * props.card.delay }) : tn("parts.ticket.terms", props.card.delay);
   const ariaName = () =>
     [
       pick(props.card.name),
@@ -148,8 +152,12 @@ export function Ticket(props: TicketProps): JSX.Element {
                 <span><span class="furniture">{t("parts.ticket.cost")}</span> <b>{props.card.cost}</b></span>
               </Show>
               <span>
-                <Show when={props.card.delay > 0} fallback={<span class="furniture">{t("parts.ticket.paysOutNow")}</span>}>
-                  <span class="furniture">{t("parts.ticket.paysOutIn")}</span> <b>{props.card.delay}</b>
+                <Show when={props.card.delay > 0} fallback={<span class="furniture">{t("play.ticket.works_now")}</span>}>
+                  <Show when={worksYear()} fallback={<><span class="furniture">{t("parts.ticket.paysOutIn")}</span> <b>{props.card.delay}</b></>}>
+                    <Show when={worksYear()! <= 2050} fallback={<span class="furniture">{t("play.ticket.after_2050")}</span>}>
+                      <span class="furniture">{t("play.ticket.works_from")}</span> <b>{worksYear()}</b>
+                    </Show>
+                  </Show>
                 </Show>
               </span>
             </span>
@@ -200,11 +208,14 @@ export function Ticket(props: TicketProps): JSX.Element {
             <div>
               <Show
                 when={props.card.delay > 0}
-                fallback={<span class="furniture">{t("parts.ticket.paysOutNow")}</span>}
+                fallback={<span class="furniture">{t("play.ticket.works_now")}</span>}
               >
-                <span class="furniture">{t("parts.ticket.paysOutIn")}</span>
-                <b>{props.card.delay}</b>
-                <small>{tn("parts.ticket.termWord", props.card.delay)}</small>
+                <Show when={worksYear()} fallback={<><span class="furniture">{t("parts.ticket.paysOutIn")}</span><b>{props.card.delay}</b><small>{tn("parts.ticket.termWord", props.card.delay)}</small></>}>
+                  <Show when={worksYear()! <= 2050} fallback={<span class="furniture">{t("play.ticket.after_2050")}</span>}>
+                    <span class="furniture">{t("play.ticket.works_from")}</span>
+                    <b>{worksYear()}</b>
+                  </Show>
+                </Show>
               </Show>
             </div>
           </div>

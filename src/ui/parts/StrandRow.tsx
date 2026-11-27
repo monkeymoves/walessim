@@ -39,6 +39,10 @@ export interface StrandMeterProps {
   ghostLabel?: string | null;
   /** The forecast is a fall. */
   ghostDown?: boolean;
+  /** Draw the 2050 marker faint (turns 1 and 2, before it is explained: plain-wales 3.1). */
+  stockFaint?: boolean;
+  /** Show "{n} out of 10" under the name in place of the other-language name (plain-wales 3.1). */
+  plainCount?: boolean;
 }
 
 /** "No change": a short level bar, cut square; the words are in the accessible name and tooltip. */
@@ -94,7 +98,9 @@ export function StrandMeter(props: StrandMeterProps): JSX.Element {
           </span>
         </Show>
       </div>
-      <Show when={props.ghostLabel} fallback={<span class="other" lang={otherLang()}>{otherName()}</span>}>
+      <Show when={props.ghostLabel} fallback={
+        props.plainCount ? <span class="other meter-count data">{t("play.meter.count", { n: flow() })}</span> : <span class="other" lang={otherLang()}>{otherName()}</span>
+      }>
         <span class="meter-ghostlabel" classList={{ fuzzy: props.ghostSharp === false, down: !!props.ghostDown }}>
           <svg viewBox="0 0 9 8" width="8" height="7" aria-hidden="true"><path fill="currentColor" d={props.ghostDown ? "M0 0h9L4.5 8z" : "M0 8h9L4.5 0z"} /></svg>
           {props.ghostLabel}
@@ -106,7 +112,7 @@ export function StrandMeter(props: StrandMeterProps): JSX.Element {
           <b class="ghost" classList={{ fuzzy: props.ghostSharp === false, down: (props.ghost ?? 0) < 0 }} style={{ "--g0": ghostFrom(), "--gn": ghostLen() }} />
         </Show>
       </div>
-      <div class="pegs">
+      <div class="pegs" classList={{ faint: !!props.stockFaint }}>
         <Show when={props.stockPips != null}>
           <b style={{ "--s": Math.max(0, Math.min(10, props.stockPips!)) }} />
         </Show>
@@ -159,6 +165,10 @@ export interface StrandRowProps {
   labels?: Partial<Record<StrandId, Text>>;
   /** Per strand: a forecast in words shown inside the strip (see StrandMeter.ghostLabel). */
   ghostLabels?: Partial<Record<StrandId, { text: string; down: boolean } | null>>;
+  /** 2050 markers drawn faint (see StrandMeter.stockFaint). */
+  stockFaint?: boolean;
+  /** "{n} out of 10" under each name (see StrandMeter.plainCount). */
+  plainCount?: boolean;
   pullable?: StrandId[];
   onPull?: (strand: StrandId) => void;
   class?: string;
@@ -183,6 +193,8 @@ export function StrandRow(props: StrandRowProps): JSX.Element {
             ghostLabel={props.ghostLabels?.[id]?.text ?? null}
             ghostDown={props.ghostLabels?.[id]?.down}
             note={props.notes?.[id]}
+            stockFaint={props.stockFaint}
+            plainCount={props.plainCount}
             pullable={props.pullable?.includes(id)}
             onPull={props.onPull}
           />

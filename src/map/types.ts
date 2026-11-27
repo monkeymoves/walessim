@@ -57,7 +57,7 @@ export interface LensSpec {
 export type StitchKind = "made-safe" | "planted" | "built" | "generic";
 export interface Stitch { id: string; at: { la: LaCode } | { x: number; y: number }; kind: StitchKind; label?: string }
 
-export type MarkerKind = "tip" | "warning" | "site" | "town" | "pin";
+export type MarkerKind = "tip" | "warning" | "site" | "town" | "pin" | "stamp";
 export interface Marker {
   id: string;
   x: number;

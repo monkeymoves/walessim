@@ -416,6 +416,37 @@ export type CardScope = "national" | "region" | "national_or_region" | "two_regi
 /** Input-output sector tag for the jobs ripple (rule R25). */
 export type IoSector = "construction" | "energy" | "care" | "land" | "services" | "manufacturing" | "transport";
 
+/**
+ * Which council area a card's real figure names (plain-wales 6.1): the one with the highest or the
+ * lowest value, Wales only, or a fixed ONS code.
+ */
+export type FactPick = "highest" | "lowest" | "wales" | string;
+
+/** The authored `fact` on a card in `model/cards.yaml`: an indicator id and which area to name. */
+export interface CardFactSpec {
+  indicator: string;
+  pick: FactPick;
+}
+
+/**
+ * A card's real figure as the build resolves it from `model/data/la-indicators.json`. No figure is
+ * typed by hand: `value`, `wales`, `year` and `source` are copied from the data and its indicator.
+ */
+export interface CardFact extends CardFactSpec {
+  /** ONS code of the named area, or null when `pick` is `wales`. */
+  la: string | null;
+  /** The named area's value (null when `pick` is `wales`). */
+  value: number | null;
+  /** The Wales value of the same indicator. */
+  wales: number;
+  /** Data year as the dataset gives it ("2025", "2022 to 2024"). */
+  year: string;
+  /** Source id in `model/sources.yaml`. */
+  source: string;
+  /** Rank of the named area among the 22 (1 = highest value), null for `wales`. */
+  rank: number | null;
+}
+
 export interface Card {
   id: string;
   name: Text;
@@ -460,6 +491,14 @@ export interface Card {
   arrival?: { first: number; full: number };
   /** Filled by the build: curveball ids this card is a listed good response to. */
   responds_to?: string[];
+  /** The card's real figure (plain-wales 6.1), resolved by the build. Absent: "How this works" links to the rule. */
+  fact?: CardFact;
+  /** "What it is": one plain line (plain-wales 2.1). */
+  what?: Text;
+  /** "The catch": one plain line. */
+  catch?: Text;
+  /** "Picture it": an example, never a number. */
+  picture?: Text;
 }
 
 /** An upkeep obligation minted by a card. Unpaid upkeep applies `lapse` effects. */

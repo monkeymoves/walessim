@@ -35,6 +35,12 @@ export function indicatorSources(ind: Indicator): string[] {
   return Array.isArray(s) ? s : s ? [s] : [];
 }
 
+/**
+ * Display formats that override indicators.yaml: the flood measure counts homes per 100 households,
+ * once per kind of flood, so it is never shown as a per cent (plain-wales 6.1).
+ */
+const FORMAT_FIX: Record<string, string> = { flood_exposure: "decimal1" };
+
 /** Every indicator that has data, with its values. */
 export function atlasIndicators(model: CompiledModel): AtlasIndicator[] {
   const codes = model.authorities.map((a) => a.code);
@@ -52,7 +58,7 @@ export function atlasIndicators(model: CompiledModel): AtlasIndicator[] {
     out.push({
       id: ind.id,
       name: ind.name,
-      format: (ind["format"] as string | undefined) ?? "decimal1",
+      format: FORMAT_FIX[ind.id] ?? (ind["format"] as string | undefined) ?? "decimal1",
       higherIsBetter: hib === true ? true : hib === false ? false : null,
       strand: strand && STRAND_IDS.includes(strand) ? strand : null,
       sources: indicatorSources(ind),

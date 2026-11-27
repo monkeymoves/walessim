@@ -15,25 +15,25 @@ exposure_share: 0.4
 very_well: { exposure_margin: 0.2, fairness_tips: 2, lifelines_all: true }
 # trends that change the board, shown on it before the player chooses (playtest 4)
 term_notes:
-  - { curveball: wet-decade, note: { en: "The wet decade: every tip stands one risk step higher.", cy: "Y degawd gwlyb: mae pob tomen un cam risg yn uwch.", cy_review: true } }
+  - { curveball: wet-decade, note: { en: "The wet decade: every tip is one risk level higher.", cy: "Y degawd gwlyb: mae pob tomen un lefel risg yn uwch.", cy_review: true } }
 deprived_rank: 191
 # Base risk step from open proxies (judgement, low confidence): a tip with a BGS landslide record on it is
 # step 2 if it stands at least steep_drop_m above the lowest ground within 1 km with steep_buildings or more
 # below, or has many_buildings or more below; otherwise step 1. The wet decade raises every step by one.
 risk_rule: { steep_drop_m: 200, steep_buildings: 125, many_buildings: 300 }
-prompt: { en: "The money covers three tips this term. There are more tips than thread.", cy: "Mae'r arian yn talu am dair tomen y tymor hwn. Mae mwy o domenni nag o edau.", cy_review: true }
-why_hard: { en: "The biggest tips by homes are not the riskiest, the riskiest are not above the poorest streets, and the school and railway sit under others again.", cy: "Nid y tomenni mwyaf o ran cartrefi yw'r rhai mwyaf peryglus, nid yw'r rhai mwyaf peryglus uwchben y strydoedd tlotaf, ac mae'r ysgol a'r rheilffordd o dan eraill eto.", cy_review: true }
+prompt: { en: "The money covers 3 tips this turn. There are more tips than money.", cy: "Mae'r arian yn talu am 3 thomen y tro hwn. Mae mwy o domenni nag o arian.", cy_review: true }
+why_hard: { en: "The tips above the most homes are not the riskiest. The riskiest are not above the poorest streets. The schools and the railway sit under others again.", cy: "Nid y tomenni uwchben y nifer fwyaf o gartrefi yw'r rhai mwyaf peryglus. Nid yw'r rhai mwyaf peryglus uwchben y strydoedd tlotaf. Ac mae'r ysgolion a'r rheilffordd o dan rai eraill eto.", cy_review: true }
 tests:
   - id: exposure
-    name: { en: Exposure, cy: Amlygiad, cy_review: true }
-    description: { en: "Your threads, with tips made safe before, cover at least two fifths of the risk-weighted homes below all the tips (less when the money covers fewer than three tips).", cy: "Mae eich edafedd, gyda thomenni a wnaed yn ddiogel o'r blaen, yn cwmpasu o leiaf dwy ran o bump o'r cartrefi, wedi'u pwysoli yn ôl risg, o dan yr holl domenni (llai pan fo'r arian yn talu am lai na thair tomen).", cy_review: true }
+    name: { en: "Did you protect enough homes?", cy: "Wnaethoch chi ddiogelu digon o gartrefi?", cy_review: true }
+    description: { en: "Your picks, and tips made safe before, must protect 4 in 10 of the homes below the tips. Risky tips count for more. You need less if the money covers fewer tips.", cy: "Rhaid i'ch dewisiadau ddiogelu 4 o bob 10 o'r cartrefi o dan y tomenni. Mae tomenni a wnaed yn ddiogel o'r blaen yn cyfrif. Mae tomenni peryglus yn cyfrif mwy. Mae angen llai os yw'r arian yn talu am lai o domenni.", cy_review: true }
   - id: fairness
-    name: { en: Fairness, cy: Tegwch, cy_review: true }
-    description: { en: "At least one thread protects a neighbourhood in the most deprived tenth of Wales.", cy: "Mae o leiaf un edau yn diogelu cymdogaeth yn y degfed mwyaf difreintiedig o Gymru.", cy_review: true }
+    name: { en: "Did you help the poorest streets?", cy: "Wnaethoch chi helpu'r strydoedd tlotaf?", cy_review: true }
+    description: { en: "At least one pick must sit above a neighbourhood in the poorest tenth of Wales.", cy: "Rhaid i o leiaf un dewis fod uwchben cymdogaeth yn y degfed tlotaf o Gymru.", cy_review: true }
   - id: lifelines
-    name: { en: Lifelines, cy: Achubiaeth, cy_review: true }
-    description: { en: "At least half of the top-risk tips above a school or the railway are covered.", cy: "Mae o leiaf hanner y tomenni risg uchaf uwchben ysgol neu'r rheilffordd wedi'u cwmpasu.", cy_review: true }
-data_note: { en: "Tip locations are open proxies: BGS landslide records that mention a tip and OpenStreetMap spoil heaps. The official disused tips register is not open and is not used. Confidence: low.", cy: "Dirprwyon agored yw lleoliadau'r tomenni: cofnodion tirlithriad BGS sy'n sôn am domen a thomenni rwbel OpenStreetMap. Nid yw cofrestr swyddogol y tomenni segur yn agored ac ni chaiff ei defnyddio. Hyder: isel.", cy_review: true }
+    name: { en: "Are the schools and the railway safe?", cy: "Ydy'r ysgolion a'r rheilffordd yn ddiogel?", cy_review: true }
+    description: { en: "You must make safe at least half of the high-risk tips above a school or the railway.", cy: "Rhaid i chi wneud o leiaf hanner y tomenni risg uchel uwchben ysgol neu'r rheilffordd yn ddiogel.", cy_review: true }
+data_note: { en: "The tips on this map come from open data. They are BGS landslide records that mention a tip, and spoil heaps on OpenStreetMap. The official list of old tips is not open, so it is not used. How sure: low.", cy: "Daw'r tomenni ar y map hwn o ddata agored. Cofnodion tirlithriad BGS sy'n sôn am domen ydyn nhw, a thomenni rwbel ar OpenStreetMap. Nid yw'r rhestr swyddogol o hen domenni yn agored, felly ni chaiff ei defnyddio. Pa mor siŵr: isel.", cy_review: true }
 data_file: places/rhondda.json
 # the place data's small-area ranks are WIMD 2019 (1,909 areas); the atlas uses WIMD 2025 (1,917)
 wimd: { edition: WIMD 2019, areas: 1909 }

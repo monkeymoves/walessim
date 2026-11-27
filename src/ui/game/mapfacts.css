@@ -1,0 +1,101 @@
+/* The map in play (plain-wales 5 and 6): the left panel, the controls, the selection line, the
+   compared measure's key, and the atlas or rule book over the game. Tokens only. */
+
+/* ---------- one paper panel on the left of the map ---------- */
+.mf-panel {
+  position: absolute; left: 14px; top: 14px; z-index: 5;
+  width: 336px; max-height: calc(100% - 64px);
+  display: flex; flex-direction: column;
+  padding: 14px 16px 12px;
+  color: var(--ink);
+}
+.mf-head { display: flex; justify-content: space-between; align-items: start; gap: 10px; }
+.mf-area-region { margin-top: 2px; }
+.mf-body { overflow: auto; min-height: 0; margin: 10px -6px 0 0; padding-right: 6px; display: grid; gap: 12px; align-content: start; }
+.mf-block { display: grid; gap: 6px; }
+.mf-block h3 { color: var(--ink-2); border-bottom: 1px solid var(--rule); padding-bottom: 3px; }
+.mf-list { display: grid; gap: 4px; font-size: var(--size-ui); line-height: 1.35; }
+.mf-list li.planned { color: var(--ink-2); font-style: italic; }
+.mf-warn { color: var(--warn); font-weight: var(--wght-grot-strong); }
+.mf-trend { color: var(--ink-2); }
+.mf-quiet { color: var(--ink-3); }
+.mf-estimate { font-weight: var(--wght-grot-text); color: var(--ink-3); margin-left: 4px; }
+.mf-since p + p { margin-top: 3px; }
+
+.mf-figs { display: grid; gap: 10px; }
+.mf-fig { display: grid; gap: 1px; padding-left: 10px; border-left: 3px solid var(--rule); }
+.mf-fig.lead { border-left-color: var(--thread); }
+.mf-tag { color: var(--thread-deep); }
+.mf-measure { font-size: var(--size-ui); font-weight: var(--wght-grot-strong); }
+.mf-value { font-size: var(--size-ui); }
+.mf-value b { font-family: var(--font-print); font-size: 1.25em; }
+.mf-docket { justify-self: start; margin-top: 3px; }
+
+.mf-foot { display: flex; justify-content: space-between; gap: 12px; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--rule); font-size: var(--size-small); }
+.yf-linkbtn.strong { color: var(--ink); font-weight: var(--wght-grot-strong); }
+
+/* ---------- the regions compared while a card asks "Where?" ---------- */
+.mf-lead { font-size: var(--size-ui); line-height: 1.35; }
+.mf-special { color: var(--ink); }
+.mf-regions { display: grid; gap: 6px; }
+.mf-region { padding: 6px 8px; border: 1px solid var(--rule); background: var(--paper-2); display: grid; gap: 2px; }
+.mf-region.hot { border-color: var(--ink); box-shadow: inset 3px 0 0 var(--ink); }
+.mf-region.off { opacity: 0.55; }
+.mf-region-pick {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 8px; width: 100%;
+  border: 0; background: none; padding: 2px 0; text-align: left; color: var(--ink); cursor: pointer; min-height: 28px;
+}
+.mf-region-pick:disabled { cursor: default; }
+.mf-region-name { font-family: var(--font-print); font-weight: var(--wght-print-title); font-size: 16px; }
+.mf-region-go { text-decoration: underline; text-underline-offset: 2px; }
+.mf-region-pick:disabled .mf-region-go { text-decoration: none; }
+.mf-yours, .mf-areas { color: var(--ink-2); }
+.rw-compare { color: var(--ink); font-weight: var(--wght-grot-strong); }
+
+/* ---------- controls, top right ---------- */
+.mf-controls { position: absolute; right: 14px; top: 14px; z-index: 6; display: flex; gap: 6px; align-items: start; }
+.mf-ctl {
+  border: 0; padding: 6px 10px; min-height: 30px; cursor: pointer;
+  background: var(--paper) var(--grain); box-shadow: var(--lit-edge), var(--shadow-flat);
+  color: var(--ink); font-size: var(--size-label); font-stretch: var(--wdth-label); font-weight: var(--wght-grot-strong);
+}
+.mf-ctl[aria-pressed="true"], .mf-ctl[aria-expanded="true"] { background: var(--slate); color: var(--on-slate); }
+.mf-notebook { position: absolute; right: 0; top: calc(100% + 6px); width: 260px; padding: 10px 12px; display: grid; gap: 4px; }
+/* the rings key moves under the controls */
+.yf-stage .yf-mapkey { top: 54px; }
+
+/* ---------- what is selected, under the map ---------- */
+.mf-selline {
+  position: absolute; left: 14px; bottom: 10px; z-index: 4; max-width: min(560px, calc(100% - 420px));
+  padding: 4px 10px; background: var(--paper) var(--grain); box-shadow: var(--shadow-flat); color: var(--ink);
+}
+
+/* ---------- the compared measure's key, under the controls (the opened card sits bottom right) ---------- */
+.mf-key { position: absolute; right: 14px; top: 54px; z-index: 4; display: grid; gap: 6px; justify-items: end; max-width: 300px; }
+.mf-key.inline { position: static; justify-items: start; max-width: none; }
+.mf-key.inline .mf-key-lead { display: none; }
+.mf-key.inline .lenskey { width: auto; box-shadow: none; background: transparent; padding: 0; }
+.mf-key-lead { padding: 4px 8px; background: var(--paper) var(--grain); box-shadow: var(--shadow-flat); color: var(--ink); }
+
+/* ---------- Real Wales lines on cards and slips ---------- */
+.rw-line, .rw-question, .rw-scale { font-size: var(--size-small); line-height: 1.4; }
+.rw-label { color: var(--thread-deep); margin-right: 2px; }
+.rw-label:empty { display: none; }
+.yf-slip .rw-label, .slate .rw-label { color: var(--thread-tint); }
+.rw-source { margin-left: 2px; }
+.mf-hand li { display: grid; gap: 2px; }
+
+/* ---------- the atlas or the rule book over the game ---------- */
+.mf-overlay {
+  position: fixed; inset: 0; z-index: 60;
+  display: grid; grid-template-rows: auto minmax(0, 1fr);
+  background: var(--board);
+}
+.mf-over-head { display: flex; align-items: center; gap: 18px; padding: 10px var(--margin); box-shadow: var(--shadow-flat); background: var(--paper) var(--grain); }
+.mf-back {
+  border: 0; cursor: pointer; padding: 8px 14px; min-height: 36px;
+  background: var(--slate); color: var(--on-slate); box-shadow: var(--shadow-slate);
+  font-size: var(--size-ui); font-weight: var(--wght-grot-strong);
+}
+.mf-over-body { position: relative; min-height: 0; padding-top: 10px; }
+.mf-over-body.book { overflow: auto; padding-bottom: 40px; }

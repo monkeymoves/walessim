@@ -12,6 +12,7 @@ import { WarnStrip } from "../parts/Notice";
 import type { TipFacts } from "../../model/schema";
 import { useGame } from "../game/context";
 import type { BoardApi } from "./PlaceVisit";
+import { TestQuestions } from "./TestQuestions";
 import { TermConditions } from "./TermConditions";
 
 const DROP_M = 10;
@@ -80,7 +81,6 @@ export function RhonddaBoard(props: { data: PlaceData; api: BoardApi }): JSX.Ele
 
   const selRow = () => rows.find((r) => r.id === sel()) ?? null;
   const stitched = (id: string) => props.api.threads().includes(id);
-  const tests = () => board.tests.length ? board.tests.map((x) => `${game.names.text(x.name)}: ${game.names.text(x.description)}`) : ["exposure", "fairness", "lifelines"].map((k) => t(`place.rhondda.tests.${k}`));
   const wet = () => offer().activeTrends.includes("wet-decade");
 
   return (
@@ -137,13 +137,7 @@ export function RhonddaBoard(props: { data: PlaceData; api: BoardApi }): JSX.Ele
         </table>
       </div>
       <TermConditions place="rhondda" activeTrends={offer().activeTrends} conditions={offer().termConditions} class="pl-wet" />
-      <details class="pl-tests-box" open>
-        <summary class="label">{t("place.common.tests")}</summary>
-        <ul class="pl-tests-list small">
-          <For each={tests()}>{(x) => <li>{x}</li>}</For>
-        </ul>
-        <p class="small">{t("place.common.tests_note")}</p>
-      </details>
+      <TestQuestions place="rhondda" />
       <ThreadButton onClick={() => setRule(!rule())} aria-expanded={rule()}>{t("place.common.how")}</ThreadButton>
       <p class="story-small pl-history">{t("place.rhondda.history")}</p>
 
@@ -220,7 +214,7 @@ function BelowCard(props: {
       <p class="pl-below-foot">
         <ThreadButton onClick={props.onRule}>{t("place.common.how")}</ThreadButton>
         <Show when={props.stitched} fallback={
-          <StitchButton onClick={props.onStitch} disabled={props.full}>{t("place.common.stitch")}</StitchButton>
+          <StitchButton onClick={props.onStitch} disabled={props.full}>{t("place.rhondda.stitch")}</StitchButton>
         }>
           <TabButton onClick={props.onStitch}>{t("place.common.unstitch")}</TabButton>
         </Show>

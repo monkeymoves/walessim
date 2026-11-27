@@ -14,7 +14,6 @@ import type { Thread, TraceStop } from "../../engine/api";
 import { useGame } from "./context";
 import { StrandName } from "./StrandName";
 import { placeThreadName } from "./placeNames";
-import { SharpKey } from "./SharpKey";
 
 const STOP_LABEL: Record<TraceStop["kind"], string> = {
   strand: "game.trace.strand",
@@ -131,7 +130,6 @@ export function TracePanel(): JSX.Element {
           <p class="small yf-trace-map">{tw("game.trace.on_map", { las: game.names.list(th()!.las.slice(0, 3).map((c) => game.names.laName(c))) })}</p>
         </Show>
       </Show>
-      <SharpKey />
       <p class="yf-trace-end small">{t("game.trace.ending")}</p>
       <Show when={threads().length > 1}>
         <div class="yf-trace-nav">
@@ -167,7 +165,7 @@ function Stop(props: { stop: TraceStop; sharp: boolean }): JSX.Element {
                 ? tn("game.trace.strand_same", s().pipsAfter, { strand: game.names.strandName(s().strand), to: s().pipsAfter })
                 : t("game.trace.strand_line", { strand: game.names.strandName(s().strand), from: s().pipsBefore, to: s().pipsAfter })}
             </p>
-            <p class="small">{s().sharp ? t("game.trace.sharp") : t("game.trace.fuzzy")}</p>
+            <Show when={!s().sharp}><p class="small">{t("parts.meter.fuzzy")}</p></Show>
           </>
         )}
       </Match>
@@ -212,18 +210,26 @@ function Stop(props: { stop: TraceStop; sharp: boolean }): JSX.Element {
             <>
               <p class="yf-stop-title strong">{rule() ? pick(rule()!.name) : s().rule}</p>
               <Show when={rule()}><p class="story-small">{pick(rule()!.note)}</p></Show>
-              <p class="yf-rule-marks">
-                <ConfidenceMark level={s().confidence} />
-                <span class="small">{t("game.trace.evidence", { e: t(`game.evidence.${s().evidence}`) })}</span>
-              </p>
-              <p><a class="threadlink" href={`#/llyfr/${s().rule}`}>{t("game.trace.how")}</a></p>
-              <Show when={s().placeholder}><p class="warnstrip small"><span>{t("game.trace.placeholder")}</span></p></Show>
-              <Show when={s().gameRule}><p class="small yf-gamerule">{t("game.trace.game_rule")}</p></Show>
               <Show when={s().sources.length}>
                 <p class="yf-dockets">
                   <For each={s().sources}>{(id) => <SourceTag source={id} />}</For>
                 </p>
               </Show>
+              <p><a class="threadlink" href={`#/llyfr/${s().rule}`}>{t("play.why.book")}</a></p>
+              <details class="yf-maths">
+                <summary class="small">{t("play.why.maths")}</summary>
+                <p class="yf-rule-marks">
+                  <ConfidenceMark level={s().confidence} />
+                  <span class="small">{t("game.trace.evidence", { e: t(`game.evidence.${s().evidence}`) })}</span>
+                </p>
+                <Show when={s().params.length}>
+                  <ul class="small data yf-params">
+                    <For each={s().params}>{(p) => <li>{pick(p.unit) ? `${p.name}: ${p.value} ${pick(p.unit)} (${p.min} to ${p.max})` : `${p.name}: ${p.value} (${p.min} to ${p.max})`}</li>}</For>
+                  </ul>
+                </Show>
+                <Show when={s().placeholder}><p class="warnstrip small"><span>{t("game.trace.placeholder")}</span></p></Show>
+                <Show when={s().gameRule}><p class="small yf-gamerule">{t("game.trace.game_rule")}</p></Show>
+              </details>
             </>
           );
         }}

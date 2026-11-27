@@ -14,3 +14,6 @@ export const recomputeResult = api.recomputeResult;
 export const loadGame = api.loadGame;
 export const saveGame = (_m: CompiledModel, s: api.GameState): string => api.saveGame(s);
 export const dailySeed = (_m: CompiledModel, date: string): number => api.dailySeed(date);
+export const headline = api.headline;
+export const whatMattered = api.whatMattered;
+export const unusedCoins = api.unusedCoins;

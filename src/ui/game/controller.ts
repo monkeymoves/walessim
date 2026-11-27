@@ -21,9 +21,14 @@ export interface Draft {
   repair: boolean;
   skipUpkeep: string[];
   holdOver: string | null;
+  /**
+   * Coins the player chose to put in the emergency fund (plain-wales 3.3). UI only: the engine
+   * treats every unspent coin the same, but no coin is saved or lost without the player saying so.
+   */
+  saved: number;
 }
 
-const emptyDraft = (): Draft => ({ cards: [], standing: null, repayDebt: 0, repair: false, skipUpkeep: [], holdOver: null });
+const emptyDraft = (): Draft => ({ cards: [], standing: null, repayDebt: 0, repair: false, skipUpkeep: [], holdOver: null, saved: 0 });
 
 export interface TraceRef { term: number; strand: StrandId; part: "flow" | "stock"; index: number; key?: string }
 
@@ -45,6 +50,8 @@ export function createGame(model: CompiledModel, opts: { overrides?: Accessor<Re
   const [draft, setDraft] = createStore<Draft>(emptyDraft());
   const [selected, setSelected] = createSignal<string | null>(null);
   const [hovered, setHovered] = createSignal<string | null>(null);
+  /** The region a not-yet-played regional card is previewed in (hovered or focused in the tray). */
+  const [previewRegion, setPreviewRegion] = createSignal<RegionId | null>(null);
   const [trace, setTrace] = createSignal<TraceRef | null>(null);
   const [ledgerOpen, setLedgerOpen] = createSignal(false);
   const [shared, setShared] = createSignal(false);
@@ -176,18 +183,37 @@ export function createGame(model: CompiledModel, opts: { overrides?: Accessor<Re
     try { return cardCost(model, s, play); } catch { return names.card(play.card)?.cost ?? 0; }
   }
 
-  /** Pips for the plan as drafted: total, spent, left (contingency). */
+  /**
+   * Coins for the plan as drafted: total, spent on cards (and repayments), left over; of what is
+   * left, `fund` the player has put in the emergency fund and `unused` not yet decided.
+   */
   const budget = createMemo(() => {
     const s = state();
-    if (!s) return { total: 0, spent: 0, left: 0 };
+    if (!s) return { total: 0, spent: 0, left: 0, fund: 0, unused: 0 };
     const standingGain = draft.standing ? (names.standingTicket(draft.standing)?.budget ?? 0) : 0;
     const skipped = s.upkeepDue.filter((u) => draft.skipUpkeep.includes(u.id)).reduce((a, u) => a + u.pips, 0);
     const total = s.budget.available + standingGain + skipped;
     const debtCost = model.game.debt.clear_cost * draft.repayDebt;
     const repairCost = draft.repair ? (names.standingTicket("defer-maintenance")?.clear_cost ?? 3) : 0;
     const spent = draft.cards.reduce((a, c) => a + costOf(c), 0) + debtCost + repairCost;
-    return { total, spent, left: total - spent };
+    const left = total - spent;
+    const fund = Math.max(0, Math.min(draft.saved, left));
+    return { total, spent, left, fund, unused: Math.max(0, left - fund) };
   });
+
+  /**
+   * How many saved coins can do anything: a crisis can use 2 and up to `contingency_carry` more carry
+   * over. In turn 1 of a first game no crisis can come; in the last turn nothing carries over.
+   */
+  const usefulSave = createMemo(() => {
+    const s = state();
+    if (!s) return 0;
+    const carry = model.game.contingency_carry ?? 2;
+    if (s.term === 0 && s.options.firstGame) return carry;
+    if (s.term >= model.game.years.length - 1) return 2;
+    return 2 + carry;
+  });
+  function setSaved(n: number): void { setDraft("saved", Math.max(0, Math.min(n, Math.max(0, budget().left)))); }
 
   function canAfford(id: string, region?: RegionId): boolean {
     return costOf({ card: id, region }) <= budget().left;
@@ -227,8 +253,12 @@ export function createGame(model: CompiledModel, opts: { overrides?: Accessor<Re
   }
   function setHold(id: string | null): void { setDraft("holdOver", id); }
 
+  /** Coins the player put in the emergency fund at the last commit, for the results step. */
+  const [savedAt, setSavedAt] = createSignal<{ term: number; n: number } | null>(null);
   function commit(): boolean {
     if (problems().length) return false;
+    const s = state();
+    if (s) setSavedAt({ term: s.term, n: budget().fund });
     return act({ type: "commit", plays: plays() });
   }
 
@@ -271,10 +301,18 @@ export function createGame(model: CompiledModel, opts: { overrides?: Accessor<Re
     if (!card) return null;
     const p = plays();
     const extra: CardPlay = { card: id };
-    if (card.scope === "region") extra.region = lastRegion() ?? card.regions?.[0] ?? "southeast";
+    if (card.scope === "region") extra.region = previewRegionFor(id);
     if (card.scope === "two_regions") extra.regions = (card.regions?.length ? card.regions : ["north", "mid"]).slice(0, 2) as RegionId[];
     return { card: id, preview: previewOf({ ...p, cards: [...p.cards, extra] }), base: planPreview() };
   });
+
+  /** The region a regional card is previewed in before it is played: the one pointed at, else the last used. */
+  function previewRegionFor(id: string): RegionId {
+    const card = names.card(id);
+    const legal = (card?.regions?.length ? card.regions : ["north", "mid", "southwest", "southeast"]) as RegionId[];
+    const r = previewRegion() ?? lastRegion();
+    return r && legal.includes(r) ? r : legal.includes("southeast") ? "southeast" : legal[0]!;
+  }
 
   const lastRegion = createMemo<RegionId | undefined>(() => {
     for (let i = draft.cards.length - 1; i >= 0; i--) if (draft.cards[i]!.region) return draft.cards[i]!.region;
@@ -307,7 +345,7 @@ export function createGame(model: CompiledModel, opts: { overrides?: Accessor<Re
 
   return {
     model, names, state, draft, plays, problems, budget, planPreview, ghost, threads, trace, letters,
-    selected, setSelected, hovered, setHovered, ledgerOpen, setLedgerOpen, shared, error, setError, lastSave,
+    selected, setSelected, hovered, setHovered, ledgerOpen, setLedgerOpen, shared, error, setError, lastSave, usefulSave, setSaved, previewRegion, setPreviewRegion, previewRegionFor, savedAt,
     start, boot, act, commit,
     isPlayed, playOf, costOf, canAfford, blockOf, play, unplay, setRegion, setStanding, setRepay, setRepair, toggleUpkeep, setHold,
     pull, setTrace,

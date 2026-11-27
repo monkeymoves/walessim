@@ -154,7 +154,7 @@ export function LedgerDrawer(): JSX.Element {
                 {(p) => (
                   <li>{t("game.end.pledge_line", {
                     year: p.year, strand: game.names.strandName(p.strand),
-                    state: p.kept == null ? t("game.end.open") : p.kept ? t("game.end.kept") : t("game.end.broken"),
+                    state: p.kept == null ? t("play.ledger.pledge_open") : p.kept ? t("game.end.kept") : t("game.end.broken"),
                   })}</li>
                 )}
               </For>

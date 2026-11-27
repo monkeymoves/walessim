@@ -8,6 +8,10 @@ contingency_carry: 2
 peek_cost: 1
 hand_size: 5
 first_hand_size: 4
+# plain-wales E2: the first game always deals these four in turn 1 (3, 3, 2 and 1 coins: nine coins
+# of cards for eight), and does not deal these cards before turn 3
+first_game_hand: [build-flood-walls, warm-homes, welsh-medium-childcare, everyone-online]
+first_game_not_before_term3: [regional-compact]
 hold_over: 1
 sizes: { S: 1.5, M: 2.5, L: 4.0 }
 fcm_sizes: { S: 0.1, M: 0.2, L: 0.3 }
@@ -27,10 +31,10 @@ trust:
   drift_to: 50
   drift: 0.1
   bands:
-    - { id: strong, min: 70, cards: 4, label: { en: "Trust: Strong", cy: "Ymddiriedaeth: Cryf", cy_review: true } }
-    - { id: fair, min: 45, cards: 3, label: { en: "Trust: Fair", cy: "Ymddiriedaeth: Gweddol", cy_review: true } }
-    - { id: thin, min: 20, cards: 2, label: { en: "Trust: Thin", cy: "Ymddiriedaeth: Tenau", cy_review: true } }
-    - { id: collapsed, min: 0, cards: 0, label: { en: "You have lost the seat", cy: "Rydych wedi colli'r sedd", cy_review: true } }
+    - { id: strong, min: 70, cards: 4, label: { en: "Trust: High", cy: "Ymddiriedaeth: Uchel", cy_review: true } }
+    - { id: fair, min: 45, cards: 3, label: { en: "Trust: OK", cy: "Ymddiriedaeth: Iawn", cy_review: true } }
+    - { id: thin, min: 20, cards: 2, label: { en: "Trust: Low", cy: "Ymddiriedaeth: Isel", cy_review: true } }
+    - { id: collapsed, min: 0, cards: 0, label: { en: "Trust lost: you lose the election", cy: "Ymddiriedaeth wedi'i cholli: rydych yn colli'r etholiad", cy_review: true } }
   pip_gained: 4
   pip_gained_cap: 12
   pip_gained_strands: [prosperous, healthier, equal, cohesive, culture]
@@ -49,7 +53,7 @@ trust:
   neglect: -4
   # decision 15: a national card lands in every region, so it counts for every region
   national_counts_for_neglect: true
-  neglect_note: { en: "A region is overlooked when two terms pass with nothing landing there; a national card lands everywhere.", cy: "Mae rhanbarth yn cael ei anwybyddu pan fo dau dymor yn mynd heibio heb i ddim lanio yno; mae cerdyn cenedlaethol yn glanio ym mhobman.", cy_review: true }
+  neglect_note: { en: "A region feels forgotten if no card reaches it for 8 years. A card for all of Wales reaches every region.", cy: "Mae rhanbarth yn teimlo'n angof os nad oes cerdyn yn ei gyrraedd am 8 mlynedd. Mae cerdyn i Gymru gyfan yn cyrraedd pob rhanbarth.", cy_review: true }
   debt_interest: -4
   # playtest 1: deferred repairs still not done cost Trust every term
   repairs_overdue: -5
@@ -84,9 +88,9 @@ judged_change:
   dip_weight: 0.25
   # band edges in net strand pips changed since 2026 (the first band has no lower edge)
   bands:
-    - { min: -99, name: { en: "Diminished", cy: "Wedi'i leihau", cy_review: true } }
-    - { min: -4, name: { en: "Held, just", cy: "Wedi'i ddal, prin", cy_review: true } }
-    - { min: -1, name: { en: "Handed on", cy: "Wedi'i drosglwyddo", cy_review: true } }
-    - { min: 1, name: { en: "Handed on better", cy: "Wedi'i drosglwyddo'n well", cy_review: true } }
-    - { min: 4, name: { en: "A gift", cy: "Rhodd", cy_review: true } }
+    - { min: -99, name: { en: "Much worse than you found it", cy: "Llawer gwaeth nag y cawsoch hi", cy_review: true } }
+    - { min: -4, name: { en: "A little worse than you found it", cy: "Ychydig yn waeth nag y cawsoch hi", cy_review: true } }
+    - { min: -1, name: { en: "About the same as you found it", cy: "Tua'r un fath ag y cawsoch hi", cy_review: true } }
+    - { min: 1, name: { en: "A little better than you found it", cy: "Ychydig yn well nag y cawsoch hi", cy_review: true } }
+    - { min: 4, name: { en: "Much better than you found it", cy: "Llawer gwell nag y cawsoch hi", cy_review: true } }
   letter_bands: { low: -1, high: 1 }

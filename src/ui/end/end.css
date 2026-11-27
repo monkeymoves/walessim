@@ -67,3 +67,25 @@
   .end-letter { padding: 22px 24px; }
   .end-two { grid-template-columns: 1fr; }
 }
+
+
+/* ---------- plain-wales section 7: one column ---------- */
+.end.end-plain { display: block; }
+.end-col { max-width: 760px; margin: 0 auto; display: grid; gap: 14px; }
+.end-plain .end-letter-col { position: static; }
+.end-verdict-box { padding: 20px 22px; display: grid; gap: 8px; }
+.end-result-line { margin: 0; max-width: 26ch; }
+.end-score { margin: 0; }
+.end-why { margin: 0; max-width: 60ch; }
+.end-mattered { padding: 14px 18px; display: grid; gap: 8px; }
+.end-mattered li + li { margin-top: 4px; }
+.end-autopilot { margin-top: 4px; }
+.end-detail { padding: 12px 18px; }
+.end-detail > summary { cursor: pointer; }
+.end-detail-body { display: grid; gap: 14px; padding-top: 12px; }
+.end-goal-table { border-collapse: collapse; width: 100%; }
+.end-goal-table th, .end-goal-table td { text-align: left; padding: 3px 8px 3px 0; border-bottom: 1px solid var(--rule); }
+.end-goal-table td.weaker { font-weight: var(--wght-grot-strong); }
+.end-next { margin: 0; }
+.end-plain .end-envelope { padding: 16px 22px; grid-template-columns: auto 1fr auto; align-items: center; gap: 18px; }
+.end-plain .end-envelope .t-1 { margin: 0; }

@@ -142,6 +142,8 @@ export function gradeBethesda(board: PlaceBoard, newThreads: string[], c: Bethes
   const cap = board.pressure_capacity ?? 0.3;
   const penalty = (m: string) => (board.trend_penalties ?? []).filter((p) => p.measure === m && c.active.includes(p.curveball)).reduce((a, p) => a + p.amount, 0);
   let aros = 0, iaith = 0, pwysau = 0;
+  /** The central run's river balance: the explanation names the river only when it really fell short. */
+  let river0 = 0;
   const runs = Math.max(1, c.runs);
   for (let r = 0; r < runs; r++) {
     const sum = { homes: -penalty("homes"), work: -penalty("work"), iaith: -penalty("iaith"), pressure: penalty("pressure"), river: -penalty("river") };
@@ -162,6 +164,7 @@ export function gradeBethesda(board: PlaceBoard, newThreads: string[], c: Bethes
     if (sum.homes >= th.homes && sum.work >= th.work) aros++;
     if (sum.iaith >= th.iaith) iaith++;
     if (sum.pressure <= cap && sum.river >= 0) pwysau++;
+    if (r === 0) river0 = sum.river;
   }
   const hold = board.hold_share ?? 0.6;
   const copy = c.text;
@@ -169,7 +172,10 @@ export function gradeBethesda(board: PlaceBoard, newThreads: string[], c: Bethes
     const names = opts.filter((o) => sign * o[measure] > 0 && !(o.requires_card && !c.inPlay.includes(o.requires_card))).map((o) => o.name);
     return names.length ? joinNames(names) : say(copy, "engine.none", {}) ?? { en: "none of your threads", cy: "dim un o'ch edafedd" };
   };
-  const riverNeed = penalty("river") > 0 ? say(copy, "engine.visit.room_for_river", {}) ?? { en: "a thread for the river", cy: "edau i'r afon" } : say(copy, "engine.visit.nothing", {}) ?? { en: "nothing", cy: "dim byd" };
+  // plain-wales cold playtest: an option already in place that gives the river room counts, so the
+  // river is named as a need only when the river balance still falls short (never "the river needed
+  // room" straight after "Room for the river: already in place, counted")
+  const riverNeed = penalty("river") > 0 && river0 < 0 ? say(copy, "engine.visit.room_for_river", {}) ?? { en: "a thread for the river", cy: "edau i'r afon" } : say(copy, "engine.visit.nothing", {}) ?? { en: "nothing", cy: "dim byd" };
   const shares = { aros: aros / runs, iaith: iaith / runs, pwysau: pwysau / runs };
   const tests = (["aros", "iaith", "pwysau"] as const).map((id) => {
     const share = shares[id];

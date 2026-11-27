@@ -9,8 +9,8 @@
   towns:
     - { en: "Tonypandy", cy: "Tonypandy" }
   text:
-    en: "They put the threads where the cameras could see them. The tip over the school is still just a hill that might move."
-    cy: "Rhoddwyd yr edafedd lle gallai'r camerâu eu gweld. Mae'r domen uwchben yr ysgol yn dal yn fryn a allai symud."
+    en: "They chose the tips the cameras could see. The tip over the school is still just a hill that might move."
+    cy: "Dewiswyd y tomenni y gallai'r camerâu eu gweld. Mae'r domen uwchben yr ysgol yn dal yn fryn a allai symud."
     cy_review: true
 - id: visit-pentre-rhondda-poorly
   event: visit
@@ -427,7 +427,7 @@
     - { en: "Bridgend", cy: "Pen-y-bont ar Ogwr" }
   text:
     en: "Our lad's finishing a trade with a firm that has work booked past his apprenticeship. He said it twice to make sure I'd heard."
-    cy: "Mae ein mab ni'n gorffen dysgu crefft gyda chwmni sydd â gwaith wedi'i drefnu y tu hwnt i'w brentisiaeth. Dywedodd hynny ddwywaith i wneud yn siŵr fy mod wedi clywed."
+    cy: "Mae ein mab ni'n gorffen dysgu crefft gyda chwmni. Mae gwaith yn aros amdano ar ôl ei brentisiaeth. Dywedodd hynny ddwywaith i wneud yn siŵr fy mod wedi clywed."
     cy_review: true
 - id: arrival-llandeilo-pay-farms-for-nature
   event: arrival
@@ -624,7 +624,7 @@
     - { en: "Cardiff", cy: "Caerdydd" }
   text:
     en: "Same city, twenty minutes by bus, and a different idea of how long you'll live. It's on a poster at the surgery."
-    cy: "Yr un ddinas, ugain munud ar y bws, a disgwyliad gwahanol o ba mor hir y byddwch chi'n byw. Mae ar boster yn y feddygfa."
+    cy: "Yr un ddinas, ugain munud ar y bws. Ond disgwyliad gwahanol o ba mor hir y byddwch chi'n byw. Mae ar boster yn y feddygfa."
     cy_review: true
 - id: strand-llangollen-cohesive-up
   event: strand
@@ -674,7 +674,7 @@
     - { en: "Swansea", cy: "Abertawe" }
   text:
     en: "The council's stopped buying the cheap stuff that's made badly in places we never see. It costs more. I'm told that's the point."
-    cy: "Mae'r cyngor wedi rhoi'r gorau i brynu'r pethau rhad sy'n cael eu gwneud yn wael mewn llefydd na welwn ni byth. Mae'n costio mwy. Dywedir wrtha i mai dyna'r pwynt."
+    cy: "Mae'r cyngor wedi rhoi'r gorau i brynu pethau rhad. Pethau wedi'u gwneud yn wael mewn llefydd na welwn ni byth. Mae'n costio mwy. Dywedir wrtha i mai dyna'r pwynt."
     cy_review: true
 - id: strand-milford-haven-global-down
   event: strand
@@ -683,8 +683,8 @@
   towns:
     - { en: "Milford Haven", cy: "Aberdaugleddau" }
   text:
-    en: "The ships come in and the money goes out, and what they burn goes up into somebody else's sky. We're the doorstep, never the house."
-    cy: "Daw'r llongau i mewn a'r arian allan, ac mae'r hyn maen nhw'n ei losgi yn mynd i awyr rhywun arall. Ni yw'r stepen drws, byth y tŷ."
+    en: "The ships come in and the money goes out. What they burn goes up into somebody else's sky. We're the doorstep, never the house."
+    cy: "Daw'r llongau i mewn a'r arian allan. Mae'r hyn maen nhw'n ei losgi yn mynd i awyr rhywun arall. Ni yw'r stepen drws, byth y tŷ."
     cy_review: true
 - id: opening-wrexham-prosperous
   event: opening
@@ -747,7 +747,7 @@
     - { en: "Barry", cy: "Y Barri" }
   text:
     en: "Promise us we won't leave the bill to people who've never heard of Barry."
-    cy: "Addewch i ni na fyddwn ni'n gadael y bil i bobl nad ydyn nhw erioed wedi clywed am y Barri."
+    cy: "Addewch i ni na fyddwn ni'n gadael y bil i bobl sydd erioed wedi clywed am y Barri."
     cy_review: true
 - id: opening-abergavenny-
   event: opening

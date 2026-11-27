@@ -2,14 +2,22 @@
 // not part of the game (which piece is open, which card is waiting for a region, the guide).
 import { createContext, createSignal, useContext, type Accessor } from "solid-js";
 import type { PaperMap } from "../../map";
-import type { VisitOffer } from "../../engine/api";
+import type { RegionId, VisitOffer } from "../../engine/api";
 import type { Game } from "./controller";
 import { onboardSeen, saveOnboard } from "./save";
 
-export type NoteId = "hand" | "ticket" | "play" | "post" | "commit" | "strands" | "pull" | "trust" | "region";
+export type NoteId =
+  | "hand" | "ticket" | "play" | "post" | "commit" | "strands" | "pull" | "trust" | "region"
+  // plain-wales section 4: the first-turn script and the later one-time notes
+  | "how" | "slow_change" | "card_place" | "slow_card" | "coins_left" | "why" | "handoff"
+  | "promise" | "visit" | "marker" | "crisis" | "upkeep" | "borrow" | "lost";
 
 /** The order the guide teaches in. One note at a time, at most one sentence each. */
-const NOTE_ORDER: NoteId[] = ["hand", "ticket", "play", "region", "post", "commit", "strands", "pull", "trust"];
+const NOTE_ORDER: NoteId[] = [
+  "how", "slow_change", "hand", "card_place", "slow_card", "coins_left", "why", "trust", "handoff",
+  "ticket", "play", "region", "post", "commit", "strands", "pull",
+  "promise", "visit", "marker", "crisis", "upkeep", "borrow", "lost",
+];
 
 export function createUi() {
   const [map, setMap] = createSignal<PaperMap | null>(null);
@@ -26,6 +34,10 @@ export function createUi() {
   const [ticked, setTicked] = createSignal(7);
   /** Live announcements for screen readers. */
   const [announce, setAnnounce] = createSignal("");
+  /** The player opened a card they could not afford this game: Borrowing and bills is shown from then on. */
+  const [shortfall, setShortfall] = createSignal(false);
+  /** Regions chosen so far for a card that needs two (not yet played). */
+  const [twoPick, setTwoPick] = createSignal<Record<string, RegionId[]>>({});
 
   // ---- the guide: stitched notes inside play, skippable, never repeated
   const seen = onboardSeen();
@@ -54,7 +66,7 @@ export function createUi() {
 
   return {
     map, setMap, mapView, setMapView, regionPick, setRegionPick, inPlace, setInPlace, visitPick, setVisitPick, laPanel, setLaPanel,
-    ticked, setTicked, announce, setAnnounce,
+    ticked, setTicked, announce, setAnnounce, shortfall, setShortfall, twoPick, setTwoPick,
     guide: { hasSeen, done, skip: skipGuide, noteFor, skipped },
   };
 }

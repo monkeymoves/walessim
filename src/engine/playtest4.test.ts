@@ -72,10 +72,10 @@ describe("VERY WELL (item 3)", () => {
     const tight = gradeRhondda(rh, [tip(2), tip(13), tip(16)], true, { text: m.engine_text });
     expect(tight.tests.every((t) => t.pass)).toBe(true);
     expect(tight.grade).toBe("well");
-    expect(tight.notes.some((n) => n.en.startsWith("Every test held. Room to spare"))).toBe(true);
+    expect(tight.notes.some((n) => n.en.startsWith("Every test passed. For room to spare"))).toBe(true);
     const roomy = gradeRhondda(rh, [tip(4), tip(8), tip(14)], true, { stitched: [tip(2), tip(13), tip(16)], text: m.engine_text });
     expect(roomy.grade).toBe("very_well");
-    expect(roomy.notes.some((n) => n.en === "Every test held with room to spare.")).toBe(true);
+    expect(roomy.notes.some((n) => n.en === "Every test passed, with room to spare.")).toBe(true);
   });
   it("Bethesda: very well only when every test holds in the share of runs the board asks", () => {
     const ids = be.options!.map((o) => o.id);
@@ -122,7 +122,7 @@ describe("term conditions on the board (item 4)", () => {
     const s = planAt(1, 3, true);
     expect(s.activeTrends.map((a) => a.curveball)).toContain("price-of-a-home");
     const b = E.placeBoard(m, s, "bethesda");
-    expect(b.termConditions.map((t) => t.en)).toContain("Prices pull away: one Homes thread is not enough.");
+    expect(b.termConditions.map((t) => t.en)).toContain("House prices pull away: one homes pick is not enough.");
     expect(b.options!.length).toBe(10);
     const none = { ...s, activeTrends: [] };
     expect(E.placeBoard(m, none, "bethesda").termConditions).toEqual([]);
@@ -230,7 +230,7 @@ describe("copy from the engine (item 9)", () => {
       for (const l of g.result!.letter.lines) {
         if (!/loans? from/.test(l.text.en)) continue;
         found++;
-        expect(l.text.en).toContain("The loans from 2026 and 2034 are still on the books.");
+        expect(l.text.en).toContain("We are still paying back the loans from 2026 and 2034.");
         expect(l.text.cy).toContain("2026 a 2034");
       }
     }

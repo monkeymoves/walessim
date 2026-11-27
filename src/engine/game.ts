@@ -263,7 +263,7 @@ function openTerm(ctx: Ctx, prev: A.GameState, term: number): A.GameState {
   // so the last term is a choice between a visible win and a gift for Left
   const lastTerm = g.years.length - 1;
   const quick = term === lastTerm ? (id: string) => !!ctx.cards.get(id) && paysInTime(ctx.cards.get(id)!, term, lastTerm) : undefined;
-  const dealt = deal(ctx, state.deck, s.held, size, activeIds, (s.hands ?? []).slice(-4), quick);
+  const dealt = dealFor(ctx, state, term, size, activeIds, quick);
   s.hands = [...(s.hands ?? []), dealt.hand];
   state.hand = dealt.hand;
   state.deck = dealt.deck;
@@ -309,6 +309,28 @@ function openTerm(ctx: Ctx, prev: A.GameState, term: number): A.GameState {
   state.step = "opening";
   state.strands = strandViews(ctx, state);
   return state;
+}
+
+/**
+ * The deal for one term (plain-wales E2): the first game's turn 1 is always `game.first_game_hand`
+ * (the guide points at its cards), and `first_game_not_before_term3` cards are kept out of the first
+ * two hands of a first game. They keep their place in the deck for later terms.
+ */
+function dealFor(ctx: Ctx, state: A.GameState, term: number, size: number, active: string[], quick?: (id: string) => boolean): { hand: string[]; deck: string[] } {
+  const g = ctx.model.game as CompiledModel["game"] & { first_game_hand?: string[]; first_game_not_before_term3?: string[] };
+  const s = sim(state);
+  const recent = (s.hands ?? []).slice(-4);
+  if (!state.options.firstGame) return deal(ctx, state.deck, s.held, size, active, recent, quick);
+  const fixed = term === 0 ? (g.first_game_hand ?? []).filter((id) => ctx.cards.has(id) && state.deck.includes(id)) : [];
+  if (fixed.length) return { hand: fixed, deck: state.deck.filter((id) => !fixed.includes(id)) };
+  const later = term < 2 ? new Set((g.first_game_not_before_term3 ?? []).filter((id) => ctx.cards.has(id))) : new Set<string>();
+  if (!later.size) return deal(ctx, state.deck, s.held, size, active, recent, quick);
+  // set the late cards aside, deal, then put each back where it was in the deck
+  const aside = state.deck.flatMap((id, i) => (later.has(id) ? [{ id, i }] : []));
+  const dealt = deal(ctx, state.deck.filter((id) => !later.has(id)), s.held, size, active, recent, quick);
+  const deck = [...dealt.deck];
+  for (const a of aside) deck.splice(Math.min(a.i, deck.length), 0, a.id);
+  return { hand: dealt.hand, deck };
 }
 
 function curveballBudget(ctx: Ctx, state: A.GameState, active: string[]): number {
@@ -1926,6 +1948,106 @@ function computeResult(ctx: Ctx, state: A.GameState, weights: Record<StrandId, n
     modified: state.modified,
     archetype,
   };
+}
+
+/**
+ * The two running scores out of 100 (plain-wales E1). Life now is the weighted average of the seven
+ * flow scores times ten; Left for 2050 is the weighted average of the seven stock scores, less the
+ * debt penalty, times ten: the same sums as `EndResult`. Once the game has ended they are the end
+ * result's own levels (`livedLevel`, `leftLevel`, `start`) times ten.
+ */
+export function headline(model: CompiledModel, state: A.GameState): A.Headline {
+  const ctx = makeContext(model);
+  const g = ctx.model.game;
+  const w = state.options.weights;
+  const W = (vals: number[]) => STRAND_IDS.reduce((a, id, i) => a + w[id] * vals[i]!, 0);
+  const s = sim(state);
+  if (state.step === "ended" && state.result) {
+    const r = state.result;
+    return { lifeNow: r.livedLevel * 10, left2050: r.leftLevel * 10, start: { lifeNow: r.start.lived * 10, left2050: r.start.left * 10 }, final: true };
+  }
+  const by = new Map(state.strands.map((v) => [v.strand, v]));
+  const flow = STRAND_IDS.map((id, i) => by.get(id)?.flow ?? s.start.flow[i]!);
+  const stock = STRAND_IDS.map((id, i) => by.get(id)?.stock ?? s.start.stock[i]!);
+  const debtPenalty = Math.min(g.debt.left_penalty_cap, g.debt.left_penalty * state.debts.length);
+  return {
+    lifeNow: W(flow) * 10,
+    left2050: (W(stock) - debtPenalty) * 10,
+    start: { lifeNow: W(s.start.flow) * 10, left2050: W(s.start.stock) * 10 },
+    final: false,
+  };
+}
+
+/**
+ * The few things that mattered most over the whole game (plain-wales E3), largest first, at most
+ * `limit`. Sizes are in score points out of 100 (weighted strand change times ten, flow and stock
+ * together), from the per-term contributions in `state.history`. Lost turns, coins left unused in
+ * three or more turns, promises and visits are ranked by fixed sizes beside them.
+ */
+export function whatMattered(model: CompiledModel, state: A.GameState, limit = 3): A.Mattered[] {
+  const ctx = makeContext(model);
+  const w = state.options.weights;
+  const carry = ctx.model.game.contingency_carry;
+  const out: A.Mattered[] = [];
+  const cards = new Map<string, A.Mattered & { strandSize: number[] }>();
+  for (const h of state.history) {
+    const shockSize: number[] = STRAND_IDS.map(() => 0);
+    for (const c of h.contributions) {
+      const shares = strandShares(ctx, c);
+      if (c.cause.kind === "card") {
+        const key = `${c.cause.term}:${c.cause.id}`;
+        let m = cards.get(key);
+        if (!m) {
+          m = { kind: "card", id: c.cause.id, term: c.cause.term, year: c.cause.year, regions: c.cause.regions, size: 0, strand: null, strandSize: STRAND_IDS.map(() => 0) };
+          cards.set(key, m);
+        }
+        if (c.cause.place && !m.place) m.place = { place: c.cause.place.place, grade: c.cause.place.grade };
+        for (const sh of shares) m.strandSize[sh.strand]! += sh.delta * w[STRAND_IDS[sh.strand]!] * 10;
+      } else if (c.cause.kind === "shock" && !c.recovery && c.cause.term === h.term) {
+        for (const sh of shares) shockSize[sh.strand]! += sh.delta * w[STRAND_IDS[sh.strand]!] * 10;
+      }
+    }
+    if (h.shock) {
+      const total = shockSize.reduce((a, b) => a + b, 0);
+      const k = shockSize.reduce((b, v, i) => (Math.abs(v) > Math.abs(shockSize[b]!) ? i : b), 0);
+      out.push({ kind: "shock", id: h.shock.curveball, term: h.term, year: h.year, regions: null, size: total, strand: STRAND_IDS[k]!, response: h.shock.response, prepared: h.shock.prepared });
+    }
+    if (h.caretaker) out.push({ kind: "lost_turn", id: "caretaker", term: h.term, year: h.year, regions: null, size: -2, strand: null });
+    if (h.pledge) out.push({ kind: "promise", id: h.pledge.strand, term: h.term, year: h.year, regions: null, size: h.pledge.kept ? 0.4 : -0.6, strand: h.pledge.strand, kept: h.pledge.kept });
+    if (h.visit && !h.visit.stayed) {
+      const good = isGoodGrade(h.visit.grade);
+      out.push({ kind: "visit", id: h.visit.place, term: h.term, year: h.year, regions: null, size: good ? 0.5 : h.visit.grade === "poorly" ? -0.5 : 0.2, strand: null, place: { place: h.visit.place, grade: h.visit.grade }, picks: h.visit.threads });
+    }
+  }
+  for (const m of cards.values()) {
+    m.size = m.strandSize.reduce((a, b) => a + b, 0);
+    const k = m.strandSize.reduce((b, v, i) => (Math.abs(v) > Math.abs(m.strandSize[b]!) ? i : b), 0);
+    m.strand = Math.abs(m.strandSize[k]!) > 0 ? STRAND_IDS[k]! : null;
+    const { strandSize: _drop, ...rest } = m;
+    void _drop;
+    out.push(rest);
+  }
+  // coins left unused and lost: what was held, less what a crisis used, less what carried over
+  const lost = unusedCoins(state, carry);
+  if (lost.turns >= 3) out.push({ kind: "coins_unused", id: "coins", term: lost.firstTerm, year: ctx.model.game.years[lost.firstTerm] ?? state.year, regions: null, size: -Math.max(1, 0.3 * lost.coins), strand: null, coins: lost.coins, turns: lost.turns });
+  // a visit already named through its card is not named again
+  const named = new Set(out.filter((m) => m.kind === "card" && m.place).map((m) => `${m.term}:${m.place!.place}`));
+  return out
+    .filter((m) => !(m.kind === "visit" && named.has(`${m.term}:${m.id}`)))
+    .filter((m) => Math.abs(m.size) >= 0.05)
+    .sort((a, b) => Math.abs(b.size) - Math.abs(a.size) || a.term - b.term)
+    .slice(0, limit);
+}
+
+/** Coins not spent and then lost (not used by a crisis, not carried over), per finished turn. */
+export function unusedCoins(state: A.GameState, carry: number): { coins: number; turns: number; firstTerm: number; perTurn: number[] } {
+  const perTurn = state.history.map((h) => {
+    if (h.caretaker) return 0;
+    const left = Math.max(0, h.contingencyHeld - (h.shock?.response ?? 0));
+    return Math.max(0, left - carry);
+  });
+  const turns = perTurn.filter((n) => n > 0).length;
+  return { coins: perTurn.reduce((a, b) => a + b, 0), turns, firstTerm: Math.max(0, perTurn.findIndex((n) => n > 0)), perTurn };
 }
 
 function postItemsLeft(ctx: Ctx, state: A.GameState): A.PostItem[] {

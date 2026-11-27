@@ -3,11 +3,15 @@ import { createMemo, createSignal, For, Show, type JSX } from "solid-js";
 import { lang, pick, t, tn, textOf } from "../../i18n";
 import { CurveballSlip } from "../parts/CurveballSlip";
 import { StrandRow } from "../parts/StrandRow";
-import { TrustGauge } from "../parts/TrustGauge";
+import { TrustSlots } from "../parts/TrustGauge";
+import { Tooltip } from "../parts/Tooltip";
+import { headline } from "./engine";
+import { TrendFact } from "./RealWales";
 import { TopBar as ShellTopBar } from "../shell/TopBar";
 import type { StrandId, VoiceLine } from "../../engine/api";
 import { STRAND_IDS, type Text } from "../../model/schema";
 import { useGame } from "./context";
+import { tw } from "./cymraeg";
 import { Note } from "./Note";
 
 // ------------------------------------------------------------------ curveball slip
@@ -22,7 +26,21 @@ export function TrendSlip(): JSX.Element {
     return id ? game.names.curveball(id) ?? null : null;
   });
   const others = () => s().activeTrends.filter((a) => a.curveball !== newest()?.id);
-  const canPeek = () => s().step === "plan" && !s().peekedThisTerm && s().term < 5 && game.budget().left >= (game.model.game.peek_cost ?? 1);
+  // looking ahead comes in from turn 2 (plain-wales 3.1)
+  const canPeek = () => s().step === "plan" && !s().peekedThisTerm && s().term >= 1 && s().term < 5 && game.budget().left >= (game.model.game.peek_cost ?? 1);
+  const { ui } = useGame();
+  /** The guide's note on the first slow change: which goal it pushes down. */
+  const pushes = () => {
+    const c = newest();
+    if (!c) return null;
+    // the first goal whose bar a slow effect pushes down
+    for (const e of c.slow) {
+      if (e.sign >= 0) continue;
+      const st = game.model.strands.find((x) => x.flow.includes(e.target) || x.stock.includes(e.target));
+      if (st) return st.id as StrandId;
+    }
+    return null;
+  };
   const peekCurve = () => {
     const p = s().peekedNext;
     return p && p !== "none" ? game.names.curveball(p) ?? null : null;
@@ -44,6 +62,14 @@ export function TrendSlip(): JSX.Element {
           <p class="yf-slip-desc">{pick(newest()!.description)}</p>
           <Show when={newest()!.shock}>
             <p class="yf-slip-shock small">{t("game.slip.shock_form", { name: pick(newest()!.shock!.name) })}</p>
+          </Show>
+          <Show when={s().opening?.newTrend === newest()!.id || s().term === 0}>
+            <TrendFact curveball={newest()!.id} class="yf-slip-fact" />
+          </Show>
+          <Show when={s().term === 0 && s().options.firstGame && pushes()}>
+            <Note id="slow_change" when={s().step === "plan" && ui.guide.hasSeen("how")} class="yf-note-slow-change" placement="below">
+              {tw("play.guide.slow_note", { goal: game.names.strandName(pushes()!) }, [])}
+            </Note>
           </Show>
           <Show when={others().length}>
             <button type="button" class="yf-slip-more" aria-expanded={all()} onClick={() => setAll(!all())}>
@@ -208,6 +234,9 @@ export function TopBar(props: { ticking?: boolean }): JSX.Element {
   });
   const shortLabels = Object.fromEntries(STRAND_IDS.map((id) => [id, textOf(`game.strand_short.${id}`)])) as Partial<Record<StrandId, Text>>;
   const pullable = () => (out() ? STRAND_IDS.filter((_, i) => i < ui.ticked()) : []);
+  /** The 2050 marker is explained at the start of turn 3, or when the first slow card arrives (plain-wales 3.1). */
+  const markerTime = () => s().term >= 2 || !!s().opening?.arrivals.some((a) => a.arrivesTerm > a.playedTerm) || s().history.some((h) => h.arrivals.length > 0);
+  const markerKnown = () => ui.guide.hasSeen("marker") || ui.guide.skipped() || s().step === "ended";
   const limitNext = () => (s().step === "changed" || s().step === "election" ? s().lastOutcome?.trust.cardLimit ?? s().cardLimit : s().cardLimit);
   const termNo = () => Math.min(6, s().term + 1);
 
@@ -235,20 +264,23 @@ export function TopBar(props: { ticking?: boolean }): JSX.Element {
               labels={shortLabels}
               notes={ghostNotes()}
               pullable={pullable()}
-              onPull={(id) => { game.pull(id); ui.guide.done("pull"); }}
+              onPull={(id) => { game.pull(id); ui.guide.done("pull"); ui.guide.done("why"); }}
+              stockFaint={!markerKnown() && !markerTime()}
+              plainCount
             />
             <p class="sr-only" aria-live="polite">
               {ghostHeading() ? `${ghostHeading()} ${STRAND_IDS.filter((id) => ghostLabels()?.[id]).map((id) => `${game.names.strandName(id)} ${ghostLabels()![id]!.down ? t("game.plan.ghost_dir_down") : t("game.plan.ghost_dir_up")}, ${ghostLabels()![id]!.text}`).join("; ")}` : ""}
             </p>
-            <Show when={s().step === "changed"}>
-              <Note id="strands" when={ui.ticked() >= 7} class="yf-note-strands">{t("game.onboard.strands")}</Note>
+            <Show when={s().step === "opening" || s().step === "plan" || s().step === "pledge"}>
+              <Note id="marker" when={markerTime() && ui.guide.hasSeen("handoff")} class="yf-note-strands">{t("play.guide.marker")}</Note>
             </Show>
           </div>
           <Show when={s().step !== "ended"}>
+          <Scoreboard showLeft={markerTime() || markerKnown()} />
           <div class="yf-trust">
-            <TrustGauge band={s().step === "changed" || s().step === "election" ? s().lastOutcome?.trust.band ?? s().trustBand : s().trustBand} cards={limitNext()} now={!(s().step === "changed" || s().step === "election")} allowText={s().step === "caretaker" ? t("parts.trust.benches") : undefined} compact />
+            <TrustSlots band={s().step === "changed" || s().step === "election" ? s().lastOutcome?.trust.band ?? s().trustBand : s().trustBand} cards={limitNext()} now={!(s().step === "changed" || s().step === "election")} out={s().step === "caretaker" || (s().caretaker && s().step !== "changed" && s().step !== "election")} />
             <Show when={s().step === "election"}>
-              <Note id="trust" when={true} class="yf-note-trust" placement="left">{t("game.onboard.trust")}</Note>
+              <Note id="trust" when={true} class="yf-note-trust" placement="left">{t("play.guide.trust")}</Note>
             </Show>
           </div>
           </Show>
@@ -258,3 +290,67 @@ export function TopBar(props: { ticking?: boolean }): JSX.Element {
   );
 }
 
+
+// ------------------------------------------------------------------ the two running scores
+
+/**
+ * The scoreboard on the top bar (plain-wales 3.2): "Life now: about 52 out of 100" and, from turn 3,
+ * "Left for 2050". The same weighted sums the end screen uses (engine `headline`), each with its
+ * 2026 value under it, so a player can see what moves the score.
+ */
+export function Scoreboard(props: { showLeft: boolean }): JSX.Element {
+  const { game } = useGame();
+  const h = createMemo(() => {
+    const st = game.state();
+    if (!st) return null;
+    try { return headline(game.model, st); } catch { return null; }
+  });
+  const r = (v: number) => Math.round(v);
+  return (
+    <Show when={h()}>
+      <div class="yf-score" role="group" aria-label={t("play.score.label")} data-testid="scoreboard">
+        <Tooltip heading={t("play.score.life")} content={<>{t("play.score.tip_life")} {t("play.score.rule")}</>}>
+          <div class="yf-score-item" data-testid="score-life" tabIndex={0}>
+            <span class="label">{t("play.score.life")}</span>
+            <b class="data">{t("play.score.value", { n: r(h()!.lifeNow) })}</b><span class="small">{t("play.score.was", { n: r(h()!.start.lifeNow) })}</span>
+          </div>
+        </Tooltip>
+        <Show when={props.showLeft}>
+          <Tooltip heading={t("play.score.left")} content={<>{t("play.score.tip_left")} {t("play.score.rule")}</>}>
+            <div class="yf-score-item" data-testid="score-left" tabIndex={0}>
+              <span class="label">{t("play.score.left")}</span>
+              <b class="data">{t("play.score.value", { n: r(h()!.left2050) })}</b><span class="small">{t("play.score.was", { n: r(h()!.start.left2050) })}</span>
+            </div>
+          </Tooltip>
+        </Show>
+      </div>
+    </Show>
+  );
+}
+
+// ------------------------------------------------------------------ the four-step strip
+
+const STEP_OF: Record<string, 1 | 2 | 3 | 4> = { opening: 1, pledge: 1, plan: 1, visit: 2, passing: 3, caretaker: 3, changed: 4, election: 4 };
+const STEP_KEYS = ["play.steps.choose", "play.steps.visit", "play.steps.pass", "play.steps.happened"] as const;
+
+/** Under the top bar: 1 Choose your cards, 2 Visit a place, 3 Four years pass, 4 What happened. */
+export function StepStrip(): JSX.Element {
+  const { game } = useGame();
+  const cur = () => STEP_OF[game.state()?.step ?? ""] ?? 0;
+  // always in the grid (a row of its own), empty at the end
+  return (
+    <nav class="yf-stepstrip" classList={{ off: !cur() }} aria-label={t("play.steps.label")} aria-hidden={!cur() ? "true" : undefined} data-testid="step-strip">
+      <ol>
+        <For each={cur() ? STEP_KEYS : []}>
+          {(k, i) => (
+            <li classList={{ now: cur() === i() + 1, done: cur() > i() + 1 }} aria-current={cur() === i() + 1 ? "step" : undefined}>
+              <span class="yf-stepno data" aria-hidden="true">{i() + 1}</span>
+              <span>{t(k)}</span>
+              <Show when={cur() === i() + 1}><span class="sr-only"> ({t("play.steps.now")})</span></Show>
+            </li>
+          )}
+        </For>
+      </ol>
+    </nav>
+  );
+}

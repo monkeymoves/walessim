@@ -73,7 +73,7 @@ describe("Bethesda remembers earlier threads", () => {
     const ctx = { active: [], inPlay: [], everPlayed: ["skills-and-apprenticeships"], seed: 3, runs: 50, text: m.engine_text };
     const fresh = gradeBethesda(be, ["room-for-river", "park-and-ride"], ctx);
     const after = gradeBethesda(be, ["room-for-river", "park-and-ride"], { ...ctx, stitched: ["chapel-homes", "quarry-workshops", "welsh-youth-centre"] });
-    expect(fresh.tests.find((t) => t.id === "aros")!.explanation!.en).toMatch(/none of your threads/);
+    expect(fresh.tests.find((t) => t.id === "aros")!.explanation!.en).toMatch(/none of your picks/);
     expect(after.tests.find((t) => t.id === "aros")!.explanation!.en).toMatch(/Empty chapel/);
     expect(after.tests.filter((t) => t.pass).length).toBeGreaterThan(fresh.tests.filter((t) => t.pass).length);
     expect(after.notes[0]!.en).toMatch(/Already in place from an earlier visit/);

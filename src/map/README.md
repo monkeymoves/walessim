@@ -58,6 +58,7 @@ The map fills `host` (which it makes `position: relative` if static) and follows
 | `setLens({ values, domain: [min, max], ramp, higherIsBetter, centre? } \| null)` | Tints each authority as a paper sheet within the relief (terrain shading kept). `ramp: "sequential"` or `"diverging"`; a diverging lens centres on `centre` (pass the Wales value; default the domain middle), runs worst to best when `higherIsBetter` is true, is flipped when false, and uses neutral hues when null. Missing values are hatched. |
 | `setSelected(code \| null)` | Lifts the authority and outlines it in twisted red thread. |
 | `setHighlight(codes)` | A region: other authorities wash pale, these are outlined in ink. `[]` clears. |
+| `focusLas(codes \| null)` | Eases the national view to fit these authorities (a council area or region, at most 4 times closer), or back to all of Wales with `null`. Markers of kind `stamp` draw a small inked tick in a circle (the notebook). |
 | `setStitches([{ id, at: { la } \| { x, y }, kind, label? }])` | Rings of cross-stitches; `kind` is `made-safe`, `planted`, `built` or `generic` (a small sign in the ring). Several at one place spiral apart. |
 | `setMarkers([{ id, x, y, kind, label?, size?, glyph? }])` | `tip` (a coal tip mound), `warning` (dashed amber circle, `size` x 6 km radius), `site` (a disc with `glyph`: coal, slate, copper, steel, energy, heritage, water), `town`, `pin`. Drawn under the names. |
 | `setLayers({ rail, towns, sites, peaks, labels, markers, stitches })` | Booleans, merged. |

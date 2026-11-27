@@ -37,6 +37,17 @@ export interface AtlasProps {
   geo: WalesGeo;
   /** Selected authority from the route (#/heddiw/<code>). */
   selected: string | null;
+  /**
+   * Opened over the game (plain-wales 6.3): selection changes call this instead of the route, and
+   * the lens starts at `lens` without changing the atlas's own remembered lens.
+   */
+  onSelect?: (code: string | null) => void;
+  /** Lens to start on (an indicator id), for the atlas opened from play. */
+  lens?: string;
+  /** Called with each authority opened, for the game's notebook. */
+  onLook?: (code: string) => void;
+  /** Open with the explorer table showing, sorted by the lens (from play: "See the 22 council areas"). */
+  explorer?: boolean;
 }
 
 export function Atlas(props: AtlasProps): JSX.Element {
@@ -45,13 +56,15 @@ export function Atlas(props: AtlasProps): JSX.Element {
   const codes = () => props.model.authorities.map((a) => a.code);
   const narrow = useNarrow();
 
-  const [lensId, setLensId] = createSignal<string>(stored(LENS_KEY, DEFAULT_LENS, (v) => typeof v === "string"));
+  const [lensId, setLensId] = createSignal<string>(props.lens ?? stored(LENS_KEY, DEFAULT_LENS, (v) => typeof v === "string"));
   const lens = () => indicators().find((i) => i.id === lensId()) ?? indicators().find((i) => i.id === DEFAULT_LENS) ?? indicators()[0]!;
   const lensSpec = createMemo(() => lensFor(lens()));
   const [columns, setColumns] = createSignal<string[]>(stored(COLS_KEY, [...HEADLINE], (v) => Array.isArray(v) && v.every((x) => typeof x === "string")));
+  // opened from play on a measure: make sure the table shows that measure's column
+  if (props.explorer && props.lens && !columns().includes(props.lens)) setColumns([props.lens, ...columns()]);
   const cols = () => columns().filter((c) => ids().includes(c));
   const [axes, setAxes] = createSignal<[string, string]>(["earnings", "life_exp"]);
-  const [explorer, setExplorer] = createSignal<"closed" | "table" | "scatter">("closed");
+  const [explorer, setExplorer] = createSignal<"closed" | "table" | "scatter">(props.explorer ? "table" : "closed");
   const [hot, setHot] = createSignal<string | null>(null);
   const [hover, setHover] = createSignal<HoverInfo | null>(null);
   const [kbd, setKbd] = createSignal<string | null>(null);
@@ -60,7 +73,11 @@ export function Atlas(props: AtlasProps): JSX.Element {
   let panelEl: HTMLElement | null = null;
 
   const selectedLa = () => props.model.authorities.find((a) => a.code === props.selected) ?? null;
-  const select = (code: string | null) => navigate(code ? `#/heddiw/${code}` : "#/heddiw", true);
+  const select = (code: string | null) => {
+    if (code) props.onLook?.(code);
+    if (props.onSelect) props.onSelect(code);
+    else navigate(code ? `#/heddiw/${code}` : "#/heddiw", true);
+  };
 
   // map wiring
   const ready = (m: PaperMap) => {
@@ -109,7 +126,7 @@ export function Atlas(props: AtlasProps): JSX.Element {
     map()?.focusLa(code);
   };
 
-  const changeLens = (id: string) => { setLensId(id); store(LENS_KEY, id); };
+  const changeLens = (id: string) => { setLensId(id); if (!props.lens) store(LENS_KEY, id); };
   const changeCols = (c: string[]) => { setColumns(c); store(COLS_KEY, c); };
 
   // keyboard: an ordered list of the authorities, arrow keys move by the map's neighbours
@@ -229,6 +246,7 @@ export function Atlas(props: AtlasProps): JSX.Element {
                   selected={props.selected}
                   onHot={linkHot}
                   onSelect={(c) => select(c)}
+                  sortBy={props.explorer ? props.lens : undefined}
                 />
               }
             >

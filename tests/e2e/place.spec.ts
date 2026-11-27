@@ -38,7 +38,15 @@ async function reach(page: Page, place: "rhondda" | "bethesda"): Promise<void> {
         if (await region.count()) await region.first().click();
         else await page.locator(".yf-tray .yf-where .btn-stamp").first().click();
       }
-      await page.locator(".yf-commit").click();
+      // coins not used never pass silently: answer the end-of-turn sheet
+      await page.getByTestId("end-turn").click();
+      const sheet = page.getByTestId("end-sheet");
+      if (await sheet.isVisible().catch(() => false)) {
+        for (const id of ["end-save", "end-lose", "end-anyway"]) {
+          const b = sheet.getByTestId(id);
+          if (await b.count()) { await b.click(); break; }
+        }
+      }
     } else if (s === "visit") {
       const h = (await page.locator(".yf-visit-offer h2").textContent()) ?? "";
       if ((place === "bethesda") === /Bethesda/i.test(h)) {
@@ -69,12 +77,15 @@ test("the Rhondda: tips, what sits below, the rule and its slider, three threads
   const errors = await start(page);
   await reach(page, "rhondda");
   await expect(page.locator(".pl-ledger tbody tr")).toHaveCount(17);
-  await expect(page.locator(".pl-prompt")).toContainText("more tips than thread");
+  await expect(page.locator(".pl-prompt")).toContainText("more tips than money");
+  // before choosing: the three tests as plain questions, each with what makes it pass
+  await expect(page.getByTestId("visit-questions").locator("li")).toHaveCount(3);
+  await expect(page.getByTestId("visit-questions")).toContainText("To pass:");
   // what sits below one tip
   await page.locator(".pl-rowbtn").nth(8).click();
   const below = page.locator(".pl-below");
   await expect(below).toBeVisible();
-  await expect(below).toContainText("Homes land below");
+  await expect(below).toContainText("Land with homes below");
   await expect(below).toContainText(/BGS|OpenStreetMap/);
   // the rule card: honest about the register, and the slider changes the counts
   await below.locator(".threadlink").click();
@@ -112,7 +123,8 @@ test("Bethesda and Dyffryn Ogwen: ten options with their flags, three threads, f
   const errors = await start(page);
   await reach(page, "bethesda");
   await expect(page.locator(".pl-ledger tbody tr")).toHaveCount(10);
-  await expect(page.locator(".pl-ledger thead")).toContainText("Iaith");
+  await expect(page.locator(".pl-ledger thead")).toContainText("Welsh on the street");
+  await expect(page.getByTestId("visit-questions").locator("li")).toHaveCount(3);
   await page.locator(".pl-rowbtn").nth(6).click();
   await expect(page.locator(".pl-below")).toContainText("The catch");
   await page.locator(".pl-below .btn-stitch").click();

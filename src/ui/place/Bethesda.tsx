@@ -10,6 +10,7 @@ import { ConfidenceMark } from "../parts/ConfidenceMark";
 import type { ThreadOption } from "../../model/schema";
 import { useGame } from "../game/context";
 import type { BoardApi } from "./PlaceVisit";
+import { TestQuestions } from "./TestQuestions";
 import { TermConditions } from "./TermConditions";
 
 const FLAGS = ["homes", "work", "iaith", "visitors", "river"] as const;
@@ -120,7 +121,6 @@ export function BethesdaBoard(props: { data: PlaceData; api: BoardApi }): JSX.El
     if (id) ui.map()?.place.focusItem(id);
   }
   const selOpt = () => options.find((o) => o.id === sel()) ?? null;
-  const tests = () => board.tests.length ? board.tests.map((x) => `${game.names.text(x.name)}: ${game.names.text(x.description)}`) : ["aros", "iaith", "pwysau"].map((k) => t(`place.bethesda.tests.${k}`));
 
   return (
     <div class="pl-bethesda">
@@ -153,7 +153,7 @@ export function BethesdaBoard(props: { data: PlaceData; api: BoardApi }): JSX.El
                   <For each={FLAGS}>
                     {(f) => <td class="flag">{o.flags.includes(f) ? <i class="cut" role="img" aria-label={t(`place.bethesda.flags.${f}`)} /> : null}</td>}
                   </For>
-                  <td class="num data">{o.delay ? tn("place.bethesda.delay", o.delay) : t("place.bethesda.delay_now")}</td>
+                  <td class="num data">{o.delay ? t("play.visit.delay_years", { n: 4 * o.delay }) : t("place.bethesda.delay_now")}</td>
                 </tr>
               )}
             </For>
@@ -161,12 +161,10 @@ export function BethesdaBoard(props: { data: PlaceData; api: BoardApi }): JSX.El
         </table>
       </div>
       <TermConditions place="bethesda" activeTrends={offer().activeTrends} conditions={offer().termConditions} />
+      <TestQuestions place="bethesda" />
       <details class="pl-tests-box pl-about">
         <summary class="label">{t("place.bethesda.about")}</summary>
         <p class="small pl-history">{t("place.bethesda.history")}</p>
-        <h3 class="label">{t("place.common.tests")}</h3>
-        <ul class="pl-tests-list small"><For each={tests()}>{(x) => <li>{x}</li>}</For></ul>
-        <p class="small">{t("place.common.tests_note")}</p>
         <h3 class="label">{t("place.common.sources")}</h3>
         <p class="small">{game.names.text(board.data_note)}</p>
         <ConfidenceMark level={board.confidence} />
@@ -204,7 +202,7 @@ function OptionCard(props: { opt: ThreadOption; stitched: boolean; full: boolean
           )}
         </For>
       </ul>
-      <p class="data small">{t("place.bethesda.table_delay")}: {o().delay ? tn("place.bethesda.delay", o().delay) : t("place.bethesda.delay_now")}</p>
+      <p class="data small">{t("place.bethesda.table_delay")}: {o().delay ? t("play.visit.delay_years", { n: 4 * o().delay }) : t("place.bethesda.delay_now")}</p>
       <h4 class="label">{t("place.bethesda.catch")}</h4>
       <p class="story-small">{pick(o().catch)}</p>
       <Show when={o().requires_card}><p class="small">{t("place.bethesda.requires", { card: game.names.cardName(o().requires_card!) })}</p></Show>
@@ -212,7 +210,7 @@ function OptionCard(props: { opt: ThreadOption; stitched: boolean; full: boolean
       <Show when={o().pairs_with && pairName()}><p class="small">{t("place.bethesda.pairs", { n: pairName()! })}</p></Show>
       <Show when={o().river_flips_in}><p class="small">{t("place.bethesda.river_flips")}</p></Show>
       <p class="pl-below-foot">
-        <Show when={props.stitched} fallback={<StitchButton onClick={props.onStitch} disabled={props.full}>{t("place.common.stitch")}</StitchButton>}>
+        <Show when={props.stitched} fallback={<StitchButton onClick={props.onStitch} disabled={props.full}>{t("place.bethesda.stitch")}</StitchButton>}>
           <TabButton onClick={props.onStitch}>{t("place.common.unstitch")}</TabButton>
         </Show>
       </p>

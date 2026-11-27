@@ -1,16 +1,16 @@
 // Yfory: the game screen. One board whose states are the seven steps of a term, per Papur v2:
 // strands and Trust across the top, the map in its well, the hand and the step on the rail,
 // the timeline (and post rail) beneath.
-import { createEffect, createSignal, ErrorBoundary, on, For, Match, onCleanup, onMount, Show, Switch, type JSX } from "solid-js";
-import { formatNum, lang, Pair, t } from "../../i18n";
+import { createEffect, createSignal, ErrorBoundary, on, Match, onCleanup, onMount, Show, Switch, type JSX } from "solid-js";
+import { lang, t } from "../../i18n";
 import { geo, model, modelError, modelStatus, startLoading } from "../shell/model";
-import { CloseButton, SourceTag, StampButton } from "../parts";
+import { StampButton } from "../parts";
 import { paramOverrides } from "../book/overrides";
 import type { CompiledModel } from "../../model/schema";
 import { createGame } from "./controller";
 import { createUi, GameContext, useGame } from "./context";
 import { MapStage } from "./MapStage";
-import { TopBar, TrendSlip } from "./Pieces";
+import { StepStrip, TopBar, TrendSlip } from "./Pieces";
 import { Timeline } from "./Timeline";
 import { LedgerDrawer } from "./Ledger";
 import { TracePanel } from "./Trace";
@@ -79,7 +79,7 @@ function BoardBody(): JSX.Element {
     if (e.key !== "Escape") return;
     if (game.trace()) { game.setTrace(null); ui.map()?.setThread(null); }
     else if (game.ledgerOpen()) game.setLedgerOpen(false);
-    else if (ui.laPanel()) { ui.setLaPanel(null); ui.map()?.setSelected(null); }
+    else if (ui.laPanel()) { ui.setLaPanel(null); ui.map()?.setSelected(null); ui.map()?.focusLas(null); }
   };
   onMount(() => window.addEventListener("keydown", onKey));
   onCleanup(() => window.removeEventListener("keydown", onKey));
@@ -87,14 +87,13 @@ function BoardBody(): JSX.Element {
   return (
     <div class="yf" data-era="yfory" data-step={step()} lang={lang()}>
       <TopBar />
+      <StepStrip />
       <main class="yf-main" classList={{ ended: ended() }}>
         <MapStage>
           <Show when={!ended() && !ui.inPlace()}>
             <TrendSlip />
           </Show>
-          <Show when={ui.laPanel() && !ui.inPlace() && !game.trace() && (step() === "opening" || step() === "plan" || step() === "pledge")}>
-            <LaPanel code={ui.laPanel()!} />
-          </Show>
+          {/* the council area, region and All of Wales panels now live in MapStage (plain-wales 5) */}
           <ArrivalStrip />
           <TicketNotes />
           <StageVoice />
@@ -148,44 +147,5 @@ function BoardBody(): JSX.Element {
       </footer>
       <p class="sr-only" aria-live="polite">{ui.announce()}</p>
     </div>
-  );
-}
-
-// ------------------------------------------------------------------ touch the real thing
-
-/** Three real figures for an authority, each with its source: "This is real, and it is mine to look after." */
-function LaPanel(props: { code: string }): JSX.Element {
-  const { game, ui } = useGame();
-  const la = () => game.names.la(props.code);
-  const fig = (ind: string) => game.model.la_data[ind]?.values[props.code] ?? null;
-  const srcOf = (ind: string) => {
-    const i = game.model.indicators.find((x) => x.id === ind);
-    const s = i?.sources?.[0] ?? (Array.isArray(i?.source) ? i?.source[0] : i?.source);
-    return s ?? null;
-  };
-  const yearOf = (ind: string) => game.model.la_data[ind]?.year ?? "";
-  const items = () => [
-    { ind: "pop", v: fig("pop"), fmt: (v: number) => (v >= 100000 ? `${formatNum(Math.round(v / 1000))}k` : formatNum(Math.round(v))), label: t("game.place_panel.people") },
-    { ind: "welsh_speakers", v: fig("welsh_speakers"), fmt: (v: number) => `${formatNum(v, { maximumFractionDigits: 1 })}%`, label: t("game.place_panel.welsh") },
-    { ind: "employment", v: fig("employment"), fmt: (v: number) => `${formatNum(v, { maximumFractionDigits: 1 })}%`, label: t("game.place_panel.employment") },
-  ].filter((x) => x.v != null);
-  return (
-    <aside class="yf-lapanel sheet" aria-labelledby="yf-la-title">
-      <div class="yf-lapanel-head">
-        <Pair text={la()?.name} as="h2" id="yf-la-title" class="t-1" />
-        <CloseButton label={t("game.place_panel.close")} onClick={() => { ui.setLaPanel(null); ui.map()?.setSelected(null); }} />
-      </div>
-      <div class="yf-figs">
-        <For each={items()}>
-          {(x) => (
-            <div class="yf-fig">
-              <b class="figure-big">{x.fmt(x.v!)}</b>
-              <span class="label">{x.label}</span>
-              <SourceTag source={srcOf(x.ind)} year={yearOf(x.ind)} />
-            </div>
-          )}
-        </For>
-      </div>
-    </aside>
   );
 }

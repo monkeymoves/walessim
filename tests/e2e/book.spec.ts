@@ -19,7 +19,7 @@ test("the model book lists the rules and shows one", async ({ page }) => {
   await expect(page).toHaveURL(/#\/llyfr\/R05$/);
   await expect(page.getByTestId("rule-title")).toHaveText("The grid gets cleaner anyway");
   await expect(page.getByTestId("rule-sentence")).not.toBeEmpty();
-  await expect(page.getByTestId("rule-page")).toContainText("Linear");
+  await expect(page.getByTestId("rule-page")).toContainText("Straight line");
   await expect(page.getByTestId("rule-page").locator("button.docket")).not.toHaveCount(0);
 });
 
@@ -30,7 +30,7 @@ test("changing a parameter shows the modified rule set badge, and putting it bac
   await slider.focus();
   await page.keyboard.press("ArrowRight");
   await expect(page.getByTestId("modified-badge")).toBeVisible();
-  await expect(page.getByTestId("modified-badge")).toContainText("You are playing a modified rule set");
+  await expect(page.getByTestId("modified-badge")).toContainText("You changed the rules");
   await expect(page).toHaveURL(/rules=R05\.coef:/);
   const stored = await page.evaluate(() => localStorage.getItem("etifeddiaeth.v1.overrides"));
   expect(stored).toContain("R05.coef");

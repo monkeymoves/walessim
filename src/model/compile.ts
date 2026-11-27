@@ -11,6 +11,7 @@ import type {
   Authority,
   Band,
   Card,
+  CardFact,
   CompiledModel,
   Component,
   Condition,
@@ -36,6 +37,9 @@ import type {
   VoiceTemplate,
 } from "./schema";
 import { STRAND_IDS, REGION_IDS, GRADE_ORDER } from "./schema";
+
+/** ONS code for Wales in la-indicators.json. */
+const WALES_CODE = "W92000004";
 
 /** The raw parsed files. Optional ones may be undefined. */
 export interface RawModelFiles {
@@ -429,6 +433,47 @@ export function compileModel(raw: RawModelFiles, opts: CompileOptions = {}): Com
     return out;
   };
 
+  // the real figure on a card (plain-wales 6.1): read from the data, never typed by hand
+  const indicatorById = new Map(indicators.map((i) => [i.id, i]));
+  const resolveFact = (id: string, spec: unknown): CardFact | undefined => {
+    const f = "cards.yaml";
+    if (!isObj(spec) || typeof spec.indicator !== "string" || typeof spec.pick !== "string") {
+      err(f, id, "fact must be { indicator, pick } (pick: highest, lowest, wales or an authority code)");
+      return undefined;
+    }
+    const ind = indicatorById.get(spec.indicator);
+    if (!ind) { err(f, id, `fact names unknown indicator ${spec.indicator}`); return undefined; }
+    const d = laData[spec.indicator];
+    if (!d) { err(f, id, `fact indicator ${spec.indicator} has no data in la-indicators.json`); return undefined; }
+    const src = (Array.isArray(ind.sources) && ind.sources.length ? ind.sources : Array.isArray(ind.source) ? ind.source : ind.source ? [ind.source] : [])[0];
+    if (!src || !sourceIds.has(src)) { err(f, id, `fact indicator ${spec.indicator} has no source in sources.yaml (${src ?? "none"})`); return undefined; }
+    const wales = d.values[WALES_CODE];
+    if (typeof wales !== "number" || !Number.isFinite(wales)) { err(f, id, `fact indicator ${spec.indicator} has no Wales value`); return undefined; }
+    const vals = authorities.map((a) => [a.code, d.values[a.code]] as const).filter((x): x is readonly [string, number] => typeof x[1] === "number" && Number.isFinite(x[1]));
+    const rankOf = (code: string) => { const v = d.values[code]!; return 1 + vals.filter(([, w]) => w > v).length; };
+    let la: string | null = null;
+    if (spec.pick === "highest" || spec.pick === "lowest") {
+      if (!vals.length) { err(f, id, `fact indicator ${spec.indicator} has no authority values`); return undefined; }
+      const sorted = [...vals].sort((a, b) => (spec.pick === "highest" ? b[1] - a[1] : a[1] - b[1]));
+      la = sorted[0]![0];
+    } else if (spec.pick !== "wales") {
+      if (!laCodes.has(spec.pick)) { err(f, id, `fact pick ${spec.pick} is not highest, lowest, wales or an authority code`); return undefined; }
+      if (typeof d.values[spec.pick] !== "number") { err(f, id, `fact indicator ${spec.indicator} has no value for ${spec.pick}`); return undefined; }
+      la = spec.pick;
+    }
+    return {
+      indicator: spec.indicator, pick: spec.pick, la, value: la ? d.values[la]! : null, wales,
+      year: String(d.year ?? ind.year ?? ""), source: src, rank: la ? rankOf(la) : null,
+    };
+  };
+  const cardLine = (id: string, field: "what" | "catch" | "picture", v: unknown): Text | undefined => {
+    if (v === undefined || v === null) return undefined;
+    const out = text("cards.yaml", id, field, v);
+    if (/[\u2013\u2014]/.test(out.en + out.cy)) err("cards.yaml", id, `${field} contains an em or en dash`);
+    if (field === "picture" && /\d/.test(out.en + out.cy)) err("cards.yaml", id, "picture is an example and must not contain a number");
+    return out;
+  };
+
   const cards: Card[] = cardList.map((c: any) => {
     const f = "cards.yaml";
     if (!["national", "region", "national_or_region", "two_regions"].includes(c.scope)) err(f, c.id, `unknown scope ${c.scope}`);
@@ -479,8 +524,16 @@ export function compileModel(raw: RawModelFiles, opts: CompileOptions = {}): Com
       .filter((e) => !e.side && e.target !== "trust" && e.target !== "budget" && e.target !== "card_cost")
       .map((e) => Math.max(e.delay ?? c.delay, e.rule ? (rules.find((r) => r.id === e.rule)?.lag ?? 0) : 0));
     if (upkeep) for (const e of upkeep.lapse) for (const s of strandsOf(e.target)) frays.add(s);
+    const { fact: factSpec, what, catch: catchLine, picture, ...rest } = c;
+    const fact = factSpec === undefined || factSpec === null || factSpec === "none" ? undefined : resolveFact(c.id, factSpec);
+    if (factSpec === undefined) warn(`cards.yaml: ${c.id}: no fact (the card shows "How this works" instead of a real figure)`);
+    const lines = { what: cardLine(c.id, "what", what), catch: cardLine(c.id, "catch", catchLine), picture: cardLine(c.id, "picture", picture) };
     const card: Card = {
-      ...c,
+      ...rest,
+      ...(fact ? { fact } : {}),
+      ...(lines.what ? { what: lines.what } : {}),
+      ...(lines.catch ? { catch: lines.catch } : {}),
+      ...(lines.picture ? { picture: lines.picture } : {}),
       name: text(f, c.id, "name", c.name),
       description: text(f, c.id, "description", c.description),
       upgraded_by: text(f, c.id, "upgraded_by", c.upgraded_by),
@@ -632,7 +685,7 @@ export function compileModel(raw: RawModelFiles, opts: CompileOptions = {}): Com
         if (!known) err(f, v.id, `requires unknown board item ${th}`);
       }
       const t = text(f, v.id, "text", v.text);
-      if (/[–—]/.test(t.en + t.cy)) err(f, v.id, "contains an em or en dash");
+      if (/[\u2013\u2014]/.test(t.en + t.cy)) err(f, v.id, "contains an em or en dash");
       if (/!/.test(t.en)) warn(`voices.yaml: ${v.id}: exclamation mark (tone rule)`);
       voices.push({ ...(v as VoiceTemplate), text: t, towns: (v.towns ?? []).map((x: unknown) => text(f, v.id, "towns", x, false)) });
     }
@@ -660,7 +713,7 @@ export function compileModel(raw: RawModelFiles, opts: CompileOptions = {}): Com
       }
       if (!named.none?.length) err(f, id, "named.none needs at least one variant (the fallback)");
       letters.push({ archetype: id, title: text(f, id, "title", l.title), salutation: slots("salutation"), lived: slots("lived"), left: slots("left"), named, signoff: slots("signoff") });
-      for (const t of [...letters[letters.length - 1]!.lived, ...Object.values(named).flat()]) if (/[–—]/.test(t.en + t.cy)) err(f, id, "contains an em or en dash");
+      for (const t of [...letters[letters.length - 1]!.lived, ...Object.values(named).flat()]) if (/[\u2013\u2014]/.test(t.en + t.cy)) err(f, id, "contains an em or en dash");
     }
   }
   const vs = (raw.voiceSlots ?? {}) as any;
@@ -727,7 +780,9 @@ export function compileModel(raw: RawModelFiles, opts: CompileOptions = {}): Com
     game,
     engine_text,
   };
-  model.meta.hash = hashString(JSON.stringify([model.rules, model.cards, model.standing, model.curveballs, model.game, model.components, model.places.map((p) => [p.options, p.tips])]));
+  // the hash covers what the engine reads: display-only card lines (plain-wales 2.1, 6.1) are left out
+  const engineCards = model.cards.map(({ fact: _f, what: _w, catch: _c, picture: _p, ...rest }) => rest);
+  model.meta.hash = hashString(JSON.stringify([model.rules, engineCards, model.standing, model.curveballs, model.game, model.components, model.places.map((p) => [p.options, p.tips])]));
   return { model, errors, warnings };
 }
 

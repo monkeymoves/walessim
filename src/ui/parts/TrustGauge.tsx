@@ -70,3 +70,38 @@ export function TrustGauge(props: TrustGaugeProps): JSX.Element {
     </div>
   );
 }
+
+const SLOTS = 4;
+
+export interface TrustSlotsProps {
+  band: TrustBand;
+  /** Cards Trust allows (this turn with `now`, else next turn). */
+  cards: number;
+  now?: boolean;
+  /** Out of office this turn: a stand-in plays the cards. */
+  out?: boolean;
+  class?: string;
+}
+
+/**
+ * Trust as card slots (plain-wales 3.1): four ticket-shaped slots, as many filled as the cards Trust
+ * allows, with the plain line "Trust: OK. You can play 3 cards." The points are never shown.
+ */
+export function TrustSlots(props: TrustSlotsProps): JSX.Element {
+  const band = () => t(`parts.trust.${props.band}`);
+  const line = () => {
+    if (props.out) return t("play.trust.line_out");
+    if (props.band === "collapsed" || props.cards <= 0) return t("play.trust.line_lost", { band: band() });
+    return tn(props.now ? "play.trust.line_now" : "play.trust.line_next", props.cards, { band: band() });
+  };
+  return (
+    <div class={`trustslots slate on-slate${props.class ? " " + props.class : ""}`} data-band={props.band} data-testid="trust" title={t("play.trust.tip")}>
+      <div class="trustslots-row" role="img" aria-label={line()}>
+        <For each={Array.from({ length: SLOTS }, (_, i) => i < (props.out ? 0 : props.cards))}>
+          {(on) => <i class="trustslot" classList={{ on }} aria-hidden="true" />}
+        </For>
+      </div>
+      <p class="trustslots-line">{line()}</p>
+    </div>
+  );
+}

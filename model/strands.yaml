@@ -28,7 +28,7 @@ components:
     initial: 4
   - id: flood_exposure
     name: { en: Safe from floods, cy: Yn ddiogel rhag llifogydd, cy_review: true }
-    note: { en: "Share of homes at flood risk, inverted: a higher score means fewer homes at risk.", cy: "Cyfran y cartrefi sydd mewn perygl o lifogydd, wedi'i gwrthdroi: mae sgôr uwch yn golygu llai o gartrefi mewn perygl.", cy_review: true }
+    note: { en: "Share of homes at flood risk, turned round. A higher score means fewer homes at risk.", cy: "Cyfran y cartrefi mewn perygl o lifogydd, wedi'i throi. Mae sgôr uwch yn golygu llai o gartrefi mewn perygl.", cy_review: true }
     role: flow
     aggregate: pop
     indicator: flood_exposure
@@ -64,7 +64,7 @@ components:
     initial: 5
   - id: earnings_gap
     name: { en: Pay gap between places, cy: Bwlch cyflog rhwng lleoedd, cy_review: true }
-    note: { en: "Gap in pay between the five worst-off authorities and the Wales median, inverted: a smaller gap scores higher. Starts at 4 (illustrative) and moves as the 2026 gap narrows or widens.", cy: "Y bwlch cyflog rhwng y pum awdurdod tlotaf a chanolrif Cymru, wedi'i wrthdroi: mae bwlch llai yn sgorio'n uwch.", cy_review: true }
+    note: { en: "The pay gap between the five poorest council areas and the middle of Wales. A smaller gap scores higher. Starts at 4 (illustrative) and moves as the gap changes.", cy: "Y bwlch cyflog rhwng y pum ardal cyngor dlotaf a chanol Cymru. Mae bwlch llai yn sgorio'n uwch. Yn dechrau ar 4 (enghreifftiol) ac yn symud wrth i'r bwlch newid.", cy_review: true }
     role: flow
     aggregate: gap
     of: earnings
@@ -122,8 +122,8 @@ components:
     indicator: welsh_speakers
     initial: 4
   - id: heartland
-    name: { en: Welsh in the heartland, cy: Cymraeg yn y cadarnleoedd, cy_review: true }
-    note: { en: "Whether the heartland authorities hold their 2021 speaker share: the mean over Gwynedd, Anglesey, Ceredigion and Carmarthenshire. Starts at the band middle: illustrative.", cy: "A yw'r awdurdodau cadarnle yn dal eu cyfran siaradwyr 2021: y cymedr dros Wynedd, Môn, Ceredigion a Sir Gaerfyrddin. Yn dechrau yng nghanol y band: enghreifftiol.", cy_review: true }
+    name: { en: "Welsh in Welsh-speaking areas", cy: "Y Gymraeg mewn ardaloedd Cymraeg", cy_review: true }
+    note: { en: "Whether the most Welsh-speaking council areas keep their 2021 share of speakers. It is the average of Gwynedd, Anglesey, Ceredigion and Carmarthenshire. Starts in the middle: illustrative.", cy: "A yw'r ardaloedd cyngor mwyaf Cymraeg yn cadw eu cyfran o siaradwyr 2021. Y cyfartaledd dros Wynedd, Môn, Ceredigion a Sir Gaerfyrddin yw hwn. Yn dechrau yn y canol: enghreifftiol.", cy_review: true }
     role: flow
     aggregate: heartland
     initial: 5
@@ -160,7 +160,7 @@ components:
     illustrative: true
   - id: nature_condition
     name: { en: Nature's condition, cy: Cyflwr natur, cy_review: true }
-    note: { en: "Mean of the 11 SoNaRR ecosystem and resource states, from the Fuzzy Cognitive Map (R03), times ten.", cy: "Cymedr 11 cyflwr ecosystem ac adnodd SoNaRR, o'r Map Gwybyddol Niwlog (R03), wedi'i luosi â deg.", cy_review: true }
+    note: { en: "The average of the 11 SoNaRR measures of nature, times ten. They come from the SoNaRR web of causes (R03).", cy: "Cyfartaledd 11 mesur natur SoNaRR, wedi'i luosi â deg. Maen nhw'n dod o we achosion SoNaRR (R03).", cy_review: true }
     role: stock
     aggregate: pop
     initial: 4.4
@@ -210,7 +210,7 @@ components:
     illustrative: true
   - id: tip_liability
     name: { en: Tips made safe, cy: Tomenni wedi'u gwneud yn ddiogel, cy_review: true }
-    note: { en: "Coal tip liability, inverted. Lower in the coal valley authorities, where the high-category tips are. Illustrative scores, counts from the Welsh Government coal tip safety statistics.", cy: "Atebolrwydd tomenni glo, wedi'i wrthdroi. Yn is yn awdurdodau'r cymoedd glo, lle mae'r tomenni categori uchel. Sgoriau enghreifftiol, cyfrifon o ystadegau diogelwch tomenni glo Llywodraeth Cymru.", cy_review: true }
+    note: { en: "How much coal tip risk is left, turned round so higher is safer. It is lower in the coal valleys, where the riskiest tips are. Illustrative scores. Tip counts come from Welsh Government coal tip safety figures.", cy: "Faint o risg tomenni glo sydd ar ôl, wedi'i droi fel bod uwch yn fwy diogel. Mae'n is yn y cymoedd glo, lle mae'r tomenni mwyaf peryglus. Sgoriau enghreifftiol. Daw nifer y tomenni o ffigurau diogelwch tomenni glo Llywodraeth Cymru.", cy_review: true }
     role: stock
     aggregate: pop
     initial: 9
@@ -233,50 +233,50 @@ components:
 
 strands:
   - id: prosperous
-    name: { en: Prosperous, cy: Llewyrchus, cy_review: true }
-    description: { en: "Good work and fair pay, built on skills and sound infrastructure.", cy: "Gwaith da a chyflog teg, wedi'i adeiladu ar sgiliau a seilwaith cadarn.", cy_review: true }
+    name: { en: "Work and pay", cy: "Gwaith a chyflog", cy_review: true }
+    description: { en: "Good jobs and fair pay. Skills, roads and pipes in good shape.", cy: "Swyddi da a chyflog teg. Sgiliau, ffyrdd a phibellau mewn cyflwr da.", cy_review: true }
     colour: --strand-prosperous
     flow: [gva_head, employment, earnings]
     stock: [skills_stock, infrastructure_condition]
     expected_2026: 4
   - id: resilient
-    name: { en: Resilient, cy: Cydnerth, cy_review: true }
-    description: { en: "Healthy nature that holds water and gives back, and homes safe from floods.", cy: "Natur iach sy'n dal dŵr ac yn rhoi'n ôl, a chartrefi'n ddiogel rhag llifogydd.", cy_review: true }
+    name: { en: "Nature and floods", cy: "Natur a llifogydd", cy_review: true }
+    description: { en: "Healthy nature that soaks up water, and homes safe from floods.", cy: "Natur iach sy'n dal dŵr, a chartrefi'n ddiogel rhag llifogydd.", cy_review: true }
     colour: --strand-resilient
     flow: [flood_exposure, nature_services]
     stock: [nature_condition, woodland_stock, peat_condition]
     expected_2026: 4
   - id: healthier
-    name: { en: Healthier, cy: Iachach, cy_review: true }
-    description: { en: "Long lives in warm homes, with care to go round.", cy: "Bywydau hir mewn cartrefi cynnes, gyda digon o ofal i bawb.", cy_review: true }
+    name: { en: "Health", cy: "Iechyd", cy_review: true }
+    description: { en: "Long lives in warm homes, with enough care for everyone.", cy: "Bywydau hir mewn cartrefi cynnes, gyda digon o ofal i bawb.", cy_review: true }
     colour: --strand-healthier
     flow: [life_exp, fuel_poverty, care_pressure]
     stock: [health_stock]
     expected_2026: 5
   - id: equal
-    name: { en: More equal, cy: Mwy cyfartal, cy_review: true }
-    description: { en: "No place left far behind. Every authority counts once.", cy: "Dim lle wedi'i adael ymhell ar ôl. Mae pob awdurdod yn cyfrif unwaith.", cy_review: true }
+    name: { en: "Fairness", cy: "Tegwch", cy_review: true }
+    description: { en: "No place left far behind. Every council area counts once.", cy: "Dim lle wedi'i adael ymhell ar ôl. Mae pob ardal cyngor yn cyfrif unwaith.", cy_review: true }
     colour: --strand-equal
     flow: [earnings_gap, employment_gap, life_exp_gap, deprivation]
     stock: [early_years_stock, housing_stock]
     expected_2026: 4
   - id: cohesive
-    name: { en: Cohesive communities, cy: Cymunedau cydlynus, cy_review: true }
-    description: { en: "Places young people can afford to stay in and get about from, with things they own together.", cy: "Lleoedd y gall pobl ifanc fforddio aros ynddynt a theithio ohonynt, gyda phethau maen nhw'n berchen arnynt gyda'i gilydd.", cy_review: true }
+    name: { en: "Homes and community", cy: "Cartrefi a chymuned", cy_review: true }
+    description: { en: "Places young people can afford to live in and travel from. Things people own together.", cy: "Lleoedd y gall pobl ifanc fforddio byw ynddyn nhw a theithio ohonyn nhw. Pethau mae pobl yn berchen arnyn nhw gyda'i gilydd.", cy_review: true }
     colour: --strand-cohesive
     flow: [affordability, young_adults, access]
     stock: [community_assets, tip_liability]
     expected_2026: 5
   - id: culture
-    name: { en: Culture and Welsh, cy: Diwylliant a'r Gymraeg, cy_review: true }
-    description: { en: "A living culture where Welsh thrives, in the heartland and beyond.", cy: "Diwylliant byw lle mae'r Gymraeg yn ffynnu, yn y cadarnleoedd a thu hwnt.", cy_review: true }
+    name: { en: "Welsh and culture", cy: "Y Gymraeg a diwylliant", cy_review: true }
+    description: { en: "A living culture where Welsh thrives, in Welsh-speaking areas and beyond.", cy: "Diwylliant byw lle mae'r Gymraeg yn ffynnu, mewn ardaloedd Cymraeg a thu hwnt.", cy_review: true }
     colour: --strand-culture
     flow: [welsh_speakers, heartland]
     stock: [speakers_stock]
     expected_2026: 5
   - id: global
-    name: { en: Globally responsible, cy: Cyfrifol yn fyd-eang, cy_review: true }
-    description: { en: "Clean power and falling emissions, keeping to a fair share of carbon.", cy: "Pŵer glân ac allyriadau'n gostwng, gan gadw at gyfran deg o garbon.", cy_review: true }
+    name: { en: "Climate", cy: "Hinsawdd", cy_review: true }
+    description: { en: "Clean power and less greenhouse gas, keeping to a fair share for Wales.", cy: "Pŵer glân a llai o nwyon tŷ gwydr, gan gadw at gyfran deg i Gymru.", cy_review: true }
     colour: --strand-global
     flow: [emissions_head, renewables]
     stock: [carbon_budget, peat_condition]

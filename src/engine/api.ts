@@ -2,6 +2,17 @@
  * The engine's public surface. The UI imports from this file only.
  *
  * CHANGES (newest first; every change is backward compatible in shape):
+ * - v6.0 (plain wales, docs/design/plain-wales.md section 10): additive only, no rule, cost, effect or
+ *   balance number moved and `GameState` keeps its shape. E1: `headline(model, state)` gives the two
+ *   running scores out of 100 (`Headline`: Life now and Left for 2050 with their 2026 starts), the
+ *   same weighted sums as `EndResult`; once ended they are `livedLevel`, `leftLevel` and `start`
+ *   times ten. E2: a first game deals `game.first_game_hand` in turn 1 (Build flood walls, Warm homes,
+ *   Welsh-medium childcare, Everyone online) and keeps `game.first_game_not_before_term3` (Regional
+ *   compact) out of its first two hands; no crisis lands in turn 1 of any game. E3:
+ *   `whatMattered(model, state, limit?)` lists the largest causes across the game (`Mattered`: card,
+ *   shock, visit, promise, lost turn, coins unused) with year, place and goal, sized in score points
+ *   out of 100; `unusedCoins(state)` counts coins left unspent and lost (not used by a crisis, not
+ *   carried over).
  * - v5.1 (playtest 4): `Grade` gains `"very_well"` (above "well"): every test held with room to spare,
  *   the margins in each board's `very_well` block (Bethesda: every test in 9 runs in 10, against 6
  *   needed; the Rhondda: exposure a fifth above what it needs, two deprived neighbourhoods, every
@@ -797,6 +808,49 @@ export interface EndResult {
 }
 
 // ---------------------------------------------------------------------------
+// Plain scores (v6.0)
+
+/** The two running scores, out of 100 (unrounded: show "about" and a whole number). */
+export interface Headline {
+  /** Life now: weighted average of the seven flow scores, times ten. At the end, `livedLevel` times ten. */
+  lifeNow: number;
+  /** Left for 2050: weighted average of the seven stock scores less the debt penalty, times ten. At the end, `leftLevel` times ten. */
+  left2050: number;
+  /** Both in 2026. */
+  start: { lifeNow: number; left2050: number };
+  /** The game has ended: the values are the end result's own. */
+  final: boolean;
+}
+
+/** One thing that mattered over the game, for the end screen's "What you did that mattered". */
+export interface Mattered {
+  kind: "card" | "shock" | "visit" | "promise" | "lost_turn" | "coins_unused";
+  /** Card id, curveball id (shock), place id (visit), strand id (promise), or a fixed id. */
+  id: string;
+  /** Term index (0 = 2026) and its start year. */
+  term: number;
+  year: number;
+  /** Where a card was played (null for national). */
+  regions: RegionId[] | null;
+  /** Size in score points out of 100 (signed: negative hurt). Fixed sizes for promises, visits, lost turns and unused coins. */
+  size: number;
+  /** The goal it moved most (or the promised goal), or null. */
+  strand: StrandId | null;
+  /** A place visit that shaped a card, or the visit itself. */
+  place?: { place: "rhondda" | "bethesda"; grade: Grade };
+  /** For a visit: the picks made. */
+  picks?: string[];
+  /** For a shock: coins spent on it and whether a card had made Wales ready. */
+  response?: ShockResponse;
+  prepared?: boolean;
+  /** For a promise: kept or broken. */
+  kept?: boolean;
+  /** For coins unused: how many were lost, over how many turns. */
+  coins?: number;
+  turns?: number;
+}
+
+// ---------------------------------------------------------------------------
 // Preview
 
 /** A projected strand. */
@@ -987,6 +1041,21 @@ export function describeRule(model: CompiledModel, ruleId: string, overrides?: R
 /** Trust band for a Trust value. */
 export function trustBand(model: CompiledModel, trust: number): TrustBand {
   return impl.trustBand(model, trust);
+}
+
+/** The two running scores out of 100 (v6.0, plain-wales E1). */
+export function headline(model: CompiledModel, state: GameState): Headline {
+  return impl.headline(model, state);
+}
+
+/** The largest causes across the game, largest first (v6.0, plain-wales E3). Default limit 3. */
+export function whatMattered(model: CompiledModel, state: GameState, limit?: number): Mattered[] {
+  return impl.whatMattered(model, state, limit);
+}
+
+/** Coins left unspent and lost over the game (not used by a crisis, not carried over). */
+export function unusedCoins(model: CompiledModel, state: GameState): { coins: number; turns: number; firstTerm: number; perTurn: number[] } {
+  return impl.unusedCoins(state, model.game.contingency_carry);
 }
 
 /** Raised for illegal actions or unreadable saves. `code` is stable for i18n. */

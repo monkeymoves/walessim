@@ -3,7 +3,7 @@
 
 .yf {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) var(--timeline-h) var(--foot-h);
+  grid-template-rows: auto auto minmax(0, 1fr) var(--timeline-h) var(--foot-h);
   height: 100vh;
   min-height: 640px;
   overflow: hidden;
@@ -495,3 +495,119 @@
 }
 /* the preview heading may take two lines rather than cut its words off */
 .yf-ghosthead { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.25; }
+
+
+/* ======================================================================
+   Plain Wales (docs/design/plain-wales.md): play screens.
+   Same materials: paper, slate, ink, tickets, brass coins. No new colours.
+   ====================================================================== */
+
+/* ---------- the four-step strip under the top bar ---------- */
+.yf-stepstrip { padding: 0 var(--margin); margin: 2px 0 6px; }
+.yf-stepstrip.off { height: 0; margin: 0; overflow: hidden; }
+.yf-stepstrip ol { display: flex; gap: 4px; list-style: none; margin: 0; padding: 0; }
+.yf-stepstrip li {
+  display: flex; align-items: center; gap: 6px; padding: 3px 12px 3px 6px;
+  font-family: var(--font-grot); font-size: var(--size-label); font-stretch: var(--wdth-label);
+  color: var(--ink-2); background: var(--paper-2); box-shadow: inset 0 0 0 1px var(--rule);
+}
+.yf-stepstrip li.done { color: var(--ink-2); text-decoration: line-through; text-decoration-thickness: 1px; }
+.yf-stepstrip li.now { color: var(--paper); background: var(--ink); box-shadow: none; font-weight: var(--wght-grot-strong); }
+.yf-stepno { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px currentColor; font-size: 11px; }
+
+/* ---------- the two running scores ---------- */
+.yf-score { display: flex; flex-direction: column; justify-content: center; gap: 3px; flex: none; padding: 4px 9px; background: var(--paper); box-shadow: var(--shadow-flat); }
+.yf-score-item { display: grid; gap: 0; line-height: 1.12; }
+.yf-score-item .label { font-size: 10.5px; }
+.yf-score-item b { font-size: 12.5px; font-weight: var(--wght-grot-heavy); font-stretch: var(--wdth-label); white-space: nowrap; }
+.yf-score-item .small { font-size: 10.5px; color: var(--ink-2); white-space: nowrap; }
+
+/* ---------- Trust as card slots ---------- */
+.trustslots { display: grid; gap: 3px; align-content: center; padding: 5px 9px; height: 100%; width: 9.6em; }
+.trustslots-row { display: flex; gap: 4px; }
+.trustslot { width: 13px; height: 18px; border-radius: 2px; box-shadow: inset 0 0 0 1.5px var(--on-slate-2); background: transparent; }
+.trustslot.on { background: var(--ticket-buff); box-shadow: inset 0 0 0 1px var(--slate-deep), 1px 1px 0 rgba(0, 0, 0, 0.3); }
+.trustslots-line { font-size: 11px; line-height: 1.2; font-stretch: var(--wdth-label); color: var(--on-slate); }
+
+/* goal names may take two short lines so "Nature and floods" is never cut */
+.yf-strands .meter-name { white-space: normal; font-size: 12.5px; line-height: 1.1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.yf-slip-fact { margin-top: 6px; }
+
+/* ---------- strand bars: plain count, faint 2050 marker ---------- */
+.meter-count { font-size: 11px; color: var(--ink-2); }
+.pegs.faint b { opacity: 0.25; }
+
+/* ---------- coins: three piles ---------- */
+.yf-coins { display: flex; gap: 4px; padding: 5px 6px; width: max-content; max-width: 100%; flex-wrap: wrap; }
+.yf-coin { display: inline-block; width: 15px; height: 15px; border-radius: 50%; background: var(--brass); box-shadow: inset -1.5px -1.5px 0 rgba(27, 34, 38, 0.35), 1px 1px 0 rgba(255, 255, 255, 0.35); }
+.yf-coin.cards { background: transparent; box-shadow: inset 1.5px 1.5px 0 rgba(20, 26, 24, 0.35), inset 0 0 0 1px var(--rule-strong); }
+.yf-coin.fund { background: var(--brass); box-shadow: inset 0 0 0 2px var(--ink), 0 0 0 1px var(--paper); }
+.yf-coin.debt { background: var(--ticket-blue); box-shadow: inset 0 0 0 1.5px var(--ink); border-radius: 2px; width: 11px; }
+.yf-piles { display: grid; grid-template-columns: repeat(3, auto); justify-content: start; gap: 2px 16px; margin: 0; }
+.yf-pile { display: grid; gap: 0; }
+.yf-pile dt { font-family: var(--font-grot); font-size: 11.5px; font-stretch: var(--wdth-label); color: var(--ink-2); }
+.yf-pile dd { margin: 0; font-size: 16px; font-weight: var(--wght-grot-heavy); }
+.yf-pile.fund dd::before, .yf-pile.unused dd::before, .yf-pile.cards dd::before { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; vertical-align: 1px; }
+.yf-pile.cards dd::before { box-shadow: inset 0 0 0 1px var(--rule-strong); }
+.yf-pile.fund dd::before { background: var(--brass); box-shadow: inset 0 0 0 1.5px var(--ink); }
+.yf-pile.unused dd::before { background: var(--brass); }
+.yf-budget-why { display: block; padding: 4px 0 0; border-top: 1px solid var(--rule); }
+.yf-budget-why ul { list-style: none; margin: 2px 0 0; padding: 0; display: grid; gap: 1px; }
+.yf-budget-why li { display: flex; justify-content: space-between; gap: 12px; }
+.yf-coin-is { max-width: 46ch; }
+.yf-save { display: grid; gap: 2px; }
+.yf-save-btns { display: flex; gap: 14px; }
+.yf-first-note { color: var(--ink-2); }
+
+/* ---------- end-of-turn sheet ---------- */
+.yf-endsheet-wrap { position: absolute; inset: 0; z-index: 30; display: grid; align-items: end; background: rgba(27, 34, 38, 0.28); }
+.yf-endsheet { margin: 0 8px 8px; padding: 16px 18px 18px; display: grid; gap: 10px; box-shadow: var(--shadow-lifted); }
+.yf-endsheet-actions { display: grid; gap: 8px; justify-items: start; }
+.yf-panel-plan { position: relative; }
+
+/* ---------- how it works (turn 1 of the first game) ---------- */
+.yf-how { padding: 18px 18px 20px; display: grid; gap: 14px; align-content: start; }
+.yf-how-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.yf-how-list li { display: grid; grid-template-columns: 64px 1fr; gap: 12px; align-items: center; }
+.yf-how-art { display: flex; gap: 3px; align-items: center; }
+.yf-how-ticket { display: inline-block; width: 24px; height: 32px; background: var(--ticket-buff); box-shadow: inset 0 0 0 1px var(--rule-strong), 1px 1px 0 rgba(27, 34, 38, 0.2); }
+.yf-how-ticket + .yf-how-ticket { background: var(--ticket-green); margin-left: -10px; transform: rotate(6deg); }
+.yf-how-bars { align-items: flex-end; height: 32px; }
+.yf-how-bars i { width: 6px; background: var(--ink-2); }
+.yf-how-bars i:nth-child(1) { height: 40%; } .yf-how-bars i:nth-child(2) { height: 70%; } .yf-how-bars i:nth-child(3) { height: 55%; }
+.yf-how-bars i:nth-child(4) { height: 35%; } .yf-how-bars i:nth-child(5) { height: 80%; } .yf-how-bars i:nth-child(6) { height: 60%; } .yf-how-bars i:nth-child(7) { height: 45%; }
+
+/* ---------- the opened card (pattern 2.1) ---------- */
+.yf-cardopen { display: grid; gap: 6px; max-width: 380px; }
+.yf-co-name { margin: 0; }
+.yf-co-cost { font-weight: var(--wght-grot-strong); }
+.yf-co { display: grid; grid-template-columns: 6.5em minmax(0, 1fr); gap: 6px 10px; margin: 2px 0 0; }
+.yf-co dt { padding-top: 2px; }
+.yf-co dd { margin: 0; }
+.yf-co dd.small { grid-column: 1 / -1; }
+.yf-co-line { display: block; }
+.yf-co-line + .yf-co-line { margin-top: 2px; }
+.yf-co-tag { color: var(--ink-2); }
+.yf-where-hint { margin: 0 0 2px; }
+.yf-region.steer:not([aria-pressed="true"]) { box-shadow: inset 0 0 0 2px var(--thread); }
+
+/* ---------- results ---------- */
+.yf-fund-result { color: var(--ink-2); }
+.yf-guide-slips .yf-slip-paper.guide { box-shadow: inset 3px 0 0 var(--thread), var(--shadow-sheet); }
+.yf-passing-caption { font-weight: var(--wght-print-title); }
+.yf-maths summary { cursor: pointer; }
+.yf-params { list-style: none; padding: 0; margin: 4px 0 0; }
+
+@media (max-width: 1360px) {
+  .yf-score { padding: 3px 7px; }
+  .trustslots { width: 8.8em; padding: 4px 7px; }
+}
+
+/* preview chips on the goal tiles wrap rather than cut ("less than 1 point") */
+.yf-strands .meter-ghostlabel { height: auto; min-height: 14px; white-space: normal; line-height: 1.15; padding: 1px 4px; align-items: flex-start; }
+.yf-strands .meter-ghostlabel svg { flex: none; margin-top: 3px; }
+/* the preview heading under the turn: plain words, no box */
+.yf-ghosthead { outline: none; padding: 0; font-style: italic; font-weight: var(--wght-grot-text); color: var(--ink-2); }
+/* the opened card keeps the chosen region in view: south regions put it top right, north and mid bottom right */
+.yf-cardopen[data-where="southeast"], .yf-cardopen[data-where="southwest"] { top: 56px; bottom: auto; }
+.yf-strands .meter-count { font-size: 10.5px; font-stretch: var(--wdth-ticket); font-style: normal; white-space: nowrap; overflow: visible; }

@@ -52,12 +52,26 @@ export class NationalSheet {
     this.bbox = b;
   }
 
-  /** Fits Wales inside the host, keeping the padding clear. */
+  /** A km box to fit instead of the whole of Wales (a zoom to an area or region), or null. */
+  focus: [number, number, number, number] | null = null;
+
+  /** The view that fits Wales (or the focus box, at most `maxZoom` times closer) inside the host, keeping the padding clear. */
+  viewFor(W: number, H: number, dpr: number, pad: Padding, focus = this.focus, maxZoom = 4): NationalView {
+    const fitBox = (b: [number, number, number, number]) => {
+      const [x0, y0, x1, y1] = b;
+      const left = pad.left, right = W - pad.right, top = pad.top, bottom = H - pad.bottom;
+      const s = Math.max(0.1, Math.min((bottom - top) / Math.max(1, y1 - y0), (right - left) / Math.max(1, x1 - x0)));
+      return { s, cx: (left + right) / 2, cy: (top + bottom) / 2, mx: (x0 + x1) / 2, my: (y0 + y1) / 2 };
+    };
+    const whole = fitBox(this.bbox);
+    const f = focus ? fitBox(focus) : whole;
+    const s = Math.min(f.s, whole.s * maxZoom);
+    return { W, H, dpr, s, ox: f.cx - f.mx * s, oy: f.cy - f.my * s };
+  }
+
+  /** Fits Wales (or the focus box) inside the host, keeping the padding clear. */
   fit(W: number, H: number, dpr: number, pad: Padding): void {
-    const [x0, y0, x1, y1] = this.bbox;
-    const left = pad.left, right = W - pad.right, top = pad.top, bottom = H - pad.bottom;
-    const s = Math.max(0.1, Math.min((bottom - top) / (y1 - y0), (right - left) / (x1 - x0)));
-    this.view = { W, H, dpr, s, ox: (left + right) / 2 - ((x0 + x1) / 2) * s, oy: (top + bottom) / 2 - ((y0 + y1) / 2) * s };
+    this.view = this.viewFor(W, H, dpr, pad);
   }
 
   project(x: number, y: number): Pt { const v = this.view; return [v.ox + x * v.s, v.oy + y * v.s]; }
@@ -357,6 +371,17 @@ export class NationalSheet {
         case "tip": tipMound(ctx, x, y, 6 * size * Math.max(0.8, s / 3)); break;
         case "site": siteDisc(ctx, x, y, m.glyph ?? "heritage", pal); break;
         case "town": house(ctx, x, y, 8 * size, 7 * size, false, pal); break;
+        case "stamp": {
+          // a small inked notebook stamp: this area has been looked at
+          const r = 6 * size;
+          ctx.save();
+          ctx.globalAlpha = 0.85;
+          ctx.strokeStyle = pal.ink; ctx.lineWidth = 1.3;
+          ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(x - r * 0.45, y + r * 0.02); ctx.lineTo(x - r * 0.1, y + r * 0.38); ctx.lineTo(x + r * 0.5, y - r * 0.35); ctx.stroke();
+          ctx.restore();
+          break;
+        }
         default: pinHead(ctx, x, y, pal, 3.4 * size);
       }
       if (m.label) haloText(ctx, m.label, x + 8, y + 4, { font: `600 11px ${pal.fontSans}`, fill: pal.ink, halo: pal.halo, haloW: 3 });

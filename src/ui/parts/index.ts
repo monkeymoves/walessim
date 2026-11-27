@@ -4,7 +4,7 @@ import "./parts.css";
 export { StampButton, TabButton, StitchButton, ThreadButton, CloseButton } from "./Buttons";
 export { Ticket, serialOf, ticketScope, type TicketProps, type TicketCard, type TicketScope } from "./Ticket";
 export { StrandRow, StrandMeter, strandGoal, strandName, type StrandRowProps, type StrandMeterProps, type StrandRowView } from "./StrandRow";
-export { TrustGauge, type TrustGaugeProps } from "./TrustGauge";
+export { TrustGauge, TrustSlots, type TrustGaugeProps, type TrustSlotsProps } from "./TrustGauge";
 export { CurveballSlip, type CurveballSlipProps } from "./CurveballSlip";
 export { SourceTag, SourceCard, sourceShort, type SourceTagProps } from "./SourceTag";
 export { ConfidenceMark } from "./ConfidenceMark";

@@ -210,6 +210,52 @@ export class PaperMap {
     this.requestRender();
   }
 
+  /**
+   * Zooms the national view to fit some authorities (a council area, a region), or back out to all
+   * of Wales with null or an empty list. Eases from the last frame, then redraws at the new scale.
+   */
+  focusLas(codes: LaCode[] | null): void {
+    const boxes = (codes ?? []).map((c) => this.index.byCode.get(c)?.bbox).filter((b): b is [number, number, number, number] => !!b);
+    let focus: [number, number, number, number] | null = null;
+    if (boxes.length) {
+      focus = [Infinity, Infinity, -Infinity, -Infinity];
+      for (const b of boxes) { focus[0] = Math.min(focus[0], b[0]); focus[1] = Math.min(focus[1], b[1]); focus[2] = Math.max(focus[2], b[2]); focus[3] = Math.max(focus[3], b[3]); }
+      // a little room around the area, so its neighbours show
+      const m = Math.max(10, 0.3 * Math.max(focus[2] - focus[0], focus[3] - focus[1]));
+      focus = [focus[0] - m, focus[1] - m, focus[2] + m, focus[3] + m];
+    }
+    const same = (a: typeof focus, b: typeof focus) => (a === null && b === null) || (!!a && !!b && a.every((v, i) => Math.abs(v - b[i]!) < 1e-6));
+    if (same(focus, this.nat.focus)) return;
+    const from = { ...this.nat.view };
+    this.nat.focus = focus;
+    const { W, H, dpr } = this.size;
+    const to = this.nat.viewFor(W, H, dpr, this.padding);
+    cancelAnimationFrame(this.focusAnim);
+    const finish = () => { this.focusAnim = 0; this.nat.fit(W, H, dpr, this.padding); this.nat.invalidate("all"); this.renderNow(); };
+    if (this.mode !== "national" || this.reduced() || W < 2) { finish(); return; }
+    // ease the last frame from the old view to the new, then draw the new view once
+    const snap = document.createElement("canvas");
+    snap.width = this.natCanvas.width; snap.height = this.natCanvas.height;
+    snap.getContext("2d")!.drawImage(this.natCanvas, 0, 0);
+    const ctx = this.natCanvas.getContext("2d")!;
+    const sea = this.pal.sea[0] ?? "#9fb6bf";
+    const t0 = performance.now(), D = 420;
+    const step = (now: number) => {
+      if (this.destroyed) return;
+      const t = Math.min(1, (now - t0) / D), e = t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+      const sc = from.s * (to.s / from.s) ** e, ox = from.ox + (to.ox - from.ox) * e, oy = from.oy + (to.oy - from.oy) * e;
+      const k = sc / from.s;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.fillStyle = sea; ctx.fillRect(0, 0, snap.width, snap.height);
+      ctx.setTransform(k, 0, 0, k, dpr * (ox - from.ox * k), dpr * (oy - from.oy * k));
+      ctx.drawImage(snap, 0, 0);
+      if (t < 1) this.focusAnim = requestAnimationFrame(step);
+      else finish();
+    };
+    this.focusAnim = requestAnimationFrame(step);
+  }
+  private focusAnim = 0;
+
   zoomIn(): void { this.place.zoomIn(); }
   zoomOut(): void { this.place.zoomOut(); }
 
@@ -400,7 +446,7 @@ export class PaperMap {
     if (this.destroyed) return;
     const t0 = performance.now();
     if (this.mode === "place") this.drawPlace();
-    else if (this.mode === "national") this.drawNational();
+    else if (this.mode === "national" && !this.focusAnim) this.drawNational();
     this.stats.lastFrameMs = performance.now() - t0;
   }
 
@@ -573,6 +619,7 @@ export class PaperMap {
     this.destroyed = true;
     cancelAnimationFrame(this.raf);
     cancelAnimationFrame(this.zoomAnim);
+    cancelAnimationFrame(this.focusAnim);
     clearTimeout(this.sheetTimer);
     this.ro?.disconnect();
     this.unbind();

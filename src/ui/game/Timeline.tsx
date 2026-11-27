@@ -105,7 +105,7 @@ export function Timeline(props: { passing?: boolean }): JSX.Element {
         </For>
       </ul>
       <Show when={s().step === "plan" && game.draft.cards.length > 0}>
-        <Note id="post" when={true} class="yf-note-post" placement="above">{t("game.onboard.post")}</Note>
+        <Note id="post" when={ui.guide.hasSeen("handoff")} class="yf-note-post" placement="above">{t("game.onboard.post")}</Note>
       </Show>
       <span class="sr-only" aria-live="polite">{ui.announce()}</span>
       <Show when={s().opening?.arrivals.length && s().step === "opening"}>

@@ -7,23 +7,27 @@
 cards:
   - id: restore-upland-peat
     name: { en: Restore upland peat, cy: Adfer mawn yr ucheldir, cy_review: true }
-    description: { en: "Block the drains and re-wet the bog.", cy: "Blocio'r ffosydd ac ail-wlychu'r gors.", cy_review: true }
+    description: { en: "Block the drains on hill bogs so they fill with water again.", cy: "Cau'r ffosydd ar gorsydd y bryniau fel eu bod yn llenwi â dŵr eto.", cy_review: true }
     scope: region
     cost: 2
     delay: 2
     sector: land
     tags: [prevention, green, nature]
     upgraded_by: { en: Lesson of the drained uplands, cy: Gwers yr ucheldir a ddraeniwyd, cy_review: true }
-    side_note: { en: "Upland farm income dips for a term.", cy: "Mae incwm ffermydd yr ucheldir yn gostwng am dymor.", cy_review: true }
+    side_note: { en: "Hill farms earn a little less for 4 years.", cy: "Mae ffermydd y bryniau'n ennill ychydig llai am 4 blynedd.", cy_review: true }
+    what: { en: "Wet bogs on the hills hold back rain and store carbon.", cy: "Mae corsydd gwlyb ar y bryniau'n dal glaw yn ôl ac yn storio carbon.", cy_review: true }
+    catch: { en: "It takes 8 years to work. Hill farms earn a little less at first.", cy: "Mae'n cymryd 8 mlynedd i weithio. Mae ffermydd y bryniau'n ennill ychydig llai i ddechrau.", cy_review: true }
+    picture: { en: "A stream below the moor rises slowly after a storm, not all at once.", cy: "Mae nant o dan y rhos yn codi'n araf ar ôl storm, nid i gyd ar unwaith.", cy_review: true }
+    fact: { indicator: flood_exposure, pick: highest }
     effects:
       - { target: peat_condition, size: S, sign: 1, rule: R06 }
       - { target: "fcm:pressure:drainage", size: M, sign: -1, rule: R29 }
       - { target: flood_exposure, size: S, sign: 1, rule: R08 }
-      - { target: earnings, size: S, sign: -1, side: true, duration: 1, note: { en: "Upland farm income, for one term", cy: "Incwm ffermydd yr ucheldir, am un tymor", cy_review: true } }
+      - { target: earnings, size: S, sign: -1, side: true, duration: 1, note: { en: "Hill farm income, for 4 years", cy: "Incwm ffermydd y bryniau, am 4 blynedd", cy_review: true } }
 
   - id: make-coal-tips-safe
     name: { en: Make coal tips safe, cy: Gwneud tomenni glo yn ddiogel, cy_review: true }
-    description: { en: "Drain, regrade and monitor the tips above the valleys.", cy: "Draenio, ail-raddio a monitro'r tomenni uwchben y cymoedd.", cy_review: true }
+    description: { en: "Drain, reshape and keep watch on the old coal tips above the valleys.", cy: "Draenio, ail-siapio a chadw golwg ar yr hen domenni glo uwchben y cymoedd.", cy_review: true }
     scope: region
     regions: [southeast, southwest]
     cost: 4
@@ -32,7 +36,11 @@ cards:
     visit: rhondda
     tags: [prevention, places, safety]
     upgraded_by: { en: "Coal: the tips stayed", cy: "Glo: arhosodd y tomenni", cy_review: true }
-    side_note: { en: "The heaviest ticket: it crowds out a whole hand. The jobs ripple is brief.", cy: "Y tocyn trymaf: mae'n gwthio llaw gyfan allan. Mae'r crychdon swyddi yn fyr.", cy_review: true }
+    side_note: { en: "The most costly card: it can use up a whole turn. The building jobs do not last.", cy: "Y cerdyn drutaf: gall ddefnyddio tro cyfan. Dydy'r swyddi adeiladu ddim yn para.", cy_review: true }
+    what: { en: "Make old coal tips safe, so they cannot slide onto homes.", cy: "Gwneud hen domenni glo yn ddiogel, fel na allan nhw lithro ar gartrefi.", cy_review: true }
+    catch: { en: "It costs 4 coins, half your budget. It only works in the coal valleys.", cy: "Mae'n costio 4 darn arian, hanner eich cyllideb. Dim ond yn y cymoedd glo mae'n gweithio.", cy_review: true }
+    picture: { en: "Children walk to school under a hill that will not move.", cy: "Mae plant yn cerdded i'r ysgol o dan fryn na fydd yn symud.", cy_review: true }
+    fact: none
     effects:
       - { target: tip_liability, size: M, sign: 1, rule: R11, where: { flags: [coal_valley] } }
       - { target: access, size: S, sign: 1, where: { flags: [coal_valley] } }
@@ -40,7 +48,7 @@ cards:
 
   - id: community-owned-energy
     name: { en: Community-owned energy, cy: Ynni dan berchnogaeth gymunedol, cy_review: true }
-    description: { en: "Local turbines, hydro and solar, with the income staying put.", cy: "Tyrbinau, hydro a solar lleol, gyda'r incwm yn aros yn ei unfan.", cy_review: true }
+    description: { en: "Local wind, water and solar power, with the money staying in the village.", cy: "Pŵer gwynt, dŵr a haul lleol, gyda'r arian yn aros yn y pentref.", cy_review: true }
     scope: region
     cost: 1
     delay: 1
@@ -50,16 +58,20 @@ cards:
     confidence: low
     tags: [energy, cooperation, green]
     upgraded_by: { en: The miners' institutes, cy: Neuaddau'r glowyr, cy_review: true }
-    side_note: { en: "Needs partners: half strength without a regional compact or a well-handled visit. Slower than commercial build.", cy: "Angen partneriaid: hanner cryfder heb gompact rhanbarthol neu ymweliad wedi'i drin yn dda. Arafach nag adeiladu masnachol.", cy_review: true }
+    side_note: { en: "Needs local help: half as strong unless regions work together there, or your visit goes well. Slower than a big company.", cy: "Angen cymorth lleol: hanner mor gryf heb hynny. Mae rhanbarthau sy'n cydweithio, neu ymweliad da, yn helpu. Arafach na chwmni mawr.", cy_review: true }
+    what: { en: "Villages own their own turbines, hydro and solar panels.", cy: "Mae pentrefi'n berchen ar eu tyrbinau, eu hydro a'u paneli solar eu hunain.", cy_review: true }
+    catch: { en: "It is small and slow. It is half as strong without local help.", cy: "Mae'n fach ac yn araf. Mae'n hanner mor gryf heb gymorth lleol.", cy_review: true }
+    picture: { en: "The village hall pays its bills from the hydro on the stream.", cy: "Mae neuadd y pentref yn talu ei biliau o'r hydro ar y nant.", cy_review: true }
+    fact: { indicator: renewables, pick: highest }
     effects:
       - { target: community_assets, size: S, sign: 1, rule: R33, condition: { needs_partners: true } }
       - { target: renewables, size: S, sign: 1, rule: R27, condition: { needs_partners: true } }
       - { target: earnings, size: S, sign: 1, condition: { needs_partners: true } }
-      - { target: heartland, size: S, sign: 1, where: { flags: [heartland] }, condition: { needs_partners: true }, note: { en: "Income that stays in Welsh-speaking villages", cy: "Incwm sy'n aros mewn pentrefi Cymraeg", cy_review: true } }
+      - { target: heartland, size: S, sign: 1, where: { flags: [heartland] }, condition: { needs_partners: true }, note: { en: "Money that stays in Welsh-speaking villages", cy: "Arian sy'n aros mewn pentrefi Cymraeg", cy_review: true } }
 
   - id: welsh-medium-childcare
     name: { en: Welsh-medium childcare, cy: Gofal plant cyfrwng Cymraeg, cy_review: true }
-    description: { en: "Free Welsh-medium places from age two.", cy: "Lleoedd cyfrwng Cymraeg am ddim o ddwy oed.", cy_review: true }
+    description: { en: "Free nursery places in Welsh from age two.", cy: "Lleoedd meithrin am ddim yn Gymraeg o ddwy oed.", cy_review: true }
     scope: national_or_region
     cost: 2
     delay: 3
@@ -67,23 +79,31 @@ cards:
     visit: bethesda
     tags: [prevention, language]
     upgraded_by: { en: The Sunday schools, cy: Yr Ysgolion Sul, cy_review: true }
-    side_note: { en: "Employment dips for a term where staff are short; weaker without skills and apprenticeships.", cy: "Mae cyflogaeth yn gostwng am dymor lle mae prinder staff; gwannach heb sgiliau a phrentisiaethau.", cy_review: true }
+    side_note: { en: "Where staff are short, other work loses people for 4 years. Weaker without Skills and apprenticeships.", cy: "Lle mae prinder staff, mae gwaith arall yn colli pobl am 4 blynedd. Gwannach heb Sgiliau a phrentisiaethau.", cy_review: true }
+    what: { en: "Children learn Welsh at nursery, even when nobody speaks it at home.", cy: "Mae plant yn dysgu Cymraeg yn y feithrinfa. Does dim rhaid i neb ei siarad gartref.", cy_review: true }
+    catch: { en: "It takes 12 years to show. It needs trained staff, so it is weaker without Skills and apprenticeships.", cy: "Mae'n cymryd 12 mlynedd i'w weld. Mae angen staff wedi'u hyfforddi, felly mae'n wannach heb Sgiliau a phrentisiaethau.", cy_review: true }
+    picture: { en: "A girl in Bargoed answers her grandmother in Welsh for the first time.", cy: "Mae merch ym Margod yn ateb ei mam-gu yn Gymraeg am y tro cyntaf.", cy_review: true }
+    fact: { indicator: welsh_speakers, pick: highest }
     effects:
       - { target: speakers_stock, size: S, sign: 1, rule: R19, condition: { half_without_card: skills-and-apprenticeships } }
       - { target: welsh_speakers, size: S, sign: 1, rule: R19, condition: { half_without_card: skills-and-apprenticeships } }
       - { target: early_years_stock, size: S, sign: 1, rule: R32 }
-      - { target: employment, size: S, sign: -1, side: true, duration: 1, note: { en: "Staff are short, for one term", cy: "Prinder staff, am un tymor", cy_review: true } }
+      - { target: employment, size: S, sign: -1, side: true, duration: 1, note: { en: "Staff are short, for 4 years", cy: "Prinder staff, am 4 blynedd", cy_review: true } }
 
   - id: warm-homes
     name: { en: Warm homes, cy: Cartrefi cynnes, cy_review: true }
-    description: { en: "Insulate and re-heat the coldest homes first.", cy: "Inswleiddio ac ail-gynhesu'r cartrefi oeraf yn gyntaf.", cy_review: true }
+    description: { en: "Insulate the coldest homes first and fit better heating.", cy: "Inswleiddio'r cartrefi oeraf yn gyntaf a gosod gwres gwell.", cy_review: true }
     scope: national
     cost: 3
     delay: 2
     sector: construction
     tags: [prevention, energy, health]
     upgraded_by: { en: "The terraces: built fast, built cold", cy: "Y terasau: wedi'u codi'n gyflym, wedi'u codi'n oer", cy_review: true }
-    side_note: { en: "Half strength while skills are below 4. Nothing visible for two terms.", cy: "Hanner cryfder tra bo sgiliau o dan 4. Dim byd i'w weld am ddau dymor.", cy_review: true }
+    side_note: { en: "Half as strong while Wales is short of trained workers. Nothing to see for 8 years.", cy: "Hanner mor gryf tra bo Cymru'n brin o weithwyr wedi'u hyfforddi. Dim byd i'w weld am 8 mlynedd.", cy_review: true }
+    what: { en: "Insulate the coldest homes first.", cy: "Inswleiddio'r cartrefi oeraf yn gyntaf.", cy_review: true }
+    catch: { en: "8 years of nothing to show. Trust may dip while you wait. It is half as strong if Wales is short of trained workers.", cy: "8 mlynedd heb ddim i'w ddangos. Gall yr ymddiriedaeth ostwng tra byddwch yn aros. Mae'n hanner mor gryf os yw Cymru'n brin o weithwyr wedi'u hyfforddi.", cy_review: true }
+    picture: { en: "A pensioner in a cold terrace turns the heating down and stays warm.", cy: "Mae pensiynwr mewn tŷ teras oer yn troi'r gwres i lawr ac yn aros yn gynnes.", cy_review: true }
+    fact: { indicator: poor_housing, pick: highest }
     effects:
       - { target: fuel_poverty, size: M, sign: 1, rule: R13, condition: { half_if_below: { component: skills_stock, value: 4 } } }
       - { target: emissions_head, size: M, sign: 1, condition: { half_if_below: { component: skills_stock, value: 4 } } }
@@ -91,14 +111,18 @@ cards:
 
   - id: build-social-homes
     name: { en: Build social homes, cy: Codi cartrefi cymdeithasol, cy_review: true }
-    description: { en: "Homes for rent that stay affordable.", cy: "Cartrefi i'w rhentu sy'n aros yn fforddiadwy.", cy_review: true }
+    description: { en: "Council and housing association homes, with rents people can afford.", cy: "Cartrefi cyngor a chymdeithas dai, gyda rhent y gall pobl ei fforddio.", cy_review: true }
     scope: region
     cost: 3
     delay: 1
     sector: construction
     tags: [housing]
     upgraded_by: { en: Garden villages, cy: Pentrefi gardd, cy_review: true }
-    side_note: { en: "Land take presses on nature; building spends carbon.", cy: "Mae defnyddio tir yn pwyso ar natur; mae adeiladu'n gwario carbon.", cy_review: true }
+    side_note: { en: "Building takes land from nature and adds to climate change.", cy: "Mae adeiladu'n cymryd tir oddi wrth natur ac yn ychwanegu at newid hinsawdd.", cy_review: true }
+    what: { en: "New homes to rent that stay affordable for good.", cy: "Cartrefi newydd i'w rhentu sy'n aros yn fforddiadwy am byth.", cy_review: true }
+    catch: { en: "Building uses land and makes greenhouse gas. Nature and Climate dip a little.", cy: "Mae adeiladu'n defnyddio tir ac yn creu nwyon tŷ gwydr. Mae Natur a'r Hinsawdd yn gostwng ychydig.", cy_review: true }
+    picture: { en: "A young couple rent a flat in the town where they grew up.", cy: "Mae cwpl ifanc yn rhentu fflat yn y dref lle cawson nhw eu magu.", cy_review: true }
+    fact: { indicator: affordability, pick: highest }
     effects:
       - { target: housing_stock, size: S, sign: 1 }
       - { target: affordability, size: S, sign: 1, rule: R16 }
@@ -108,7 +132,7 @@ cards:
 
   - id: homes-for-locals
     name: { en: Homes for locals, cy: Cartrefi i bobl leol, cy_review: true }
-    description: { en: "Limits on second homes and holiday lets where they crowd people out.", cy: "Cyfyngiadau ar ail gartrefi a llety gwyliau lle maen nhw'n gwthio pobl allan.", cy_review: true }
+    description: { en: "Limits on second homes and holiday lets where they push local people out.", cy: "Cyfyngiadau ar ail gartrefi a llety gwyliau lle maen nhw'n gwthio pobl leol allan.", cy_review: true }
     scope: region
     regions: [north, mid, southwest]
     cost: 1
@@ -116,7 +140,11 @@ cards:
     visit: bethesda
     tags: [housing, language]
     upgraded_by: { en: "Slate: the lockout and the terraces", cy: "Llechi: y cload allan a'r terasau", cy_review: true }
-    side_note: { en: "Visitor spend falls in the region; some people are angry that term.", cy: "Mae gwariant ymwelwyr yn gostwng yn y rhanbarth; mae rhai pobl yn ddig y tymor hwnnw.", cy_review: true }
+    side_note: { en: "Visitors spend less in the region. Some people are angry for 4 years.", cy: "Mae ymwelwyr yn gwario llai yn y rhanbarth. Mae rhai pobl yn ddig am 4 blynedd.", cy_review: true }
+    what: { en: "Fewer homes become second homes, so more are left for local people.", cy: "Llai o gartrefi'n troi'n ail gartrefi, felly mae mwy ar ôl i bobl leol.", cy_review: true }
+    catch: { en: "Visitors spend less. Second home owners complain, and Trust dips.", cy: "Mae ymwelwyr yn gwario llai. Mae perchnogion ail gartrefi'n cwyno, ac mae'r ymddiriedaeth yn gostwng.", cy_review: true }
+    picture: { en: "A nurse in Abersoch finds a house she can afford near the harbour.", cy: "Mae nyrs yn Abersoch yn dod o hyd i dŷ y gall ei fforddio ger yr harbwr.", cy_review: true }
+    fact: { indicator: affordability, pick: W06000008 }
     effects:
       - { target: affordability, size: S, sign: 1, rule: R16 }
       - { target: young_adults, size: S, sign: 1 }
@@ -126,7 +154,7 @@ cards:
 
   - id: connect-buses-rail
     name: { en: Buses and rail that connect, cy: Bysiau a rheilffyrdd sy'n cysylltu, cy_review: true }
-    description: { en: "Frequent services that link valleys and villages to work.", cy: "Gwasanaethau mynych sy'n cysylltu cymoedd a phentrefi â gwaith.", cy_review: true }
+    description: { en: "Frequent buses and trains that link valleys and villages to work.", cy: "Bysiau a threnau mynych sy'n cysylltu cymoedd a phentrefi â gwaith.", cy_review: true }
     scope: region
     cost: 3
     delay: 1
@@ -135,7 +163,11 @@ cards:
     visit_thread_fewer: true
     tags: [transport]
     upgraded_by: { en: The lines that closed, cy: Y rheilffyrdd a gaeodd, cy_review: true }
-    side_note: { en: "Upkeep: 1 pip in each of the next two terms, or the service lapses and a pledge counts as broken.", cy: "Cynnal: 1 pip ym mhob un o'r ddau dymor nesaf, neu mae'r gwasanaeth yn dod i ben ac mae addewid yn cyfrif fel un a dorrwyd.", cy_review: true }
+    side_note: { en: "Running cost: 1 coin each turn for the next 8 years. Skip it and the buses stop. That counts as a broken promise.", cy: "Cost cynnal: 1 darn arian bob tro am yr 8 mlynedd nesaf. Os na thalwch, mae'r bysiau'n stopio. Mae hynny'n cyfrif fel addewid wedi'i dorri.", cy_review: true }
+    what: { en: "Buses and trains that come often and meet each other.", cy: "Bysiau a threnau sy'n dod yn aml ac yn cwrdd â'i gilydd.", cy_review: true }
+    catch: { en: "Pay 1 coin each turn for the next 8 years. Skip it and the buses stop.", cy: "Talwch 1 darn arian bob tro am yr 8 mlynedd nesaf. Os na thalwch, mae'r bysiau'n stopio.", cy_review: true }
+    picture: { en: "A school leaver in Treorchy gets to a job in Cardiff without a car.", cy: "Mae person ifanc o Dreorci yn cyrraedd swydd yng Nghaerdydd heb gar.", cy_review: true }
+    fact: { indicator: gp_travel_public, pick: highest }
     upkeep:
       pips: 1
       every: 1
@@ -151,29 +183,37 @@ cards:
 
   - id: skills-and-apprenticeships
     name: { en: Skills and apprenticeships, cy: Sgiliau a phrentisiaethau, cy_review: true }
-    description: { en: "Training tied to the work that is coming.", cy: "Hyfforddiant wedi'i glymu i'r gwaith sydd ar ddod.", cy_review: true }
+    description: { en: "Training and apprenticeships for the jobs that are coming.", cy: "Hyfforddiant a phrentisiaethau ar gyfer y swyddi sydd ar ddod.", cy_review: true }
     scope: national
     cost: 2
     delay: 2
     sector: services
     tags: [prevention, growth, skills]
     upgraded_by: { en: The tinplate and steel apprenticeships, cy: Prentisiaethau'r tunplat a'r dur, cy_review: true }
-    side_note: { en: "Without jobs to go to, young people qualify and leave where work is scarce.", cy: "Heb swyddi i fynd iddynt, mae pobl ifanc yn cymhwyso ac yn gadael lle mae gwaith yn brin.", cy_review: true }
+    side_note: { en: "Where jobs are scarce, young people train and then leave.", cy: "Lle mae swyddi'n brin, mae pobl ifanc yn hyfforddi ac yna'n gadael.", cy_review: true }
+    what: { en: "Train people now for the work Wales will need.", cy: "Hyfforddi pobl nawr ar gyfer y gwaith fydd ei angen ar Gymru.", cy_review: true }
+    catch: { en: "It takes 8 years. Where there are few jobs, young people train and then move away.", cy: "Mae'n cymryd 8 mlynedd. Lle mae ychydig o swyddi, mae pobl ifanc yn hyfforddi ac yna'n symud i ffwrdd.", cy_review: true }
+    picture: { en: "An apprentice in Port Talbot learns to fit heat pumps.", cy: "Mae prentis ym Mhort Talbot yn dysgu gosod pympiau gwres.", cy_review: true }
+    fact: { indicator: employment, pick: lowest }
     effects:
       - { target: skills_stock, size: M, sign: 1, rule: R21 }
       - { target: earnings, size: S, sign: 1 }
-      - { target: young_adults, size: S, sign: -1, side: true, delay: 2, condition: { only_where_below_middle: employment }, note: { en: "They qualify and leave", cy: "Maen nhw'n cymhwyso ac yn gadael", cy_review: true } }
+      - { target: young_adults, size: S, sign: -1, side: true, delay: 2, condition: { only_where_below_middle: employment }, note: { en: "They train, then leave", cy: "Maen nhw'n hyfforddi, yna'n gadael", cy_review: true } }
 
   - id: land-a-big-employer
     name: { en: Land a big employer, cy: Denu cyflogwr mawr, cy_review: true }
-    description: { en: "Incentives to bring one large plant or office.", cy: "Cymhellion i ddod ag un gwaith neu swyddfa fawr.", cy_review: true }
+    description: { en: "Offer a deal to bring one big factory or office to a region.", cy: "Cynnig bargen i ddod ag un ffatri neu swyddfa fawr i ranbarth.", cy_review: true }
     scope: region
     cost: 2
     delay: 0
     sector: manufacturing
     tags: [growth, fragile]
     upgraded_by: { en: The branch plants, cy: Y gweithfeydd cangen, cy_review: true }
-    side_note: { en: "Emissions rise. Fragile: it may leave if a trade or recession shock lands. Pay rises only a little.", cy: "Mae allyriadau'n codi. Bregus: gall adael os daw sioc masnach neu ddirwasgiad. Mae cyflog yn codi ychydig yn unig.", cy_review: true }
+    side_note: { en: "More greenhouse gas. It may leave if a recession or a trade crisis hits. Pay rises only a little.", cy: "Mwy o nwyon tŷ gwydr. Gall adael os daw dirwasgiad neu argyfwng masnach. Mae cyflogau'n codi ychydig yn unig.", cy_review: true }
+    what: { en: "Bring one big factory or office, and the jobs that come with it.", cy: "Dod ag un ffatri neu swyddfa fawr, a'r swyddi sy'n dod gyda hi.", cy_review: true }
+    catch: { en: "More greenhouse gas. If a recession comes, the employer may leave.", cy: "Mwy o nwyon tŷ gwydr. Os daw dirwasgiad, gall y cyflogwr adael.", cy_review: true }
+    picture: { en: "A father who drove to Bristol each day now works close to home.", cy: "Mae tad a fyddai'n gyrru i Fryste bob dydd nawr yn gweithio'n agos i adref.", cy_review: true }
+    fact: { indicator: employment, pick: lowest }
     effects:
       - { target: gva_head, size: M, sign: 1, rule: R26 }
       - { target: employment, size: M, sign: 1, rule: R26 }
@@ -182,7 +222,7 @@ cards:
 
   - id: grid-and-big-renewables
     name: { en: Grid and big renewables, cy: Grid ac ynni adnewyddadwy mawr, cy_review: true }
-    description: { en: "New lines and large wind, on land and at sea.", cy: "Llinellau newydd a gwynt mawr, ar y tir ac ar y môr.", cy_review: true }
+    description: { en: "New power lines and big wind farms, on land and at sea.", cy: "Llinellau pŵer newydd a ffermydd gwynt mawr, ar y tir ac ar y môr.", cy_review: true }
     scope: region
     regions: [north, mid, southwest]
     cost: 3
@@ -190,16 +230,20 @@ cards:
     sector: energy
     tags: [energy, green, growth]
     upgraded_by: { en: "Water and power for elsewhere: consent first", cy: "Dŵr a phŵer i fannau eraill: caniatâd yn gyntaf", cy_review: true }
-    side_note: { en: "Building presses on nature; communities lose out unless community energy came first in the region.", cy: "Mae adeiladu'n pwyso ar natur; mae cymunedau ar eu colled oni bai bod ynni cymunedol wedi dod yn gyntaf yn y rhanbarth.", cy_review: true }
+    side_note: { en: "Building puts pressure on nature. Local people lose out, unless Community-owned energy came first in that region.", cy: "Mae adeiladu'n rhoi pwysau ar natur. Mae pobl leol ar eu colled, oni bai bod Ynni dan berchnogaeth gymunedol yno'n gyntaf.", cy_review: true }
+    what: { en: "Big wind farms, and the power lines to carry their power.", cy: "Ffermydd gwynt mawr, a'r llinellau i gario'u pŵer.", cy_review: true }
+    catch: { en: "It takes 8 years. Local people lose out unless Community-owned energy came first.", cy: "Mae'n cymryd 8 mlynedd. Mae pobl leol ar eu colled oni bai bod Ynni dan berchnogaeth gymunedol yno'n gyntaf.", cy_review: true }
+    picture: { en: "Turbines turn off the coast of Anglesey while the lights stay on in Holyhead.", cy: "Mae tyrbinau'n troi oddi ar arfordir Môn tra bo'r goleuadau ymlaen yng Nghaergybi.", cy_review: true }
+    fact: { indicator: renewables_mw, pick: highest }
     effects:
       - { target: renewables, size: L, sign: 1, rule: R27 }
       - { target: gva_head, size: S, sign: 1 }
       - { target: "fcm:pressure:built_development_and_infrastructure", size: S, sign: 1, rule: R29, side: true }
-      - { target: community_assets, size: S, sign: -1, side: true, condition: { unless_card_in_scope: community-owned-energy }, note: { en: "Built over local heads", cy: "Wedi'i godi dros bennau pobl leol", cy_review: true } }
+      - { target: community_assets, size: S, sign: -1, side: true, condition: { unless_card_in_scope: community-owned-energy }, note: { en: "Built without asking local people", cy: "Wedi'i godi heb ofyn i bobl leol", cy_review: true } }
 
   - id: slow-the-flow
     name: { en: Slow the flow, cy: Arafu'r llif, cy_review: true }
-    description: { en: "Leaky dams, wet woodland and room for rivers upstream.", cy: "Argaeau sy'n gollwng, coetir gwlyb a lle i afonydd i fyny'r cwm.", cy_review: true }
+    description: { en: "Leaky dams, wet woods and room for rivers in the hills.", cy: "Argaeau sy'n gollwng, coed gwlyb a lle i afonydd yn y bryniau.", cy_review: true }
     scope: region
     cost: 2
     delay: 2
@@ -210,58 +254,74 @@ cards:
     confidence: low
     tags: [prevention, green, cooperation, nature, flood]
     upgraded_by: { en: The canalised rivers, cy: Yr afonydd a gamlaswyd, cy_review: true }
-    side_note: { en: "Needs partners among land managers: half strength without them. Fuzzy by design.", cy: "Angen partneriaid ymhlith rheolwyr tir: hanner cryfder hebddynt. Niwlog yn fwriadol.", cy_review: true }
+    side_note: { en: "Needs local help from farmers and landowners: half as strong without it. How well it works is hard to predict.", cy: "Angen cymorth lleol gan ffermwyr a thirfeddianwyr: hanner mor gryf hebddo. Mae'n anodd dweud pa mor dda fydd e'n gweithio.", cy_review: true }
+    what: { en: "Slow rainwater down in the hills, so towns below flood less.", cy: "Arafu dŵr glaw yn y bryniau, fel bod trefi islaw yn gorlifo llai.", cy_review: true }
+    catch: { en: "It takes 8 years. Without farmers on board it is half as strong. Results vary a lot.", cy: "Mae'n cymryd 8 mlynedd. Heb ffermwyr gyda chi, mae'n hanner mor gryf. Mae'r canlyniadau'n amrywio llawer.", cy_review: true }
+    picture: { en: "The river in town stays inside its banks through a wet winter.", cy: "Mae'r afon yn y dref yn aros o fewn ei glannau drwy aeaf gwlyb.", cy_review: true }
+    fact: { indicator: flood_exposure, pick: highest }
     effects:
       - { target: flood_exposure, size: M, sign: 1, rule: R08, condition: { needs_partners: true } }
       - { target: "fcm:pressure:physical_modification_freshwater_and_coastal", size: S, sign: -1, rule: R29, condition: { needs_partners: true } }
 
   - id: build-flood-walls
     name: { en: Build flood walls, cy: Codi waliau llifogydd, cy_review: true }
-    description: { en: "Hard defences where the homes are.", cy: "Amddiffynfeydd caled lle mae'r cartrefi.", cy_review: true }
+    description: { en: "Strong walls where rivers and the sea reach homes.", cy: "Waliau cryf lle mae afonydd a'r môr yn cyrraedd cartrefi.", cy_review: true }
     scope: region
     cost: 3
     delay: 0
     sector: construction
     tags: [flood]
     upgraded_by: { en: The sea walls and the tidal harbours, cy: Y morgloddiau a'r harbwrs llanw, cy_review: true }
-    side_note: { en: "Mints a liability: 1 pip of upkeep every second term, or the condition of what is built falls. Presses on rivers and coast.", cy: "Mae'n gadael baich i'w gario: 1 pip o waith cynnal bob yn ail dymor, neu mae cyflwr yr hyn a adeiladwyd yn dirywio. Mae'n rhoi pwysau ar afonydd a'r arfordir.", cy_review: true }
+    side_note: { en: "The catch: walls need care. Pay 1 coin every 8 years, or they start to fail. Walls also squeeze the river.", cy: "Y pris: mae angen gofal ar waliau. Talwch 1 darn arian bob 8 mlynedd, neu maen nhw'n dechrau methu. Mae waliau hefyd yn gwasgu'r afon.", cy_review: true }
+    what: { en: "Strong walls where rivers and the sea reach homes.", cy: "Waliau cryf lle mae afonydd a'r môr yn cyrraedd cartrefi.", cy_review: true }
+    catch: { en: "Walls need care. Pay 1 coin every 8 years, or they start to fail.", cy: "Mae angen gofal ar waliau. Talwch 1 darn arian bob 8 mlynedd, neu maen nhw'n dechrau methu.", cy_review: true }
+    picture: { en: "A family near the river sleeps through a storm.", cy: "Mae teulu ger yr afon yn cysgu drwy storm.", cy_review: true }
+    fact: { indicator: flood_exposure, pick: highest }
     upkeep:
       pips: 1
       every: 2
       times: 0
       lapse:
         - { target: infrastructure_condition, size: M, sign: -1, rule: R10 }
-      note: { en: "The walls need their upkeep", cy: "Mae angen cynnal y waliau", cy_review: true }
+      note: { en: "The walls need care", cy: "Mae angen gofal ar y waliau", cy_review: true }
     effects:
       - { target: flood_exposure, size: L, sign: 1, rule: R09 }
       - { target: "fcm:pressure:physical_modification_freshwater_and_coastal", size: S, sign: 1, rule: R29, side: true }
 
   - id: pay-farms-for-nature
     name: { en: Pay farms for nature, cy: Talu ffermydd am natur, cy_review: true }
-    description: { en: "Public money for clean rivers, hedges and habitat.", cy: "Arian cyhoeddus am afonydd glân, gwrychoedd a chynefinoedd.", cy_review: true }
+    description: { en: "Public money for farms that keep rivers clean, hedges thick and wildlife coming back.", cy: "Arian cyhoeddus i ffermydd sy'n cadw afonydd yn lân a gwrychoedd yn drwchus. Mae bywyd gwyllt yn dod yn ôl.", cy_review: true }
     scope: national
     cost: 2
     delay: 1
     sector: land
     tags: [green, nature]
     upgraded_by: { en: The enclosures, cy: Y caeau amgaeedig, cy_review: true }
-    side_note: { en: "Farm incomes dip for a term in Mid and South West; family farms are squeezed without a regional compact.", cy: "Mae incwm ffermydd yn gostwng am dymor yn y Canolbarth a'r De-orllewin; mae ffermydd teuluol dan bwysau heb gompact rhanbarthol.", cy_review: true }
+    side_note: { en: "Farms in Mid and South West Wales earn less for 4 years. Family farms struggle unless regions work together.", cy: "Mae ffermydd yn y Canolbarth a'r De-orllewin yn ennill llai am 4 blynedd. Mae ffermydd teulu'n ei chael yn anodd oni bai bod rhanbarthau'n cydweithio.", cy_review: true }
+    what: { en: "Pay farmers to look after rivers, hedges and wildlife.", cy: "Talu ffermwyr i ofalu am afonydd, gwrychoedd a bywyd gwyllt.", cy_review: true }
+    catch: { en: "Farm income dips for 4 years. Welsh-speaking farm areas suffer unless regions work together.", cy: "Mae incwm ffermydd yn gostwng am 4 blynedd. Mae ardaloedd ffermio Cymraeg yn dioddef oni bai bod rhanbarthau'n cydweithio.", cy_review: true }
+    picture: { en: "Otters come back to a river in Carmarthenshire.", cy: "Mae dyfrgwn yn dod yn ôl i afon yn Sir Gaerfyrddin.", cy_review: true }
+    fact: none
     effects:
       - { target: "fcm:pressure:agricultural_intensification", size: M, sign: -1, rule: R29 }
       - { target: "fcm:driver:land_and_sea_use_change", size: S, sign: -1, rule: R29 }
       - { target: earnings, size: S, sign: -1, side: true, duration: 1, where: { regions: [mid, southwest] } }
-      - { target: heartland, size: S, sign: -1, side: true, where: { flags: [heartland] }, condition: { unless_card_in_force: regional-compact }, note: { en: "Family farms squeezed", cy: "Ffermydd teuluol dan bwysau", cy_review: true } }
+      - { target: heartland, size: S, sign: -1, side: true, where: { flags: [heartland] }, condition: { unless_card_in_force: regional-compact }, note: { en: "Family farms squeezed", cy: "Ffermydd teulu dan bwysau", cy_review: true } }
 
   - id: plant-woodland
     name: { en: Plant woodland, cy: Plannu coetir, cy_review: true }
-    description: { en: "New mixed woodland for carbon, timber and shade.", cy: "Coetir cymysg newydd ar gyfer carbon, pren a chysgod.", cy_review: true }
+    description: { en: "New mixed woods for carbon, timber and shade.", cy: "Coed cymysg newydd ar gyfer carbon, pren a chysgod.", cy_review: true }
     scope: region
     cost: 1
     delay: 3
     sector: land
     tags: [prevention, green]
     upgraded_by: { en: The conifer plantations, cy: Y planhigfeydd conwydd, cy_review: true }
-    side_note: { en: "In the North, Mid and South West, farms bought for trees thin the heartland unless partners are in place.", cy: "Yn y Gogledd, y Canolbarth a'r De-orllewin, mae ffermydd a brynwyd ar gyfer coed yn teneuo'r cadarnleoedd oni bai bod partneriaid yn eu lle.", cy_review: true }
+    side_note: { en: "In the North, Mid and South West, farms sold for trees can empty Welsh-speaking villages. Not if regions work together.", cy: "Yn y Gogledd, y Canolbarth a'r De-orllewin, gall ffermydd a werthir am goed wagio pentrefi Cymraeg. Ddim os yw rhanbarthau'n cydweithio.", cy_review: true }
+    what: { en: "Plant new woods that take carbon out of the air as they grow.", cy: "Plannu coed newydd sy'n tynnu carbon o'r aer wrth dyfu.", cy_review: true }
+    catch: { en: "Trees grow slowly: 12 years before it shows. Farms sold for trees can empty Welsh-speaking villages.", cy: "Mae coed yn tyfu'n araf: 12 mlynedd cyn i chi ei weld. Gall ffermydd a werthir am goed wagio pentrefi Cymraeg.", cy_review: true }
+    picture: { en: "Children who helped plant a wood walk their own children through it.", cy: "Mae plant a helpodd i blannu coedwig yn mynd â'u plant eu hunain am dro drwyddi.", cy_review: true }
+    fact: { indicator: emissions_head, pick: highest }
     effects:
       - { target: woodland_stock, size: S, sign: 1 }
       - { target: carbon_budget, size: S, sign: 1 }
@@ -269,47 +329,59 @@ cards:
 
   - id: health-before-hospital
     name: { en: Health before hospital, cy: Iechyd cyn ysbyty, cy_review: true }
-    description: { en: "Shift money into prevention and care close to home.", cy: "Symud arian i atal a gofal yn agos at adref.", cy_review: true }
+    description: { en: "Move money into keeping people well, with care close to home.", cy: "Symud arian i gadw pobl yn iach, gyda gofal yn agos at adref.", cy_review: true }
     scope: national
     cost: 2
     delay: 3
     sector: care
     tags: [prevention, health]
     upgraded_by: { en: The medical aid societies, cy: Y cymdeithasau cymorth meddygol, cy_review: true }
-    side_note: { en: "Waiting lists lengthen for a term while money moves, and nothing shows for three terms.", cy: "Mae rhestrau aros yn hwy am dymor tra bo arian yn symud, a does dim i'w weld am dri thymor.", cy_review: true }
+    side_note: { en: "Waiting lists grow for 4 years while money moves. Nothing good shows for 12 years.", cy: "Mae rhestrau aros yn tyfu am 4 blynedd tra bo arian yn symud. Does dim byd da i'w weld am 12 mlynedd.", cy_review: true }
+    what: { en: "Help people stay well, so fewer end up in hospital.", cy: "Helpu pobl i aros yn iach, fel bod llai'n mynd i'r ysbyty.", cy_review: true }
+    catch: { en: "Waiting lists grow for 4 years. Nothing good shows for 12 years.", cy: "Mae rhestrau aros yn tyfu am 4 blynedd. Does dim byd da i'w weld am 12 mlynedd.", cy_review: true }
+    picture: { en: "A man in Merthyr sees a nurse about his chest before it gets serious.", cy: "Mae dyn ym Merthyr yn gweld nyrs am ei frest cyn iddi waethygu.", cy_review: true }
+    fact: { indicator: life_exp, pick: lowest }
     effects:
       - { target: health_stock, size: S, sign: 1, rule: R15 }
       - { target: care_pressure, size: S, sign: 1 }
-      - { target: life_exp, size: S, sign: -1, side: true, duration: 1, delay: 0, note: { en: "Waiting lists, for one term", cy: "Rhestrau aros, am un tymor", cy_review: true } }
+      - { target: life_exp, size: S, sign: -1, side: true, duration: 1, delay: 0, note: { en: "Waiting lists, for 4 years", cy: "Rhestrau aros, am 4 blynedd", cy_review: true } }
 
   - id: early-years
     name: { en: Early years first, cy: Y blynyddoedd cynnar yn gyntaf, cy_review: true }
-    description: { en: "Family support and childcare in the hardest-pressed places.", cy: "Cymorth i deuluoedd a gofal plant yn y lleoedd dan y pwysau mwyaf.", cy_review: true }
+    description: { en: "Help for families, and childcare, in the poorest places.", cy: "Help i deuluoedd, a gofal plant, yn y lleoedd tlotaf.", cy_review: true }
     scope: national
     cost: 2
     delay: 3
     sector: care
     tags: [prevention, equal]
     upgraded_by: { en: The school boards, cy: Y byrddau ysgol, cy_review: true }
-    side_note: { en: "Slow. It does nothing for the median place, so there is no national cheer.", cy: "Araf. Nid yw'n gwneud dim i'r lle canolrifol, felly does dim bloedd genedlaethol.", cy_review: true }
+    side_note: { en: "Slow. It only helps the poorest places, so most of Wales sees nothing.", cy: "Araf. Dim ond y lleoedd tlotaf mae'n eu helpu, felly dydy'r rhan fwyaf o Gymru'n gweld dim.", cy_review: true }
+    what: { en: "Give children in the poorest places a strong start.", cy: "Rhoi dechrau cryf i blant yn y lleoedd tlotaf.", cy_review: true }
+    catch: { en: "It takes 12 years. Most of Wales will not notice it.", cy: "Mae'n cymryd 12 mlynedd. Fydd y rhan fwyaf o Gymru ddim yn sylwi arno.", cy_review: true }
+    picture: { en: "A toddler in Tredegar starts school ready to learn.", cy: "Mae plentyn bach yn Nhredegar yn dechrau'r ysgol yn barod i ddysgu.", cy_review: true }
+    fact: { indicator: deprivation_10, pick: highest }
     effects:
       - { target: early_years_stock, size: M, sign: 1, rule: R32, where: { flags: [worst5] } }
       - { target: earnings, size: S, sign: 1, where: { flags: [worst5] } }
 
   - id: regional-compact
-    name: { en: Regional compact, cy: Compact rhanbarthol, cy_review: true }
-    description: { en: "Councils, health boards and landowners agree to act as one.", cy: "Cynghorau, byrddau iechyd a thirfeddianwyr yn cytuno i weithredu fel un.", cy_review: true }
+    name: { en: "Regions work together", cy: "Rhanbarthau'n cydweithio", cy_review: true }
+    description: { en: "Councils, health boards and landowners in two regions agree to act as one.", cy: "Mae cynghorau, byrddau iechyd a thirfeddianwyr mewn dau ranbarth yn cytuno i weithio fel un.", cy_review: true }
     scope: two_regions
     cost: 1
     delay: 0
     tags: [cooperation]
     upgraded_by: { en: The lodge and the chapel, cy: Y gyfrinfa a'r capel, cy_review: true }
-    side_note: { en: "Delivers nothing by itself and uses a card slot. For two terms, needs-partners cards work at full strength in both regions, and one regional card may cover both for one extra pip.", cy: "Nid yw'n cyflawni dim ar ei ben ei hun ac mae'n defnyddio slot cerdyn. Am ddau dymor, mae cardiau sydd angen partneriaid yn gweithio'n llawn yn y ddau ranbarth, a gall un cerdyn rhanbarthol gwmpasu'r ddau am un pip ychwanegol.", cy_review: true }
+    side_note: { en: "Does nothing alone and uses a card slot. For 8 years, cards that need local help work at full strength in both regions. One regional card can cover both for 1 coin more.", cy: "Dim byd ar ei ben ei hun, ac mae'n defnyddio lle cerdyn. Am 8 mlynedd, mae cardiau sydd angen cymorth lleol yn gweithio'n llawn yn y ddau ranbarth. Gall un cerdyn rhanbarthol gwmpasu'r ddau am 1 darn arian yn fwy.", cy_review: true }
+    what: { en: "Get two regions to plan and spend together for 8 years.", cy: "Cael dau ranbarth i gynllunio a gwario gyda'i gilydd am 8 mlynedd.", cy_review: true }
+    catch: { en: "It does nothing alone and uses up a card. It only pays if you play cards that need local help.", cy: "Dydy e'n gwneud dim ar ei ben ei hun, ac mae'n defnyddio cerdyn. Dim ond os chwaraewch gardiau sydd angen cymorth lleol mae'n talu.", cy_review: true }
+    picture: { en: "Councils on both banks of a river finally agree where the flood money goes.", cy: "Mae cynghorau ar ddwy lan afon yn cytuno o'r diwedd ble mae arian y llifogydd yn mynd.", cy_review: true }
+    fact: none
     effects: []
 
   - id: tourism-pays-its-way
     name: { en: Tourism pays its way, cy: Twristiaeth yn talu ei ffordd, cy_review: true }
-    description: { en: "A visitor levy and limits at the busiest places, spent locally.", cy: "Ardoll ymwelwyr a chyfyngiadau yn y lleoedd prysuraf, wedi'u gwario'n lleol.", cy_review: true }
+    description: { en: "A small charge on visitors, and limits at the busiest spots, spent locally.", cy: "Tâl bach ar ymwelwyr, a chyfyngiadau yn y mannau prysuraf, wedi'i wario'n lleol.", cy_review: true }
     scope: region
     cost: 1
     delay: 1
@@ -318,7 +390,11 @@ cards:
     confidence: low
     tags: [tourism, cooperation]
     upgraded_by: { en: The railway resorts, cy: Y cyrchfannau rheilffordd, cy_review: true }
-    side_note: { en: "Output dips for a term. Fuzzy: how visitors respond is contested.", cy: "Mae allbwn yn gostwng am dymor. Niwlog: mae dadl am ymateb ymwelwyr.", cy_review: true }
+    side_note: { en: "Visitor spending dips for 4 years. How visitors will react is hard to predict.", cy: "Mae gwariant ymwelwyr yn gostwng am 4 blynedd. Mae'n anodd dweud sut bydd ymwelwyr yn ymateb.", cy_review: true }
+    what: { en: "Visitors pay a little, and the money stays where they visit.", cy: "Mae ymwelwyr yn talu ychydig, ac mae'r arian yn aros lle maen nhw'n ymweld.", cy_review: true }
+    catch: { en: "Visitor spending dips for 4 years. Nobody is sure how visitors will react.", cy: "Mae gwariant ymwelwyr yn gostwng am 4 blynedd. Does neb yn siŵr sut bydd ymwelwyr yn ymateb.", cy_review: true }
+    picture: { en: "The car park at the foot of Yr Wyddfa pays for the path to be mended.", cy: "Mae'r maes parcio wrth droed yr Wyddfa'n talu i drwsio'r llwybr.", cy_review: true }
+    fact: none
     effects:
       - { target: community_assets, size: S, sign: 1, rule: R33 }
       - { target: access, size: S, sign: 1 }
@@ -327,14 +403,18 @@ cards:
 
   - id: everyone-online
     name: { en: Everyone online, cy: Pawb ar-lein, cy_review: true }
-    description: { en: "Connection, kit and help for those left offline.", cy: "Cysylltiad, offer a chymorth i'r rhai sydd all-lein.", cy_review: true }
+    description: { en: "Internet, a device and help for people who are not online.", cy: "Rhyngrwyd, dyfais a help i bobl sydd ddim ar-lein.", cy_review: true }
     scope: national
     cost: 1
     delay: 1
     sector: services
     tags: [equal, digital]
     upgraded_by: { en: The penny post, cy: Y post ceiniog, cy_review: true }
-    side_note: { en: "Counters close in rural places once services go online, unless buses and rail are in force.", cy: "Mae cownteri'n cau mewn lleoedd gwledig unwaith y bydd gwasanaethau'n mynd ar-lein, oni bai bod bysiau a rheilffyrdd ar waith.", cy_review: true }
+    side_note: { en: "Once services go online, counters close in country areas. Not if Buses and rail that connect is active.", cy: "Pan fydd gwasanaethau'n mynd ar-lein, mae cownteri'n cau yng nghefn gwlad. Ddim os yw Bysiau a rheilffyrdd sy'n cysylltu ar waith.", cy_review: true }
+    what: { en: "Get everyone online, with a device and someone to help.", cy: "Cael pawb ar-lein, gyda dyfais a rhywun i helpu.", cy_review: true }
+    catch: { en: "Bank and post office counters close in country areas, unless the buses are good.", cy: "Mae cownteri banc a swyddfa bost yn cau yng nghefn gwlad, oni bai bod y bysiau'n dda.", cy_review: true }
+    picture: { en: "A farmer in Powys sees his doctor on a video call.", cy: "Mae ffermwr ym Mhowys yn gweld ei feddyg ar alwad fideo.", cy_review: true }
+    fact: { indicator: gp_travel_public, pick: highest }
     effects:
       - { target: access, size: S, sign: 1, rule: R24 }
       - { target: employment, size: S, sign: 1, where: { flags: [worst5] } }
@@ -343,23 +423,23 @@ cards:
 
 standing:
   - id: borrow-to-invest
-    name: { en: Borrow to invest, cy: Benthyg i fuddsoddi, cy_review: true }
-    description: { en: "Spend now, repay later.", cy: "Gwario nawr, ad-dalu wedyn.", cy_review: true }
+    name: { en: "Borrow", cy: "Benthyg", cy_review: true }
+    description: { en: "Spend now, pay back later.", cy: "Gwario nawr, talu'n ôl wedyn.", cy_review: true }
     budget: 3
     effects: []
     clear_cost: 3
     max_tokens: 3
     rule: R35
-    side_note: { en: "One debt token: 1 pip of interest every term until cleared for 3 pips. Each token left in 2050 takes from what you hand on. At most three.", cy: "Un tocyn dyled: 1 pip o log bob tymor nes ei glirio am 3 phip. Mae pob tocyn sydd ar ôl yn 2050 yn tynnu o'r hyn a drosglwyddwch. Tri ar y mwyaf.", cy_review: true }
+    side_note: { en: "Each loan costs 1 coin every turn until you pay back 3. A loan left in 2050 takes away from Left for 2050. You can have 3 at most.", cy: "Mae pob benthyciad yn costio 1 darn arian bob tro nes i chi dalu 3 yn ôl. Mae benthyciad sydd ar ôl yn 2050 yn tynnu o Ar ôl ar gyfer 2050. Gallwch gael 3 ar y mwyaf.", cy_review: true }
     upgraded_by: { en: The company shop, cy: Siop y cwmni, cy_review: true }
   - id: defer-maintenance
-    name: { en: Put off the repairs, cy: Gohirio'r atgyweiriadau, cy_review: true }
-    description: { en: "Skip a round of upkeep on roads, pipes and defences.", cy: "Hepgor rownd o gynnal ar ffyrdd, pibellau ac amddiffynfeydd.", cy_review: true }
+    name: { en: "Skip repairs", cy: "Hepgor atgyweiriadau", cy_review: true }
+    description: { en: "Skip a round of repairs on roads, pipes and flood defences.", cy: "Hepgor un rownd o atgyweirio ffyrdd, pibellau ac amddiffynfeydd llifogydd.", cy_review: true }
     budget: 2
     effects:
       - { target: infrastructure_condition, size: M, sign: -1, rule: R10 }
       - { target: access, size: S, sign: -1, rule: R10, side: true, note: { en: "Potholes, closed lanes and late trains until it is repaired", cy: "Tyllau yn y ffordd, lonydd ar gau a threnau hwyr nes ei atgyweirio", cy_review: true } }
     clear_cost: 3
     rule: R10
-    side_note: { en: "Roads, pipes and defences decline. While they are poor, every shock hits a quarter harder. Repair costs 3 pips.", cy: "Mae ffyrdd, pibellau ac amddiffynfeydd yn dirywio. Tra bônt yn wael, mae pob sioc yn taro chwarter yn galetach. Mae atgyweirio'n costio 3 phip.", cy_review: true }
+    side_note: { en: "Roads, pipes and defences get worse. Until you repair them, every crisis hits a quarter harder. Repairs cost 3 coins.", cy: "Mae ffyrdd, pibellau ac amddiffynfeydd yn gwaethygu. Nes i chi eu trwsio, mae pob argyfwng yn taro chwarter yn galetach. Mae trwsio'n costio 3 darn arian.", cy_review: true }
     upgraded_by: { en: The tips nobody owned, cy: Y tomenni nad oedd neb yn berchen arnynt, cy_review: true }

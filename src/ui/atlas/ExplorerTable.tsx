@@ -15,12 +15,14 @@ export interface ExplorerTableProps {
   selected: string | null;
   onHot: (code: string | null) => void;
   onSelect: (code: string) => void;
+  /** Start sorted by this indicator, highest first (the explorer opened from a result slip in play). */
+  sortBy?: string;
 }
 
 type Sort = { col: string; dir: "asc" | "desc" };
 
 export function ExplorerTable(props: ExplorerTableProps): JSX.Element {
-  const [sort, setSort] = createSignal<Sort>({ col: "name", dir: "asc" });
+  const [sort, setSort] = createSignal<Sort>(props.sortBy ? { col: props.sortBy, dir: "desc" } : { col: "name", dir: "asc" });
   const [choosing, setChoosing] = createSignal(false);
   const cols = () => props.columns.map((id) => props.indicators.find((i) => i.id === id)).filter((x): x is AtlasIndicator => !!x);
   const rows = createMemo(() => {

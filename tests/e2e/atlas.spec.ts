@@ -16,7 +16,7 @@ test("the atlas loads with a lens and its key", async ({ page }) => {
   page.on("pageerror", (e) => errors.push(e.message));
   await openAtlas(page);
   await expect(page.getByTestId("lens-name")).toHaveText("Welsh speakers aged 3 and over");
-  await expect(page.getByRole("group", { name: "Key to the lens" })).toContainText("Wales");
+  await expect(page.getByRole("group", { name: "What the colours mean" })).toContainText("Wales");
   expect(errors).toEqual([]);
 });
 
@@ -25,7 +25,7 @@ test("changing the lens changes the map", async ({ page }) => {
   const canvas = page.locator("canvas.paper-map-national");
   await page.waitForTimeout(400);
   const before = await canvas.screenshot();
-  await page.getByRole("button", { name: "Change the lens" }).click();
+  await page.getByRole("button", { name: "Colour the map by..." }).click();
   await page.getByTestId("lens-employment").check();
   await expect(page.getByTestId("lens-name")).toHaveText("Employment rate, 16 to 64");
   await page.keyboard.press("Escape");
@@ -75,7 +75,7 @@ test("switching to Cymraeg changes the interface and the place names", async ({ 
   await expect(page.getByTestId("place-panel").getByRole("heading", { level: 2 }).locator("span").first()).toHaveText("Cardiff");
   await page.getByRole("button", { name: "Cymraeg" }).click();
   await expect(page.locator("html")).toHaveAttribute("lang", "cy");
-  await expect(page.getByRole("button", { name: "Newid y lens" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Lliwio’r map yn ôl..." })).toBeVisible();
   await expect(page.getByTestId("place-panel").getByRole("heading", { level: 2 }).locator("span").first()).toHaveText("Caerdydd");
   await expect(page.getByTestId("lens-name")).toHaveText("Siaradwyr Cymraeg 3 oed a throsodd");
   await expect(page.locator("button.kbd-la", { hasText: /^Abertawe/ })).toHaveCount(1);

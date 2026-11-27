@@ -26,7 +26,7 @@ export function CurveballSlip(props: CurveballSlipProps): JSX.Element {
         <p class="slip-from">{props.from ?? t("parts.slip.from")}</p>
         <Pair text={props.title} as="h3" class="slip-title" />
         <Show when={props.ripple}>
-          <p class="ripple"><b>{t("parts.slip.ripple")}</b>{props.ripple}</p>
+          <p class="ripple">{props.ripple}</p>
         </Show>
         {props.children}
       </article>

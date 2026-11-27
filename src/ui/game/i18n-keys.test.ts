@@ -17,7 +17,7 @@ const dict = (lang: string) => {
 };
 
 function sources(): string[] {
-  const dirs = ["game", "place", "end"].map((d) => join(root, "src", "ui", d));
+  const dirs = ["game", "place", "end", "parts"].map((d) => join(root, "src", "ui", d));
   const files: string[] = [];
   for (const d of dirs) for (const f of readdirSync(d, { recursive: true }) as string[]) if (/\.tsx?$/.test(f) && !f.endsWith(".test.ts")) files.push(join(d, f));
   return files;
@@ -29,7 +29,7 @@ describe("copy keys for Yfory", () => {
   const used = new Map<string, "t" | "tn">();
   for (const f of sources()) {
     const src = readFileSync(f, "utf8");
-    for (const m of src.matchAll(/\b(tn?|tw)\(\s*"((?:game|place|parts)\.[\w.]+)"/g)) used.set(m[2]!, m[1] === "tn" ? "tn" : "t");
+    for (const m of src.matchAll(/\b(tn?|tw)\(\s*"((?:game|place|parts|play)\.[\w.]+)"/g)) used.set(m[2]!, m[1] === "tn" ? "tn" : "t");
   }
 
   it("finds the keys in the source", () => {
@@ -47,10 +47,44 @@ describe("copy keys for Yfory", () => {
     for (const g of GRADE_ORDER) for (const d of [en, cy]) expect(d.has(`game.grade.${g}`), g).toBe(true);
   });
 
-  it("never uses an em or en dash in game or place copy", () => {
-    for (const lang of ["en", "cy"]) for (const ns of ["game", "place"]) {
+  it("never uses an em or en dash in game, place or play copy", () => {
+    for (const lang of ["en", "cy"]) for (const ns of ["game", "place", "play"]) {
       const bad = Object.entries(load(lang, ns)).filter(([, v]) => typeof v === "string" && /[\u2013\u2014]/.test(v));
       expect(bad).toEqual([]);
     }
+  });
+});
+
+describe("play strings (plain-wales)", () => {
+  const en = load("en", "play");
+  const cy = load("cy", "play");
+  it("has the same keys in English and Welsh, and the Welsh is marked for review", () => {
+    const keys = (o: Record<string, unknown>) => Object.keys(o).filter((k) => !k.startsWith("_")).sort();
+    expect(keys(cy)).toEqual(keys(en));
+    expect(cy["_cy_review"]).toBe(true);
+  });
+  it("keeps the same {slots} in both languages", () => {
+    const slots = (v: unknown) => [...String(v).matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
+    for (const k of Object.keys(en)) if (!k.startsWith("_")) expect(slots(cy[k]), k).toEqual(slots(en[k]));
+  });
+  it("adds no key that another string file already has", () => {
+    for (const lang of ["en", "cy"]) {
+      const mine = Object.keys(load(lang, "play")).filter((k) => !k.startsWith("_")).map((k) => `play.${k}`);
+      const others = new Set<string>();
+      for (const f of readdirSync(join(root, "model", "i18n", lang))) {
+        const ns = f.replace(/\.json$/, "");
+        if (ns === "play") continue;
+        for (const k of Object.keys(load(lang, ns))) others.add(`${ns}.${k}`);
+      }
+      expect(mine.filter((k) => others.has(k))).toEqual([]);
+    }
+  });
+  it("never runs an English sentence past 18 words", () => {
+    const long: string[] = [];
+    for (const [k, v] of Object.entries(en)) {
+      if (k.startsWith("_") || typeof v !== "string") continue;
+      for (const sentence of v.split(/(?<=[.?!])\s+/)) if (sentence.split(/\s+/).filter(Boolean).length > 18) long.push(k);
+    }
+    expect(long).toEqual([]);
   });
 });
