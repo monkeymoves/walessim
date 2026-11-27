@@ -1,29 +1,24 @@
-# Needs from shared parts (UI lead B to UI lead A)
+# Needs from shared parts
 
-Thin local workarounds are in place for each; nothing here blocks the game.
+Items 1 to 5 were raised by UI lead B against UI lead A's parts and resolved by B directly in
+`src/ui/parts/` (with the lead's go-ahead while A was not running), keeping the parts API
+backward compatible. Item 6 is for the content agent.
 
-1. **StrandMeter: ghost sharp or fuzzy.** The ghost preview must say whether the forecast is
-   sharp or fuzzy (game-design 2.2, step 3). Please add `ghostSharp?: boolean` to `StrandMeter`
-   (and `ghostSharp?: Partial<Record<StrandId, boolean>>` to `StrandRow`), drawn dashed when sharp
-   and dotted when fuzzy. Workaround: `src/ui/game/game.css` targets `.meter:nth-child(n) .ghost`
-   from classes `fz-<index>` on the row's wrapper.
-2. **StrandMeter: ghost visibility.** At 1440 the dashed ghost outline is very faint beside the
-   knot. The game also passes the forecast move through `changes` during planning and outlines
-   `.meter-move` dashed, so the head reads "up 1 (forecast)". A `ghostLabel` or a distinct
-   forecast style for the move would be cleaner than overloading `changes`.
-3. **StrandMeter: a class or data attribute per strand** (`data-strand="resilient"`) so screen
-   code can anchor threads and notes to a meter without relying on the fixed order.
-4. **Ticket: accessible name.** With `onSelect`, the ticket is `role="button"` with an
-   `aria-label` that does not contain its visible text, so axe reports
-   `label-content-name-mismatch` (serious). Either drop the `aria-label` and let the name come
-   from the printed content, or start it with the exact visible title and put the rest in
-   `aria-describedby`. Workaround: the hand wraps each ticket (rendered without `onSelect`) in its
-   own pressable element whose name comes from the ticket's content.
-5. **StrandMeter: "no change" crowds the name.** At 1440 and 1280 the words "no change" in the
-   meter head truncate the strand name ("Pros|", "Resil"). The game now passes `null` for a
-   strand that did not move, so the head shows nothing; a shorter mark (a level dash) for
-   "no change" would keep the design's intent without the crowding.
-6. **Model: Bethesda option positions.** `model/places/bethesda.yaml` options have no `x`, `y`.
-   The board anchors them to real features in the place data (town, Gerlan, Llandygai, the
+1. **Resolved. StrandMeter: ghost sharp or fuzzy.** `ghostSharp?: boolean` on `StrandMeter` and
+   `ghostSharp?: Partial<Record<StrandId, boolean>>` on `StrandRow`: dashed when sharp, dotted
+   when fuzzy.
+2. **Resolved. StrandMeter: ghost visibility.** The ghost outline is thicker, taller and lightly
+   filled. The game also writes the forecast in words under the strands a card touches ("about
+   1 pip", "under a pip"), in `src/ui/game/Pieces.tsx` (`GhostRow`).
+3. **Resolved. StrandMeter: per-strand attribute.** Each meter `li` carries `data-strand`.
+4. **Resolved. Ticket: accessible name.** A pressable ticket (`onSelect`) now takes its name from
+   its printed content and is described by the summary through `aria-describedby`; a ticket
+   that is not pressable keeps its `aria-label`.
+5. **Resolved. "no change" crowding.** The meter head shows a short level bar for no change, with
+   the words kept for screen readers and the tooltip. `StrandRow` takes `labels` (and
+   `StrandMeter` takes `label`), a `{en, cy}` pair per strand for tight bars; the game passes the
+   short names from `model/i18n/*/game.json` (`strand_short.*`).
+6. **Open. Model: Bethesda option positions.** `model/places/bethesda.yaml` options have no `x`,
+   `y`. The board anchors them to real features in the place data (town, Gerlan, Llandygai, the
    school, the Afon Caseg and Afon Ogwen) in `src/ui/place/Bethesda.tsx`; authored positions
-   would be better (for the content agent, not UI lead A).
+   would be better.

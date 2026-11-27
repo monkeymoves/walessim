@@ -286,18 +286,17 @@
   .yf-slip { width: 268px; }
 }
 
-/* the ghost on the strand row: the forecast move sits in the meter head, dashed, so it reads as a
-   forecast and not as a change that has happened; fuzzy forecasts get a dotted outline */
-.yf-strands.ghosting .meter-move { outline: 1.5px dashed currentColor; outline-offset: 2px; padding: 0 2px; color: var(--ink); }
-.yf-strands .yarn .ghost { border-width: 2px; background: repeating-linear-gradient(90deg, transparent 0 4px, rgba(255, 255, 255, 0.5) 4px 6px); }
-.yf-strands.fz-0 .meter:nth-child(1) .ghost, .yf-strands.fz-1 .meter:nth-child(2) .ghost,
-.yf-strands.fz-2 .meter:nth-child(3) .ghost, .yf-strands.fz-3 .meter:nth-child(4) .ghost,
-.yf-strands.fz-4 .meter:nth-child(5) .ghost, .yf-strands.fz-5 .meter:nth-child(6) .ghost,
-.yf-strands.fz-6 .meter:nth-child(7) .ghost { border-style: dotted; }
-.yf-strands.fz-0 .meter:nth-child(1) .meter-move, .yf-strands.fz-1 .meter:nth-child(2) .meter-move,
-.yf-strands.fz-2 .meter:nth-child(3) .meter-move, .yf-strands.fz-3 .meter:nth-child(4) .meter-move,
-.yf-strands.fz-4 .meter:nth-child(5) .meter-move, .yf-strands.fz-5 .meter:nth-child(6) .meter-move,
-.yf-strands.fz-6 .meter:nth-child(7) .meter-move { outline-style: dotted; }
+/* the ghost in words, under the strands a card would touch */
+.yf-ghostrow { position: absolute; left: 0; right: 0; top: calc(100% + 6px); display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; z-index: 12; pointer-events: none; }
+.yf-ghostcell { min-width: 0; display: flex; }
+.yf-ghosttag {
+  display: inline-flex; align-items: center; gap: 5px; max-width: 100%;
+  padding: 3px 8px 3px 7px; background: var(--paper); color: var(--ink);
+  font-size: var(--size-label); font-stretch: var(--wdth-label); font-weight: var(--wght-grot-strong); line-height: 1.2; white-space: nowrap;
+  outline: 2px dashed var(--ink); outline-offset: -2px; box-shadow: 2px 3px 0 rgba(40, 46, 42, 0.22);
+}
+.yf-ghosttag.fuzzy { outline-style: dotted; }
+.yf-ghosttag.down { background: var(--paper-2); }
 
 /* in the hand the played stamp sits low on the body, clear of the title */
 .yf-ticket .ticket-stamp { top: auto; bottom: 30px; right: 22px; }
@@ -324,3 +323,30 @@
 .yf-stops-tail { margin-top: 0; }
 .yf-stops-tail .yf-stop { border-top: 1px solid var(--rule); }
 .yf-stops-tail .yf-stop::before { bottom: auto; height: 14px; }
+
+/* arrivals from the post, landing on the map at the opening */
+.yf-arrivals { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 4; max-width: min(560px, 80%); padding: 10px 14px 12px; background: var(--paper) var(--grain); box-shadow: var(--lit-edge), var(--shadow-sheet); outline: 2px dashed var(--stitch); outline-offset: -6px; }
+.yf-arrivals-head { color: var(--stitch-deep); margin-bottom: 4px; }
+.yf-arrivals ul { display: grid; gap: 5px; }
+.yf-arrival { display: flex; align-items: center; gap: 10px; font-family: var(--font-print); font-stretch: normal; font-size: var(--size-story-small); animation: yf-arrive var(--dur-stamp) var(--ease-press) both; animation-delay: calc(var(--i) * 180ms); }
+.yf-arrival-stub { display: inline-grid; place-items: center; width: 30px; height: 24px; background: var(--ticket-green) var(--grain); border-radius: var(--radius-worn); box-shadow: 1px 1px 0 var(--paper-edge); }
+@media (prefers-reduced-motion: reduce) { .yf-arrival { animation: none; } }
+
+/* the hand's scroll cue: the tickets below the fold are counted and one click away */
+.yf-more {
+  position: absolute; left: 0; right: 12px; bottom: 0; z-index: 3;
+  display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 30px;
+  border: 0; background: linear-gradient(to bottom, rgba(201, 203, 194, 0), var(--board) 45%);
+  padding: 14px 0 4px; color: var(--ink); font-weight: var(--wght-grot-strong); font-stretch: var(--wdth-label); cursor: pointer;
+}
+.yf-more:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* at 1280 the strand names in the bar drop to the narrow width rather than clip (design 4.6) */
+@media (max-width: 1360px) {
+  .yf-strands .meter-name, .yf-strands .meter .other { font-stretch: var(--wdth-ticket); }
+  .yf-strands .meter-inner { padding-left: 8px; padding-right: 8px; }
+  .yf-trust .trust.compact { grid-template-columns: 40px minmax(0, 8.5em); }
+  .yf-trust .trust.compact .trust-dial { width: 40px; }
+  .yf-trust .trust-word { font-size: 13.5px; line-height: 1.15; }
+  .yf-trust .trust-allow { font-size: var(--size-small); }
+}

@@ -93,7 +93,9 @@ export function PlaceVisit(): JSX.Element {
       <div class="pl-board sheet">
         <header class="pl-head">
           <Pair text={board?.name} as="h2" class="t-1" />
-          <p class="small">{t("place.common.trigger", { card: game.names.list(offer().triggeredBy.filter((c) => c !== "curveball").map((c) => game.names.cardName(c))) })}</p>
+          <Show when={offer().triggeredBy.some((c) => c !== "curveball")}>
+            <p class="small">{t("place.common.trigger", { card: game.names.list(offer().triggeredBy.filter((c) => c !== "curveball").map((c) => game.names.cardName(c))) })}</p>
+          </Show>
         </header>
         <Show when={data()} fallback={<p class="small">{t("place.common.folding", { place: game.names.placeName(id) })}</p>}>
           <Show when={id === "rhondda"} fallback={<BethesdaBoard data={data()!} api={api} />}>

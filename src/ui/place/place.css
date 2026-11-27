@@ -106,3 +106,26 @@
   .pl-rule { left: 320px; width: 280px; }
   .pl-name { max-width: 128px; }
 }
+
+/* at 1280 the seventeen tips fit without scrolling: denser rows, the history folded away */
+@media (max-width: 1360px) {
+  .pl-ledger td, .pl-ledger th[scope="row"] { height: 22px; }
+  .pl-rowbtn { min-height: 18px; }
+  .pl-tag { min-width: 16px; height: 16px; }
+  .pl-rhondda .pl-ledger th[scope="row"] { min-width: 150px; }
+  .pl-rhondda .pl-name { white-space: nowrap; max-width: none; font-stretch: var(--wdth-ticket); }
+  .pl-board { gap: 6px; padding: 10px 12px; }
+  .pl-ledger th[scope="col"] { font-size: 11.5px; padding-bottom: 2px; }
+  .pl-ledger td, .pl-ledger th[scope="row"] { height: 19px; }
+  /* flag columns narrow, their heads set vertically like a printed ledger */
+  .pl-rhondda .pl-ledger th.flag, .pl-rhondda .pl-ledger td.flag { width: 22px; padding: 0 2px; }
+  .pl-rhondda .pl-ledger th.flag { writing-mode: vertical-rl; transform: rotate(180deg); height: 62px; white-space: nowrap; text-align: left; vertical-align: top; padding: 2px 0; line-height: 22px; height: 54px; }
+  .pl-rhondda .pl-ledger th[scope="row"] { min-width: 140px; }
+  .pl-rhondda .pl-table-wrap { margin: 0; }
+  .pl-prompt { font-size: 15px; }
+  .pl-head .t-1 { font-size: 21px; }
+  .pl-foot { grid-template-columns: auto 1fr; align-items: center; gap: 6px 12px; padding: 8px 12px; }
+  .pl-foot .yf-actions { justify-content: flex-end; flex-wrap: nowrap; }
+  .pl-foot > .small { grid-column: 1 / -1; }
+  .pl-spools .label { display: none; }
+}

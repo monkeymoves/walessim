@@ -192,7 +192,9 @@
 .yarn.sharp > i::after { content: ""; position: absolute; right: -5px; top: -2px; width: 9px; height: 13px; background: var(--cd); clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
 .yarn.fuzzy > i { box-shadow: -1px 0 0 0 var(--yarn-keyline), 0 -1px 0 0 var(--yarn-keyline), 0 1px 0 0 var(--yarn-keyline); }
 .yarn.fuzzy > i::after { content: ""; position: absolute; left: 100%; top: -1px; bottom: -1px; width: 10px; background: repeating-linear-gradient(0deg, var(--cd) 0 1.5px, transparent 1.5px 3.6px); clip-path: polygon(0 0, 100% 12%, 55% 30%, 90% 48%, 45% 66%, 100% 84%, 0 100%); }
-.yarn .ghost { position: absolute; top: -1px; bottom: -1px; left: calc(var(--g0) * 10%); width: calc(var(--gn) * 10%); border: 1.5px dashed var(--cd); }
+.yarn .ghost { position: absolute; top: -3px; bottom: -3px; left: calc(var(--g0) * 10%); width: max(5px, calc(var(--gn) * 10%)); border: 2px dashed var(--cd); background: repeating-linear-gradient(90deg, transparent 0 3px, rgba(255, 255, 255, 0.55) 3px 5px); z-index: 1; }
+.yarn .ghost.fuzzy { border-style: dotted; }
+.meter-level { display: inline-flex; align-items: center; color: var(--ink-2); }
 .pegs { position: relative; height: 4px; margin-top: 2px; background: repeating-linear-gradient(90deg, rgba(27, 34, 38, 0.6) 0 1px, transparent 1px 10%); border-right: 1px solid rgba(27, 34, 38, 0.6); }
 .pegs b { position: absolute; left: calc(var(--s) * 10% - 5px); top: -1px; width: 10px; height: 10px; background: linear-gradient(45deg, transparent 42%, var(--ink) 42% 58%, transparent 58%), linear-gradient(-45deg, transparent 42%, var(--ink) 42% 58%, transparent 58%); }
 .meter-pin { position: absolute; right: -3px; bottom: -3px; width: 9px; height: 9px; border-radius: var(--radius-round); background: var(--thread); box-shadow: 1px 2px 0 rgba(20, 24, 26, 0.35); }

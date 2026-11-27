@@ -1,12 +1,12 @@
 // Small pieces of the board: the curveball slip, the voice sheet, the top bar.
 import { createMemo, createSignal, For, Show, type JSX } from "solid-js";
-import { lang, pick, t, tn } from "../../i18n";
+import { lang, pick, t, tn, textOf } from "../../i18n";
 import { CurveballSlip } from "../parts/CurveballSlip";
 import { StrandRow } from "../parts/StrandRow";
 import { TrustGauge } from "../parts/TrustGauge";
 import { TopBar as ShellTopBar } from "../shell/TopBar";
 import type { StrandId, VoiceLine } from "../../engine/api";
-import { STRAND_IDS } from "../../model/schema";
+import { STRAND_IDS, type Text } from "../../model/schema";
 import { useGame } from "./context";
 import { Note } from "./Note";
 
@@ -121,18 +121,9 @@ export function TopBar(props: { ticking?: boolean }): JSX.Element {
     for (const [id, v] of Object.entries(gd)) m[id as StrandId] = Math.abs(v!.d) >= 0.05 ? Math.max(-10, Math.min(10, v!.d)) : null;
     return m;
   });
-  /** The head figure only for whole pips: no decimals on screen. */
-  const ghostPips = createMemo(() => {
-    const gd = ghostDelta();
-    if (!gd) return undefined;
-    const m: Partial<Record<StrandId, number | null>> = {};
-    // the size of the move, rounded: a sliver that happens to cross a pip boundary is not "a pip"
-    for (const [id, v] of Object.entries(gd)) m[id as StrandId] = Math.round(v!.d) || null;
-    return m;
-  });
   const changes = createMemo(() => {
     const o = out();
-    if (!o) return ghostPips();
+    if (!o) return undefined;
     const m: Partial<Record<StrandId, number | null>> = {};
     o.strands.forEach((c) => {
       const i = STRAND_IDS.indexOf(c.strand);
@@ -151,11 +142,14 @@ export function TopBar(props: { ticking?: boolean }): JSX.Element {
     }
     return m;
   });
-  const fuzzyGhost = createMemo(() => {
+  const ghostSharp = createMemo(() => {
     const gd = ghostDelta();
-    if (!gd) return [] as StrandId[];
-    return (Object.entries(gd) as [StrandId, { d: number; sharp: boolean }][]).filter(([, v]) => Math.abs(v.d) >= 0.05 && !v.sharp).map(([id]) => id);
+    if (!gd) return undefined;
+    const m: Partial<Record<StrandId, boolean>> = {};
+    for (const [id, v] of Object.entries(gd)) m[id as StrandId] = v!.sharp;
+    return m;
   });
+  const shortLabels = Object.fromEntries(STRAND_IDS.map((id) => [id, textOf(`game.strand_short.${id}`)])) as Partial<Record<StrandId, Text>>;
   const pullable = () => (out() ? STRAND_IDS.filter((_, i) => i < ui.ticked()) : []);
   const limitNext = () => (s().step === "changed" || s().step === "election" ? s().lastOutcome?.trust.cardLimit ?? s().cardLimit : s().cardLimit);
   const termNo = () => Math.min(6, s().term + 1);
@@ -172,30 +166,76 @@ export function TopBar(props: { ticking?: boolean }): JSX.Element {
       }
       middle={
         <div class="yf-bar-middle">
-          <div
-            class={`yf-strands ${fuzzyGhost().map((id) => `fz-${STRAND_IDS.indexOf(id)}`).join(" ")}`}
-            classList={{ ghosting: !out() && !!game.ghost()?.preview }}
-          >
+          <div class="yf-strands" classList={{ ghosting: !out() && !!game.ghost()?.preview }}>
             <StrandRow
               views={views()}
               changes={changes()}
               ghosts={ghosts()}
+              ghostSharp={ghostSharp()}
+              labels={shortLabels}
               notes={ghostNotes()}
               pullable={pullable()}
               onPull={(id) => { game.pull(id); ui.guide.done("pull"); }}
             />
+            <GhostRow delta={ghostDelta()} card={game.ghost()?.card ?? null} />
             <Show when={s().step === "changed"}>
               <Note id="strands" when={ui.ticked() >= 7} class="yf-note-strands">{t("game.onboard.strands")}</Note>
             </Show>
           </div>
+          <Show when={s().step !== "ended"}>
           <div class="yf-trust">
             <TrustGauge band={s().step === "changed" || s().step === "election" ? s().lastOutcome?.trust.band ?? s().trustBand : s().trustBand} cards={limitNext()} now={!(s().step === "changed" || s().step === "election")} compact />
             <Show when={s().step === "election"}>
               <Note id="trust" when={true} class="yf-note-trust" placement="left">{t("game.onboard.trust")}</Note>
             </Show>
           </div>
+          </Show>
         </div>
       }
     />
+  );
+}
+
+// ------------------------------------------------------------------ the ghost, in words
+
+/**
+ * The ghost preview as words under the strands it touches: "up about 1 pip", or honestly
+ * "up, under a pip" when the card moves a strand by less than a whole pip. Dotted when fuzzy.
+ */
+function GhostRow(props: { delta: Partial<Record<StrandId, { d: number; sharp: boolean }>> | null; card: string | null }): JSX.Element {
+  const { game } = useGame();
+  const tag = (v: { d: number; sharp: boolean }) => {
+    const n = Math.round(Math.abs(v.d));
+    if (n === 0) return t(v.d > 0 ? "game.plan.ghost_small_up" : "game.plan.ghost_small_down");
+    return tn(v.d > 0 ? "game.plan.ghost_up" : "game.plan.ghost_down", n);
+  };
+  // knock-on moves under a fifth of a pip are left off: they are noise, not what the card does
+  const touched = () => STRAND_IDS.filter((id) => Math.abs(props.delta?.[id]?.d ?? 0) >= 0.2);
+  const heading = () => (props.card ? t("game.plan.ghost_row", { card: game.names.cardName(props.card) }) : t("game.plan.ghost_row_plan"));
+  return (
+    <Show when={props.delta && touched().length}>
+      <div class="yf-ghostrow" role="status" aria-label={heading()}>
+        <For each={STRAND_IDS}>
+          {(id) => (
+            <span class="yf-ghostcell">
+              <Show when={touched().includes(id)}>
+                <span
+                  class="yf-ghosttag"
+                  classList={{ fuzzy: !props.delta![id]!.sharp, down: props.delta![id]!.d < 0 }}
+                  title={props.delta![id]!.sharp ? t("game.plan.ghost_sharp") : t("game.plan.ghost_fuzzy")}
+                >
+                  <svg viewBox="0 0 9 8" width="9" height="8" aria-hidden="true">
+                    <path fill="currentColor" d={props.delta![id]!.d > 0 ? "M0 8h9L4.5 0z" : "M0 0h9L4.5 8z"} />
+                  </svg>
+                  <span class="sr-only">{game.names.strandName(id)} {t(props.delta![id]!.d > 0 ? "game.plan.ghost_dir_up" : "game.plan.ghost_dir_down")}: </span>
+                  {tag(props.delta![id]!)}
+                  <Show when={!props.delta![id]!.sharp}><span class="sr-only">, {t("game.plan.ghost_fuzzy_tag")}</span></Show>
+                </span>
+              </Show>
+            </span>
+          )}
+        </For>
+      </div>
+    </Show>
   );
 }

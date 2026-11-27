@@ -1,7 +1,7 @@
 // The hand of railway tickets (plan step). One tab stop: arrow keys move between tickets,
 // Enter selects, P plays. Hovering or selecting a ticket shows the ghost on the strand row.
 // Region cards ask where: the map lights the four regions and the same choice sits here.
-import { createMemo, createSignal, For, Show, type JSX } from "solid-js";
+import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show, type JSX } from "solid-js";
 import { t, tn, pick } from "../../i18n";
 import { Ticket, type TicketCard } from "../parts/Ticket";
 import { StampButton, TabButton } from "../parts/Buttons";
@@ -30,7 +30,22 @@ export function Hand(props: { interactive: boolean; stampLimit?: JSX.Element }):
     return ids.filter((id) => game.names.card(id));
   });
   const [active, setActive] = createSignal(0);
+  const [below, setBelow] = createSignal(0);
   let list!: HTMLDivElement;
+  /** How many tickets sit wholly or mostly below the fold of the hand (the scroll cue). */
+  const measure = () => {
+    if (!list) return;
+    const bottom = list.getBoundingClientRect().bottom;
+    const slots = [...list.querySelectorAll<HTMLElement>(".yf-ticket-slot")];
+    setBelow(slots.filter((el) => el.getBoundingClientRect().top + el.offsetHeight * 0.5 > bottom).length);
+  };
+  onMount(() => {
+    measure();
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
+    ro?.observe(list);
+    onCleanup(() => ro?.disconnect());
+  });
+  createEffect(() => { hand(); game.selected(); requestAnimationFrame(measure); });
 
   const focusAt = (i: number) => {
     const n = hand().length;
@@ -110,6 +125,7 @@ export function Hand(props: { interactive: boolean; stampLimit?: JSX.Element }):
         role="group"
         aria-label={`${t("game.plan.hand")}. ${t("game.plan.keys")}`}
         onKeyDown={onKey}
+        onScroll={measure}
         onMouseLeave={() => game.setHovered(null)}
       >
         <For each={hand()}>
@@ -166,6 +182,12 @@ export function Hand(props: { interactive: boolean; stampLimit?: JSX.Element }):
           }}
         </For>
       </div>
+      <Show when={below() > 0}>
+        <button type="button" class="yf-more" onClick={() => list.scrollBy({ top: list.clientHeight * 0.8, behavior: "smooth" })}>
+          <svg viewBox="0 0 9 8" width="9" height="8" aria-hidden="true"><path fill="currentColor" d="M0 0h9L4.5 8z" /></svg>
+          {tn("game.plan.more_below", below())}
+        </button>
+      </Show>
       {props.stampLimit}
     </div>
   );

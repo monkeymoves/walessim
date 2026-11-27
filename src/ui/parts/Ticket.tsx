@@ -94,6 +94,7 @@ export function Ticket(props: TicketProps): JSX.Element {
       props.played ? t("parts.ticket.playedAria", { year: props.played }) : "",
       props.blocked ? props.blocked.reason : "",
     ].filter(Boolean).join(". ");
+  const descId = `${props.id ?? `ticket-${props.card.id}`}-desc`;
   const keydown = (e: KeyboardEvent) => {
     if (!props.onSelect) return;
     if (e.key === "Enter" || e.key === " ") { e.preventDefault(); props.onSelect(); }
@@ -107,10 +108,15 @@ export function Ticket(props: TicketProps): JSX.Element {
       tabIndex={props.onSelect ? (props.tabIndex ?? 0) : props.tabIndex}
       role={props.onSelect ? "button" : undefined}
       aria-pressed={props.onSelect ? !!props.selected : undefined}
-      aria-label={ariaName()}
+      aria-label={props.onSelect ? undefined : ariaName()}
+      aria-describedby={props.onSelect ? descId : undefined}
       onClick={() => props.onSelect?.()}
       onKeyDown={keydown}
     >
+      <Show when={props.onSelect}>
+        {/* a pressable ticket takes its name from what is printed on it (WCAG 2.5.3); the summary describes it */}
+        <span id={descId} class="sr-only">{ariaName()}</span>
+      </Show>
       <div class="ticket-weave" aria-hidden="true" />
       <div class="ticket-stub">
         <Icon name={props.icon ?? cardIcon(props.card)} size={38} />

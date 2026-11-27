@@ -132,59 +132,87 @@ function worstStrand(r: EndResult): StrandId {
 
 // ------------------------------------------------------------------ Lived and Left
 
+/** A change in net pips, in words: "about 2 pips up", "level with 2026". Never a decimal. */
+export function changeWords(v: number | null): string {
+  if (v == null) return "";
+  const n = Math.round(Math.abs(v));
+  if (Math.abs(v) < 0.5 || n === 0) return t("game.end.change_level");
+  return tn(v > 0 ? "game.end.change_up" : "game.end.change_down", n);
+}
+
+/** The fuzzy edge as words, from p10 and p90: "Between about 1 and 3 up." Nothing if they round the same. */
+function rangeWords(lo: number | null, hi: number | null): string {
+  if (lo == null || hi == null) return "";
+  const a = Math.round(lo), b = Math.round(hi);
+  if (a === b) return "";
+  if (a >= 0 && b > 0) return t("game.end.range_up", { a: Math.max(a, 0), b });
+  if (a < 0 && b <= 0) return t("game.end.range_down", { a: -b, b: -a });
+  return t("game.end.range_mixed", { a: -a, b });
+}
+
 function Bands(props: { result: EndResult; custom: boolean }): JSX.Element {
-  const { game } = useGame();
   const r = () => props.result;
   const lowerName = () => (r().result.which === "lived" ? t("game.end.lived") : t("game.end.left"));
+  const vs = () => fin(r().vsCaretaker);
+  const vsWords = () => {
+    const v = vs();
+    if (v == null) return "";
+    const n = Math.round(Math.abs(v));
+    if (n === 0) return t("game.end.vs_level");
+    return tn(v > 0 ? "game.end.vs_ahead" : "game.end.vs_behind", n);
+  };
   return (
     <div class="end-bands sheet">
-      <p class="t-2 end-verdict">{t("game.end.lower", { which: lowerName(), band: pick(r().result.band.name) })}</p>
+      <p class="t-2 end-verdict">
+        {t("game.end.summary_lived", { change: changeWords(fin(r().lived.value)) })}{" "}
+        {t("game.end.summary_left", { change: changeWords(fin(r().left.value)) })}{" "}
+        {t("game.end.lower", { which: lowerName(), band: pick(r().result.band.name) })}
+      </p>
+      <p class="small">{rangeWords(fin(r().result.p10), fin(r().result.p90))} {t("game.end.unit")}</p>
       <Show when={props.custom}><p class="label end-badge">{t("game.end.weights_badge")}</p></Show>
       <div class="end-pair">
         <Band which="lived" score={r().lived} lower={r().result.which === "lived"} result={r()} />
         <Band which="left" score={r().left} lower={r().result.which === "left"} result={r()} />
       </div>
       <Show when={fin(r().caretakerGhost?.result) != null}>
-        <p class="small">{t("game.end.ghost_note", { band: bandName(game.model.game.result_bands, r().caretakerGhost!.result) })}</p>
+        <p class="story-small">{t("game.end.ghost_line", { change: changeWords(fin(r().caretakerGhost!.result)) })} {vsWords()}</p>
       </Show>
     </div>
   );
 }
 
-/** The result band a value falls in (for the caretaker ghost), from the model's band edges. */
-function bandName(resultBands: { min: number; name: Text }[], v: number): string {
-  const bands = [...resultBands].sort((a, b) => b.min - a.min);
-  return pick(bands.find((b) => v >= b.min)?.name ?? bands[bands.length - 1]?.name);
-}
-
 function Band(props: { which: "lived" | "left"; score: EndResult["lived"]; lower: boolean; result: EndResult }): JSX.Element {
   const r = () => props.result;
-  const total = () => STRAND_IDS.reduce((a, id) => a + (r().weights[id] ?? 0) * (fin(r().perStrand.find((p) => p.strand === id)?.[props.which]) ?? 0), 0) || 1;
+  const level = () => fin(props.which === "lived" ? r().livedLevel : r().leftLevel);
+  const strandLevel = (id: StrandId) => {
+    const p = r().perStrand.find((x) => x.strand === id);
+    return fin(props.which === "lived" ? p?.livedLevel : p?.leftLevel) ?? 0;
+  };
+  const total = () => STRAND_IDS.reduce((a, id) => a + (r().weights[id] ?? 0) * strandLevel(id), 0) || 1;
   const pct = (v: number | null) => `${Math.max(0, Math.min(10, fin(v) ?? 0)) * 10}%`;
   const startV = () => (props.which === "lived" ? r().start.lived : r().start.left);
-  const ghostV = () => fin(r().caretakerGhost ? (props.which === "lived" ? r().caretakerGhost!.lived : r().caretakerGhost!.left) : null);
+  /** The caretaker's ghost is given as change; its level is the start plus the change over the seven strands. */
+  const ghostV = () => {
+    const g = r().caretakerGhost;
+    const c = fin(g ? (props.which === "lived" ? g.lived : g.left) : null);
+    return c == null ? null : startV() + c / STRAND_IDS.length;
+  };
   return (
     <figure class="end-band" classList={{ lower: props.lower }}>
       <figcaption>
         <span class="t-2">{t(`game.end.${props.which}`)}</span>
         <span class="small">{t(`game.end.${props.which}_note`)}</span>
-        <span class="label">{pick(props.score.band.name)}</span>
+        <span class="label">{changeWords(fin(props.score.value))}. {pick(props.score.band.name)}</span>
       </figcaption>
-      <div class="end-weave" role="img" aria-label={`${t(`game.end.${props.which}`)}: ${pick(props.score.band.name)}`}>
-        <div class="end-woven" style={{ width: pct(props.score.value) }}>
+      <div class="end-weave" role="img" aria-label={`${t(`game.end.${props.which}`)}: ${changeWords(fin(props.score.value))}, ${pick(props.score.band.name)}`}>
+        <div class="end-woven" style={{ width: pct(level()) }}>
           <For each={STRAND_IDS}>
-            {(id) => {
-              const v = () => (r().weights[id] ?? 0) * (fin(r().perStrand.find((p) => p.strand === id)?.[props.which]) ?? 0);
-              return <i style={{ ...strandVars(id), flex: `${v() / total()} 0 0` }} title={t(`parts.strand.${id}`)} />;
-            }}
+            {(id) => <i style={{ ...strandVars(id), flex: `${((r().weights[id] ?? 0) * strandLevel(id)) / total()} 0 0` }} title={t(`parts.strand.${id}`)} />}
           </For>
         </div>
-        <Show when={fin(props.score.p10) != null && fin(props.score.p90) != null}>
-        <i class="end-fuzz" style={{ left: pct(props.score.p10), width: `calc(${pct(props.score.p90)} - ${pct(props.score.p10)})` }} aria-hidden="true" />
-        </Show>
         <i class="end-mark end-start" style={{ left: pct(startV()) }}><span class="small">{t("game.end.start_mark")}</span></i>
         <Show when={ghostV() != null}>
-          <i class="end-mark end-ghost" style={{ left: pct(ghostV()!) }}><span class="small">{t("game.end.ghost_mark")}</span></i>
+          <i class="end-mark end-ghost" style={{ left: pct(ghostV()) }}><span class="small">{t("game.end.ghost_mark")}</span></i>
         </Show>
         <div class="end-pegs" aria-hidden="true" />
       </div>
@@ -194,23 +222,42 @@ function Band(props: { which: "lived" | "left"; score: EndResult["lived"]; lower
 
 // ------------------------------------------------------------------ six terms
 
+/**
+ * The six terms against the 2026 line. Term 1 is greyed as inherited; a counted term below 2026 is
+ * marked in rust. The axis is centred on 2026 so the small honest differences can be seen.
+ */
 function Terms(props: { result: EndResult }): JSX.Element {
   const r = () => props.result;
+  const w0 = () => r().start.lived;
+  const span = 1.5; // points either side of 2026 shown, about ten net strand pips
+  const y = (v: number | null) => 50 - (Math.max(-span, Math.min(span, (fin(v) ?? w0()) - w0())) / span) * 50;
   return (
     <div class="end-terms sheet">
       <p class="label">{t("game.end.terms")}</p>
-      <ol class="end-cols">
-        <For each={r().wellbeingByTerm}>
-          {(w, i) => (
-            <li classList={{ worst: i() === r().worstTerm }}>
-              <i style={{ height: `${Math.max(0, Math.min(10, fin(w) ?? 0)) * 10}%` }} classList={{ nodata: fin(w) == null }} aria-hidden="true" />
-              <span class="data small">{TERM_YEARS[i()]}</span>
-            </li>
-          )}
-        </For>
-      </ol>
+      <div class="end-cols-wrap">
+        <i class="end-line2026" aria-hidden="true"><span class="small">{t("game.end.line_2026")}</span></i>
+        <ol class="end-cols">
+          <For each={r().wellbeingByTerm}>
+            {(w, i) => {
+              const below = () => i() > 0 && (fin(w) ?? w0()) < w0();
+              const top = () => Math.min(y(w), 50);
+              const h = () => Math.abs(y(w) - 50);
+              return (
+                <li classList={{ inherited: i() === 0, worst: i() === r().worstTerm, below: below() }}>
+                  <span class="end-col-area">
+                    <i style={{ top: `${top()}%`, height: `${Math.max(h(), 1.5)}%` }} classList={{ nodata: fin(w) == null }} aria-hidden="true" />
+                  </span>
+                  <span class="data small">{TERM_YEARS[i()]}</span>
+                  <Show when={i() === 0}><span class="small end-inherited">{t("game.end.inherited")}</span></Show>
+                </li>
+              );
+            }}
+          </For>
+        </ol>
+      </div>
+      <p class="small">{t("game.end.terms_note")}</p>
       <Show when={TERM_YEARS[r().worstTerm] != null}>
-        <p class="small">{t("game.end.worst", { year: TERM_YEARS[r().worstTerm]! })}. {t("game.end.worst_note")}</p>
+        <p class="small">{t("game.end.worst", { year: TERM_YEARS[r().worstTerm]! })}.<Show when={r().dippedBelowStart}> {t("game.end.dipped")}</Show></p>
       </Show>
     </div>
   );

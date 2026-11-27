@@ -44,7 +44,7 @@ describe("copy keys for Yfory", () => {
 
   it("never uses an em or en dash in game or place copy", () => {
     for (const lang of ["en", "cy"]) for (const ns of ["game", "place"]) {
-      const bad = Object.entries(load(lang, ns)).filter(([, v]) => typeof v === "string" && /[–—]/.test(v));
+      const bad = Object.entries(load(lang, ns)).filter(([, v]) => typeof v === "string" && /[\u2013\u2014]/.test(v));
       expect(bad).toEqual([]);
     }
   });

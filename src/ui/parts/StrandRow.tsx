@@ -3,8 +3,8 @@
 // pegs (flow: how people fare now), a knot when sharp or a loose fringe when fuzzy, and an ink
 // cross-stitch on the pegs at the stock value (what is being handed on).
 import { For, Show, type JSX } from "solid-js";
-import { t, textOf, tIn, otherLang, lang } from "../../i18n";
-import { STRAND_IDS, type StrandId } from "../../model/schema";
+import { t, textOf, tIn, otherLang, lang, pick } from "../../i18n";
+import { STRAND_IDS, type StrandId, type Text } from "../../model/schema";
 import { strandVars } from "./strands";
 import { Tooltip } from "./Tooltip";
 
@@ -25,6 +25,23 @@ export interface StrandMeterProps {
   onPull?: (strand: StrandId) => void;
   /** Extra tooltip line (for example "Up one place since 2026"). */
   note?: string;
+  /** Whether the ghost forecast is sharp (dashed outline) or fuzzy (dotted); default sharp. */
+  ghostSharp?: boolean;
+  /**
+   * The name to show on the strip, as a {en, cy} pair (a short form for tight bars). The full goal
+   * name stays in the tooltip and the accessible name is built from it.
+   */
+  label?: Text;
+}
+
+/** "No change": a short level bar, cut square; the words are in the accessible name and tooltip. */
+function LevelMark(): JSX.Element {
+  return (
+    <span class="meter-level" title={t("parts.meter.noChange")}>
+      <svg viewBox="0 0 10 8" width="10" height="8" aria-hidden="true"><path fill="currentColor" d="M0 3h10v2H0z" /></svg>
+      <span class="sr-only">{t("parts.meter.noChange")}</span>
+    </span>
+  );
 }
 
 function Triangle(props: { up: boolean }): JSX.Element {
@@ -37,7 +54,8 @@ function Triangle(props: { up: boolean }): JSX.Element {
 
 export function StrandMeter(props: StrandMeterProps): JSX.Element {
   const name = () => t(`parts.strand.${props.strand}`);
-  const otherName = () => tIn(otherLang(), `parts.strand.${props.strand}`);
+  const shown = () => (props.label ? pick(props.label, lang()) : name());
+  const otherName = () => (props.label ? pick(props.label, otherLang()) : tIn(otherLang(), `parts.strand.${props.strand}`));
   const goal = () => t(`parts.goal.${props.strand}`);
   const flow = () => Math.max(0, Math.min(10, props.flowPips));
   const ghostFrom = () => (props.ghost && props.ghost < 0 ? flow() + props.ghost : flow());
@@ -59,10 +77,10 @@ export function StrandMeter(props: StrandMeterProps): JSX.Element {
   const body = (): JSX.Element => (
     <>
       <div class="meter-head">
-        <span class="meter-name">{name()}</span>
+        <span class="meter-name">{shown()}</span>
         <Show when={props.change != null}>
           <span class="meter-move data">
-            <Show when={props.change !== 0} fallback={t("parts.meter.noChange")}>
+            <Show when={props.change !== 0} fallback={<LevelMark />}>
               <Triangle up={(props.change ?? 0) > 0} />
               {Math.abs(props.change ?? 0)}
             </Show>
@@ -73,7 +91,7 @@ export function StrandMeter(props: StrandMeterProps): JSX.Element {
       <div class="yarn" classList={{ sharp: props.sharp !== false, fuzzy: props.sharp === false }} style={{ "--n": flow() }}>
         <i />
         <Show when={ghostLen() > 0}>
-          <b class="ghost" style={{ "--g0": ghostFrom(), "--gn": ghostLen() }} />
+          <b class="ghost" classList={{ fuzzy: props.ghostSharp === false, down: (props.ghost ?? 0) < 0 }} style={{ "--g0": ghostFrom(), "--gn": ghostLen() }} />
         </Show>
       </div>
       <div class="pegs">
@@ -95,7 +113,7 @@ export function StrandMeter(props: StrandMeterProps): JSX.Element {
     </>
   );
   return (
-    <li class="meter" style={strandVars(props.strand)} lang={lang()}>
+    <li class="meter" data-strand={props.strand} style={strandVars(props.strand)} lang={lang()}>
       <Tooltip heading={goal()} content={tipLines()}>
         <Show
           when={props.pullable && props.onPull}
@@ -123,6 +141,10 @@ export interface StrandRowProps {
   changes?: Partial<Record<StrandId, number | null>>;
   ghosts?: Partial<Record<StrandId, number | null>>;
   notes?: Partial<Record<StrandId, string>>;
+  /** Per strand: is the ghost forecast sharp (default) or fuzzy. */
+  ghostSharp?: Partial<Record<StrandId, boolean>>;
+  /** Per strand: the name to show on the strip (short forms for tight bars). */
+  labels?: Partial<Record<StrandId, Text>>;
   pullable?: StrandId[];
   onPull?: (strand: StrandId) => void;
   class?: string;
@@ -142,6 +164,8 @@ export function StrandRow(props: StrandRowProps): JSX.Element {
             sharp={byId(id)?.flowSharp}
             change={props.changes?.[id]}
             ghost={props.ghosts?.[id]}
+            ghostSharp={props.ghostSharp?.[id]}
+            label={props.labels?.[id]}
             note={props.notes?.[id]}
             pullable={props.pullable?.includes(id)}
             onPull={props.onPull}

@@ -84,7 +84,6 @@ export function RhonddaBoard(props: { data: PlaceData; api: BoardApi }): JSX.Ele
 
   return (
     <div class="pl-rhondda">
-      <p class="story-small pl-history">{t("place.rhondda.history")} <span class="pl-check small">{t("place.rhondda.history_check")}</span></p>
       <p class="pl-prompt print">{t("place.rhondda.prompt", { n: props.api.max })}</p>
       <div class="pl-table-wrap">
         <table class="pl-ledger" aria-label={t("place.rhondda.prompt", { n: props.api.max })}>
@@ -144,6 +143,7 @@ export function RhonddaBoard(props: { data: PlaceData; api: BoardApi }): JSX.Ele
         <p class="small">{t("place.common.tests_note")}</p>
       </details>
       <ThreadButton onClick={() => setRule(!rule())} aria-expanded={rule()}>{t("place.common.how")}</ThreadButton>
+      <p class="story-small pl-history">{t("place.rhondda.history")} <span class="pl-check small">{t("place.rhondda.history_check")}</span></p>
 
       <Portal mount={document.querySelector(".yf-stage") ?? document.body}>
         <Show when={selRow() && !props.api.closed()}>

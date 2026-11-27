@@ -6,6 +6,7 @@ import { lang, t } from "../../i18n";
 import { PaperMap, type Marker, type Stitch, type StitchKind } from "../../map";
 import { geo } from "../shell/model";
 import type { RegionId } from "../../engine/api";
+import type { CompiledModel } from "../../model/schema";
 import { useGame } from "./context";
 import { cardRegions, regionLas } from "./names";
 
@@ -14,6 +15,15 @@ function stitchKind(card: string): StitchKind {
   if (/peat|woodland|flow|farms|nature/.test(card)) return "planted";
   if (/homes|walls|grid|warm|energy|buses/.test(card)) return "built";
   return "generic";
+}
+
+/** The authorities an arrival reached: the three most populous in each of its regions, or in Wales. */
+export function arrivalLas(model: CompiledModel, regions: RegionId[] | null): string[] {
+  const pool = model.authorities.filter((a) => !regions?.length || regions.includes(a.region));
+  const byRegion = new Map<string, typeof pool>();
+  for (const a of pool) byRegion.set(a.region, [...(byRegion.get(a.region) ?? []), a]);
+  const per = regions?.length ? 3 : 1;
+  return [...byRegion.values()].flatMap((as) => [...as].sort((x, y) => y.population - x.population).slice(0, per).map((a) => a.code));
 }
 
 export function MapStage(props: { children?: JSX.Element }): JSX.Element {
@@ -101,7 +111,21 @@ export function MapStage(props: { children?: JSX.Element }): JSX.Element {
     }
     return out;
   });
-  createEffect(() => ui.map()?.setStitches(stitches()));
+  // cards arriving from the post this term: stitched on the authorities they reached
+  const arrivalStitches = createMemo<Stitch[]>(() => {
+    const s = game.state();
+    if (!s || s.step !== "opening" || !s.opening?.arrivals.length) return [];
+    return s.opening.arrivals.flatMap((a, i) =>
+      arrivalLas(game.model, a.regions).map((la) => ({ id: `arrive-${i}-${la}`, at: { la }, kind: stitchKind(a.card) } as Stitch)));
+  });
+  createEffect(() => ui.map()?.setStitches([...stitches(), ...arrivalStitches()]));
+  // and lit, while the opening shows them
+  createEffect(() => {
+    const m = ui.map();
+    const s = game.state();
+    if (!m || ui.regionPick()) return;
+    m.setHighlight(s?.step === "opening" && s.opening?.arrivals.length ? s.opening.arrivals.flatMap((a) => arrivalLas(game.model, a.regions)) : []);
+  });
 
   // markers: a pin where a place is asking for you
   const markers = createMemo<Marker[]>(() => {

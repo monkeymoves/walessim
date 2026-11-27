@@ -5,7 +5,7 @@ import { pick, t, tn } from "../../i18n";
 import { StampButton, TabButton, ThreadButton } from "../parts/Buttons";
 import { SevereNotice, WarnStrip, Snip } from "../parts/Notice";
 import { StrandName } from "./StrandName";
-import { Icon } from "../parts/Icon";
+import { cardIcon, Icon } from "../parts/Icon";
 import type { Slip, StrandId, TrustReason } from "../../engine/api";
 import { STRAND_IDS } from "../../model/schema";
 import { useGame } from "./context";
@@ -382,5 +382,35 @@ export function CaretakerPanel(): JSX.Element {
         <p class="small">{t("game.passing.title", { from: s().year, to: s().year + 4 })}</p>
       </div>
     </div>
+  );
+}
+
+// ------------------------------------------------------------------ arrivals land
+
+/** On the stage at the opening: what arrived from the post, and where. */
+export function ArrivalStrip(): JSX.Element {
+  const { game } = useGame();
+  const s = () => game.state()!;
+  const items = () => s().opening?.arrivals ?? [];
+  return (
+    <Show when={s().step === "opening" && items().length}>
+      <aside class="yf-arrivals" aria-label={t("game.opening.arrivals_label")}>
+        <p class="label yf-arrivals-head">{t("game.opening.arrivals_label")}</p>
+        <ul>
+          <For each={items()}>
+            {(a, i) => (
+              <li class="yf-arrival" style={{ "--i": i() }}>
+                <span class="yf-arrival-stub"><Icon name={cardIcon(game.names.card(a.card) ?? { id: a.card })} size={20} /></span>
+                <span>
+                  {a.regions?.length
+                    ? t("game.opening.arrives", { card: game.names.cardName(a.card), where: game.names.regionsText(a.regions) })
+                    : t("game.opening.arrives_wales", { card: game.names.cardName(a.card) })}
+                </span>
+              </li>
+            )}
+          </For>
+        </ul>
+      </aside>
+    </Show>
   );
 }
