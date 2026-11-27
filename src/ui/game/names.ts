@@ -1,8 +1,16 @@
 // Names of things in the active language, looked up from the compiled model. One place, so
 // components never reach into model arrays themselves.
 import { hasKey, pick, t, lang } from "../../i18n";
+import { andCy } from "./cymraeg";
 import type { Cause, GameState, RegionId, StrandId } from "../../engine/api";
 import type { Card, CompiledModel, Curveball, Text } from "../../model/schema";
+
+/** "A, B and C"; in Welsh "a" or "ac" with the aspirate mutation on the last item. */
+function joinAnd(items: string[]): string {
+  const a = items.slice(0, -1).join(", ");
+  const b = items[items.length - 1]!;
+  return lang() === "cy" ? `${a} ${andCy(b)}` : t("game.and", { a, b });
+}
 
 export type Lookup = ReturnType<typeof makeNames>;
 
@@ -76,13 +84,13 @@ export function makeNames(model: CompiledModel) {
       if (!ids || ids.length === 0) return t("game.plan.all_wales");
       const names = ids.map((r) => text(regions.get(r)?.name ?? r));
       if (names.length === 1) return names[0]!;
-      return t("game.and", { a: names.slice(0, -1).join(", "), b: names[names.length - 1]! });
+      return joinAnd(names);
     },
 
     /** A list in words: "A, B and C". */
     list(items: string[]): string {
       if (items.length <= 1) return items[0] ?? "";
-      return t("game.and", { a: items.slice(0, -1).join(", "), b: items[items.length - 1]! });
+      return joinAnd(items);
     },
   };
 }

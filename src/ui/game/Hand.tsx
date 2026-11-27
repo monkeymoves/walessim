@@ -1,15 +1,18 @@
-// The hand of railway tickets (plan step). One tab stop: arrow keys move between tickets,
-// Enter selects, P plays. Hovering or selecting a ticket shows the ghost on the strand row.
-// Region cards ask where: the map lights the four regions and the same choice sits here.
+// The hand of railway tickets (plan step), as the design's stub stack: every ticket a one-row
+// stub (title, cost, when it pays), the selected one opened to its full anatomy. Its controls
+// (where it goes, play it, keep it) sit in a fixed tray above the pips, so they never open
+// below the fold. One tab stop: arrow keys move between tickets, Enter selects, P plays.
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show, type JSX } from "solid-js";
 import { t, tn, pick } from "../../i18n";
 import { Ticket, type TicketCard } from "../parts/Ticket";
 import { StampButton, TabButton } from "../parts/Buttons";
+import { Snip } from "../parts/Notice";
 import type { RegionId } from "../../engine/api";
 import type { Card } from "../../model/schema";
 import { useGame } from "./context";
 import { cardRegions } from "./names";
 import { Note } from "./Note";
+import { iPlace } from "./cymraeg";
 
 export function ticketOf(card: Card, cost?: number): TicketCard {
   return {
@@ -18,56 +21,11 @@ export function ticketOf(card: Card, cost?: number): TicketCard {
   };
 }
 
-export function Hand(props: { interactive: boolean; stampLimit?: JSX.Element }): JSX.Element {
+const needsWhere = (c: Card) => c.scope === "region" || c.scope === "two_regions";
+
+/** Playing, re-aiming and selecting, shared by the hand and the tray. */
+function usePlay() {
   const { game, ui } = useGame();
-  const s = () => game.state()!;
-  /** In play the hand; once sealed, the cards played this term (the engine empties the hand). */
-  const hand = createMemo(() => {
-    const st = s();
-    const ids = props.interactive
-      ? st.hand
-      : (st.plays?.cards ?? (st.step === "changed" || st.step === "election" ? st.lastOutcome?.plays.cards : null) ?? []).map((c) => c.card);
-    return ids.filter((id) => game.names.card(id));
-  });
-  const [active, setActive] = createSignal(0);
-  const [below, setBelow] = createSignal(0);
-  let list!: HTMLDivElement;
-  /** How many tickets sit wholly or mostly below the fold of the hand (the scroll cue). */
-  const measure = () => {
-    if (!list) return;
-    const bottom = list.getBoundingClientRect().bottom;
-    const slots = [...list.querySelectorAll<HTMLElement>(".yf-ticket-slot")];
-    setBelow(slots.filter((el) => el.getBoundingClientRect().top + el.offsetHeight * 0.5 > bottom).length);
-  };
-  onMount(() => {
-    measure();
-    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
-    ro?.observe(list);
-    onCleanup(() => ro?.disconnect());
-  });
-  createEffect(() => { hand(); game.selected(); requestAnimationFrame(measure); });
-
-  const focusAt = (i: number) => {
-    const n = hand().length;
-    if (!n) return;
-    const k = ((i % n) + n) % n;
-    setActive(k);
-    (list.querySelectorAll<HTMLElement>(".yf-ticket-press")[k])?.focus();
-  };
-
-  function select(id: string): void {
-    if (!props.interactive) return;
-    const next = game.selected() === id ? null : id;
-    game.setSelected(next);
-    ui.guide.done("hand");
-    ui.guide.done("ticket");
-    const card = next ? game.names.card(next) : null;
-    if (card && needsWhere(card) && !game.isPlayed(card.id)) ui.setRegionPick(card.id);
-    else ui.setRegionPick(null);
-  }
-
-  const needsWhere = (c: Card) => c.scope === "region" || c.scope === "two_regions";
-
   function playNow(id: string, region?: RegionId, regions?: RegionId[]): void {
     const card = game.names.card(id);
     if (!card) return;
@@ -80,8 +38,74 @@ export function Hand(props: { interactive: boolean; stampLimit?: JSX.Element }):
     ui.setRegionPick(null);
     ui.guide.done("play");
     ui.guide.done("region");
-    ui.setAnnounce(t("game.plan.played_count", { played: game.draft.cards.length, limit: s().cardLimit }));
+    ui.setAnnounce(t("game.plan.played_count", { played: game.draft.cards.length, limit: game.state()!.cardLimit }));
   }
+  function select(id: string | null): void {
+    const next = id && game.selected() === id ? null : id;
+    game.setSelected(next);
+    ui.guide.done("hand");
+    ui.guide.done("ticket");
+    const card = next ? game.names.card(next) : null;
+    ui.setRegionPick(card && needsWhere(card) && !game.isPlayed(card.id) ? card.id : null);
+  }
+  return { playNow, select };
+}
+
+export function Hand(props: { interactive: boolean }): JSX.Element {
+  const { game, ui } = useGame();
+  const { playNow, select } = usePlay();
+  const s = () => game.state()!;
+  /** In play the hand; once sealed, the cards played this term (the engine empties the hand). */
+  const hand = createMemo(() => {
+    const st = s();
+    const ids = props.interactive
+      ? st.hand
+      : (st.plays?.cards ?? (st.step === "changed" || st.step === "election" ? st.lastOutcome?.plays.cards : null) ?? []).map((c) => c.card);
+    return ids.filter((id) => game.names.card(id));
+  });
+  const [active, setActive] = createSignal(0);
+  const [below, setBelow] = createSignal(0);
+  /** Full tickets when they all fit; the stub stack only when the hand is short of room. */
+  const [roomy, setRoomy] = createSignal(true);
+  /** Room for the selected ticket in full beside the other stubs. */
+  const [oneFull, setOneFull] = createSignal(false);
+  let list!: HTMLDivElement;
+  /** Tickets with any part below the fold of the hand (the scroll cue counts only real ones). */
+  const measure = () => {
+    if (!list) return;
+    const full = parseFloat(getComputedStyle(list).getPropertyValue("--ticket-h")) || 138;
+    const stub = parseFloat(getComputedStyle(list).getPropertyValue("--ticket-compact-h")) || 50;
+    setRoomy(hand().length * (full + 8) <= list.clientHeight);
+    setOneFull((hand().length - 1) * (stub + 6) + full + 8 <= list.clientHeight);
+    // when everything fits, nothing should sit scrolled out of view above the top
+    if (list.scrollHeight <= list.clientHeight + 1 && list.scrollTop) list.scrollTop = 0;
+    const bottom = list.getBoundingClientRect().bottom;
+    const slots = [...list.querySelectorAll<HTMLElement>(".yf-ticket-slot")];
+    setBelow(slots.filter((el) => el.getBoundingClientRect().bottom > bottom + 2).length);
+  };
+  onMount(() => {
+    measure();
+    const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
+    ro?.observe(list);
+    onCleanup(() => ro?.disconnect());
+  });
+  // keep the opened ticket in view
+  createEffect(() => {
+    const id = game.selected();
+    hand();
+    requestAnimationFrame(() => {
+      if (id) list?.querySelector<HTMLElement>(`[data-card="${id}"]`)?.scrollIntoView({ block: "nearest" });
+      measure();
+    });
+  });
+
+  const focusAt = (i: number) => {
+    const n = hand().length;
+    if (!n) return;
+    const k = ((i % n) + n) % n;
+    setActive(k);
+    (list.querySelectorAll<HTMLElement>(".yf-ticket-press")[k])?.focus();
+  };
 
   const onKey = (e: KeyboardEvent) => {
     if (!props.interactive) return;
@@ -97,7 +121,7 @@ export function Hand(props: { interactive: boolean; stampLimit?: JSX.Element }):
       const card = game.names.card(id)!;
       if (game.isPlayed(id)) return;
       if (game.blockOf(id)) { ui.setAnnounce(t(game.blockOf(id)!)); return; }
-      if (card.scope === "region" || card.scope === "two_regions") { ui.setRegionPick(id); return; }
+      if (needsWhere(card)) { ui.setRegionPick(id); return; }
       playNow(id);
     }
   };
@@ -114,9 +138,6 @@ export function Hand(props: { interactive: boolean; stampLimit?: JSX.Element }):
         </Note>
         <Note id="ticket" when={ui.guide.hasSeen("hand") && !!game.hovered() && game.draft.cards.length === 0} class="yf-note-ticket" placement="left">
           {t("game.onboard.ticket")}
-        </Note>
-        <Note id="play" when={ui.guide.hasSeen("ticket") && !!game.selected() && game.draft.cards.length === 0} class="yf-note-play" placement="left">
-          {t("game.onboard.play")}
         </Note>
       </Show>
       <div
@@ -141,11 +162,17 @@ export function Hand(props: { interactive: boolean; stampLimit?: JSX.Element }):
               if (p.region) return game.names.region(p.region)?.name ?? null;
               return null;
             };
-            const sel = () => game.selected() === id;
+            const sel = () => props.interactive && game.selected() === id;
             const held = () => s().step === "plan" && game.draft.holdOver === id;
+            const cost = () => game.costOf(pl() ?? { card: id, region: card().regions?.[0] });
+            const budgetLabel = () =>
+              played() || !props.interactive
+                ? t("parts.ticket.ofPips", { n: game.budget().total || s().budget.available })
+                : t("game.plan.of_left", { n: Math.max(0, game.budget().left) });
             return (
               <div
                 class="yf-ticket-slot"
+                data-card={id}
                 classList={{ sel: sel(), played: played() }}
                 onMouseEnter={() => { if (props.interactive) { game.setHovered(id); ui.guide.done("hand"); } }}
               >
@@ -154,28 +181,27 @@ export function Hand(props: { interactive: boolean; stampLimit?: JSX.Element }):
                   role={props.interactive ? "button" : undefined}
                   tabIndex={props.interactive ? (active() === i() ? 0 : -1) : undefined}
                   aria-pressed={props.interactive ? sel() : undefined}
+                  aria-expanded={props.interactive ? sel() : undefined}
                   onClick={() => { if (props.interactive) { setActive(i()); select(id); } }}
                   onKeyDown={(e) => { if (props.interactive && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); setActive(i()); select(id); } }}
                 >
                   <Ticket
                     id={`ticket-${id}`}
-                    card={ticketOf(card(), game.costOf(pl() ?? { card: id, region: card().regions?.[0] }))}
-                    serial={game.names.serial(id)}
+                    card={ticketOf(card(), cost())}
                     budget={game.budget().total || s().budget.available}
+                    budgetLabel={budgetLabel()}
                     scope={pl()?.region && card().scope === "national_or_region" ? "region" : undefined}
                     where={where()}
                     played={played() || !props.interactive ? s().year : null}
                     blocked={props.interactive && block() ? { on: block() === "game.plan.cannot_limit" ? "trust" : "cost", reason: t(block()!) } : null}
                     selected={sel()}
+                    compact={!roomy() && !(sel() && oneFull())}
                     lifted={game.hovered() === id || sel()}
                     class="yf-ticket"
                   />
                 </div>
                 <Show when={held()}>
                   <span class="yf-held small">{t("game.plan.held")}</span>
-                </Show>
-                <Show when={props.interactive && sel()}>
-                  <WherePicker card={card()} onPlay={playNow} />
                 </Show>
               </div>
             );
@@ -188,20 +214,59 @@ export function Hand(props: { interactive: boolean; stampLimit?: JSX.Element }):
           {tn("game.plan.more_below", below())}
         </button>
       </Show>
-      {props.stampLimit}
     </div>
   );
 }
 
-/** Under the selected ticket: where it goes (region cards), keep it for next term. */
+/**
+ * The fixed tray above the pips: the selected ticket's plain description and its controls.
+ * Always in view, so choosing a region or playing never needs a scroll.
+ */
+export function TicketTray(): JSX.Element {
+  const { game, ui } = useGame();
+  const { playNow } = usePlay();
+  const s = () => game.state()!;
+  const card = () => (game.selected() ? game.names.card(game.selected()!) ?? null : null);
+  return (
+    <div class="yf-tray sheet" aria-live="polite">
+      <Show when={card()} fallback={<p class="small yf-tray-hint">{t("game.plan.tray_hint")}</p>}>
+        {(c) => (
+          <>
+            <WherePicker card={c()} onPlay={playNow} />
+            <div class="yf-tray-notes">
+              <ul class="pulls yf-tray-pulls">
+                <For each={c().helps ?? []}>
+                  {(x) => <li><Snip strand={x} />{(c().frays ?? []).includes(x) ? t("parts.ticket.mixed", { strand: game.names.strandName(x) }) : game.names.strandName(x)}</li>}
+                </For>
+                <For each={(c().frays ?? []).filter((x) => !(c().helps ?? []).includes(x))}>
+                  {(x) => <li class="strain"><Snip strand={x} frays />{t("parts.ticket.frays", { strand: game.names.strandName(x) })}</li>}
+                </For>
+              </ul>
+              <p class="story-small">{pick(c().description)}</p>
+              <Show when={c().needs_partners}><p class="small">{t("game.plan.partners_note")}</p></Show>
+              <Show when={c().upkeep}><p class="small">{pick(c().upkeep!.note)}</p></Show>
+              <Show when={c().side_note}><p class="small">{pick(c().side_note)}</p></Show>
+              <Show when={c().visit}><p class="small">{t("game.plan.visit_card", { place: game.names.placeName(c().visit!), i_place: iPlace(game.names.placeName(c().visit!)) })}</p></Show>
+              <Show when={s().term + c().delay > 5}><p class="small yf-after2050">{t("game.plan.after_2050")}</p></Show>
+            </div>
+          </>
+        )}
+      </Show>
+      <Note id="play" when={ui.guide.hasSeen("ticket") && !!game.selected() && game.draft.cards.length === 0} class="yf-note-play" placement="left">
+        {t("game.onboard.play")}
+      </Note>
+    </div>
+  );
+}
+
+/** Where the selected card goes, play it or take it back, and keep it for next term. */
 function WherePicker(props: { card: Card; onPlay: (id: string, region?: RegionId, regions?: RegionId[]) => void }): JSX.Element {
   const { game, ui } = useGame();
-  const s = () => game.state()!;
   const regions = () => cardRegions(game.model, props.card);
   const played = () => game.isPlayed(props.card.id);
   const pl = () => game.playOf(props.card.id);
   const [two, setTwo] = createSignal<RegionId[]>(pl()?.regions ?? []);
-  const scope = props.card.scope;
+  const scope = () => props.card.scope;
   const block = () => game.blockOf(props.card.id);
   const canHold = () => !played() && (game.model.game.hold_over ?? 1) > 0;
   const toggleTwo = (r: RegionId) => {
@@ -216,16 +281,25 @@ function WherePicker(props: { card: Card; onPlay: (id: string, region?: RegionId
     if (r == null) return !p.region && !p.regions;
     return p.region === r;
   };
-  const { ui: ui2 } = useGame();
   return (
-    <div class="yf-where sheet" role="group" aria-label={scope === "two_regions" ? t("game.plan.where_two") : scope === "national" ? pick(props.card.name) : t("game.plan.where")}>
-      <Show when={scope === "national" && !played()}>
-        <StampButton onClick={() => props.onPlay(props.card.id)} disabled={!!block()}>{t("game.plan.play")}</StampButton>
-      </Show>
-      <Show when={scope === "region" || scope === "national_or_region"}>
-        <p class="label">{t("game.plan.where")}</p>
+    <div class="yf-where" role="group" aria-label={scope() === "two_regions" ? t("game.plan.where_two") : scope() === "national" ? pick(props.card.name) : t("game.plan.where")}>
+      <div class="yf-tray-head">
+        <p class="yf-tray-title t-3">{pick(props.card.name)}</p>
+        <Show when={canHold()}>
+          <button
+            type="button"
+            class="yf-linkbtn yf-keep"
+            aria-pressed={game.draft.holdOver === props.card.id}
+            onClick={() => game.setHold(game.draft.holdOver === props.card.id ? null : props.card.id)}
+          >
+            {game.draft.holdOver === props.card.id ? t("game.plan.held") : t("game.plan.hold")}
+          </button>
+        </Show>
+      </div>
+      <Show when={scope() === "region" || scope() === "national_or_region"}>
         <div class="yf-where-row">
-          <Show when={scope === "national_or_region"}>
+          <span class="label">{t("game.plan.where")}</span>
+          <Show when={scope() === "national_or_region"}>
             <button type="button" class="yf-region" aria-pressed={isOn(null)} disabled={!played() && !!block()} onClick={() => props.onPlay(props.card.id)}>
               {t("game.plan.all_wales")}
             </button>
@@ -239,51 +313,46 @@ function WherePicker(props: { card: Card; onPlay: (id: string, region?: RegionId
                 disabled={!played() && !!block()}
                 onClick={() => props.onPlay(props.card.id, r)}
                 onMouseEnter={() => ui.setRegionPick(props.card.id)}
+                aria-label={game.names.regionName(r)}
               >
-                {game.names.regionName(r)}
+                {t(`game.region_short.${r}`)}
               </button>
             )}
           </For>
         </div>
-        <Show when={scope === "region" && !played()}>
-          <Note id="region" when={true} class="yf-note-region">{t("game.onboard.region")}</Note>
-          <p class="small">{t("game.plan.choose_region")}</p>
+        <Show when={scope() === "region" && !played()}>
+          <Note id="region" when={true} class="yf-note-region" placement="left">{t("game.onboard.region")}</Note>
         </Show>
       </Show>
-      <Show when={scope === "two_regions"}>
-        <p class="label">{t("game.plan.where_two")}</p>
+      <Show when={scope() === "two_regions"}>
         <div class="yf-where-row">
+          <span class="label">{t("game.plan.where_two")}</span>
           <For each={regions()}>
             {(r) => (
-              <button type="button" class="yf-region" aria-pressed={two().includes(r)} onClick={() => toggleTwo(r)}>
-                {game.names.regionName(r)}
+              <button type="button" class="yf-region" aria-pressed={two().includes(r)} onClick={() => toggleTwo(r)} aria-label={game.names.regionName(r)}>
+                {t(`game.region_short.${r}`)}
               </button>
             )}
           </For>
         </div>
-        <Show when={!played()}>
-          <StampButton disabled={two().length !== 2 || !!block()} onClick={() => props.onPlay(props.card.id, undefined, two())}>
-            {t("game.plan.play")}
-          </StampButton>
-        </Show>
       </Show>
+      <div class="yf-tray-actions">
+        <Show when={!played()}>
+          <Show when={scope() === "national"}>
+            <StampButton onClick={() => props.onPlay(props.card.id)} disabled={!!block()}>{t("game.plan.play")}</StampButton>
+          </Show>
+          <Show when={scope() === "two_regions"}>
+            <StampButton disabled={two().length !== 2 || !!block()} onClick={() => props.onPlay(props.card.id, undefined, two())}>
+              {t("game.plan.play")}
+            </StampButton>
+          </Show>
+        </Show>
+        <Show when={played()}>
+          <TabButton onClick={() => { game.unplay(props.card.id); ui.setRegionPick(null); }}>{t("game.plan.unplay")}</TabButton>
+        </Show>
+      </div>
       <Show when={block() && !played()}>
         <p class="small yf-why">{t(block()!)}</p>
-      </Show>
-      <Show when={played()}>
-        <TabButton class="yf-hold" onClick={() => { game.unplay(props.card.id); ui2.setRegionPick(null); }}>{t("game.plan.unplay")}</TabButton>
-      </Show>
-      <Show when={canHold()}>
-        <TabButton
-          class="yf-hold"
-          aria-pressed={game.draft.holdOver === props.card.id}
-          onClick={() => game.setHold(game.draft.holdOver === props.card.id ? null : props.card.id)}
-        >
-          {game.draft.holdOver === props.card.id ? t("game.plan.held") : t("game.plan.hold")}
-        </TabButton>
-      </Show>
-      <Show when={props.card.upgraded_by}>
-        <p class="small yf-upgrade">{t("game.plan.upgraded_by", { lesson: pick(props.card.upgraded_by) })}</p>
       </Show>
     </div>
   );

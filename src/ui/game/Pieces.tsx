@@ -23,6 +23,14 @@ export function TrendSlip(): JSX.Element {
   });
   const others = () => s().activeTrends.filter((a) => a.curveball !== newest()?.id);
   const canPeek = () => s().step === "plan" && !s().peekedThisTerm && s().term < 5 && game.budget().left >= (game.model.game.peek_cost ?? 1);
+  const peekCurve = () => {
+    const p = s().peekedNext;
+    return p && p !== "none" ? game.names.curveball(p) ?? null : null;
+  };
+  const peekAnswers = () => {
+    const c = peekCurve();
+    return c ? s().hand.filter((id) => c.responses.includes(id)).map((id) => game.names.cardName(id)) : [];
+  };
   const peekLine = () => {
     const p = s().peekedNext;
     if (p == null) return null;
@@ -56,6 +64,10 @@ export function TrendSlip(): JSX.Element {
           </Show>
           <Show when={peekLine()}>
             <p class="yf-slip-peeked">{peekLine()}</p>
+            <Show when={peekCurve()}>
+              <p class="yf-slip-desc">{pick(peekCurve()!.where_note)}</p>
+              <p class="yf-slip-desc">{peekAnswers().length ? t("game.slip.peek_answers", { cards: game.names.list(peekAnswers()) }) : t("game.slip.peek_none_in_hand")}</p>
+            </Show>
           </Show>
           <Show when={canPeek()}>
             <button type="button" class="yf-slip-peek" title={t("game.slip.peek_note")} onClick={() => game.act({ type: "peek" })}>
@@ -160,7 +172,7 @@ export function TopBar(props: { ticking?: boolean }): JSX.Element {
       year={s().step === "ended" ? 2050 : s().step === "changed" || s().step === "election" ? s().year + 4 : s().year}
       yearNote={
         <>
-          <b>{s().caretaker ? t("game.bar.caretaker") : t("game.bar.term", { n: termNo() })}</b>
+          <b>{s().caretaker ? t("game.bar.caretaker") : t(s().step === "changed" || s().step === "election" ? "game.bar.term_done" : "game.bar.term", { n: termNo() })}</b>
           <span>{t("game.bar.generation")}</span>
         </>
       }
@@ -210,7 +222,7 @@ function GhostRow(props: { delta: Partial<Record<StrandId, { d: number; sharp: b
     return tn(v.d > 0 ? "game.plan.ghost_up" : "game.plan.ghost_down", n);
   };
   // knock-on moves under a fifth of a pip are left off: they are noise, not what the card does
-  const touched = () => STRAND_IDS.filter((id) => Math.abs(props.delta?.[id]?.d ?? 0) >= 0.2);
+  const touched = () => STRAND_IDS.filter((id) => Math.abs(props.delta?.[id]?.d ?? 0) >= 0.3);
   const heading = () => (props.card ? t("game.plan.ghost_row", { card: game.names.cardName(props.card) }) : t("game.plan.ghost_row_plan"));
   return (
     <Show when={props.delta && touched().length}>

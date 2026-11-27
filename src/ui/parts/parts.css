@@ -171,6 +171,19 @@
 .ticket.played .ticket-body > *:not(.ticket-stamp) { opacity: 0.5; }
 .ticket-action { position: absolute; right: 8px; top: 8px; }
 .ticket.stubonly { grid-template-columns: 18px var(--ticket-stub-w); min-height: 0; height: auto; width: max-content; }
+/* the hand's stub stack: one row, title and fare figures; the selected ticket opens in full */
+.ticket.compact { grid-template-columns: 12px 40px 1fr 22px; min-height: 0; height: var(--ticket-compact-h, 50px); }
+.ticket.compact .ticket-weave { background-size: 12px 12px; }
+.ticket.compact .ticket-stub { padding: 0; }
+.ticket-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 10px 0 12px; min-width: 0; }
+.ticket.compact .ticket-title { font-size: var(--size-title-3); line-height: 1.15; padding: 0; }
+.ticket.played.compact .ticket-row > .ticket-title { opacity: 0.55; }
+.ticket-figs { display: grid; justify-items: end; gap: 2px; flex: none; white-space: nowrap; }
+.ticket-figs b { font-family: var(--font-print); font-stretch: normal; font-weight: 700; font-size: 15px; line-height: 1; }
+.ticket-figs.blocked { background: var(--warn-paper); padding: 2px 6px; }
+.ticket-stamp-small { font-size: 11px; padding: 2px 6px 1px; flex: none; }
+.ticket.compact .ticket-edge span { display: none; }
+.pulls li.mixed { font-style: normal; }
 
 /* ---------- strand meters ---------- */
 .strandrow { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }

@@ -34,9 +34,9 @@ async function reach(page: Page, place: "rhondda" | "bethesda"): Promise<void> {
       if (i >= 0) {
         const slot = page.locator(".yf-hand .yf-ticket-slot").nth(i);
         await slot.locator(".yf-ticket-press").click();
-        const region = slot.locator(".yf-where .yf-region:not([disabled])");
+        const region = page.locator(".yf-tray .yf-where .yf-region:not([disabled])");
         if (await region.count()) await region.first().click();
-        else await slot.locator(".yf-where .btn-stamp").first().click();
+        else await page.locator(".yf-tray .yf-where .btn-stamp").first().click();
       }
       await page.locator(".yf-commit").click();
     } else if (s === "visit") {

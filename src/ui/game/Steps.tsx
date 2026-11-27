@@ -1,18 +1,20 @@
 // The rail's content for each of the seven steps of a term (game-design 2.2), plus the
 // caretaker term. Each panel has one stamp: the action that moves the term on.
 import { createEffect, createSignal, For, onCleanup, onMount, Show, type JSX } from "solid-js";
-import { pick, t, tn } from "../../i18n";
+import { lang, pick, t, tn } from "../../i18n";
 import { StampButton, TabButton, ThreadButton } from "../parts/Buttons";
 import { SevereNotice, WarnStrip, Snip } from "../parts/Notice";
 import { StrandName } from "./StrandName";
 import { cardIcon, Icon } from "../parts/Icon";
+import { iPlace, maePlace, soft, softYn, ynPlace } from "./cymraeg";
 import type { Slip, StrandId, TrustReason } from "../../engine/api";
 import { STRAND_IDS } from "../../model/schema";
 import { useGame } from "./context";
 import { BudgetRow } from "./Budget";
-import { Hand } from "./Hand";
+import { Hand, TicketTray } from "./Hand";
 import { Note } from "./Note";
 import { VoiceSheet } from "./Pieces";
+import { KnotMark, SharpKey } from "./SharpKey";
 
 const reduced = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -58,7 +60,7 @@ export function OpeningPanel(): JSX.Element {
           <Show when={!o()?.newTrend}>
             <p class="small">{t("game.opening.no_new_trend")}</p>
           </Show>
-          <p class="data">{t("game.opening.budget", { n: s().budget.available })}. {tn("game.opening.limit", s().cardLimit)}.</p>
+          <p class="data">{tn("game.opening.budget", s().budget.available)}. {tn("game.opening.limit", s().cardLimit)}.</p>
           <StampButton class="yf-go" onClick={() => game.act({ type: "open" })}>{t("game.opening.begin")}</StampButton>
         </div>
       </Show>
@@ -80,7 +82,7 @@ export function PledgePanel(): JSX.Element {
         <p class="story-small">{t("game.pledge.ask")}</p>
         <Show when={strand()}>
           <p class="yf-pledge-strand"><StrandName strand={strand()!} /></p>
-          <p class="small">{t("game.pledge.note", { strand: game.names.strandName(strand()!) })}</p>
+          <p class="small">{t("game.pledge.note", { strand: game.names.strandName(strand()!), strand_i: soft(game.names.strandName(strand()!)) })}</p>
         </Show>
         <div class="yf-actions">
           <StampButton class="yf-go" onClick={() => game.act({ type: "pledge", strand: strand() })}>
@@ -117,6 +119,7 @@ export function PlanPanel(): JSX.Element {
         <p class="yf-pledged small">{t("game.pledge.made", { strand: game.names.strandName(s().pledge!) })}</p>
       </Show>
       <Hand interactive />
+      <TicketTray />
       <div class="yf-plan-foot sheet">
         <BudgetRow />
         <div class="yf-plan-actions">
@@ -150,12 +153,12 @@ export function VisitOfferPanel(): JSX.Element {
   return (
     <div class="yf-panel">
       <div class="yf-step sheet yf-visit-offer">
-        <h2 class="t-1">{t("game.visit.asking", { place: place() })}</h2>
+        <h2 class="t-1">{t("game.visit.asking", { place: place(), mae_place: maePlace(place()) })}</h2>
         <Show when={by()}>
           <p class="story-small">{t("game.visit.why", { card: by() })}</p>
         </Show>
         <div class="yf-actions">
-          <StampButton class="yf-go" onClick={() => ui.setInPlace(true)}>{t("game.visit.go", { place: place() })}</StampButton>
+          <StampButton class="yf-go" onClick={() => ui.setInPlace(true)}>{t("game.visit.go", { place: place(), i_place: iPlace(place()) })}</StampButton>
           <TabButton onClick={() => game.act({ type: "visit", choice: null })}>{t("game.visit.stay")}</TabButton>
         </div>
         <p class="small">{t("game.visit.stay_note")}</p>
@@ -236,6 +239,14 @@ export function slipText(game: ReturnType<typeof useGame>["game"], sl: Slip): st
 }
 
 export function reasonText(game: ReturnType<typeof useGame>["game"], r: TrustReason): string {
+  // the engine's own copy for a reason wins when it has one
+  const eng = game.model.engine_text?.[`engine.trust.reason.${r.code}`];
+  if (eng) {
+    const region = r.detail ? game.names.regionName(r.detail as never) : "";
+    let s = pick(eng);
+    if (lang() === "cy") s = s.replace("yn {region}", ynPlace(region));
+    return s.replace(/\{region\}/g, region).replace(/\{detail\}/g, r.detail ?? "");
+  }
   let detail = r.detail ?? "";
   if (r.code === "pledge_kept" || r.code === "pledge_broken") detail = game.names.strandName(detail as StrandId);
   else if (r.code === "neglect") detail = game.names.regionName(detail as never);
@@ -264,10 +275,12 @@ export function ChangedPanel(): JSX.Element {
     onCleanup(() => { clearInterval(timer); window.removeEventListener("keydown", skip); ui.setTicked(7); });
   });
 
+  const sharpOf = (id: StrandId) => o().strands.find((c) => c.strand === id)?.sharp ?? true;
   const trustDir = () => (o().trust.after > o().trust.before + 0.5 ? "up" : o().trust.after < o().trust.before - 0.5 ? "down" : "same");
 
   return (
     <div class="yf-panel yf-panel-changed">
+      <div class="yf-scroll">
       <div class="yf-step sheet">
         <h2 class="t-2">{t("game.changed.title", { from: o().year, to: o().year + 4 })}</h2>
         <Show when={o().shock?.prepared}>
@@ -284,8 +297,11 @@ export function ChangedPanel(): JSX.Element {
         <Show when={o().slips.length} fallback={<li class="yf-slip-paper sheet"><p class="story-small">{t("game.changed.no_slips")}</p></li>}>
           <For each={o().slips}>
             {(sl, i) => (
-              <li class="yf-slip-paper sheet" classList={{ unexpected: sl.unexpected }} style={{ "--i": i() }}>
-                <Show when={sl.unexpected}>
+              <li class="yf-slip-paper sheet" classList={{ unexpected: sl.unexpected, shock: !!sl.shock }} style={{ "--i": i() }}>
+                <Show when={sl.shock}>
+                  <p class="yf-shocklabel label">{t("game.changed.shock_label", { name: game.names.shockName(sl.cause.id) })}</p>
+                </Show>
+                <Show when={sl.unexpected && !sl.shock}>
                   <p class="yf-unexpected label">{t("game.changed.unexpected")}</p>
                 </Show>
                 <h3 class="t-3 yf-slip-head">
@@ -293,6 +309,11 @@ export function ChangedPanel(): JSX.Element {
                   <span>{game.names.strandName(sl.strand)}</span>
                   <span class="yf-dir" aria-label={sl.delta >= 0 ? t("game.dir.up") : t("game.dir.down")}>
                     <svg viewBox="0 0 9 8" width="9" height="8" aria-hidden="true"><path fill="currentColor" d={sl.delta >= 0 ? "M0 8h9L4.5 0z" : "M0 0h9L4.5 8z"} /></svg>
+                    <Show when={sl.pipChange}><span class="data yf-pipchange">{tn("game.pips", Math.abs(sl.pipChange!))}</span></Show>
+                  </span>
+                  <span class="yf-sharpmark small" classList={{ fuzzy: !sharpOf(sl.strand) }}>
+                    <KnotMark sharp={sharpOf(sl.strand)} />
+                    {sharpOf(sl.strand) ? t("game.sharpkey.sharp") : t("game.sharpkey.fuzzy")}
                   </span>
                 </h3>
                 <p class="story-small">{slipText(game, sl)}</p>
@@ -309,11 +330,11 @@ export function ChangedPanel(): JSX.Element {
       </ol>
       <div class="yf-trustwhy sheet">
         <h3 class="t-3">{t(`game.trust.${trustDir()}`)}</h3>
-        <ul class="yf-list">
-          <For each={o().trust.top}>{(r) => <li>{reasonText(game, r)}</li>}</For>
-        </ul>
+        <TrustReasons reasons={o().trust.top} />
       </div>
+      <SharpKey />
       <VoiceSheet voice={o().voice} year={o().year + 4} compact />
+      </div>
       <div class="yf-panel-foot">
         <StampButton class="yf-go" onClick={() => game.act({ type: "continue" })}>{t("game.changed.continue")}</StampButton>
       </div>
@@ -335,10 +356,8 @@ export function ElectionPanel(): JSX.Element {
     <div class="yf-panel">
       <div class="yf-step sheet yf-election">
         <h2 class="t-2">{t("game.election.title", { year: nextYear() })}</h2>
-        <p class="story-small">{t("game.election.band", { band: t(`parts.trust.${tr().band}`) })}</p>
-        <ul class="yf-list">
-          <For each={tr().top}>{(r) => <li>{reasonText(game, r)}</li>}</For>
-        </ul>
+        <p class="story-small">{t("game.election.band", { band: t(`parts.trust.${tr().band}`), band_yn: softYn(t(`parts.trust.${tr().band}`)) })}</p>
+        <TrustReasons reasons={tr().top} />
         <Show when={!last()}>
           <Show when={tr().lostSeat} fallback={
             <p class="stampmark yf-limit-stamp" ref={stamp}>{tn("game.election.stamp", tr().cardLimit)}</p>
@@ -405,6 +424,11 @@ export function ArrivalStrip(): JSX.Element {
                   {a.regions?.length
                     ? t("game.opening.arrives", { card: game.names.cardName(a.card), where: game.names.regionsText(a.regions) })
                     : t("game.opening.arrives_wales", { card: game.names.cardName(a.card) })}
+                  <Show when={game.names.card(a.card)?.helps?.length}>
+                    <span class="yf-arrival-on small">
+                      {" "}{t("game.opening.lands_on", { strands: game.names.list((game.names.card(a.card)!.helps ?? []).map((x) => game.names.strandName(x))) })}
+                    </span>
+                  </Show>
                 </span>
               </li>
             )}
@@ -412,5 +436,23 @@ export function ArrivalStrip(): JSX.Element {
         </ul>
       </aside>
     </Show>
+  );
+}
+
+/** Trust's reasons, each marked for or against, so "Trust rose" never sits over only bad news unexplained. */
+export function TrustReasons(props: { reasons: TrustReason[] }): JSX.Element {
+  const { game } = useGame();
+  return (
+    <ul class="yf-reasons">
+      <For each={props.reasons}>
+        {(r) => (
+          <li classList={{ against: r.points < 0 }}>
+            <svg viewBox="0 0 9 8" width="9" height="8" aria-hidden="true"><path fill="currentColor" d={r.points >= 0 ? "M0 8h9L4.5 0z" : "M0 0h9L4.5 8z"} /></svg>
+            <span class="sr-only">{r.points >= 0 ? t("game.trust.for") : t("game.trust.against")}: </span>
+            <span>{reasonText(game, r)}</span>
+          </li>
+        )}
+      </For>
+    </ul>
   );
 }

@@ -68,7 +68,7 @@ export function BethesdaBoard(props: { data: PlaceData; api: BoardApi }): JSX.El
       tag: String(o.n),
       name: pick(o.name),
     })));
-    m.place.setTokens(props.api.threads());
+    m.place.setTokens([...props.api.earlier().keys(), ...props.api.threads()]);
     const off = m.on("placeItem", (id) => select(id));
     // Escape closes the open card wherever focus is on the board
     const esc = (e: KeyboardEvent) => { if (e.key === "Escape" && sel()) select(null); };
@@ -82,13 +82,13 @@ export function BethesdaBoard(props: { data: PlaceData; api: BoardApi }): JSX.El
     if (id) ui.map()?.place.focusItem(id);
   }
   const selOpt = () => options.find((o) => o.id === sel()) ?? null;
-  const tests = () => board.tests.length ? board.tests.map((x) => game.names.text(x.description)) : ["aros", "iaith", "pwysau"].map((k) => t(`place.bethesda.tests.${k}`));
+  const tests = () => board.tests.length ? board.tests.map((x) => `${game.names.text(x.name)}: ${game.names.text(x.description)}`) : ["aros", "iaith", "pwysau"].map((k) => t(`place.bethesda.tests.${k}`));
   const trends = () => offer().activeTrends.filter((c) => board.trend_penalties?.some((p) => p.curveball === c));
 
   return (
     <div class="pl-bethesda">
       <p class="story-small pl-dilemma">{t("place.bethesda.dilemma")}</p>
-      <p class="small pl-history">{t("place.bethesda.history")} <span class="pl-check">{t("place.bethesda.history_check")}</span></p>
+      <p class="small pl-history">{t("place.bethesda.history")}</p>
       <p class="pl-prompt print">{t("place.bethesda.prompt")}</p>
       <div class="pl-table-wrap">
         <table class="pl-ledger" aria-label={t("place.bethesda.prompt")}>
@@ -122,7 +122,7 @@ export function BethesdaBoard(props: { data: PlaceData; api: BoardApi }): JSX.El
       <Show when={trends().length}>
         <p class="warnstrip small"><span>{t("place.bethesda.trend_note", { trend: game.names.list(trends().map((c) => game.names.curveballName(c))) })}</span></p>
       </Show>
-      <details class="pl-tests-box">
+      <details class="pl-tests-box" open>
         <summary class="label">{t("place.common.tests")}</summary>
         <ul class="pl-tests-list small"><For each={tests()}>{(x) => <li>{x}</li>}</For></ul>
         <p class="small">{t("place.common.tests_note")}</p>

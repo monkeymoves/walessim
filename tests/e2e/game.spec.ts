@@ -48,9 +48,9 @@ async function plan(page: Page, want: "rhondda" | "bethesda" | null): Promise<vo
   for (const i of order) {
     if (played >= 2) break;
     const slot = hand.nth(i);
-    if (await slot.locator(".ticket-why").count()) continue;
+    if (await slot.locator(".ticket-why, .ticket-figs.blocked").count()) continue;
     await slot.locator(".yf-ticket-press").click();
-    const where = slot.locator(".yf-where");
+    const where = page.locator(".yf-tray .yf-where");
     const regions = where.locator(".yf-region:not([disabled])");
     const stamp = where.locator(".btn-stamp:not([disabled])");
     const before = await page.locator(".yf-ticket-slot.played").count();
@@ -204,4 +204,17 @@ test("the first term can be played by keyboard, and the game resumes after a rel
   await page.reload();
   await expect(page.locator(".yf")).toBeVisible({ timeout: 30_000 });
   await expect(page.locator(".yf")).toHaveAttribute("data-step", before ?? "");
+});
+
+test("the Cymraeg toggle on the title screen switches the language and carries into the game", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => { for (const k of Object.keys(localStorage)) if (k.startsWith("etifeddiaeth.v1.")) localStorage.removeItem(k); });
+  await page.reload();
+  const hook = page.locator(".title-hook");
+  const before = await hook.textContent();
+  await page.getByRole("button", { name: "Cymraeg" }).click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "cy");
+  await expect(hook).not.toHaveText(before ?? "");
+  await page.goto("/#/yfory");
+  await expect(page.locator(".yf")).toHaveAttribute("lang", "cy", { timeout: 30_000 });
 });

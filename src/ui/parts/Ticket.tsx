@@ -8,7 +8,7 @@ import { cardIcon, Icon, type IconName } from "./Icon";
 import { Snip } from "./Notice";
 import { weaveUrl } from "./strands";
 
-export type TicketScope = "national" | "region" | "two_regions" | "standing" | "lesson";
+export type TicketScope = "national" | "national_or_region" | "region" | "two_regions" | "standing" | "lesson";
 
 export interface TicketCard {
   id: string;
@@ -42,6 +42,15 @@ export interface TicketProps {
   lifted?: boolean;
   /** Stub only (tablet hand stack, in the post). */
   stub?: boolean;
+  /**
+   * The hand's stub stack (design-system 4.3, tablet): weave, icon, title and the fare figures on
+   * one row. The selected ticket opens to the full anatomy.
+   */
+  compact?: boolean;
+  /** Replaces the words after the cost figure (default "of {budget} pips"), e.g. "of 5 left". */
+  budgetLabel?: string;
+  /** Replaces the whole cost cell (standing tickets: "Gives 3 pips"). */
+  fare?: JSX.Element;
   /** Shown at the top right of the body when selected ("Play this card" stamp). */
   action?: JSX.Element;
   onSelect?: () => void;
@@ -63,14 +72,15 @@ export function ticketScope(card: TicketCard, override?: TicketScope): TicketSco
     case "region": return "region";
     case "two_regions": return "two_regions";
     case "standing": return "standing";
-    case "national":
-    case "national_or_region": return "national";
+    case "national": return "national";
+    case "national_or_region": return "national_or_region";
     default: return "lesson";
   }
 }
 
 const STOCK: Record<TicketScope, string> = {
   national: "var(--ticket-buff)",
+  national_or_region: "var(--ticket-buff)",
   region: "var(--ticket-green)",
   two_regions: "var(--ticket-pink)",
   standing: "var(--ticket-blue)",
@@ -80,8 +90,10 @@ const STOCK: Record<TicketScope, string> = {
 export function Ticket(props: TicketProps): JSX.Element {
   const scope = () => ticketScope(props.card, props.scope);
   const helps = () => props.card.helps ?? [];
-  const frays = () => props.card.frays ?? [];
-  const serial = () => `No. ${props.serial ?? serialOf(props.card.id)}`;
+  /** A strand both helped and frayed is printed once, as "mixed", never as help and fray of itself. */
+  const mixed = (s: StrandId) => (props.card.frays ?? []).includes(s);
+  const frays = () => (props.card.frays ?? []).filter((s) => !helps().includes(s));
+  const serial = () => `${t("parts.ticket.no")} ${props.serial ?? serialOf(props.card.id)}`;
   const budget = () => props.budget ?? 8;
   const payout = () =>
     props.card.delay <= 0 ? t("parts.ticket.paysNow") : tn("parts.ticket.terms", props.card.delay);
@@ -89,7 +101,7 @@ export function Ticket(props: TicketProps): JSX.Element {
     [
       pick(props.card.name),
       t(`parts.scope.${scope()}`),
-      t("parts.ticket.costAria", { n: props.card.cost, of: budget() }),
+      props.fare ? "" : t("parts.ticket.costAria", { n: props.card.cost, of: budget() }),
       props.card.delay <= 0 ? t("parts.ticket.paysNowAria") : t("parts.ticket.paysAria", { when: payout() }),
       props.played ? t("parts.ticket.playedAria", { year: props.played }) : "",
       props.blocked ? props.blocked.reason : "",
@@ -103,7 +115,7 @@ export function Ticket(props: TicketProps): JSX.Element {
     <article
       id={props.id}
       class={`ticket${props.class ? " " + props.class : ""}`}
-      classList={{ selected: !!props.selected, lifted: !!props.lifted, played: !!props.played, stubonly: !!props.stub, pressable: !!props.onSelect }}
+      classList={{ selected: !!props.selected, lifted: !!props.lifted, played: !!props.played, stubonly: !!props.stub, compact: !!props.compact, pressable: !!props.onSelect }}
       style={{ "--stock": STOCK[scope()], "--weave": weaveUrl(helps()[0], helps()[1]) }}
       tabIndex={props.onSelect ? (props.tabIndex ?? 0) : props.tabIndex}
       role={props.onSelect ? "button" : undefined}
@@ -119,18 +131,40 @@ export function Ticket(props: TicketProps): JSX.Element {
       </Show>
       <div class="ticket-weave" aria-hidden="true" />
       <div class="ticket-stub">
-        <Icon name={props.icon ?? cardIcon(props.card)} size={38} />
-        <span class="serial">{serial()}</span>
+        <Icon name={props.icon ?? cardIcon(props.card)} size={props.compact ? 24 : 38} />
+        <Show when={!props.compact}><span class="serial">{serial()}</span></Show>
       </div>
-      <Show when={!props.stub}>
+      <Show when={props.compact && !props.stub}>
+        <div class="ticket-row">
+          <h3 class="ticket-title" lang={undefined}>{pick(props.card.name)}</h3>
+          <Show when={props.played} fallback={
+            <span class="ticket-figs" classList={{ blocked: !!props.blocked }}>
+              <Show when={!props.fare} fallback={props.fare}>
+                <span><span class="furniture">{t("parts.ticket.cost")}</span> <b>{props.card.cost}</b></span>
+              </Show>
+              <span>
+                <Show when={props.card.delay > 0} fallback={<span class="furniture">{t("parts.ticket.paysOutNow")}</span>}>
+                  <span class="furniture">{t("parts.ticket.paysOutIn")}</span> <b>{props.card.delay}</b>
+                </Show>
+              </span>
+            </span>
+          }>
+            <span class="stampmark ticket-stamp-small">{t("parts.ticket.played", { year: props.played! })}</span>
+          </Show>
+        </div>
+        <div class="ticket-edge furniture" aria-hidden="true">
+          <span>{t(`parts.scope.${scope()}`)}</span>
+        </div>
+      </Show>
+      <Show when={!props.stub && !props.compact}>
         <div class="ticket-body">
           <Pair text={props.card.name} as="h3" class="ticket-title" />
           <ul class="pulls">
             <For each={helps()}>
               {(s) => (
-                <li>
+                <li classList={{ mixed: mixed(s) }}>
                   <Snip strand={s} />
-                  {t(`parts.strand.${s}`)}
+                  {mixed(s) ? t("parts.ticket.mixed", { strand: t(`parts.strand.${s}`) }) : t(`parts.strand.${s}`)}
                 </li>
               )}
             </For>
@@ -150,11 +184,13 @@ export function Ticket(props: TicketProps): JSX.Element {
             </p>
           </Show>
           <div class="fare">
-            <div classList={{ blocked: props.blocked?.on === "cost" }}>
-              <span class="furniture">{t("parts.ticket.cost")}</span>
-              <b>{props.card.cost}</b>
-              <small>{t("parts.ticket.ofPips", { n: budget() })}</small>
-            </div>
+            <Show when={!props.fare} fallback={<div>{props.fare}</div>}>
+              <div classList={{ blocked: props.blocked?.on === "cost" }}>
+                <span class="furniture">{t("parts.ticket.cost")}</span>
+                <b>{props.card.cost}</b>
+                <small>{props.budgetLabel ?? t("parts.ticket.ofPips", { n: budget() })}</small>
+              </div>
+            </Show>
             <div>
               <Show
                 when={props.card.delay > 0}

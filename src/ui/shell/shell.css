@@ -52,7 +52,7 @@
   padding: 22px 40px 26px;
   animation: settle var(--dur-fold) var(--ease-paper) 160ms both;
 }
-.title-lang { display: flex; justify-content: flex-end; margin-right: -24px; }
+.title-lang { position: relative; z-index: 2; display: flex; justify-content: flex-end; margin-right: -24px; }
 .title-name { padding-bottom: 8px; margin-top: 10px; }
 .title-sub { display: flex; flex-wrap: wrap; gap: 4px 20px; padding-bottom: 16px; border-bottom: 3px solid var(--ink); font-family: var(--font-print); font-stretch: normal; font-style: italic; font-size: 19px; line-height: 1.3; }
 .title-hook { font-size: 21px; line-height: 1.45; margin: 20px 0 24px; max-width: 34ch; }

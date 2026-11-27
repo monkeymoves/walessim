@@ -97,7 +97,7 @@
 .pl-grade-stamp { justify-self: start; font-size: 22px; padding: 8px 14px 6px; animation: yf-stamp var(--dur-stamp) var(--ease-press) both; }
 .pl-tests { display: grid; gap: 8px; }
 .pl-tests li { display: grid; grid-template-columns: 14px 1fr; column-gap: 10px; }
-.pl-tests li .small { grid-column: 2; }
+.pl-tests li .small, .pl-tests li .story-small, .pl-tests li .strong { grid-column: 2; }
 .pl-test-mark { width: 12px; height: 12px; margin-top: 3px; box-shadow: inset 0 0 0 1.5px var(--ink); }
 .pl-test-mark.pass { background: var(--ink); }
 
@@ -129,3 +129,9 @@
   .pl-foot > .small { grid-column: 1 / -1; }
   .pl-spools .label { display: none; }
 }
+
+/* the grade sits in the rail, under the board, so the map and the threads stay in view */
+.pl-visit .pl-grade { position: static; transform: none; width: auto; flex: none; padding: 12px 14px 14px; gap: 8px; max-height: 60%; overflow-y: auto; }
+.pl-visit .pl-grade .pl-grade-stamp { font-size: 18px; }
+.pl-tag.earlier { background: var(--stitch-tint); color: var(--stitch-deep); outline: 1.5px dashed var(--stitch-deep); outline-offset: -3px; }
+.pl-earlier { color: var(--stitch-deep); white-space: nowrap; font-stretch: var(--wdth-ticket); }

@@ -42,7 +42,7 @@ export function LedgerDrawer(): JSX.Element {
                 <div class="yf-standing">
                   <Ticket
                     card={{ id: st.id, name: st.name, cost: 0, delay: 0, scope: "standing", tags: ["borrow"] }}
-                    serial={game.names.serial(st.id)}
+                    fare={<span class="small strong">{t("game.ledger.gives", { n: st.budget })}</span>}
                     budget={game.budget().total}
                     selected={on()}
                     class="yf-ticket yf-ticket-standing"

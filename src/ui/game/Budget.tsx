@@ -21,6 +21,8 @@ export function BudgetRow(): JSX.Element {
     add("game.plan.budget_carried", v.carried);
     add("game.plan.budget_upkeep", v.upkeep);
     add("game.plan.budget_peek", v.peek);
+    if (game.draft.standing) add("game.plan.budget_borrowed", game.names.standingTicket(game.draft.standing)?.budget ?? 0);
+    add("game.plan.budget_skipped", s().upkeepDue.filter((u) => game.draft.skipUpkeep.includes(u.id)).reduce((a, u) => a + u.pips, 0));
     return out;
   };
   return (
@@ -38,7 +40,7 @@ export function BudgetRow(): JSX.Element {
           {b().left > 0 ? tn("game.plan.contingency", b().left) : t("game.plan.contingency_none")}
         </span>
         <button type="button" class="yf-why-link small" aria-expanded={why()} onClick={() => setWhy(!why())}>
-          {t("game.plan.budget_why", { n: s().budget.available })}
+          {t("game.plan.budget_why", { n: b().total })}
         </button>
       </div>
       <Show when={why()}>

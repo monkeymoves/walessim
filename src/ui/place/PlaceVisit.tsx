@@ -3,7 +3,6 @@
 // The grade is never previewed as a "right answer": the tests are named, not scored, until the
 // choice is made.
 import { createResource, createSignal, For, onCleanup, onMount, Show, type JSX } from "solid-js";
-import { Portal } from "solid-js/web";
 import { Pair, t } from "../../i18n";
 import { loadPlace, type PlaceData } from "../../map";
 import { type VisitChoice, type VisitOutcome } from "../../engine/api";
@@ -22,6 +21,8 @@ export function placeData(id: "rhondda" | "bethesda"): Promise<PlaceData> {
 
 export interface BoardApi {
   threads: () => string[];
+  /** Items stitched on earlier visits to this place, with the year: they stay stitched. */
+  earlier: () => Map<string, number>;
   /** True once the choice is confirmed: floating cards close. */
   closed: () => boolean;
   max: number;
@@ -40,6 +41,15 @@ export function PlaceVisit(): JSX.Element {
   /** Set when the grade is shown, so the board's floating cards close. */
   const [closed, setClosed] = createSignal(false);
   const max = offer().threads;
+  const earlier = () => {
+    const m = new Map<string, number>();
+    for (const tid of offer().stitched ?? []) m.set(tid, 0);
+    for (const h of game.state()?.history ?? []) {
+      if (h.visit && h.visit.place === id && !h.visit.stayed) for (const tid of h.visit.threads) m.set(tid, h.year);
+    }
+    return m;
+  };
+  const tokens = (cur: string[]) => [...new Set([...earlier().keys(), ...cur])];
 
   onMount(async () => {
     const m = ui.map();
@@ -62,7 +72,7 @@ export function PlaceVisit(): JSX.Element {
     if (result()) return;
     const next = cur.includes(tid) ? cur.filter((x) => x !== tid) : cur.length < max ? [...cur, tid] : cur;
     setThreads(next);
-    ui.map()?.place.setTokens(next);
+    ui.map()?.place.setTokens(tokens(next));
     ui.setAnnounce(t("place.common.threads_placed", { placed: next.length, total: max }));
   };
 
@@ -86,7 +96,7 @@ export function PlaceVisit(): JSX.Element {
     game.act({ type: "visit", choice: c });
   }
 
-  const api: BoardApi = { threads, max, toggle, closed };
+  const api: BoardApi = { threads, earlier, max, toggle, closed };
 
   return (
     <div class="pl-visit">
@@ -114,9 +124,7 @@ export function PlaceVisit(): JSX.Element {
         </div>
       </Show>
       <Show when={result()}>
-        <Portal mount={document.querySelector(".yf-stage") ?? document.body}>
-          <GradeSheet result={result()!} onDone={() => finish(choice())} busy={busy()} />
-        </Portal>
+        <GradeSheet result={result()!} onDone={() => finish(choice())} busy={busy()} />
       </Show>
     </div>
   );
@@ -140,17 +148,24 @@ export function Spools(props: { placed: number; max: number }): JSX.Element {
   );
 }
 
+/** A share of runs in words, never as a figure. */
+export function shareWords(share: number): string {
+  if (share >= 0.9) return t("place.common.share_all");
+  if (share >= 0.6) return t("place.common.share_most");
+  if (share >= 0.4) return t("place.common.share_half");
+  if (share > 0.1) return t("place.common.share_few");
+  return t("place.common.share_none");
+}
+
 function GradeSheet(props: { result: VisitOutcome; onDone: () => void; busy: boolean }): JSX.Element {
   const { game } = useGame();
   const board = game.names.place(props.result.place);
-  const testName = (id: string) => {
-    const tt = board?.tests.find((x) => x.id === id);
-    if (tt) return game.names.text(tt.name);
-    const k = `place.${props.result.place}.tests.${id}`;
-    return t(k);
-  };
+  const test = (id: string) => board?.tests.find((x) => x.id === id);
+  const testName = (id: string) => (test(id) ? game.names.text(test(id)!.name) : t(`place.${props.result.place}.tests.${id}`));
+  /** The engine's own reason for a test, in the player's terms, when it gives one. */
+  const reasonOf = (x: VisitOutcome["tests"][number]): string | null => (x.explanation ? game.names.text(x.explanation) : null);
   return (
-    <aside class="pl-grade sheet-held" role="dialog" aria-labelledby="pl-grade-title">
+    <aside class="pl-grade sheet" role="region" aria-labelledby="pl-grade-title">
       <h2 id="pl-grade-title" class="t-2">{t("place.common.result", { place: game.names.placeName(props.result.place), grade: "" })}</h2>
       <p class="stampmark pl-grade-stamp">{t(`game.grade.${props.result.grade}`)}</p>
       <ul class="pl-tests">
@@ -158,13 +173,24 @@ function GradeSheet(props: { result: VisitOutcome; onDone: () => void; busy: boo
           {(x) => (
             <li>
               <span class="pl-test-mark" classList={{ pass: x.pass }} aria-hidden="true" />
-              <span class="strong">{testName(x.id)}</span>
-              <span class="small">{x.pass ? t("place.common.held") : t("place.common.failed")}. {t("place.common.held_share", { pct: Math.round(x.share * 10) })}</span>
+              <Show when={reasonOf(x)} fallback={
+                <>
+                  <span class="strong">{t(x.pass ? "place.common.test_held" : "place.common.test_failed", { test: testName(x.id), share: shareWords(x.share) })}</span>
+                  <Show when={!x.pass && test(x.id)}>
+                    <span class="small">{t("place.common.needed", { what: game.names.text(test(x.id)!.description) })}</span>
+                  </Show>
+                </>
+              }>
+                <span class="story-small">{reasonOf(x)}</span>
+                <span class="small">{shareWords(x.share)}</span>
+              </Show>
             </li>
           )}
         </For>
       </ul>
-      <p class="small">{t("place.common.tests_note")}</p>
+      <Show when={props.result.notes?.length}>
+        <ul class="pl-notes small"><For each={props.result.notes!}>{(n) => <li>{game.names.text(n)}</li>}</For></ul>
+      </Show>
       <StampButton class="yf-go" disabled={props.busy} onClick={props.onDone}>{t("place.common.continue")}</StampButton>
     </aside>
   );

@@ -3,7 +3,7 @@
 // Honest sources: BGS landslide records and OpenStreetMap; the official register is not open.
 import { createMemo, createSignal, For, onCleanup, onMount, Show, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
-import { hasKey, pick, t } from "../../i18n";
+import { formatNum, hasKey, pick, t, tn } from "../../i18n";
 import { analyseBelow, placeItems, type BelowResult, type PlaceData } from "../../engine/place-analysis";
 import { CloseButton, StitchButton, TabButton, ThreadButton } from "../parts/Buttons";
 import { SourceTag } from "../parts/SourceTag";
@@ -56,7 +56,7 @@ export function RhonddaBoard(props: { data: PlaceData; api: BoardApi }): JSX.Ele
     const m = ui.map();
     if (!m) return;
     m.place.setSelectable(rows.map((r) => ({ id: r.id, x: r.x, y: r.y, rings: items.find((i) => i.id === r.id)?.rings, tag: String(r.n), name: tipName(r), kind: "tip" })));
-    m.place.setTokens(props.api.threads());
+    m.place.setTokens([...props.api.earlier().keys(), ...props.api.threads()]);
     const off = m.on("placeItem", (id) => select(id));
     // Escape closes the open card wherever focus is on the board
     const esc = (e: KeyboardEvent) => { if (e.key === "Escape" && sel()) select(null); };
@@ -79,14 +79,14 @@ export function RhonddaBoard(props: { data: PlaceData; api: BoardApi }): JSX.Ele
 
   const selRow = () => rows.find((r) => r.id === sel()) ?? null;
   const stitched = (id: string) => props.api.threads().includes(id);
-  const tests = () => board.tests.length ? board.tests.map((x) => game.names.text(x.description)) : ["exposure", "fairness", "lifelines"].map((k) => t(`place.rhondda.tests.${k}`));
+  const tests = () => board.tests.length ? board.tests.map((x) => `${game.names.text(x.name)}: ${game.names.text(x.description)}`) : ["exposure", "fairness", "lifelines"].map((k) => t(`place.rhondda.tests.${k}`));
   const wet = () => offer().activeTrends.includes("wet-decade");
 
   return (
     <div class="pl-rhondda">
-      <p class="pl-prompt print">{t("place.rhondda.prompt", { n: props.api.max })}</p>
+      <p class="pl-prompt print">{tn("place.rhondda.prompt", props.api.max)}</p>
       <div class="pl-table-wrap">
-        <table class="pl-ledger" aria-label={t("place.rhondda.prompt", { n: props.api.max })}>
+        <table class="pl-ledger" aria-label={tn("place.rhondda.prompt", props.api.max)}>
           <thead>
             <tr>
               <th scope="col">{t("place.rhondda.table_tip")}</th>
@@ -108,8 +108,11 @@ export function RhonddaBoard(props: { data: PlaceData; api: BoardApi }): JSX.Ele
                   <tr classList={{ sel: sel() === r.id, stitched: stitched(r.id) }}>
                     <th scope="row">
                       <button type="button" class="pl-rowbtn" aria-pressed={sel() === r.id} onClick={() => select(sel() === r.id ? null : r.id)}>
-                        <span class="pl-tag data" classList={{ stitched: stitched(r.id) }}>{r.n}</span>
+                        <span class="pl-tag data" classList={{ stitched: stitched(r.id), earlier: props.api.earlier().has(r.id) }}>{r.n}</span>
                         <span class="pl-name">{tipName(r)}</span>
+                        <Show when={props.api.earlier().has(r.id)}>
+                          <span class="pl-earlier small">{props.api.earlier().get(r.id) ? t("place.common.earlier", { year: props.api.earlier().get(r.id)! }) : t("place.common.earlier_plain")}</span>
+                        </Show>
                       </button>
                     </th>
                     <td class="num data">
@@ -133,9 +136,9 @@ export function RhonddaBoard(props: { data: PlaceData; api: BoardApi }): JSX.Ele
         </table>
       </div>
       <Show when={wet()}>
-        <WarnStrip class="pl-wet">{t("place.rhondda.risk_raised")}</WarnStrip>
+        <WarnStrip class="pl-wet">{t("place.rhondda.risk_raised", { trend: game.names.curveballName("wet-decade") })}</WarnStrip>
       </Show>
-      <details class="pl-tests-box">
+      <details class="pl-tests-box" open>
         <summary class="label">{t("place.common.tests")}</summary>
         <ul class="pl-tests-list small">
           <For each={tests()}>{(x) => <li>{x}</li>}</For>
@@ -143,7 +146,7 @@ export function RhonddaBoard(props: { data: PlaceData; api: BoardApi }): JSX.Ele
         <p class="small">{t("place.common.tests_note")}</p>
       </details>
       <ThreadButton onClick={() => setRule(!rule())} aria-expanded={rule()}>{t("place.common.how")}</ThreadButton>
-      <p class="story-small pl-history">{t("place.rhondda.history")} <span class="pl-check small">{t("place.rhondda.history_check")}</span></p>
+      <p class="story-small pl-history">{t("place.rhondda.history")}</p>
 
       <Portal mount={document.querySelector(".yf-stage") ?? document.body}>
         <Show when={selRow() && !props.api.closed()}>
@@ -163,6 +166,7 @@ function BelowCard(props: {
   row: TipRow; result: BelowResult | null; stitched: boolean; full: boolean; name: string; distance: number; wet: boolean;
   onStitch: () => void; onClose: () => void; onRule: () => void;
 }): JSX.Element {
+  const { game } = useGame();
   const b = () => props.result;
   const none = () => t("place.rhondda.none");
   const otherBelow = () => {
@@ -184,7 +188,7 @@ function BelowCard(props: {
         {t(`place.rhondda.risk.${props.row.risk}`)}
       </p>
       <Show when={props.wet && props.row.risk > props.row.baseRisk}>
-        <WarnStrip>{t("place.rhondda.risk_raised")}</WarnStrip>
+        <WarnStrip>{t("place.rhondda.risk_raised", { trend: game.names.curveballName("wet-decade") })}</WarnStrip>
       </Show>
       <dl class="pl-facts">
         <dt>{t("place.rhondda.below_homes")}</dt>
@@ -211,7 +215,7 @@ function BelowCard(props: {
         <dd>{t(`place.rhondda.flood.${b()?.floodZone ?? 0}`)}</dd>
         <dt>{t("place.rhondda.below_wimd")}</dt>
         <dd>
-          {b()?.wimdLsoa ? t("place.rhondda.wimd", { name: pick({ en: b()!.wimdLsoa!.en, cy: b()!.wimdLsoa!.cy ?? b()!.wimdLsoa!.en }), rank: b()!.wimdRank ?? "" }) : none()}
+          {b()?.wimdLsoa ? t("place.rhondda.wimd", { name: pick({ en: b()!.wimdLsoa!.en, cy: b()!.wimdLsoa!.cy ?? b()!.wimdLsoa!.en }), rank: b()!.wimdRank ?? "", edition: game.names.place("rhondda")?.wimd?.edition ?? "WIMD 2019", areas: formatNum(game.names.place("rhondda")?.wimd?.areas ?? 1909) }) : none()}
         </dd>
       </dl>
       <p class="pl-below-foot">

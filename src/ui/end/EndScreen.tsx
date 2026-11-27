@@ -55,6 +55,7 @@ export function EndScreen(): JSX.Element {
       t("game.end.share_text", { band: pick(r.result.band.name) }),
       `${t("game.end.lived")} ${r.squares.lived.map((x) => EMOJI[x]).join("")}`,
       `${t("game.end.left")} ${r.squares.left.map((x) => EMOJI[x]).join("")}`,
+      shareLink(game.lastSave() ?? ""),
     ].join("\n");
   };
 
@@ -202,7 +203,7 @@ function Band(props: { which: "lived" | "left"; score: EndResult["lived"]; lower
       <figcaption>
         <span class="t-2">{t(`game.end.${props.which}`)}</span>
         <span class="small">{t(`game.end.${props.which}_note`)}</span>
-        <span class="label">{changeWords(fin(props.score.value))}. {pick(props.score.band.name)}</span>
+        <span class="label">{changeWords(fin(props.score.value))}</span>
       </figcaption>
       <div class="end-weave" role="img" aria-label={`${t(`game.end.${props.which}`)}: ${changeWords(fin(props.score.value))}, ${pick(props.score.band.name)}`}>
         <div class="end-woven" style={{ width: pct(level()) }}>
@@ -352,9 +353,9 @@ function Prompts(props: { result: EndResult }): JSX.Element {
     out.push(t("game.end.prompt.weakest", { strand: game.names.strandName(worstStrand(r)) }));
     if (r.ledger.lostTerms.length) out.push(t("game.end.prompt.lost_seat", { year: termYear(r.ledger.lostTerms[0]!) }));
     if (r.ledger.debts.length) out.push(t("game.end.prompt.debts"));
-    if (!r.ledger.grades.some((g) => g.grade === "well")) {
-      const place = r.ledger.grades[0]?.place ?? "rhondda";
-      out.push(t("game.end.prompt.no_well", { place: game.names.placeName(place) }));
+    if (!r.ledger.grades.length) out.push(t("game.end.prompt.no_visit"));
+    else if (!r.ledger.grades.some((g) => g.grade === "well")) {
+      out.push(t("game.end.prompt.no_well", { place: game.names.placeName(r.ledger.grades[0]!.place) }));
     }
     const absorbed = s().history.some((h) => h.shock && h.shock.response === 0 && !h.shock.prepared);
     if (absorbed) out.push(t("game.end.prompt.contingency"));

@@ -1,7 +1,7 @@
 // Yfory: the game screen. One board whose states are the seven steps of a term, per Papur v2:
 // strands and Trust across the top, the map in its well, the hand and the step on the rail,
 // the timeline (and post rail) beneath.
-import { createSignal, ErrorBoundary, For, Match, onCleanup, onMount, Show, Switch, type JSX } from "solid-js";
+import { createEffect, createSignal, ErrorBoundary, on, For, Match, onCleanup, onMount, Show, Switch, type JSX } from "solid-js";
 import { formatNum, lang, Pair, t } from "../../i18n";
 import { geo, model, modelError, modelStatus, startLoading } from "../shell/model";
 import { CloseButton, SourceTag, StampButton } from "../parts";
@@ -70,6 +70,8 @@ function BoardBody(): JSX.Element {
   const step = () => s().step;
   const ended = () => step() === "ended";
   const [confirmNew, setConfirmNew] = createSignal(false);
+  // a status line never outlives its step (screen readers would hear it for the rest of the game)
+  createEffect(on(step, () => ui.setAnnounce(""), { defer: true }));
 
   // Escape closes the outermost floating piece
   const onKey = (e: KeyboardEvent) => {

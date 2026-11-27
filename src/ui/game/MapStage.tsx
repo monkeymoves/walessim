@@ -77,6 +77,13 @@ export function MapStage(props: { children?: JSX.Element }): JSX.Element {
 
   // language
   createEffect(() => ui.map()?.setLang(lang()));
+  // the trend slip sits top left over the sea: keep Wales clear of it on the national view
+  createEffect(() => {
+    const m = ui.map();
+    if (!m) return;
+    const ended = game.state()?.step === "ended";
+    m.setPadding({ left: ui.inPlace() || ended ? 16 : Math.min(300, Math.round(host.clientWidth * 0.3)) });
+  });
 
   // the four regions lit while a card waits for one
   createEffect(() => {
