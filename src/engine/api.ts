@@ -81,7 +81,7 @@
  * - v1.1: `preview` compares each card's marginal effect over the same horizon as the whole plan
  *   (fixes inflated negative deltas). A return-from-caretaker term always plays at the Thin limit (2).
  *   In the first game the Rhondda (term 2) and Bethesda (term 4) are offered even if another trigger
- *   card was played. `state.runsNote` is set if a slow device makes the engine drop to fewer runs.
+ *   card was played. The run count is fixed for the game (never by the clock), so a save replays exactly.
  *   Schema additions (all optional): `Rule.change_lag`, `Condition.half_without_card`, `Card.confidence`,
  *   `PlaceBoard.thresholds`, `PlaceBoard.risk_rule`, `GameTuning.curveballs.slow_scale` and `shock_scale`.
  * - v1.0 (2026-11-26): first published contract.
@@ -203,7 +203,7 @@ export interface NewGameOptions {
   paramOverrides?: Record<string, number>;
   /** Also play the caretaker bot on the same seed for the end screen's ghost mark (default true). */
   caretakerGhost?: boolean;
-  /** Time budget for `resolve` in ms (default 250). If a test run is slower, later terms use fewer runs and `state.runsNote` says so. */
+  /** Kept for old saves. The engine no longer times itself: runs never change mid-game, so a replay is exact. */
   timeBudgetMs?: number;
 }
 
@@ -250,6 +250,12 @@ export interface Plays {
   skipUpkeep?: string[];
   /** One unplayed card to hold over to next term's hand. */
   holdOver?: string | null;
+  /**
+   * Coins put in the emergency fund (plain-wales 3.3; cold playtest 6, item 2). Omitted: every unspent
+   * coin is held, as before. Given: at most this many are held, and the rest are lost now, so the fund
+   * a crisis sees and what carries over are exactly what the player chose.
+   */
+  save?: number;
 }
 
 /** A place visit decision: threads placed on board items, or null to stay (adequate). */
@@ -363,8 +369,13 @@ export interface ShockView {
   prepared: boolean;
   /** Cards that made you ready. */
   preparedBy: string[];
-  /** Contingency available to respond with. */
+  /** Contingency available to respond with: the coins the player saved (`Plays.save`). */
   contingency: number;
+  /**
+   * Coins this crisis takes off next turn's budget, whatever is spent now (cold playtest 6, item 4:
+   * "Crisis last turn -2" read as a second charge for the coins already spent).
+   */
+  budgetCut?: number;
   /** Hit multiplier for each response, after preparation and fragile infrastructure. */
   hit: { absorb: number; respond1: number; respond2: number };
 }
@@ -382,6 +393,11 @@ export interface VisitOffer {
   stitched?: string[];
   /** Trends active that change the Bethesda sums. */
   activeTrends: string[];
+  /**
+   * For a visit no card asked for (the first game's curated visits): the active slow change that bears
+   * on this place's board, or null (cold playtest 6, item 8: Bethesda blamed "the wet decade").
+   */
+  trend?: string | null;
   /** The conditions on this board this term, in words (same as `placeBoard(...).termConditions`). */
   termConditions: Text[];
   /**
@@ -700,6 +716,8 @@ export interface TermOutcome {
   plays: Plays;
   spent: number;
   contingencyHeld: number;
+  /** Coins left unspent and not saved: lost at the end of the plan step (`Plays.save`). */
+  coinsNotSaved?: number;
   arrivals: PostItem[];
   newTrend: string | null;
   shock: ShockOutcome | null;
@@ -836,6 +854,8 @@ export interface Mattered {
   year: number;
   /** Where a card was played (null for national). */
   regions: RegionId[] | null;
+  /** For a card: the first year it worked (its first effect), which can be later than `year`. */
+  fromYear?: number;
   /** Size in score points out of 100 (signed: negative hurt). Fixed sizes for promises, visits, lost turns and unused coins. */
   size: number;
   /** The goal it moved most (or the promised goal), or null. */
@@ -1064,3 +1084,5 @@ export function unusedCoins(model: CompiledModel, state: GameState): { coins: nu
 
 /** Raised for illegal actions or unreadable saves. `code` is stable for i18n. */
 export { EngineError } from "./errors";
+export { promiseHelpersOf, promiseHelpable, type PromiseHelpers } from "./promise";
+export { trustDirection, topReasons } from "./trust";

@@ -75,7 +75,7 @@ test("switching to Cymraeg changes the interface and the place names", async ({ 
   await expect(page.getByTestId("place-panel").getByRole("heading", { level: 2 }).locator("span").first()).toHaveText("Cardiff");
   await page.getByRole("button", { name: "Cymraeg" }).click();
   await expect(page.locator("html")).toHaveAttribute("lang", "cy");
-  await expect(page.getByRole("button", { name: "Lliwio’r map yn ôl..." })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^Lliwio['’]r map yn ôl/ })).toBeVisible();
   await expect(page.getByTestId("place-panel").getByRole("heading", { level: 2 }).locator("span").first()).toHaveText("Caerdydd");
   await expect(page.getByTestId("lens-name")).toHaveText("Siaradwyr Cymraeg 3 oed a throsodd");
   await expect(page.locator("button.kbd-la", { hasText: /^Abertawe/ })).toHaveCount(1);

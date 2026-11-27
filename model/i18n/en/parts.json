@@ -82,5 +82,7 @@
  "ticket.ofPips.other": "of {n} coins",
  "ticket.costAria.one": "Costs {n} of {of} coin",
  "ticket.costAria.other": "Costs {n} of {of} coins",
- "trust.benches": "The stand-in plays"
+ "trust.benches": "The stand-in plays",
+ "publisher.ons": "ONS",
+ "publisher.desnz": "DESNZ (UK energy department)"
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fill, softMutate, nasalMutate, aspirateMutate, unmutatedAfterTrigger } from "./welsh";
+import { fill, joinNames, softMutate, nasalMutate, aspirateMutate, unmutatedAfterTrigger } from "./welsh";
 
 describe("Welsh slot filling", () => {
   it("soft-mutates after prepositions, keeping capitals", () => {
@@ -23,6 +23,15 @@ describe("Welsh slot filling", () => {
     expect(fill({ en: "x", cy: "o {place}" }, { place: { en: "Barry", cy: "Y Barri" } }).cy).toBe("o'r Barri");
     expect(fill({ en: "In {year}", cy: "Yn {year}" }, { year: 2038 }).cy).toBe("Yn 2038");
     expect(fill({ en: "Hi {place}", cy: "x" }, { place: { en: "The Rhondda", cy: "Y Rhondda" } }).en).toBe("Hi The Rhondda");
+  });
+  it("says 'yng' and 'ym' before a nasal-mutated place, and 'ac' before a vowel (cold playtest 6, Welsh)", () => {
+    expect(fill({ en: "x", cy: "Os chwaraewch chi hwn yn {place}" }, { place: { en: "North Wales", cy: "Gogledd Cymru" } }).cy).toBe("Os chwaraewch chi hwn yng Ngogledd Cymru");
+    expect(fill({ en: "x", cy: "Yn {place}" }, { place: { en: "Powys", cy: "Powys" } }).cy).toBe("Ym Mhowys");
+    expect(fill({ en: "x", cy: "yn {place}" }, { place: { en: "Bangor", cy: "Bangor" } }).cy).toBe("ym Mangor");
+    expect(fill({ en: "x", cy: "yn {place}" }, { place: { en: "Swansea", cy: "Abertawe" } }).cy).toBe("yn Abertawe");
+    expect(fill({ en: "x", cy: "cartrefi a {thing}" }, { thing: { en: "Reworking", cy: "Ailweithio" } }, []).cy).toBe("cartrefi ac Ailweithio");
+    expect(joinNames([{ en: "Homes", cy: "Cartrefi" }, { en: "Reworking", cy: "Ailweithio" }]).cy).toBe("Cartrefi ac Ailweithio");
+    expect(joinNames([{ en: "Homes", cy: "Cartrefi" }, { en: "Tips", cy: "Tomenni" }]).cy).toBe("Cartrefi a Thomenni");
   });
   it("finds unmutated words after a trigger", () => {
     expect(unmutatedAfterTrigger("Gadewch i Caerdydd gwympo")).toEqual(["i Caerdydd"]);

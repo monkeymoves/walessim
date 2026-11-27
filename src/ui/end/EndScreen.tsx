@@ -13,7 +13,7 @@ import { Snip } from "../parts/Notice";
 import { strandVars } from "../parts/strands";
 import { useGame } from "../game/context";
 import { shareLink } from "../game/save";
-import { autopilotScore, direction, hardestTurn, resultRange, sideScore, verdictScore, whyKind } from "./verdict";
+import { autopilotScore, direction, hardestTurn, resultRange, sideScore, verdictReason, verdictScore } from "./verdict";
 
 /** The year of a point in `wellbeingByTerm` (0 = 2026, 6 = 2050). */
 const yearOf = (i: number): number => TERM_YEARS[0]! + 4 * i;
@@ -145,7 +145,10 @@ const lowerFirst = (x: string) => (x ? x.charAt(0).toLowerCase() + x.slice(1) : 
 /** A cause in a few words, for "The biggest reason: ...". */
 function causeWords(game: Game, m: Mattered): string {
   switch (m.kind) {
-    case "card": return t("play.end.cause_card", { card: game.names.cardName(m.id), year: m.year });
+    // a card that worked later than it was played says both years (cold playtest 6: "Warm homes (2026)" for a card that worked from 2034)
+    case "card": return m.fromYear && m.fromYear > m.year
+      ? t("play2.end.cause_card_from", { card: game.names.cardName(m.id), year: m.year, from: m.fromYear })
+      : t("play2.end.cause_card", { card: game.names.cardName(m.id), year: m.year });
     case "shock": return t("play.end.cause_shock", { year: m.year, name: game.names.shockName(m.id) });
     case "lost_turn": return t("play.end.cause_lost", { year: m.year });
     case "promise": return tw("play.end.cause_promise", { goal: game.names.strandName(m.id as StrandId) }, []);
@@ -166,36 +169,27 @@ function Verdict(props: { result: EndResult }): JSX.Element {
   const coins = createMemo(() => {
     try { return unusedCoins(game.model, s()); } catch { return { coins: 0, turns: 0, firstTerm: 0, perTurn: [] }; }
   });
-  /** Plain-wales 7.2: one sentence on why. Each claim matches the direction its score line shows. */
+  /**
+   * Plain-wales 7.2: one sentence on why. Each claim matches the direction its score line shows, and
+   * the cause it names is the one the timeline marks (verdict.ts `verdictReason`).
+   */
   const why = (): string => {
     const c = coins();
-    const kind = whyKind(r(), c.turns);
-    if (kind === "coins") return t("play.end.why_coins", { n: c.coins, t: c.turns });
-    const worst = all().filter((m) => m.size < 0 && m.kind !== "coins_unused")[0];
-    const best = all().filter((m) => m.size > 0)[0];
-    const goalFell = () => {
-      const key = r().result.which;
-      const st = [...r().perStrand].sort((a, b) => a[key] - b[key])[0];
-      return st ? tw("play.end.cause_goal", { goal: game.names.strandName(st.strand) }, []) : "";
-    };
-    const goalRose = () => {
-      const key = r().result.which;
-      const st = [...r().perStrand].sort((a, b) => b[key] - a[key])[0];
-      return st ? tw("play.end.cause_goal_up", { goal: game.names.strandName(st.strand) }, []) : "";
-    };
-    const downCause = () => (worst ? causeWords(game, worst) : goalFell());
-    const upCause = () => (best ? causeWords(game, best) : goalRose());
-    if (kind === "both") return t("play.end.why_both", { cause: downCause() });
-    if (kind === "left") return t("play.end.why_left", { cause: downCause() });
-    if (kind === "lived") {
-      // the hardest turn: the one that ended in the lowest year (the timeline marks the same turn)
-      const from = yearOf(hardestTurn(r().worstTerm));
-      if (r().worstFell !== false && r().worstTerm > 0) return t("play.end.why_lived", { from, to: from + 4 });
+    const reason = verdictReason(r(), all(), c.turns);
+    if (reason.kind === "coins") return t("play.end.why_coins", { n: c.coins, t: c.turns });
+    if (reason.kind === "lived") {
+      if (reason.turn != null) { const from = yearOf(reason.turn); return t("play.end.why_lived", { from, to: from + 4 }); }
       return t("play.end.why_lived_plain");
     }
-    if (kind === "up") return t("play.end.why_up", { cause: upCause() });
+    const cause = reason.cause
+      ? causeWords(game, reason.cause)
+      : reason.goal
+        ? tw(reason.goal.up ? "play.end.cause_goal_up" : "play.end.cause_goal", { goal: game.names.strandName(reason.goal.strand) }, [])
+        : "";
+    if (reason.kind === "both") return t("play.end.why_both", { cause });
+    if (reason.kind === "left") return t("play.end.why_left", { cause });
+    if (reason.kind === "up") return t("play.end.why_up", { cause });
     const L = direction(r(), "lived"), F = direction(r(), "left");
-    const cause = L === "down" || F === "down" ? downCause() : upCause();
     return t("play.end.why_mixed", { life: t(`play.end.part_life_${L}`), left: t(`play.end.part_left_${F}`), cause });
   };
   return (
@@ -209,6 +203,18 @@ function Verdict(props: { result: EndResult }): JSX.Element {
 }
 
 // ------------------------------------------------------------------ 3: what you did that mattered
+
+/**
+ * Autopilot: the same Wales with a stand-in, on the same scale and start as the score line, in one
+ * sentence used wherever autopilot is named (cold playtest 6, item 5: "about 40" in one place and
+ * "about 6 points down" in another).
+ */
+export function autopilotLine(r: EndResult): string | null {
+  const a = autopilotScore(r);
+  if (!a) return null;
+  if (a.d === 0) return t("play.end.autopilot_level", { n: a.at });
+  return t(a.d > 0 ? "play.end.autopilot_ahead" : "play.end.autopilot_behind", { n: a.at, d: Math.abs(a.d) });
+}
 
 function Mattered(): JSX.Element {
   const { game } = useGame();
@@ -235,13 +241,7 @@ function Mattered(): JSX.Element {
       case "coins_unused": return t("play.end.m_coins", { n: m.coins ?? 0, t: m.turns ?? 0 });
     }
   };
-  /** Autopilot: the same Wales with a stand-in, on the same scale and start as the score line above. */
-  const autopilot = () => {
-    const a = autopilotScore(r());
-    if (!a) return null;
-    if (a.d === 0) return t("play.end.autopilot_level", { n: a.at });
-    return t(a.d > 0 ? "play.end.autopilot_ahead" : "play.end.autopilot_behind", { n: a.at, d: Math.abs(a.d) });
-  };
+  const autopilot = () => autopilotLine(r());
   const pull = (m: Mattered) => {
     const term = Math.max(0, Math.min(s().history.length - 1, m.kind === "card" ? (s().history.findIndex((h) => h.contributions.some((c) => c.cause.kind === "card" && c.cause.id === m.id && c.cause.term === m.term && h.term >= m.term)) ?? m.term) : m.term));
     game.pull(m.strand ?? worstStrand(r()), "flow", term < 0 ? m.term : term);
@@ -357,13 +357,7 @@ function rangeWords(r: EndResult): string {
 
 function Bands(props: { result: EndResult; custom: boolean }): JSX.Element {
   const r = () => props.result;
-  /** Ahead or behind autopilot by the same number the "What you did that mattered" line gives. */
-  const vsWords = () => {
-    const a = autopilotScore(r());
-    if (!a) return "";
-    if (a.d === 0) return t("game.end.vs_level");
-    return tn(a.d > 0 ? "game.end.vs_ahead" : "game.end.vs_behind", Math.abs(a.d));
-  };
+
   return (
     <div class="end-bands sheet">
       <h3 class="t-3">{t("play.end.two_scores")}</h3>
@@ -374,8 +368,8 @@ function Bands(props: { result: EndResult; custom: boolean }): JSX.Element {
         <Band which="lived" score={r().lived} lower={r().result.which === "lived"} result={r()} />
         <Band which="left" score={r().left} lower={r().result.which === "left"} result={r()} />
       </div>
-      <Show when={fin(r().caretakerGhost?.result) != null}>
-        <p class="story-small">{t("game.end.ghost_line", { change: changeWords(fin(r().caretakerGhost!.result)) })} {vsWords()}</p>
+      <Show when={autopilotLine(r())}>
+        <p class="story-small">{autopilotLine(r())}</p>
       </Show>
     </div>
   );

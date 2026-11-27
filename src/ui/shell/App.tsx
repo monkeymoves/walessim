@@ -72,7 +72,7 @@ export function App(): JSX.Element {
 function HeddiwSlot(): JSX.Element {
   return (
     <>
-      <span class="t-year topbar-year" lang="cy">Heddiw</span>
+      <span class="t-year topbar-year">{t("play2.era.heddiw")}</span>
       <span class="topbar-yearnote">
         <b>{t("shell.heddiw.line1")}</b>
         <span>{t("shell.heddiw.line2")}</span>

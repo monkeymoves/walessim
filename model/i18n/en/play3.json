@@ -1,0 +1,9 @@
+{
+ "_note": "Facts in play and layout after the sixth (cold) playtest (docs/design/playtest-6-cold.md). Plain words, reading age 11, no sentence over 18 words.",
+
+ "coins.one": "1 coin.",
+ "coins.other": "{n} coins.",
+ "now.label": "Wales now",
+ "now.start": "Real figure at the start: {value} {unit} ({year}).",
+ "now.close": "Close Wales now"
+}

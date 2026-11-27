@@ -14,7 +14,8 @@ import { cardRegions } from "./names";
 import { Note } from "./Note";
 import { iPlace, midEn, tw } from "./cymraeg";
 import { RealWalesLine } from "./RealWales";
-import { previewLines } from "./previewLines";
+import { cardIndicator } from "./mapFacts";
+import { needLines, previewLines, scopeChoiceKey } from "./previewLines";
 
 /** "Starts to work from 2030. Works in full from 2034.", when a card arrives in stages (years, never counts). */
 export function stagedNote(card: Card, year: number): string | null {
@@ -159,9 +160,9 @@ export function Hand(props: { interactive: boolean }): JSX.Element {
     <div class="yf-hand-wrap" style={{ "--hand-n": hand().length }}>
       <div class="yf-hand-head">
         <h2 class="yf-hand-title print">{t("game.plan.hand")}</h2>
-        {/* after the last turn there is no "this turn" to play cards in */}
-        <Show when={!(s().term >= 5 && (s().step === "changed" || s().step === "election" || s().step === "ended"))}>
-          <p class="small data">{tn("game.plan.limit", s().cardLimit)}</p>
+        {/* the card cap sits beside the coins (Budget.tsx); here, only what to do next */}
+        <Show when={props.interactive && !game.selected()}>
+          <p class="small yf-hand-hint">{t("game.plan.tray_hint")}</p>
         </Show>
       </div>
       <div
@@ -260,9 +261,10 @@ export function TicketTray(): JSX.Element {
   const { game } = useGame();
   const { playNow } = usePlay();
   const card = () => (game.selected() ? game.names.card(game.selected()!) ?? null : null);
+  // no empty sheet while nothing is open: the hint sits in the hand's head, and the hand keeps the room
   return (
-    <div class="yf-tray sheet" aria-live="polite" data-testid="tray">
-      <Show when={card()} keyed fallback={<p class="small yf-tray-hint">{t("game.plan.tray_hint")}</p>}>
+    <div class="yf-tray sheet" classList={{ empty: !card() }} aria-live="polite" data-testid="tray">
+      <Show when={card()} keyed>
         {(c) => <WherePicker card={c} onPlay={playNow} />}
       </Show>
     </div>
@@ -302,7 +304,8 @@ function WherePicker(props: { card: Card; onPlay: (id: string, region?: RegionId
   return (
     <div class="yf-where" role="group" aria-label={scope() === "two_regions" ? t("game.plan.where_two") : scope() === "national" ? pick(props.card.name) : t("game.plan.where")}>
       <div class="yf-tray-head">
-        <p class="yf-tray-title t-3">{pick(props.card.name)}</p>
+        {/* the opened card on the map carries the name in full; here it is for screen readers */}
+        <p class="yf-tray-title t-3 sr-only">{pick(props.card.name)}</p>
         <Show when={canHold()}>
           <button
             type="button"
@@ -314,7 +317,8 @@ function WherePicker(props: { card: Card; onPlay: (id: string, region?: RegionId
           </button>
         </Show>
       </div>
-      <Show when={(scope() === "region" || scope() === "national_or_region") && !played()}>
+      {/* while the map compares the regions its own line says how to choose: the tray keeps to its buttons */}
+      <Show when={(scope() === "region" || scope() === "national_or_region") && !played() && (ui.regionPick() !== props.card.id || guided())}>
         <p class="small yf-where-hint">{t("play.card.choose_where")}</p>
       </Show>
       <Show when={scope() === "region" || scope() === "national_or_region"}>
@@ -413,7 +417,9 @@ export function TicketNotes(): JSX.Element {
 }
 
 function CardOpen(props: { card: Card }): JSX.Element {
-  const { game } = useGame();
+  const { game, ui } = useGame();
+  /** Choosing where: the comparison on the map has the card's figure, so the card gives it the room. */
+  const choosing = () => ui.regionPick() === props.card.id && !game.isPlayed(props.card.id);
   const s = () => game.state()!;
   const c = () => props.card;
   const pl = () => game.playOf(c().id);
@@ -455,6 +461,7 @@ function CardOpen(props: { card: Card }): JSX.Element {
     if (!p) return [];
     return previewLines(p, c(), s().year, (id) => game.names.strandName(id), (xs) => game.names.list(xs)).map((l) => (l.n != null ? tn(l.key, l.n, l.vars) : t(l.key, l.vars)));
   });
+  const needs = () => needLines(c(), game.model.cards, (id) => game.names.cardName(id), (xs) => game.names.list(xs));
   /** The catch: the authored line, else what the card's upkeep, partners and side note say. */
   const catches = (): string[] => {
     if (c().catch) return [pick(c().catch)];
@@ -466,13 +473,13 @@ function CardOpen(props: { card: Card }): JSX.Element {
     return out;
   };
   return (
-    <aside class="yf-cardnotes yf-cardopen sheet" aria-label={pick(c().name)} data-testid="card-open" data-where={whereId() ?? "wales"}>
+    <aside class="yf-cardnotes yf-cardopen sheet" classList={{ choosing: choosing() }} aria-label={pick(c().name)} data-testid="card-open" data-where={whereId() ?? "wales"}>
       <h2 class="t-2 yf-co-name">{pick(c().name)}</h2>
       <p class="yf-co-cost data">{tn("play.card.costs", cost())} {works()}</p>
       <dl class="yf-co">
         <dt class="label">{t("play.card.what")}</dt>
         <dd class="story-small">{pick(c().what ?? c().description)}</dd>
-        <dt class="label">{where() ? tw("play.card.if_in", { place: where()! }) : t("play.card.if")}</dt>
+        <dt class="label">{where() ? tw(!pl() && game.previewRegionIsGuess(c().id) ? "play2.card.if_example" : "play.card.if_in", { place: where()! }) : t("play.card.if")}</dt>
         <dd class="story-small" aria-live="polite">
           <Show when={cp()} fallback={<span class="small">{t("play.card.working")}</span>}>
             <For each={lines()}>{(l) => <span class="yf-co-line">{l}</span>}</For>
@@ -482,7 +489,15 @@ function CardOpen(props: { card: Card }): JSX.Element {
           <dt class="label">{t("play.card.catch")}</dt>
           <dd class="story-small"><For each={catches()}>{(l) => <span class="yf-co-line">{l}</span>}</For></dd>
         </Show>
-        <Show when={c().picture}>
+        {/* what it needs to work in full, on its own line (cold playtest 6), and what a region changes */}
+        <Show when={needs().length}>
+          <dt class="label">{t("play2.card.needs")}</dt>
+          <dd class="story-small" data-testid="card-needs"><For each={needs()}>{(l) => <span class="yf-co-line">{t(l.key, l.vars)}</span>}</For></dd>
+        </Show>
+        <Show when={scopeChoiceKey(c())}>
+          <dd class="small" data-testid="card-scope">{t(scopeChoiceKey(c())!)}</dd>
+        </Show>
+        <Show when={c().picture && !choosing()}>
           <dt class="label">{t("play.card.picture")}</dt>
           <dd class="story-small"><i>{pick(c().picture)}</i> <span class="small yf-co-tag">({t("play.card.example")})</span></dd>
         </Show>
@@ -490,7 +505,9 @@ function CardOpen(props: { card: Card }): JSX.Element {
           <dd class="small">{t("game.plan.visit_card", { place: midEn(game.names.placeName(c().visit!)), i_place: iPlace(game.names.placeName(c().visit!)) })}</dd>
         </Show>
       </dl>
-      <RealWalesLine card={c().id} label={t("play.card.real")} atlas />
+      <Show when={!choosing() || !cardIndicator(game.model, c().id)}>
+        <RealWalesLine card={c().id} label={t("play.card.real")} atlas />
+      </Show>
     </aside>
   );
 }

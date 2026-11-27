@@ -20,6 +20,8 @@ import {
 import { PlaceVisit } from "../place/PlaceVisit";
 import { EndScreen } from "../end/EndScreen";
 import { TicketNotes } from "./Hand";
+import { WalesNow } from "./RealWales";
+import { inplay } from "./inplay";
 import "./game.css";
 import "../place/place.css";
 import "../end/end.css";
@@ -71,6 +73,13 @@ function BoardBody(): JSX.Element {
   const step = () => s().step;
   const ended = () => step() === "ended";
   const [confirmNew, setConfirmNew] = createSignal(false);
+  /** "Wales now" while the turn starts (in turn 1, what the scores mean), until a panel takes the left of the map. */
+  const walesNowTime = () => {
+    const st = step();
+    const arriving = st === "opening" && !!s().opening?.arrivals.length;
+    return (st === "opening" || st === "pledge" || st === "plan") && !arriving && !ui.inPlace() && !ui.laPanel() && !ui.regionPick()
+      && !inplay.walesOpen() && !game.trace() && !game.selected();
+  };
   // a status line never outlives its step (screen readers would hear it for the rest of the game)
   createEffect(on(step, () => ui.setAnnounce(""), { defer: true }));
   // nor does a "Why?" panel and its red line (cold playtest: the line stayed after moving on)
@@ -96,6 +105,10 @@ function BoardBody(): JSX.Element {
             <TrendSlip />
           </Show>
           {/* the council area, region and All of Wales panels now live in MapStage (plain-wales 5) */}
+          {/* the start of each turn: the real measure that moved most, beside where it began (cold playtest 6) */}
+          <Show when={walesNowTime()}>
+            <WalesNow />
+          </Show>
           <ArrivalStrip />
           <TicketNotes />
           <StageVoice />

@@ -7,15 +7,15 @@ import { SevereNotice, WarnStrip, Snip } from "../parts/Notice";
 import { StrandName } from "./StrandName";
 import { cardIcon, Icon } from "../parts/Icon";
 import { iPlace, maePlace, midEn, soft, softYn, tw, ynPlace } from "./cymraeg";
-import type { Slip, StrandChange, StrandId, TrustReason, VisitOffer } from "../../engine/api";
+import { trustDirection, type Slip, type StrandChange, type StrandId, type TrustReason, type VisitOffer } from "../../engine/api";
 import { shareOfHit, slipWording } from "./slips";
-import { promiseHelpers } from "./promise";
-import { saveNoteKey } from "./endturn";
+import { promiseHelpersOf } from "./promise";
+import { fundWords, responseKey, saveNoteKey, visitWhyLines } from "./endturn";
 import { isGoodGrade, STRAND_IDS } from "../../model/schema";
 import { useGame } from "./context";
 import { BudgetRow } from "./Budget";
 import { GUIDE_CARD, GUIDE_SLOW, Hand, TicketTray } from "./Hand";
-import { ForScale } from "./RealWales";
+import { ForScale, PlaceFacts } from "./RealWales";
 import { Note, ReplayGuide } from "./Note";
 import { VoiceSheet } from "./Pieces";
 
@@ -80,36 +80,48 @@ export function PledgePanel(): JSX.Element {
   const s = () => game.state()!;
   const strand = () => s().pledgeOffer;
   /**
-   * Cards that can help the asked-for goal this turn, when the promise is judged: in the hand and
-   * working straight away, or on their way and landing now (promise.ts). The engine's offer is
-   * unchanged; the player is told before choosing.
+   * Cards that can help the asked-for goal this turn, when the promise is judged (engine promise.ts):
+   * in the hand and working straight away, or played earlier and landing now. Listed apart, so a card
+   * already played is never named as if it were in the hand (cold playtest 6, item 1). The engine
+   * only asks for a promise one of them can help; with none, no promise is asked.
    */
   const helpers = () => {
     const id = strand();
-    return id ? promiseHelpers(s(), (c) => game.names.card(c), id) : [];
+    return id ? promiseHelpersOf(s(), (c) => game.names.card(c), id) : { hand: [], landing: [] };
   };
+  const names = (ids: string[]) => game.names.list(ids.map((id) => game.names.cardName(id)));
   return (
     <div class="yf-panel">
       <VoiceSheet voice={s().opening?.voice ?? null} year={s().year} />
       <div class="yf-step sheet">
         <h2 class="t-2">{t("game.step.pledge")}</h2>
-        <p class="story-small">{t("game.pledge.ask")}</p>
-        <Show when={strand()}>
+        <Show when={strand()} fallback={
+          <>
+            <p class="story-small" data-testid="no-promise">{t("play2.promise.none")}</p>
+            <p class="small">{t("play2.promise.none_note")}</p>
+            <div class="yf-actions">
+              <StampButton class="yf-go" onClick={() => game.act({ type: "pledge", strand: null })}>{t("play2.promise.none_go")}</StampButton>
+            </div>
+          </>
+        }>
+          <p class="story-small">{t("game.pledge.ask")}</p>
           <p class="yf-pledge-strand"><StrandName strand={strand()!} /></p>
-          <p class="small">{t("game.pledge.note", { strand: game.names.strandName(strand()!), strand_i: soft(game.names.strandName(strand()!)) })}</p>
-          <Show when={helpers().length} fallback={
-            <p class="small yf-warn-line" data-testid="promise-warning">{tw("play.promise.no_card", { goal: game.names.strandName(strand()!) }, [])}</p>
-          }>
-            <p class="small">{t("play.promise.cards", { cards: game.names.list(helpers().map((id) => game.names.cardName(id))) })}</p>
+          <p class="small">{tw("game.pledge.note", { strand: game.names.strandName(strand()!) }, [])}</p>
+          <Show when={helpers().hand.length}>
+            <p class="small" data-testid="promise-hand">{t("play2.promise.in_hand", { cards: names(helpers().hand) })}</p>
+          </Show>
+          <Show when={helpers().landing.length}>
+            <p class="small" data-testid="promise-landing">{t("play2.promise.landing", { cards: names(helpers().landing) })}</p>
           </Show>
           <Note id="promise" when={true} class="yf-note-promise" placement="left">{t("play.guide.promise")}</Note>
+          <div class="yf-actions">
+            <StampButton class="yf-go" onClick={() => game.act({ type: "pledge", strand: strand() })}>
+              {tw("game.pledge.make", { strand: game.names.strandName(strand()!) }, [])}
+            </StampButton>
+            <TabButton onClick={() => game.act({ type: "pledge", strand: null })}>{t("game.pledge.decline")}</TabButton>
+          </div>
+          <p class="small">{t("play2.promise.decline_note")}</p>
         </Show>
-        <div class="yf-actions">
-          <StampButton class="yf-go" onClick={() => game.act({ type: "pledge", strand: strand() })}>
-            {t("game.pledge.make", { strand: strand() ? game.names.strandName(strand()!) : "" })}
-          </StampButton>
-          <TabButton onClick={() => game.act({ type: "pledge", strand: null })}>{t("game.pledge.decline")}</TabButton>
-        </div>
       </div>
     </div>
   );
@@ -160,7 +172,7 @@ export function PlanPanel(): JSX.Element {
   return (
     <div class="yf-panel yf-panel-plan">
       <Show when={s().pledge}>
-        <p class="yf-pledged small">{t("game.pledge.made", { strand: game.names.strandName(s().pledge!) })}</p>
+        <p class="yf-pledged small">{tw("game.pledge.made", { strand: game.names.strandName(s().pledge!) }, [])}</p>
       </Show>
       <Show when={first() && !ui.guide.hasSeen("how") && !ui.guide.skipped()} fallback={
         <>
@@ -287,6 +299,7 @@ export function VisitOfferPanel(): JSX.Element {
               <div class="yf-step sheet yf-visit-offer" data-place={o.place}>
                 <h2 classList={{ "t-1": !many(), "t-3": many() }}>{t("game.visit.asking", { place: place(), mae_place: maePlace(place()) })}</h2>
                 <p class="story-small">{many() ? visitWhyShort(game, o) : visitWhy(game, o)}</p>
+                <PlaceFacts place={o.place} n={many() ? 1 : 2} />
                 <div class="yf-actions">
                   <Show when={i() === 0} fallback={
                     <TabButton onClick={() => go(o)}>{t("game.visit.go", { place: midEn(place()), i_place: iPlace(place()) })}</TabButton>
@@ -314,16 +327,25 @@ export function VisitOfferPanel(): JSX.Element {
 export function visitWhyShort(game: ReturnType<typeof useGame>["game"], o: VisitOffer): string {
   const cards = o.triggeredBy.filter((c) => c !== "curveball");
   if (cards.length) return t("game.visit.why_short", { card: game.names.list(cards.map((c) => game.names.cardName(c))) });
-  const trend = game.state()!.activeTrends[0]?.curveball;
-  return t("game.visit.why_trend_short", { trend: trend ? game.names.curveballName(trend) : "" });
+  return o.trend ? t("game.visit.why_trend_short", { trend: game.names.curveballName(o.trend) }) : t("play2.visit.why_plain_short");
 }
 
-/** Why a place is asking: the cards played there, or (in the guided first game) the trend. */
+/**
+ * Why a place is asking (cold playtest 6, item 8). For a card: what links that card to this board,
+ * in the card's own authored words, and for a slow card that work only starts there now. For a visit
+ * no card asked for: the slow change that bears on this board (engine `VisitOffer.trend`), never
+ * whichever slow change happened to be first.
+ */
 export function visitWhy(game: ReturnType<typeof useGame>["game"], o: VisitOffer): string {
+  const s = game.state()!;
   const cards = o.triggeredBy.filter((c) => c !== "curveball");
-  if (cards.length) return t(cards.length > 1 ? "game.visit.why_many" : "game.visit.why_one", { card: game.names.list(cards.map((c) => game.names.cardName(c))) });
-  const trend = game.state()!.activeTrends[0]?.curveball;
-  return t("game.visit.why_trend", { trend: trend ? game.names.curveballName(trend) : "" });
+  if (cards.length) {
+    return visitWhyLines(s, cards, (id) => game.names.card(id), (ids) => game.names.list(ids.map((c) => game.names.cardName(c))))
+      .map((l) => ("text" in l ? pick(l.text) : t(l.key, l.vars)))
+      .join(" ");
+  }
+  if (o.trend) return t(o.place === "rhondda" ? "game.visit.why_trend" : "play2.visit.why_trend_bethesda", { trend: game.names.curveballName(o.trend) });
+  return t("play2.visit.why_plain");
 }
 
 // ------------------------------------------------------------------ 5. passing (no shock: the term runs)
@@ -381,16 +403,26 @@ export function ShockSlip(): JSX.Element {
             <p class="stampmark yf-ready" aria-live="polite">{t("game.shock.ready")}</p>
             <p class="small yf-on-slate-2">{t("game.shock.ready_by", { cards: game.names.list(sh().preparedBy.map((id) => game.names.cardName(id))) })}</p>
           </Show>
-          <p class="yf-on-slate-2">{t("game.shock.explain")}</p>
           <Note id="crisis" when={true} class="yf-note-crisis" placement="left">
             {c() > 0 ? tn("play.guide.crisis", c()) : t("play.guide.crisis_none")}
           </Note>
-          <p class="yf-on-slate-2 data">{c() > 0 ? tn("game.shock.contingency", c()) : t("game.shock.contingency_none")}</p>
+          {/* only what the saved coins can buy is offered (cold playtest 6, item 3: "Spend 1 coin" beside "You saved no coins") */}
+          <Show when={c() > 0} fallback={<p class="yf-on-slate-2" data-testid="crisis-none">{t("play2.crisis.none")}</p>}>
+            <p class="yf-on-slate-2">{t("game.shock.explain")}</p>
+            <p class="yf-on-slate-2 data">{tn("game.shock.contingency", c())}</p>
+          </Show>
+          <Show when={(sh().budgetCut ?? 0) > 0}>
+            <p class="yf-on-slate-2 small" data-testid="crisis-budget-cut">{tn("play2.crisis.budget_cut", sh().budgetCut!)}</p>
+          </Show>
           <div class="yf-actions yf-shock-actions">
-            <TabButton onClick={() => game.act({ type: "respond", response: 0 })}>{t("game.shock.absorb")}</TabButton>
-            <StampButton disabled={c() < 1} onClick={() => game.act({ type: "respond", response: 1 })}>{t("game.shock.respond1")}</StampButton>
-            <Show when={c() >= 2}>
-              <TabButton onClick={() => game.act({ type: "respond", response: 2 })}>{t("game.shock.respond2")}</TabButton>
+            <Show when={c() >= 1} fallback={
+              <StampButton class="yf-go" onClick={() => game.act({ type: "respond", response: 0 })}>{t("play2.crisis.go_on")}</StampButton>
+            }>
+              <TabButton onClick={() => game.act({ type: "respond", response: 0 })}>{t("game.shock.absorb")}</TabButton>
+              <StampButton onClick={() => game.act({ type: "respond", response: 1 })}>{t("game.shock.respond1")}</StampButton>
+              <Show when={c() >= 2}>
+                <TabButton onClick={() => game.act({ type: "respond", response: 2 })}>{t("game.shock.respond2")}</TabButton>
+              </Show>
             </Show>
           </div>
         </article>
@@ -409,9 +441,11 @@ export function slipText(game: ReturnType<typeof useGame>["game"], sl: Slip, str
   // at the start of a sentence they keep their capital (cold playtest 5: ". a big employer leaving")
   const lower = lang() === "en" && (sl.cause.kind === "curveball" || sl.cause.kind === "shock" || sl.cause.kind === "event");
   const cause = w.causeAt === "mid" && lower ? named.charAt(0).toLowerCase() + named.slice(1) : named.charAt(0).toUpperCase() + named.slice(1);
-  if (w.key === "game.changed.ripple") return t(w.key, { strand, cause: game.names.cardName(sl.cause.id) });
-  if (w.key === "game.changed.side") return t(w.key, { strand, cause, dir: t(sl.delta >= 0 ? "game.dir.up_word" : "game.dir.down_word") });
-  return t(w.key, { strand, cause });
+  // tw: in Welsh a goal's article is lower case mid-sentence and names mutate after their trigger word
+  // (cold playtest 6, Welsh: "aeth Y Gymraeg a diwylliant i lawr")
+  if (w.key === "game.changed.ripple") return tw(w.key, { strand, cause: game.names.cardName(sl.cause.id) }, []);
+  if (w.key === "game.changed.side") return tw(w.key, { strand, cause, dir: t(sl.delta >= 0 ? "game.dir.up_word" : "game.dir.down_word") }, []);
+  return tw(w.key, { strand, cause }, []);
 }
 
 /**
@@ -419,10 +453,10 @@ export function slipText(game: ReturnType<typeof useGame>["game"], sl: Slip, str
  * states (cold playtest 5: "Spent 1 coin: a quarter of the damage hit" when 1 coin halves it, and
  * "You spent nothing: all of the damage hit" under "You were ready").
  */
-export function responseText(r: NonNullable<Slip["response"]>): string {
+export function responseText(r: NonNullable<Slip["response"]>, held?: number): string {
   const out: string[] = [];
   if (r.prepared) out.push(t("game.changed.response_ready"));
-  out.push(r.pips >= 2 ? t("game.changed.response_two") : r.pips === 1 ? t("game.changed.response_one") : t("game.changed.response_nothing"));
+  out.push(t(responseKey(r.pips, held)));
   out.push(t("game.changed.response_landed", { share: t(`game.share.${shareOfHit(r.hit)}`) }));
   return out.join(" ");
 }
@@ -441,6 +475,8 @@ export function reasonText(game: ReturnType<typeof useGame>["game"], r: TrustRea
   else if (r.code === "neglect") detail = game.names.regionName(detail as never);
   else if (r.code === "visit") detail = t(`game.grade.${detail}`);
   else if (r.code === "card") detail = game.names.cardName(detail);
+  // a reason that pushed Trust up never reads as a loss (cold playtest 6, item 7)
+  if ((r.code === "card" || r.code === "curveball") && r.points > 0) return tw(`play2.trust.${r.code}_up`, { detail }, []);
   // "ar {detail}": the strand name takes the soft mutation in Welsh ("ar Lewyrchus")
   return tw(`game.trust.reason.${r.code}`, { detail }, []);
 }
@@ -465,29 +501,15 @@ export function ChangedPanel(): JSX.Element {
     onCleanup(() => { clearInterval(timer); window.removeEventListener("keydown", skip); ui.setTicked(7); });
   });
 
-  const trustDir = () => (o().trust.after > o().trust.before + 0.5 ? "up" : o().trust.after < o().trust.before - 0.5 ? "down" : "same");
+  /** The same rule the engine uses to pick the reasons shown, so the heading and its reasons agree. */
+  const trustDir = () => trustDirection(o().trust.before, o().trust.after);
   /** The ready stamp only when the player really softened the hit (cold playtest). */
   const ready = () => {
     const sh = o().shock;
     return !!sh && sh.prepared && sh.hit < 0.95;
   };
   /** What happened to the coins not spent (plain-wales 3.3, point 5). */
-  const fundLines = (): string[] => {
-    const held = o().contingencyHeld;
-    if (o().caretaker) return [];
-    if (held <= 0) return [t("play.result.all_spent")];
-    const used = o().shock?.response ?? 0;
-    const carry = s().term >= game.model.game.years.length - 1 && s().step === "ended" ? 0 : Math.min(game.model.game.contingency_carry ?? 2, Math.max(0, held - used));
-    const lost = Math.max(0, held - used - carry);
-    // the coins the player put in the fund this turn (the draft is kept until the next plan step)
-    const at = game.savedAt();
-    const saved = at && at.term === o().term ? Math.min(at.n, held) : held;
-    const out = saved > 0 ? [tn("play.result.fund", saved)] : [];
-    out.push(o().shock ? tn("play.result.fund_used", used) : t("play.result.no_crisis"));
-    if (carry > 0) out.push(tn("play.result.carried", carry));
-    if (lost > 0) out.push(tn("play.result.lost", lost));
-    return out;
-  };
+  const fundLines = (): string[] => fundWords(o(), game.model.game.contingency_carry ?? 2, o().term >= game.model.game.years.length - 1).map((l) => (l.n != null ? tn(l.key, l.n) : t(l.key)));
   /**
    * A place that went well last turn rests this turn (the engine does not ask again and its cards
    * work at that grade): say so when a card played this turn would otherwise have asked.
@@ -575,6 +597,7 @@ export function ChangedPanel(): JSX.Element {
         <Show when={slips().length || guideEngineSlip()} fallback={<li class="yf-slip-paper sheet"><p class="story-small">{t("game.changed.no_slips")}</p></li>}>
           <For each={slips()}>
             {(sl, i) => (
+              <Show when={ui.ticked() > STRAND_IDS.indexOf(sl.strand)}>
               <li class="yf-slip-paper sheet" classList={{ unexpected: sl.unexpected, shock: !!sl.shock, held: slipWording(sl, o().strands).dir === "level" }} style={{ "--i": i() }}>
                 <Show when={sl.shock}>
                   <p class="yf-shocklabel label">{t("game.changed.shock_label", { name: game.names.shockName(sl.cause.id) })}</p>
@@ -594,7 +617,7 @@ export function ChangedPanel(): JSX.Element {
                 </h3>
                 <p class="story-small yf-slip-text">
                   {slipText(game, sl, o().strands)}{" "}
-                  <Show when={sl.shock && sl.response}>{responseText(sl.response!)}{" "}</Show>
+                  <Show when={sl.shock && sl.response}>{responseText(sl.response!, o().contingencyHeld)}{" "}</Show>
                   <ThreadButton onClick={() => pullSlip(sl)}>
                     {t("game.changed.pull")}
                   </ThreadButton>
@@ -606,6 +629,7 @@ export function ChangedPanel(): JSX.Element {
                   <Note id="why" when={ui.ticked() >= 7} class="yf-note-pull" placement="left">{t("play.guide.why")}</Note>
                 </Show>
               </li>
+              </Show>
             )}
           </For>
         </Show>

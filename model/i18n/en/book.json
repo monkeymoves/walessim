@@ -148,5 +148,7 @@
   "attributions.checkedOn": "Checked on 26 November 2026 against each publisher’s own page. This records what each publisher states and is not legal advice.",
   "attributions.unconfirmed": "No licence is stated for this table. We have asked for written confirmation. The figures stay flagged until it arrives.",
   "rule.eqAfter.one": "(after {n} turn)",
-  "rule.eqAfter.other": "(after {n} turns)"
+  "rule.eqAfter.other": "(after {n} turns)",
+  "param.floor_share": "Share kept up anyway",
+  "param.ageing": "Loss as it ages"
 }

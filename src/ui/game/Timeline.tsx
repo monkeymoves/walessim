@@ -9,7 +9,8 @@ import { Tooltip } from "../parts/Tooltip";
 import { TERM_YEARS, type PostItem } from "../../engine/api";
 import { useGame } from "./context";
 import { Note } from "./Note";
-import { hardestTurn } from "../end/verdict";
+import { verdictReason } from "../end/verdict";
+import { unusedCoins, whatMattered } from "./engine";
 
 const Y0 = 2026, Y1 = 2050;
 const frac = (year: number) => (Math.min(Math.max(year, Y0), Y1) - Y0) / (Y1 - Y0);
@@ -56,7 +57,15 @@ export function Timeline(props: { passing?: boolean }): JSX.Element {
   // only a term that really fell is marked "worst" on the strip. `worstTerm` is the lowest year (an
   // index into wellbeingByTerm, 0 = 2026); the turn that ended in it is the one before (cold playtest 5:
   // a 2042 crisis marked "worst" on the 2046 to 2050 turn)
-  const worst = () => (s().result && s().result!.worstFell !== false ? hardestTurn(s().result!.worstTerm) : null);
+  // (cold playtest 6: "Hardest turn 2026" while the verdict blamed the 2042 crisis) the turn marked is
+  // the one the end screen's sentence names, from the same reason, or none
+  const worst = createMemo(() => {
+    const st = s();
+    if (!st.result) return null;
+    try {
+      return verdictReason(st.result, whatMattered(game.model, st, 8), unusedCoins(game.model, st).turns).turn;
+    } catch { return null; }
+  });
 
   return (
     <section class="yf-timeline strip" aria-label={t("game.timeline.label")}>

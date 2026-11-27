@@ -1,0 +1,11 @@
+{
+ "_note": "Ffeithiau wrth chwarae a gosodiad ar ôl y chweched prawf chwarae (oer). Geiriau plaen, dim brawddeg dros 18 gair.",
+ "_cy_review": true,
+
+ "coins.one": "1 darn arian.",
+ "coins.two": "2 ddarn arian.",
+ "coins.other": "{n} darn arian.",
+ "now.label": "Cymru nawr",
+ "now.start": "Y ffigur go iawn ar y dechrau: {value} {unit} ({year}).",
+ "now.close": "Cau Cymru nawr"
+}

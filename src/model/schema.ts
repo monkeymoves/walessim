@@ -499,6 +499,11 @@ export interface Card {
   catch?: Text;
   /** "Picture it": an example, never a number. */
   picture?: Text;
+  /**
+   * Why playing this card makes its place ask for a visit, in one plain line (cold playtest 6, item 8:
+   * "You played Buses and rail. Go and choose how it is done" over a board of coal tips).
+   */
+  visit_why?: Text;
 }
 
 /** An upkeep obligation minted by a card. Unpaid upkeep applies `lapse` effects. */

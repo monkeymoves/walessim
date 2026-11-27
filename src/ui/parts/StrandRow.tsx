@@ -12,6 +12,8 @@ export interface StrandMeterProps {
   strand: StrandId;
   /** Whole pips, 0 to 10 (StrandView.flowPips). */
   flowPips: number;
+  /** How far the yarn is filled, 0 to 10, when it follows the underlying level (labels stay on flowPips). */
+  flowFill?: number;
   /** Whole pips of the stock score, 0 to 10; omit to hide the cross-stitch. */
   stockPips?: number | null;
   /** At least 80 per cent of runs agree: a knot. Otherwise a loose fringe. */
@@ -106,7 +108,7 @@ export function StrandMeter(props: StrandMeterProps): JSX.Element {
           {props.ghostLabel}
         </span>
       </Show>
-      <div class="yarn" classList={{ sharp: props.sharp !== false, fuzzy: props.sharp === false }} style={{ "--n": flow() }}>
+      <div class="yarn" classList={{ sharp: props.sharp !== false, fuzzy: props.sharp === false }} style={{ "--n": props.flowFill ?? flow() }}>
         <i />
         <Show when={ghostLen() > 0}>
           <b class="ghost" classList={{ fuzzy: props.ghostSharp === false, down: (props.ghost ?? 0) < 0 }} style={{ "--g0": ghostFrom(), "--gn": ghostLen() }} />
@@ -149,6 +151,8 @@ export function StrandMeter(props: StrandMeterProps): JSX.Element {
 export interface StrandRowView {
   strand: StrandId;
   flowPips: number;
+  /** See StrandMeter.flowFill. */
+  flowFill?: number;
   stockPips?: number | null;
   flowSharp?: boolean;
 }
@@ -184,6 +188,7 @@ export function StrandRow(props: StrandRowProps): JSX.Element {
           <StrandMeter
             strand={id}
             flowPips={byId(id)?.flowPips ?? 0}
+            flowFill={byId(id)?.flowFill}
             stockPips={byId(id)?.stockPips}
             sharp={byId(id)?.flowSharp}
             change={props.changes?.[id]}

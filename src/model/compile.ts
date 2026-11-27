@@ -466,7 +466,7 @@ export function compileModel(raw: RawModelFiles, opts: CompileOptions = {}): Com
       year: String(d.year ?? ind.year ?? ""), source: src, rank: la ? rankOf(la) : null,
     };
   };
-  const cardLine = (id: string, field: "what" | "catch" | "picture", v: unknown): Text | undefined => {
+  const cardLine = (id: string, field: "what" | "catch" | "picture" | "visit_why", v: unknown): Text | undefined => {
     if (v === undefined || v === null) return undefined;
     const out = text("cards.yaml", id, field, v);
     if (/[\u2013\u2014]/.test(out.en + out.cy)) err("cards.yaml", id, `${field} contains an em or en dash`);
@@ -524,16 +524,18 @@ export function compileModel(raw: RawModelFiles, opts: CompileOptions = {}): Com
       .filter((e) => !e.side && e.target !== "trust" && e.target !== "budget" && e.target !== "card_cost")
       .map((e) => Math.max(e.delay ?? c.delay, e.rule ? (rules.find((r) => r.id === e.rule)?.lag ?? 0) : 0));
     if (upkeep) for (const e of upkeep.lapse) for (const s of strandsOf(e.target)) frays.add(s);
-    const { fact: factSpec, what, catch: catchLine, picture, ...rest } = c;
+    const { fact: factSpec, what, catch: catchLine, picture, visit_why: visitWhy, ...rest } = c;
     const fact = factSpec === undefined || factSpec === null || factSpec === "none" ? undefined : resolveFact(c.id, factSpec);
     if (factSpec === undefined) warn(`cards.yaml: ${c.id}: no fact (the card shows "How this works" instead of a real figure)`);
-    const lines = { what: cardLine(c.id, "what", what), catch: cardLine(c.id, "catch", catchLine), picture: cardLine(c.id, "picture", picture) };
+    const lines = { what: cardLine(c.id, "what", what), catch: cardLine(c.id, "catch", catchLine), picture: cardLine(c.id, "picture", picture), visitWhy: cardLine(c.id, "visit_why", visitWhy) };
+    if (c.visit && !lines.visitWhy) warn(`cards.yaml: ${c.id}: asks for a visit but has no visit_why line`);
     const card: Card = {
       ...rest,
       ...(fact ? { fact } : {}),
       ...(lines.what ? { what: lines.what } : {}),
       ...(lines.catch ? { catch: lines.catch } : {}),
       ...(lines.picture ? { picture: lines.picture } : {}),
+      ...(lines.visitWhy ? { visit_why: lines.visitWhy } : {}),
       name: text(f, c.id, "name", c.name),
       description: text(f, c.id, "description", c.description),
       upgraded_by: text(f, c.id, "upgraded_by", c.upgraded_by),
@@ -781,7 +783,7 @@ export function compileModel(raw: RawModelFiles, opts: CompileOptions = {}): Com
     engine_text,
   };
   // the hash covers what the engine reads: display-only card lines (plain-wales 2.1, 6.1) are left out
-  const engineCards = model.cards.map(({ fact: _f, what: _w, catch: _c, picture: _p, ...rest }) => rest);
+  const engineCards = model.cards.map(({ fact: _f, what: _w, catch: _c, picture: _p, visit_why: _v, ...rest }) => rest);
   model.meta.hash = hashString(JSON.stringify([model.rules, engineCards, model.standing, model.curveballs, model.game, model.components, model.places.map((p) => [p.options, p.tips])]));
   return { model, errors, warnings };
 }

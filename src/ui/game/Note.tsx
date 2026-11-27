@@ -8,7 +8,7 @@
 // queue is drawn; the next one appears when it is dismissed. A note never covers the controls the
 // player needs next (the play and end-turn buttons, the region buttons, the scores, Trust, the
 // opened card): it tries its own side first, then the others, and takes the clearest.
-import { createEffect, createSignal, onCleanup, Show, type Accessor, type JSX, type Setter } from "solid-js";
+import { createEffect, createSignal, on, onCleanup, Show, type Accessor, type JSX, type Setter } from "solid-js";
 import { Portal } from "solid-js/web";
 import { t } from "../../i18n";
 import { StampButton, TabButton } from "../parts/Buttons";
@@ -16,7 +16,7 @@ import { useGame, type NoteId, type Ui } from "./context";
 
 const W = 260;
 
-type Side = "above" | "below" | "left" | "right";
+type Side = "above" | "below" | "left" | "right" | "belowleft";
 
 /** The waiting line of notes, one per board. */
 const queues = new WeakMap<object, [Accessor<NoteId[]>, Setter<NoteId[]>]>();
@@ -31,6 +31,8 @@ const KEEP_CLEAR = [
   '[data-testid="end-turn"]', '[data-testid="play-card"]', ".yf-tray .yf-region", ".yf-tray .btn-tab",
   '[data-testid="scoreboard"]', '[data-testid="trust"]', ".yf-rail .btn-stamp", '[data-testid="card-open"]',
   ".yf-shock .btn-stamp", ".yf-shock .btn-tab", ".yf-endsheet",
+  // the panels the player is reading: the step in the rail (the election), the Why panel, the map panels
+  ".yf-rail .yf-step", ".yf-trace", ".mf-panel", ".mf-key", ".rw-now",
 ];
 
 type Box = { left: number; top: number; right: number; bottom: number };
@@ -45,19 +47,23 @@ function at(side: Side, r: DOMRect, h: number): Box {
   if (side === "left") { left = r.left - W - 16; top = mid; }
   else if (side === "right") { left = r.right + 16; top = mid; }
   else if (side === "above") { left = r.left + 12; top = r.top - h - 10; }
+  else if (side === "belowleft") { left = r.left - W + 40; top = r.bottom + 8; }
   else { left = r.left + 12; top = r.bottom + 8; }
   left = Math.max(8, Math.min(left, innerWidth - W - 8));
   top = Math.max(8, Math.min(top, innerHeight - h - 8));
   return { left, top, right: left + W, bottom: top + h };
 }
 
-export function Note(props: { id: NoteId; when: boolean; class?: string; children: JSX.Element; placement?: Side }): JSX.Element {
-  const { ui } = useGame();
+export function Note(props: { id: NoteId; when: boolean; class?: string; children: JSX.Element; placement?: Side; hold?: boolean }): JSX.Element {
+  const { game, ui } = useGame();
   const [queue, setQueue] = queueFor(ui);
   // once a note has shown it stays until it is dismissed or its lesson is learnt, so moving the
   // pointer from the thing it points at to the note itself does not swap it away
   const [latched, setLatched] = createSignal(false);
   createEffect(() => { if (props.when && ui.guide.noteFor(props.id, true)) setLatched(true); });
+  // but never past its own step or turn: a note left over from the plan must not sit on the
+  // results or the Why panel (cold playtest 6)
+  createEffect(on(() => `${game.state()?.term}:${game.state()?.step}`, () => setLatched(false), { defer: true }));
   const wants = () => ui.guide.noteFor(props.id, latched());
   createEffect(() => {
     const id = props.id;
@@ -65,7 +71,10 @@ export function Note(props: { id: NoteId; when: boolean; class?: string; childre
     else setQueue((q) => q.filter((x) => x !== id));
   });
   onCleanup(() => setQueue((q) => q.filter((x) => x !== props.id)));
-  const shown = () => wants() && queue()[0] === props.id;
+  /** The thing it points at is on screen (a hidden slip takes its note with it). */
+  const [hostShown, setHostShown] = createSignal(true);
+  const active = () => wants() && queue()[0] === props.id && !props.hold;
+  const shown = () => active() && hostShown();
 
   let anchor!: HTMLSpanElement;
   let note: HTMLElement | undefined;
@@ -75,6 +84,7 @@ export function Note(props: { id: NoteId; when: boolean; class?: string; childre
     const host = anchor?.parentElement;
     if (!host) return;
     const r = host.getBoundingClientRect();
+    setHostShown(r.width > 0 || r.height > 0);
     const h = note?.offsetHeight ?? 90;
     const clear: Box[] = [];
     for (const el of document.querySelectorAll<HTMLElement>(KEEP_CLEAR.join(","))) {
@@ -85,7 +95,7 @@ export function Note(props: { id: NoteId; when: boolean; class?: string; childre
     // never on the thing it points at either
     const self: Box = { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
     const want = props.placement ?? "below";
-    const order: Side[] = [want, ...(["left", "below", "above", "right"] as Side[]).filter((s) => s !== want)];
+    const order: Side[] = [want, ...(["left", "below", "above", "right", "belowleft"] as Side[]).filter((s) => s !== want)];
     let best: { side: Side; box: Box; cost: number } | null = null;
     for (const s of order) {
       const box = at(s, r, h);
@@ -97,7 +107,7 @@ export function Note(props: { id: NoteId; when: boolean; class?: string; childre
     setPos({ left: best!.box.left, top: best!.box.top });
   };
   createEffect(() => {
-    if (!shown()) return;
+    if (!active()) return;
     const host = anchor?.parentElement;
     host?.classList.add("yf-guided");
     let raf = requestAnimationFrame(function tick() { place(); raf = requestAnimationFrame(tick); });

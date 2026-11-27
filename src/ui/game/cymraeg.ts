@@ -28,13 +28,13 @@ export const aspirate = (w: string): string => apply(ASP, w);
 
 const ARTICLE = /^Yr? /;
 
-/** "Mae’r Rhondda" for "Y Rhondda", else "Mae Bethesda". */
+/** "Mae'r Rhondda" for "Y Rhondda", else "Mae Bethesda". */
 export function maePlace(name: string): string {
-  return ARTICLE.test(name) ? `Mae’r ${name.replace(ARTICLE, "")}` : `Mae ${name}`;
+  return ARTICLE.test(name) ? `Mae'r ${name.replace(ARTICLE, "")}` : `Mae ${name}`;
 }
-/** "i’r Rhondda" for "Y Rhondda", else "i Fethesda". */
+/** "i'r Rhondda" for "Y Rhondda", else "i Fethesda". */
 export function iPlace(name: string): string {
-  return ARTICLE.test(name) ? `i’r ${name.replace(ARTICLE, "")}` : `i ${soft(name)}`;
+  return ARTICLE.test(name) ? `i'r ${name.replace(ARTICLE, "")}` : `i ${soft(name)}`;
 }
 /** "a" or "ac", and the aspirate mutation, before the last item of a Welsh list. */
 export function andCy(b: string): string {

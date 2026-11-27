@@ -14,6 +14,7 @@ import type { Thread, TraceStop } from "../../engine/api";
 import { useGame } from "./context";
 import { StrandName } from "./StrandName";
 import { placeThreadName } from "./placeNames";
+import { paramLabel } from "../book/names";
 
 const STOP_LABEL: Record<TraceStop["kind"], string> = {
   strand: "game.trace.strand",
@@ -232,7 +233,7 @@ function Stop(props: { stop: TraceStop; sharp: boolean }): JSX.Element {
                 </p>
                 <Show when={s().params.length}>
                   <ul class="small data yf-params">
-                    <For each={s().params}>{(p) => <li>{pick(p.unit) ? `${p.name}: ${p.value} ${pick(p.unit)} (${p.min} to ${p.max})` : `${p.name}: ${p.value} (${p.min} to ${p.max})`}</li>}</For>
+                    <For each={s().params}>{(p) => <li>{pick(p.unit) ? `${paramLabel(p.name)}: ${p.value} ${pick(p.unit)} (${p.min} to ${p.max})` : `${paramLabel(p.name)}: ${p.value} (${p.min} to ${p.max})`}</li>}</For>
                   </ul>
                 </Show>
                 <Show when={s().placeholder}><p class="warnstrip small"><span>{t("game.trace.placeholder")}</span></p></Show>

@@ -2,7 +2,8 @@
 // the red thread to where a number came from. Pressing it opens the source card (title,
 // publisher, licence, notes, link), or calls onPull if the caller wires "Pull the thread".
 import { createSignal, createUniqueId, onCleanup, Show, type JSX } from "solid-js";
-import { pick, t } from "../../i18n";
+import { lang, pick, t } from "../../i18n";
+import { periodIn } from "../../model/period";
 import type { Source } from "../../model/schema";
 import { sourceById } from "../shell/model";
 import { CloseButton } from "./Buttons";
@@ -12,8 +13,8 @@ export function sourceShort(s: Source | null): string {
   if (!s) return t("parts.source.unknown");
   const p = `${s.publisher ?? ""} ${pick(s.title as never)}`;
   if (/^(Welsh Government|StatsWales|DataMapWales)/i.test(s.publisher ?? "")) return t("parts.publisher.wg");
-  if (/Office for National Statistics|\bONS\b|Nomis/i.test(p)) return "ONS";
-  if (/Department for Energy Security/i.test(p)) return "DESNZ";
+  if (/Office for National Statistics|\bONS\b|Nomis/i.test(p)) return t("parts.publisher.ons");
+  if (/Department for Energy Security/i.test(p)) return t("parts.publisher.desnz");
   if (/Natural Resources Wales/i.test(p)) return t("parts.publisher.nrw");
   if (/Welsh Government|StatsWales|DataMapWales/i.test(p)) return t("parts.publisher.wg");
   if (/British Geological Survey|\bBGS\b/i.test(p)) return "BGS";
@@ -39,7 +40,7 @@ export function SourceTag(props: SourceTagProps): JSX.Element {
   const [open, setOpen] = createSignal(false);
   const id = createUniqueId();
   let host!: HTMLSpanElement;
-  const text = () => props.label ?? (props.year != null && props.year !== "" ? `${sourceShort(src())}, ${props.year}` : sourceShort(src()));
+  const text = () => props.label ?? (props.year != null && props.year !== "" ? `${sourceShort(src())}, ${periodIn(lang(), String(props.year))}` : sourceShort(src()));
   const onDoc = (e: Event) => { if (!host.contains(e.target as Node)) setOpen(false); };
   document.addEventListener("pointerdown", onDoc);
   onCleanup(() => document.removeEventListener("pointerdown", onDoc));

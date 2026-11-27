@@ -15,7 +15,7 @@ const SOFT = new Set(["am", "ar", "at", "dan", "dros", "drwy", "trwy", "gan", "h
 const ASPIRATE = new Set(["a", "â", "gyda", "tua", "na"]);
 const NASAL = new Set(["fy"]);
 /** Words after which the article is elided onto the word ("i'r", "Mae'r"). */
-const ELIDE = new Set(["i", "o", "a", "â", "gyda", "tua", "na", "mae", "ac"]);
+const ELIDE = new Set(["i", "o", "a", "â", "gyda", "tua", "na", "mae", "ac", "cadw"]);
 
 const keepCase = (orig: string, out: string) => (orig[0] && orig[0] === orig[0].toUpperCase() ? out.charAt(0).toUpperCase() + out.slice(1) : out);
 
@@ -64,7 +64,16 @@ function fillCy(s: string, values: Record<string, string>, places: Set<string>):
       return `${before}${space}${atStart ? v : article[1]!.toLowerCase() + " " + rest}`;
     }
     if (space && /^\D/.test(v)) {
-      if (prev === "yn") v = places.has(key) ? nasalMutate(v) : /^(ll|rh)/i.test(v) ? v : softMutate(v);
+      // "yn" + a place takes the nasal mutation and becomes "yng" or "ym" before it (cold playtest 6:
+      // "yn Ngogledd Cymru" for "yng Ngogledd Cymru")
+      if (prev === "yn" && places.has(key)) {
+        const m = nasalMutate(v);
+        const yn = /^ng/i.test(m) && m !== v ? "yng" : /^m/i.test(m) && m !== v ? "ym" : "yn";
+        return `${before.replace(/yn$/i, (x) => (x[0] === "Y" ? yn.charAt(0).toUpperCase() + yn.slice(1) : yn))}${space}${m}`;
+      }
+      // "a" before a vowel is "ac" (cold playtest 6: "a Ailweithio")
+      if ((prev === "a" || prev === "â") && /^[aeiouwyâêîôûŵŷ]/i.test(v)) return `${before.replace(/(a|â)$/i, (x) => (x === "A" ? "Ac" : "ac"))}${space}${v}`;
+      if (prev === "yn") v = /^(ll|rh)/i.test(v) ? v : softMutate(v);
       else if (SOFT.has(prev)) v = softMutate(v);
       else if (ASPIRATE.has(prev)) v = aspirateMutate(v);
       else if (NASAL.has(prev)) v = nasalMutate(v);
@@ -96,7 +105,9 @@ export function joinNames(names: Text[]): Text {
   const j = (xs: string[], and: string) => (xs.length === 1 ? xs[0]! : `${xs.slice(0, -1).join(", ")} ${and} ${xs[xs.length - 1]}`);
   const cy = names.map((n) => n.cy || n.en);
   const lastCy = names.length > 1 ? aspirateMutate(cy[cy.length - 1]!) : cy[0]!;
-  return { en: j(names.map((n) => n.en), "and"), cy: names.length > 1 ? `${cy.slice(0, -1).join(", ")} a ${lastCy}` : lastCy };
+  // "ac" before a vowel (cold playtest 6: "a Ailweithio")
+  const and = /^[aeiouwyâêîôûŵŷ]/i.test(lastCy) ? "ac" : "a";
+  return { en: j(names.map((n) => n.en), "and"), cy: names.length > 1 ? `${cy.slice(0, -1).join(", ")} ${and} ${lastCy}` : lastCy };
 }
 
 /**

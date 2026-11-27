@@ -3,7 +3,7 @@
 // puts it there with "Save 1 coin for a crisis". Whenever anything changed it (a carried coin, a
 // loan), one list says how it adds up, even when it comes back to 8 (cold playtest 5).
 import { createSignal, For, Show, type JSX } from "solid-js";
-import { t } from "../../i18n";
+import { t, tn } from "../../i18n";
 import { useGame } from "./context";
 
 type Pile = "cards" | "fund" | "unused";
@@ -12,6 +12,7 @@ export function BudgetRow(): JSX.Element {
   const { game } = useGame();
   const s = () => game.state()!;
   const b = () => game.budget();
+  const cap = () => game.cardCap();
   const [what, setWhat] = createSignal(false);
   const base = () => game.model.game.budget ?? 8;
   const coins = (): Pile[] => {
@@ -42,12 +43,12 @@ export function BudgetRow(): JSX.Element {
   return (
     <div class="yf-budget" data-testid="budget">
       <div class="yf-budget-head">
-        <span class="label">{t("play.budget.title")}</span>
-        <button type="button" class="yf-why-link small" aria-expanded={what()} onClick={() => setWhat(!what())}>{t("play.budget.what_coin")}</button>
+        {/* the card cap beside the coins from turn 1 (cold playtest 6: spare coins felt wasted) */}
+        <p class="yf-cap" data-testid="coin-cap">
+          <b>{tn("play3.coins", Math.max(0, b().total))}</b>{" "}
+          {cap().played === 0 ? tn("play2.budget.cap", cap().limit) : cap().left > 0 ? tn("play2.budget.cap_left", cap().left) : t("play2.budget.cap_full", { n: cap().limit })}
+        </p>
       </div>
-      <Show when={what()}>
-        <p class="small yf-coin-is">{t("play.budget.coin_is")} {t("play.budget.coin_more")}</p>
-      </Show>
       <div class="yf-coins well" role="img" aria-label={t("play.budget.aria", { total: b().total, spent: b().spent, fund: b().fund, unused: b().unused })}>
         <For each={coins()}>{(p) => <i class={`yf-coin ${p}`} />}</For>
         <For each={s().debts}>{() => <i class="yf-coin debt" title={t("game.ledger.debts")} />}</For>
@@ -58,29 +59,35 @@ export function BudgetRow(): JSX.Element {
         <div class="yf-pile unused"><dt>{t("play.budget.unused")}</dt><dd class="data" data-testid="pile-unused">{Math.max(0, b().unused)}</dd></div>
       </dl>
       <Show when={lines().length}>
-        <div class="yf-budget-why small">
-          <p class="strong">{b().total !== base() ? t("play.budget.why_not", { n: b().total }) : t("play.budget.adds_up", { n: b().total })}</p>
-          <ul>
-            <For each={lines()}>{([k, n]) => <li><span>{t(k)}</span> <span class="data">{n > 0 ? `+${n}` : n}</span></li>}</For>
-          </ul>
-        </div>
+        {/* one run of words rather than a list, so the hand keeps its room */}
+        <p class="yf-budget-why small">
+          <span class="strong">{b().total !== base() ? t("play.budget.why_not", { n: b().total }) : t("play.budget.adds_up", { n: b().total })}</span>{" "}
+          <For each={lines()}>{([k, n], i) => <span class="yf-why-item">{t(k)} <span class="data">{n > 0 ? `+${n}` : n}</span>{i() < lines().length - 1 ? "; " : "."}</span>}</For>
+        </p>
       </Show>
-      <Show when={b().left > 0}>
-        <div class="yf-save">
-          <div class="yf-save-btns">
+      <div class="yf-save">
+        {/* saving and "What is a coin?" share a row, so the cap line has the head to itself */}
+        <div class="yf-save-btns">
+          <Show when={b().left > 0}>
             <button type="button" class="yf-linkbtn strong" data-testid="save-coin" disabled={!canSave()} onClick={() => game.setSaved(b().fund + 1)}>{t("play.budget.save")}</button>
             <Show when={b().fund > 0}>
               <button type="button" class="yf-linkbtn" data-testid="unsave-coin" onClick={() => game.setSaved(b().fund - 1)}>{t("play.budget.unsave")}</button>
             </Show>
-          </div>
+          </Show>
+          <button type="button" class="yf-why-link small" aria-expanded={what()} onClick={() => setWhat(!what())}>{t("play.budget.what_coin")}</button>
+        </div>
+        <Show when={what()}>
+          <p class="small yf-coin-is">{t("play.budget.coin_is")} {t("play.budget.coin_more")}</p>
+        </Show>
+        <Show when={b().left > 0}>
           <Show when={b().fund > 0}>
             <p class="small">{saveLine()}</p>
           </Show>
           <Show when={b().fund > game.usefulSave()}>
             <p class="small yf-warn-line" role="status">{t("play.budget.save_lost")}</p>
           </Show>
-        </div>
-      </Show>
+        </Show>
+      </div>
     </div>
   );
 }

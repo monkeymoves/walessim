@@ -401,7 +401,7 @@ for (const [lang, w, h] of [["en", 1440, 900], ["cy", 1280, 800], ["en", 1280, 8
     const out = await page.evaluate(() => {
       const scroll = document.querySelector(".yf-rail .yf-scroll") as HTMLElement;
       const box = scroll.getBoundingClientRect();
-      const buttons = [...document.querySelectorAll<HTMLElement>(".yf-visit-offer button, .yf-visit-stay button")];
+      const buttons = [...document.querySelectorAll<HTMLElement>(".yf-visit-offer .yf-actions button, .yf-visit-stay button")];
       return {
         overflow: scroll.scrollHeight - scroll.clientHeight,
         hidden: buttons.filter((b) => { const r = b.getBoundingClientRect(); return r.bottom > Math.min(box.bottom, innerHeight) + 1 || r.top < box.top - 1; }).map((b) => b.textContent),

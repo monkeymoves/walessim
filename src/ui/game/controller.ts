@@ -12,6 +12,7 @@ import {
 } from "../../engine/api";
 import type { CompiledModel } from "../../model/schema";
 import { makeNames, type Lookup } from "./names";
+import { saveCap } from "./endturn";
 import { addLetter, clearHashParams, hashParams, lettersReceived, markDaily, readSave, today, writeSave } from "./save";
 
 export interface Draft {
@@ -39,6 +40,8 @@ export interface StartOptions {
 }
 
 export type Game = ReturnType<typeof createGame>;
+
+export { saveCap } from "./endturn";
 
 /**
  * Create the controller. `overrides` are the model book parameter changes from the shell's
@@ -133,8 +136,11 @@ export function createGame(model: CompiledModel, opts: { overrides?: Accessor<Re
         adopt(loadGame(model, saved));
         return;
       } catch (e) {
+        // never a silent new game (cold playtest 6, item 9): start one, then say so
         console.warn("saved game unreadable", e);
+        start();
         setError("game.save.load_failed");
+        return;
       }
     }
     start();
@@ -202,16 +208,21 @@ export function createGame(model: CompiledModel, opts: { overrides?: Accessor<Re
   });
 
   /**
-   * How many saved coins can do anything: a crisis can use 2 and up to `contingency_carry` more carry
-   * over. In turn 1 of a first game no crisis can come; in the last turn nothing carries over.
+   * The most coins worth saving, the one cap every line about saving states (cold playtest 6, item 2:
+   * "Up to 2 carry over" beside "Save 4"). A crisis can use at most 2 (the largest response), and if
+   * none comes up to `contingency_carry` carry over, so a saved coin beyond the smaller of the two can
+   * be lost. In turn 1 of a first game no crisis can come, so only the carry counts.
    */
   const usefulSave = createMemo(() => {
     const s = state();
     if (!s) return 0;
-    const carry = model.game.contingency_carry ?? 2;
-    if (s.term === 0 && s.options.firstGame) return carry;
-    if (s.term >= model.game.years.length - 1) return 2;
-    return 2 + carry;
+    return saveCap(model.game.contingency_carry ?? 2, s.term === 0 && s.options.firstGame);
+  });
+  /** Trust's card cap beside the coins (cold playtest 6): how many cards may be played, and how many are left. */
+  const cardCap = createMemo(() => {
+    const s = state();
+    const limit = s?.cardLimit ?? 0;
+    return { limit, played: draft.cards.length, left: Math.max(0, limit - draft.cards.length) };
   });
   function setSaved(n: number): void { setDraft("saved", Math.max(0, Math.min(n, Math.max(0, budget().left)))); }
 
@@ -258,8 +269,10 @@ export function createGame(model: CompiledModel, opts: { overrides?: Accessor<Re
   function commit(): boolean {
     if (problems().length) return false;
     const s = state();
-    if (s) setSavedAt({ term: s.term, n: budget().fund });
-    return act({ type: "commit", plays: plays() });
+    const fund = Math.min(budget().fund, usefulSave());
+    if (s) setSavedAt({ term: s.term, n: fund });
+    // the engine holds exactly the coins saved: the rest are lost, as the end-of-turn sheet said
+    return act({ type: "commit", plays: { ...plays(), save: fund } });
   }
 
   // ------------------------------------------------------------ previews
@@ -306,6 +319,14 @@ export function createGame(model: CompiledModel, opts: { overrides?: Accessor<Re
     return { card: id, preview: previewOf({ ...p, cards: [...p.cards, extra] }), base: planPreview() };
   });
 
+  /**
+   * The preview's region is only a stand-in: nothing pointed at and the card not played, so the card
+   * must not say "If you play this in South East Wales" as if it had been chosen (cold playtest 6).
+   */
+  function previewRegionIsGuess(id: string): boolean {
+    return !isPlayed(id) && previewRegion() == null;
+  }
+
   /** The region a regional card is previewed in before it is played: the one pointed at, else the last used. */
   function previewRegionFor(id: string): RegionId {
     const card = names.card(id);
@@ -345,7 +366,7 @@ export function createGame(model: CompiledModel, opts: { overrides?: Accessor<Re
 
   return {
     model, names, state, draft, plays, problems, budget, planPreview, ghost, threads, trace, letters,
-    selected, setSelected, hovered, setHovered, ledgerOpen, setLedgerOpen, shared, error, setError, lastSave, usefulSave, setSaved, previewRegion, setPreviewRegion, previewRegionFor, savedAt,
+    selected, setSelected, hovered, setHovered, ledgerOpen, setLedgerOpen, shared, error, setError, lastSave, usefulSave, setSaved, previewRegion, setPreviewRegion, previewRegionFor, previewRegionIsGuess, savedAt, cardCap,
     start, boot, act, commit,
     isPlayed, playOf, costOf, canAfford, blockOf, play, unplay, setRegion, setStanding, setRepay, setRepair, toggleUpkeep, setHold,
     pull, setTrace,

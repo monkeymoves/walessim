@@ -300,8 +300,8 @@ export function RegionCompare(props: { card: string }): JSX.Element {
             {t("facts.cmp.lead", { measure: measureName(ind()!), wales: `${figValue(ind()!, ind()!.wales)} ${unitWords(ind()!)}`.trim() })}{" "}
             <SourceTag source={ind()!.sources[0] ?? null} year={ind()!.year} />
           </p>
-          <CompareButton card={props.card} />
           <Show when={inplay.compare()}><CompareKey indicator={ind()!} inline /></Show>
+          <CompareButton card={props.card} />
         </Show>
         <Show when={special()}><p class="small mf-special">{special()}</p></Show>
         <ul class="mf-regions" onMouseLeave={() => hover(null)}>
@@ -329,11 +329,10 @@ export function RegionCompare(props: { card: string }): JSX.Element {
                       {t("facts.cmp.low", { area: game.names.laName(spread()!.low.code), value: figValue(ind()!, spread()!.low.v) })}.
                     </p>
                   </Show>
-                  <Show when={ok()}>
-                    <p class="small mf-yours">{yours(r.id)}</p>
-                    <Show when={regionAtRisk(s(), last()[r.id])}><p class="small mf-warn">{t("facts.cmp.risk")}</p></Show>
-                  </Show>
+                  <Show when={ok() && regionAtRisk(s(), last()[r.id])}><p class="small mf-warn">{t("facts.cmp.risk")}</p></Show>
+                  {/* the rest on hover or focus, so the map stays in view (cold playtest 6) */}
                   <Show when={inplay.regionHover() === r.id}>
+                    <Show when={ok()}><p class="small mf-yours">{yours(r.id)}</p></Show>
                     <p class="small mf-areas">{t("facts.cmp.areas", { list: game.names.list(regionLas(game.model, r.id).map((c) => game.names.laName(c))) })}</p>
                   </Show>
                 </li>
@@ -442,8 +441,6 @@ export function SelectionLine(): JSX.Element {
 
 export function MapControls(): JSX.Element {
   const { game, ui } = useGame();
-  const [open, setOpen] = createSignal(false);
-  const nb = () => inplay.notebook();
   const lens = () => cardIndicator(game.model, focusCard(game, ui) ?? "")?.id ?? null;
   const lookupTime = () => {
     const s = game.state();
@@ -459,23 +456,8 @@ export function MapControls(): JSX.Element {
           {t("facts.ctl.lookup")}
         </button>
         {/* turn 2: nobody found the atlas or the rule book unprompted (cold playtest) */}
-        <Note id="lookup" when={lookupTime()} class="yf-note-lookup" placement="below">{t("play2.guide.lookup")}</Note>
+        <Note id="lookup" when={lookupTime()} hold={!!game.selected() || !!ui.laPanel() || inplay.walesOpen() || !!game.trace()} class="yf-note-lookup" placement="below">{t("play2.guide.lookup")}</Note>
       </span>
-      <button type="button" class="mf-ctl" title={t("play2.ctl.notebook_title")} aria-expanded={open()} onClick={() => setOpen(!open())} data-testid="notebook">
-        {t("play2.ctl.notebook", { n: nb().las.length })}
-      </button>
-      <Show when={open()}>
-        <div class="mf-notebook sheet" role="dialog" aria-label={t("facts.nb.title")}>
-          <div class="mf-head">
-            <h2 class="t-3">{t("facts.nb.title")}</h2>
-            <CloseButton label={t("facts.nb.close")} onClick={() => setOpen(false)} />
-          </div>
-          <p class="small">{t("facts.nb.areas", { n: nb().las.length })}</p>
-          <p class="small">{t("facts.nb.sources", { n: nb().sources.length })}</p>
-          <p class="small">{t("facts.nb.rules", { n: nb().rules.length })}</p>
-          <p class="small mf-quiet">{t("facts.nb.stamps")}</p>
-        </div>
-      </Show>
     </div>
   );
 }

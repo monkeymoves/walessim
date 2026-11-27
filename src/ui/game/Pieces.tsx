@@ -6,6 +6,8 @@ import { StrandRow } from "../parts/StrandRow";
 import { TrustSlots } from "../parts/TrustGauge";
 import { Tooltip } from "../parts/Tooltip";
 import { headline } from "./engine";
+import { shownScore } from "../end/verdict";
+import { barFill } from "./bars";
 import { TrendFact } from "./RealWales";
 import { TopBar as ShellTopBar } from "../shell/TopBar";
 import type { StrandId, VoiceLine } from "../../engine/api";
@@ -130,13 +132,17 @@ export function TopBar(props: { ticking?: boolean }): JSX.Element {
   const s = () => game.state()!;
   const out = () => (s().step === "changed" || s().step === "election" ? s().lastOutcome : null);
 
-  /** During the "what changed" replay, strands left of the cursor show their new pips. */
+  /**
+   * During the "what changed" replay, strands left of the cursor show their new pips. The yarn follows
+   * the underlying level within its whole point (bars.ts), so a small move shows on the bar while the
+   * label, the arrow and the slips keep to the whole points.
+   */
   const views = createMemo(() => {
     const o = out();
     return s().strands.map((v, i) => {
-      if (!o || i < ui.ticked()) return v;
+      if (!o || i < ui.ticked()) return { ...v, flowFill: barFill(v.flowPips, v.flow) };
       const c = o.strands.find((x) => x.strand === v.strand);
-      return c ? { ...v, flowPips: c.pipsBefore, stockPips: c.stockPipsBefore } : v;
+      return c ? { ...v, flowPips: c.pipsBefore, stockPips: c.stockPipsBefore, flowFill: barFill(c.pipsBefore, c.flowBefore) } : { ...v, flowFill: barFill(v.flowPips, v.flow) };
     });
   });
   /** The previewed card's own marginals (paired with and without it, at its landing), from the engine. */
@@ -305,21 +311,23 @@ export function Scoreboard(props: { showLeft: boolean }): JSX.Element {
     if (!st) return null;
     try { return headline(game.model, st); } catch { return null; }
   });
-  const r = (v: number) => Math.round(v);
+  /** Shown as the end screen shows it (verdict.ts `shownScore`): the rounded 2026 value plus the rounded change. */
+  const life = () => shownScore(h()!.start.lifeNow, h()!.lifeNow);
+  const left = () => shownScore(h()!.start.left2050, h()!.left2050);
   return (
     <Show when={h()}>
       <div class="yf-score" role="group" aria-label={t("play.score.label")} data-testid="scoreboard">
         <Tooltip heading={t("play.score.life")} content={<>{t("play.score.tip_life")} {t("play.score.rule")}</>}>
           <div class="yf-score-item" data-testid="score-life" tabIndex={0}>
             <span class="label">{t("play.score.life")}</span>
-            <b class="data">{t("play.score.value", { n: r(h()!.lifeNow) })}</b><span class="small">{t("play.score.was", { n: r(h()!.start.lifeNow) })}</span>
+            <b class="data">{t("play.score.value", { n: life().now })}</b><span class="small">{t("play.score.was", { n: life().start })}</span>
           </div>
         </Tooltip>
         <Show when={props.showLeft}>
           <Tooltip heading={t("play.score.left")} content={<>{t("play.score.tip_left")} {t("play.score.rule")}</>}>
             <div class="yf-score-item" data-testid="score-left" tabIndex={0}>
               <span class="label">{t("play.score.left")}</span>
-              <b class="data">{t("play.score.value", { n: r(h()!.left2050) })}</b><span class="small">{t("play.score.was", { n: r(h()!.start.left2050) })}</span>
+              <b class="data">{t("play.score.value", { n: left().now })}</b><span class="small">{t("play.score.was", { n: left().start })}</span>
             </div>
           </Tooltip>
         </Show>

@@ -2,7 +2,7 @@
 // the hook; three ways in; and along the foot, the generation from 2026 to a sealed letter in
 // 2050. Touching any authority opens it in the atlas.
 import { createSignal, For, onCleanup, Show, type JSX } from "solid-js";
-import { lang, t } from "../../i18n";
+import { lang, pick, t, textOf } from "../../i18n";
 import type { HoverInfo, PaperMap, WalesGeo } from "../../map";
 import { MapView } from "../atlas/MapView";
 import "../atlas/atlas.css";
@@ -39,9 +39,10 @@ export function TitleScreen(props: { geo: WalesGeo | null }): JSX.Element {
       <main class="title-sheet sheet" aria-labelledby="title-name">
         <div class="title-lang"><LangToggle /></div>
         <h1 class="t-poster title-name" id="title-name" lang="cy">Etifeddiaeth</h1>
+        {/* in Cymraeg the subtitle is Welsh only (cold playtest 6) */}
         <p class="title-sub">
-          <span lang="cy">Gêm am Gymru</span>
-          <span lang="en">Inheritance: a game of Wales</span>
+          <span lang="cy">{pick(textOf("shell.subtitle"), "cy")}</span>
+          <Show when={lang() === "en"}><span lang="en">{pick(textOf("shell.subtitle"), "en")}</span></Show>
         </p>
         <p class="title-hook story">{t("shell.title.hook")}</p>
         <ul class="title-ways">
@@ -70,8 +71,8 @@ export function TitleScreen(props: { geo: WalesGeo | null }): JSX.Element {
       </main>
 
       <div class="title-line strip" aria-label={t("shell.title.lineAria")} role="img">
-        <div class="tl-heddiw"><span class="tl-era print">Heddiw</span></div>
-        <div class="tl-yfory"><span class="tl-era print">Yfory</span></div>
+        <div class="tl-heddiw"><span class="tl-era print">{t("play2.era.heddiw")}</span></div>
+        <div class="tl-yfory"><span class="tl-era print">{t("play2.era.yfory")}</span></div>
         <For each={TICKS}>
           {(y, i) => (
             <span class="tl-tick small data" style={{ left: `calc(var(--tl-start) + (100% - var(--tl-start) - var(--tl-end)) * ${i() / (TICKS.length - 1)})` }}>{y}</span>

@@ -72,9 +72,40 @@ export function computeTrust(g: GameTuning, f: TrustFacts): { after: number; rea
   const net = Math.max(-T.clamp, Math.min(T.clamp, sum + drift));
   let after = Math.max(0, Math.min(100, f.before + net));
   if (f.returning) after = Math.max(20, after);
-  // the promise result is always the first reason shown (playtest 3), then the largest other
-  const promise = reasons.find((r) => r.code === "pledge_kept" || r.code === "pledge_broken");
-  const others = reasons.filter((r) => r.code !== "drift" && r !== promise).sort((a, b) => Math.abs(b.points) - Math.abs(a.points));
+  return { after, reasons, top: topReasons(reasons, f.before, after) };
+}
+
+/** Which way Trust moved, as the results step says it ("went up", "went down", "stayed the same"). */
+export function trustDirection(before: number, after: number): "up" | "down" | "same" {
+  return after > before + 0.5 ? "up" : after < before - 0.5 ? "down" : "same";
+}
+
+/**
+ * The reasons shown under "Trust went up / down" (at most three). The promise result comes first
+ * (playtest 3), then the largest other. Bars that fell count as one reason, not one per goal. When
+ * Trust fell, at least one reason shown pulled it down, and when it rose, at least one pushed it up
+ * (cold playtest 6, item 7: "Trust went down" over two good reasons, because three small losses and
+ * the drift back to the middle each lost to a bigger gain).
+ */
+export function topReasons(reasons: TrustReason[], before: number, after: number): TrustReason[] {
+  const merged: TrustReason[] = [];
+  for (const r of reasons) {
+    const same = r.code === "pips_lost" ? merged.find((m) => m.code === "pips_lost") : undefined;
+    if (same) same.points += r.points;
+    else merged.push({ ...r });
+  }
+  const promise = merged.find((r) => r.code === "pledge_kept" || r.code === "pledge_broken");
+  const others = merged.filter((r) => r.code !== "drift" && r !== promise).sort((a, b) => Math.abs(b.points) - Math.abs(a.points));
   const top = [...(promise ? [promise] : []), ...others].slice(0, 2);
-  return { after, reasons, top };
+  const dir = trustDirection(before, after);
+  if (dir === "same") return top;
+  const agrees = (r: TrustReason) => (dir === "down" ? r.points < 0 : r.points > 0);
+  if (top.some(agrees)) return top;
+  const best = merged.filter(agrees).sort((a, b) => Math.abs(b.points) - Math.abs(a.points))[0];
+  if (!best) return top;
+  // replace the weaker of the shown reasons that is not the promise, else add it
+  const k = top.length >= 2 && top[top.length - 1] !== promise ? top.length - 1 : -1;
+  if (k >= 0) top[k] = best;
+  else top.push(best);
+  return top;
 }

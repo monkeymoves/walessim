@@ -12,7 +12,8 @@ import { bandValue, displayPips, makeContext, walesDelta, walesValue, type Ctx }
 import { buildSchedule, type TermSchedule } from "./schedule";
 import { deal, initialDeck, needsPartner, paysInTime } from "./deck";
 import { gradeBethesda, gradeRhondda, tipName, tipRisk } from "./places";
-import { bandFor, computeTrust } from "./trust";
+import { bandFor, computeTrust, topReasons } from "./trust";
+import { promiseHelpable } from "./promise";
 import { archetypeOf, level, openingVoice, overlookedRegion, pickVoice, writeLetter, type NamedLine, type VoiceEventCandidate } from "./voices";
 import { fill, joinNames, type SlotValue } from "./welsh";
 import {
@@ -98,6 +99,8 @@ interface Sim {
   pledgeBrokenByUpkeep: boolean;
   /** Budget effects of this term's standing ticket and repayments, for the ledger. */
   spent: number;
+  /** Coins left unspent and not saved at this term's commit (`Plays.save`): lost. */
+  notSaved?: number;
   ghost: { lived: number; left: number; result: number } | null;
 }
 
@@ -250,6 +253,7 @@ function openTerm(ctx: Ctx, prev: A.GameState, term: number): A.GameState {
   s.extraTrust = [];
   s.pledgeBrokenByUpkeep = false;
   s.spent = 0;
+  s.notSaved = 0;
 
   const sch = s.schedule[term]!;
   const active = [...state.activeTrends];
@@ -351,14 +355,22 @@ function curveballBudget(ctx: Ctx, state: A.GameState, active: string[]): number
  * else the weakest, never a strand asked in either of the last two terms, preferring strands with an
  * opening voice template.
  */
-function pledgeStrand(ctx: Ctx, state: A.GameState): StrandId {
+/**
+ * The goal the opening voice asks a promise on, or null when no card can help any goal this turn
+ * (cold playtest 6, item 1: a promise could be asked with nothing in the hand able to keep it).
+ * Only goals a card in the hand, or one landing this turn, can help are asked about.
+ */
+function pledgeStrand(ctx: Ctx, state: A.GameState): StrandId | null {
+  const cardOf = (id: string) => ctx.cards.get(id);
+  const helpable = state.strands.filter((x) => promiseHelpable(state, cardOf, x.strand));
+  if (!helpable.length) return null;
   const last = state.lastOutcome?.strands ?? [];
   const recent = (sim(state).pledgeOffers ?? []).slice(-2);
   const fall = (id: StrandId) => {
     const c = last.find((x) => x.strand === id);
     return c ? c.flowAfter - c.flowBefore : 0;
   };
-  const order = [...state.strands].sort((a, b) => fall(a.strand) - fall(b.strand) || a.flowPips - b.flowPips || a.flow - b.flow);
+  const order = [...helpable].sort((a, b) => fall(a.strand) - fall(b.strand) || a.flowPips - b.flowPips || a.flow - b.flow);
   const fresh = order.filter((x) => !recent.includes(x.strand));
   const pool = fresh.length ? fresh : order;
   // prefer a strand whose own opening voice has not been heard this game (playtest 2)
@@ -670,7 +682,10 @@ function commit(ctx: Ctx, prev: A.GameState, plays: A.Plays, caretaker: boolean)
   // budget: what is left is contingency
   const spent = playCost(model, state, plays);
   s.spent = spent;
-  const available = availableFor(model, state, plays) - spent;
+  const left = availableFor(model, state, plays) - spent;
+  // only the coins the player saved are held for a crisis and can carry over; the rest are lost now
+  const available = plays.save == null || !Number.isFinite(plays.save) ? left : Math.max(0, Math.min(left, Math.floor(plays.save)));
+  s.notSaved = Math.max(0, left - available);
   state.budget = { ...state.budget, available };
 
   // the hand: played and discarded cards go to the bottom of the deck
@@ -773,6 +788,8 @@ function visitOffer(ctx: Ctx, state: A.GameState): A.VisitOffer | null {
       ...(place === "rhondda" ? { tipRisk: tipRisk(board, activeIds.includes("wet-decade"), s.stitched ?? []), stitched: [...(s.stitched ?? [])] } : { stitched: [...(s.bethesdaThreads ?? [])] }),
       activeTrends: activeIds,
       termConditions: termConditions(ctx, state, place),
+      // a visit no card asked for names the slow change that bears on this board, never another one
+      ...(triggeredBy.includes("curveball") ? { trend: activeIds.find((id) => [...(board.trend_penalties ?? []), ...(board.term_notes ?? [])].some((p) => p.curveball === id)) ?? null } : {}),
     };
   };
   // every place a card played this term asks for you, each naming its own cards (playtest 3);
@@ -855,6 +872,9 @@ function toPassing(ctx: Ctx, state: A.GameState): A.GameState {
       contingency: state.budget.available,
       hit: { absorb: base * m.absorb, respond1: base * m.respond1, respond2: base * m.respond2 },
     };
+    // what the crisis takes off next turn's budget, the same sum resolve charges (spending does not change it)
+    const cut = buildTermInput(ctx, state, 0, true).budgetHit;
+    if (cut > 0) state.shock.budgetCut = cut;
   } else state.shock = null;
   state.step = "passing";
   return state;
@@ -1176,7 +1196,6 @@ function resolveTerm(ctx: Ctx, prev: A.GameState, response: A.ShockResponse): A.
   const { input, trust: extraTrust, budgetHit } = buildTermInput(ctx, state, resp, true);
 
   // run the ensemble
-  const t0 = typeof performance !== "undefined" ? performance.now() : 0;
   const runs = s.runs.map(cloneRun);
   let contribs: A.Contribution[] = [];
   let events: { kind: string; id: string; la?: number; play?: string }[] = [];
@@ -1192,14 +1211,10 @@ function resolveTerm(ctx: Ctx, prev: A.GameState, response: A.ShockResponse): A.
     r.flowHist.push(st.flow);
     r.stockHist.push(st.stock);
   }
-  // too slow for this device: later terms keep the first half of the runs (run 0 stays central)
-  const elapsed = typeof performance !== "undefined" ? performance.now() - t0 : 0;
-  if (elapsed > state.options.timeBudgetMs && runs.length > 20) {
-    const keep = Math.max(20, Math.floor(runs.length / 2));
-    runs.length = keep;
-    s.params = s.params.slice(0, keep);
-    state.runsNote = `Resolving took ${Math.round(elapsed)} ms, so later terms use ${keep} runs instead of ${state.options.runs}.`;
-  }
+  // The run count never depends on the clock (cold playtest 6, item 9): a slow first resolve once
+  // dropped later terms to half the runs, the replay of the save ran fast and kept them all, so a
+  // reload showed other bars, or failed to replay and started a new game with a new hand. The run
+  // count is fixed by the options at the start of the game, which the save carries.
   s.runs = runs;
   s.lastContribs = contribs;
   s.deliveries = input.deliveries.filter((d) => d.landTerm > term);
@@ -1325,6 +1340,7 @@ function resolveTerm(ctx: Ctx, prev: A.GameState, response: A.ShockResponse): A.
     plays: state.plays ?? { cards: [] },
     spent: s.spent,
     contingencyHeld,
+    ...(s.notSaved ? { coinsNotSaved: s.notSaved } : {}),
     arrivals,
     newTrend: s.schedule[term]!.newTrend,
     shock: shockOutcome,
@@ -1332,7 +1348,7 @@ function resolveTerm(ctx: Ctx, prev: A.GameState, response: A.ShockResponse): A.
     pledge,
     strands: changes,
     slips,
-    trust: { before: state.trust, after, band: band.id, cardLimit, reasons, top: trustOut.top, lostSeat },
+    trust: { before: state.trust, after, band: band.id, cardLimit, reasons, top: topReasons(reasons, state.trust, after), lostSeat },
     voice,
     events: gameEvents,
     wellbeing,
@@ -2050,6 +2066,7 @@ export function whatMattered(model: CompiledModel, state: A.GameState, limit = 3
           cards.set(key, m);
         }
         if (c.cause.place && !m.place) m.place = { place: c.cause.place.place, grade: c.cause.place.grade };
+        if (m.fromYear === undefined || h.year < m.fromYear) m.fromYear = h.year;
         for (const sh of shares) m.strandSize[sh.strand]! += sh.delta * w[STRAND_IDS[sh.strand]!] * 10;
       } else if (c.cause.kind === "shock" && !c.recovery && c.cause.term === h.term) {
         for (const sh of shares) shockSize[sh.strand]! += sh.delta * w[STRAND_IDS[sh.strand]!] * 10;
@@ -2092,7 +2109,7 @@ export function unusedCoins(state: A.GameState, carry: number): { coins: number;
   const perTurn = state.history.map((h) => {
     if (h.caretaker) return 0;
     const left = Math.max(0, h.contingencyHeld - (h.shock?.response ?? 0));
-    return Math.max(0, left - carry);
+    return Math.max(0, left - carry) + (h.coinsNotSaved ?? 0);
   });
   const turns = perTurn.filter((n) => n > 0).length;
   return { coins: perTurn.reduce((a, b) => a + b, 0), turns, firstTerm: Math.max(0, perTurn.findIndex((n) => n > 0)), perTurn };

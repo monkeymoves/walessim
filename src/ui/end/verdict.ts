@@ -3,7 +3,7 @@
 // beside "Both scores rose" when one went 46 to 46; "about 46" beside an autopilot at 46 that you
 // "finished ahead of by about 4").
 import { STRAND_IDS } from "../../model/schema";
-import type { EndResult } from "../../engine/api";
+import type { EndResult, Mattered, StrandId } from "../../engine/api";
 
 export type Side = "lived" | "left";
 export type Dir = "up" | "level" | "down";
@@ -14,14 +14,25 @@ const fin = (v: number | null | undefined): number => (typeof v === "number" && 
 export const toPoints = (netSteps: number): number => (fin(netSteps) * 10) / STRAND_IDS.length;
 
 /**
+ * A score as shown, from its 2026 value and its value now: the start is rounded and the shown value is
+ * the start plus the rounded change, so "was 46, now about 41" always reads as the change. The top bar
+ * and the end screen both use it, so the last top-bar total and the end total are the same number
+ * (cold playtest 6, item 5: 40 on the top bar, 41 on the end screen).
+ */
+export function shownScore(start: number, now: number): { start: number; now: number; change: number } {
+  const s0 = Math.round(fin(start));
+  const change = Math.round(fin(now) - fin(start)) || 0;
+  return { start: s0, now: s0 + change, change };
+}
+
+/**
  * One side's 2026 score and its end score out of 100, rounded once: the start is rounded and the end
  * is the start plus the rounded change, so "46 to 43" always reads as the change the engine judged.
  */
 export function sideScore(r: EndResult, side: Side): { start: number; end: number; change: number } {
   const startRaw = fin(side === "lived" ? r.start.lived : r.start.left) * 10;
-  const start = Math.round(startRaw);
-  const change = Math.round(toPoints(side === "lived" ? r.lived.value : r.left.value)) || 0;
-  return { start, end: start + change, change };
+  const x = shownScore(startRaw, startRaw + toPoints(side === "lived" ? r.lived.value : r.left.value));
+  return { start: x.start, end: x.now, change: x.change };
 }
 
 /** Up, level or down, from the same rounded change the score line shows. */
@@ -75,3 +86,31 @@ export function resultRange(r: EndResult): { lo: number; hi: number } | null {
 
 /** The turn (0 = 2026 to 2030) that ended in the lowest year: `worstTerm` indexes years, so one before it. */
 export const hardestTurn = (worstTerm: number): number => Math.max(0, worstTerm - 1);
+
+/**
+ * The one reason the end screen gives, and the turn the timeline marks for it (cold playtest 6, item 5:
+ * "Hardest turn 2026" on the timeline while the sentence blamed the 2042 crisis). `cause` is the thing
+ * named after "The biggest reason:", or null when the sentence names a goal or none. `turn` is the turn
+ * the timeline marks as the hardest: for a fall in Life in your years, the turn that ended lowest; for a
+ * named crisis or lost election, its own turn; otherwise none, so the two never disagree.
+ */
+export interface Reason {
+  kind: WhyKind;
+  cause: Mattered | null;
+  /** The goal named when no single cause is: the one that fell (down) or rose (up) the most. */
+  goal: { strand: StrandId; up: boolean } | null;
+  turn: number | null;
+}
+
+export function verdictReason(r: EndResult, all: Mattered[], coinTurns: number): Reason {
+  const kind = whyKind(r, coinTurns);
+  if (kind === "coins") return { kind, cause: null, goal: null, turn: null };
+  if (kind === "lived") return { kind, cause: null, goal: null, turn: r.worstFell !== false && r.worstTerm > 0 ? hardestTurn(r.worstTerm) : null };
+  const L = direction(r, "lived"), F = direction(r, "left");
+  const down = kind === "both" || kind === "left" || (kind === "mixed" && (L === "down" || F === "down"));
+  const key = r.result.which;
+  const byGoal = [...r.perStrand].sort((a, b) => (down ? a[key] - b[key] : b[key] - a[key]))[0];
+  const cause = (down ? all.filter((m) => m.size < 0 && m.kind !== "coins_unused") : all.filter((m) => m.size > 0))[0] ?? null;
+  const turn = cause && down && (cause.kind === "shock" || cause.kind === "lost_turn") ? cause.term : null;
+  return { kind, cause, goal: cause || !byGoal ? null : { strand: byGoal.strand, up: !down }, turn };
+}

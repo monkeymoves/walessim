@@ -5,14 +5,18 @@
 //   <CompareButton card={id} />   colours the map by the card's measure (the atlas lens, in play)
 //   <ForScale card={id} />        the Wales figure for scale, on a result slip
 //   <TrendFact curveball={id} />  a sourced line with a new slow change
+//   <PlaceFacts place={id} />     one or two real figures for a place that invites you
+//   <WalesNow />                  at the start of a turn: the measure that moved most, beside its real start
 // Every figure comes from the card's `fact`, resolved at build time from la-indicators.json.
-import { Show, type JSX } from "solid-js";
+import { createMemo, createSignal, For, onCleanup, Show, type JSX } from "solid-js";
 import { t } from "../../i18n";
-import { SourceTag } from "../parts";
+import { CloseButton, SourceTag } from "../parts";
 import { useGame } from "./context";
 import { cardIndicator, indicatorsOf } from "./mapFacts";
 import type { StrandId } from "../../model/schema";
-import { forScaleText, measureName, realWalesText } from "./figures";
+import { figValue, forScaleText, measureName, realWalesText, unitWords } from "./figures";
+import { walesMover } from "./walesNow";
+import type { AtlasIndicator } from "../atlas/data";
 import { inplay, openAtlas, openBook } from "./inplay";
 
 /** The rule that explains a card best: the first main effect that names one. */
@@ -175,5 +179,120 @@ export function NotebookEndLine(props: { class?: string }): JSX.Element {
       {t("facts.nb.end", { n: las().length })}
       <Show when={never()}> {never()}</Show>
     </p>
+  );
+}
+
+/**
+ * The measures that say most about a place that invites you (cold playtest 6: the real Wales in the
+ * decision, not a place to visit). Chosen by what each board is about; the values are read from the
+ * data for the board's council area, never typed in.
+ */
+const PLACE_FIGURES: Record<string, string[]> = {
+  rhondda: ["deprivation_10", "flood_exposure"],
+  bethesda: ["welsh_speakers", "affordability"],
+};
+
+/** "Neighbourhoods in the poorest tenth in Rhondda Cynon Taf: 22% of small neighbourhoods. Wales: 10%." with sources. */
+export function PlaceFacts(props: { place: string; n?: number; class?: string }): JSX.Element {
+  const { game } = useGame();
+  const figs = createMemo(() => {
+    const board = game.names.place(props.place as never);
+    const la = board?.la;
+    if (!la) return [];
+    const all = indicatorsOf(game.model);
+    const ids = PLACE_FIGURES[props.place] ?? [];
+    const out: AtlasIndicator[] = [];
+    for (const id of ids) {
+      const ind = all.get(id);
+      if (ind && ind.laValues[la] != null && ind.wales != null && ind.sources.length) out.push(ind);
+    }
+    return out.slice(0, props.n ?? 2).map((ind) => ({
+      ind,
+      text: t("facts.real.area", {
+        measure: measureName(ind), area: game.names.laName(la), value: figValue(ind, ind.laValues[la]), unit: unitWords(ind), wales: figValue(ind, ind.wales),
+      }).replace(/\s+\./g, "."),
+    }));
+  });
+  return (
+    <Show when={figs().length}>
+      <div class={`rw-invite small${props.class ? " " + props.class : ""}`} data-testid="invite-facts">
+        <For each={figs()}>
+          {(f, i) => (
+            <p class="rw-invite-line" data-testid="invite-fact">
+              <Show when={i() === 0}><span class="rw-label label">{t("facts.real.label")}</span>{" "}</Show>
+              {f.text} <SourceTag source={f.ind.sources[0] ?? null} year={f.ind.year} class="rw-source" />
+            </p>
+          )}
+        </For>
+      </div>
+    </Show>
+  );
+}
+
+/**
+ * "Wales now", on the map at the start of a turn: the measure the game says moved most since 2026
+ * (a game estimate, in words), beside its real value when the game began, with its source. In turn 1,
+ * before anything has moved, it says in one line what the two scores and the 2050 marker are.
+ */
+export function WalesNow(): JSX.Element {
+  const { game } = useGame();
+  const [closed, setClosed] = createSignal<number | null>(null);
+  /**
+   * Under the slow change on the left when there is room; on a short screen, or with the slow
+   * changes unfolded, it moves to the right of the map rather than sit on them.
+   */
+  const [right, setRight] = createSignal(false);
+  let raf = 0;
+  const place = (el: HTMLElement) => {
+    const tick = () => {
+      const stage = el.closest(".yf-stage")?.getBoundingClientRect();
+      const slip = el.closest(".yf-stage")?.querySelector(".yf-slip")?.getBoundingClientRect();
+      if (stage) {
+        const top = stage.bottom - 52 - el.offsetHeight;
+        setRight(!!slip && slip.height > 0 && slip.bottom + 10 > top);
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+  };
+  onCleanup(() => cancelAnimationFrame(raf));
+  const s = () => game.state();
+  const mover = createMemo(() => {
+    const st = s();
+    return st && st.term >= 1 ? walesMover(game.model, st) : null;
+  });
+  const ind = () => (mover() ? indicatorsOf(game.model).get(mover()!.indicator) ?? null : null);
+  /** Turn 1 has nothing moved yet: the same slip says what the two scores and the 2050 marker are. */
+  const first = () => s()?.term === 0;
+  const show = () => (first() || !!ind()) && closed() !== s()?.term;
+  return (
+    <Show when={show()}>
+      <Show when={!first()} fallback={
+        <aside class="rw-now sheet" classList={{ right: right() }} ref={place} data-testid="wales-now" aria-labelledby="rw-now-title">
+          <div class="rw-now-head">
+            <h2 class="label" id="rw-now-title">{t("play3.now.label")}</h2>
+            <CloseButton label={t("play3.now.close")} onClick={() => setClosed(0)} />
+          </div>
+          <p class="small rw-now-scores" data-testid="scores-line">{t("play2.guide.scores")}</p>
+        </aside>
+      }>
+      <aside class="rw-now sheet" classList={{ right: right() }} ref={place} data-testid="wales-now" aria-labelledby="rw-now-title">
+        <div class="rw-now-head">
+          <h2 class="label" id="rw-now-title">{t("play3.now.label")}</h2>
+          <CloseButton label={t("play3.now.close")} onClick={() => setClosed(s()?.term ?? null)} />
+        </div>
+        <p class="rw-now-move">
+          {t(`facts.since.${mover()!.dir}_${mover()!.size}`, { measure: measureName(ind()!) })}{" "}
+          {t(mover()!.better ? "facts.since.better" : "facts.since.worse")}
+        </p>
+        <p class="small rw-now-tag">{t("facts.area.since_tag")}</p>
+        <p class="small rw-now-real">
+          {t("play3.now.start", { value: figValue(ind()!, ind()!.wales), unit: unitWords(ind()!), year: ind()!.year }).replace(/\s+\(/, " (")}{" "}
+          <SourceTag source={ind()!.sources[0] ?? null} year={ind()!.year} class="rw-source" />{" "}
+          <button type="button" class="yf-linkbtn" onClick={() => openAtlas(null, ind()!.id, true)}>{t("facts.scale.all")}</button>
+        </p>
+      </aside>
+      </Show>
+    </Show>
   );
 }

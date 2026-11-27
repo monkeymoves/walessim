@@ -62,3 +62,40 @@ export function previewLines(p: CardPreview, card: Card, year: number, name: (id
   if (!out.some((l) => l.goals.length)) out.push({ key: "play.card.nothing_seen", vars: {}, goals: [] });
   return out;
 }
+
+/** One "Needs" line: an i18n key and its fill-ins (card names are filled by the caller's `cardName`). */
+export interface NeedLine { key: string; vars: Record<string, string> }
+
+/**
+ * What a card needs to work in full, as its own lines (cold playtest 6: "The catch" hid "only at full
+ * strength if you have played Skills"). Read from the card's effect conditions, so no need is written
+ * by hand and none is left out: another card played first, trained workers, local help, or a card in
+ * force that stops a downside.
+ */
+export function needLines(card: Card, cards: readonly Card[], cardName: (id: string) => string, list: (xs: string[]) => string): NeedLine[] {
+  const out: NeedLine[] = [];
+  const seen = new Set<string>();
+  const add = (key: string, vars: Record<string, string>) => {
+    const k = `${key}|${JSON.stringify(vars)}`;
+    if (!seen.has(k)) { seen.add(k); out.push({ key, vars }); }
+  };
+  for (const e of card.effects) {
+    const c = e.condition;
+    if (!c) continue;
+    if (c.half_without_card) add("play2.needs.card", { card: cardName(c.half_without_card) });
+    if (c.half_if_below) {
+      // the cards that raise what it needs, from the model, never a name typed here
+      const raisers = cards.filter((x) => x.id !== card.id && x.effects.some((f) => f.target === c.half_if_below!.component && f.sign > 0 && !f.side)).map((x) => cardName(x.id));
+      add(raisers.length ? "play2.needs.below_cards" : "play2.needs.below", { cards: list(raisers) });
+    }
+    if (c.needs_partners || (card.needs_partners && !e.side)) add("play2.needs.partners", {});
+    if (c.unless_card_in_scope) add("play2.needs.unless_scope", { card: cardName(c.unless_card_in_scope) });
+    if (c.unless_card_in_force) add("play2.needs.unless_force", { card: cardName(c.unless_card_in_force) });
+  }
+  return out;
+}
+
+/** What choosing one region rather than all of Wales changes, for a card that offers both. */
+export function scopeChoiceKey(card: Pick<Card, "scope">): string | null {
+  return card.scope === "national_or_region" ? "play2.card.scope_choice" : card.scope === "region" ? "play2.card.scope_region" : null;
+}

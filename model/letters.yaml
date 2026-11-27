@@ -87,7 +87,7 @@
     lost_term:
       - { en: "The years after you were voted out, from {lost_year}, were the bleakest. Somebody kept the lights on until you came back.", cy: "Y blynyddoedd ar ôl i chi golli'r etholiad, o {lost_year}, oedd y tywyllaf. Cadwodd rhywun y goleuadau ymlaen nes i chi ddod yn ôl.", cy_review: true }
       - { en: "{lost_year} is the year we all say we nearly lost faith. You came back, and you did better. Credit where it is due.", cy: "{lost_year} yw'r flwyddyn y dywedwn ni i gyd i ni bron â cholli ffydd. Daethoch yn ôl, a gwneud yn well. Clod lle mae clod yn ddyledus.", cy_review: true }
-      - { en: "They took the pen off you in {lost_year}. It was fair. The pen was in better hands after.", cy: "Cymerwyd y gorlan oddi arnoch yn {lost_year}. Roedd yn deg. Roedd y gorlan mewn dwylo gwell wedyn.", cy_review: true }
+      - { en: "They took the pen off you in {lost_year}. It was fair. The pen was in better hands after.", cy: "Cymerwyd yr awenau oddi arnoch yn {lost_year}. Roedd yn deg. Roedd yr awenau mewn dwylo gwell wedyn.", cy_review: true }
     repairs:
       - { en: "The repairs you did not put off, from {year} on, are the reason the pipes held. Nobody sees that sort of thing.", cy: "Yr atgyweiriadau na ohiriwyd gennych, o {year} ymlaen, yw'r rheswm i'r pibau ddal. Does neb yn gweld y math yna o beth.", cy_review: true }
       - { en: "You mended things in {year} that nobody would have noticed breaking. They did not break.", cy: "Trwsiwyd pethau gennych yn {year} na fyddai neb wedi sylwi eu bod yn torri. Wnaethon nhw ddim torri.", cy_review: true }
@@ -160,7 +160,7 @@
   salutation:
     - { en: "{place}, 2050.", cy: "{place}, 2050.", cy_review: true }
     - { en: "{place}, 2050. I have tried to write this fairly.", cy: "{place}, 2050. Rwyf wedi ceisio ysgrifennu hwn yn deg.", cy_review: true }
-    - { en: "{place}, 2050. To whoever had the pen.", cy: "{place}, 2050. At bwy bynnag oedd â'r gorlan.", cy_review: true }
+    - { en: "{place}, 2050. To whoever had the pen.", cy: "{place}, 2050. At bwy bynnag oedd wrth y llyw.", cy_review: true }
   lived:
     - { en: "The storms were not your doing, nor the downturn. {worst_year} would have beaten anybody.", cy: "Nid chi achosodd y stormydd, na'r dirwasgiad. Byddai {worst_year} wedi trechu unrhyw un.", cy_review: true }
     - { en: "My parents do not talk about those years. When they do it is about money, and who went first.", cy: "Dydy fy rhieni ddim yn sôn am y blynyddoedd hynny. Pan maen nhw'n gwneud, mae'n ymwneud ag arian, a phwy aeth gyntaf.", cy_review: true }
@@ -189,7 +189,7 @@
     lost_term:
       - { en: "The years after you were voted out, from {lost_year}, were not the worst of them. I would like to know what you thought you were saving it for.", cy: "Nid y blynyddoedd ar ôl i chi golli'r etholiad, o {lost_year}, oedd y gwaethaf. Hoffwn wybod am beth oeddech chi'n meddwl eich bod yn ei gadw.", cy_review: true }
       - { en: "I do not blame you for {lost_year}. I blame the years before it, which are the ones that cost you the seat.", cy: "Dw i ddim yn eich beio am {lost_year}. Rwy'n beio'r blynyddoedd cyn hynny, sef y rhai a gostiodd y sedd i chi.", cy_review: true }
-      - { en: "They took the pen off you in {lost_year}. By then there was little left to write.", cy: "Cymerwyd y gorlan oddi arnoch yn {lost_year}. Erbyn hynny roedd ychydig ar ôl i'w ysgrifennu.", cy_review: true }
+      - { en: "They took the pen off you in {lost_year}. By then there was little left to write.", cy: "Cymerwyd yr awenau oddi arnoch yn {lost_year}. Erbyn hynny roedd ychydig ar ôl i'w ysgrifennu.", cy_review: true }
     repairs:
       - { en: "The repairs you put off in {year} are ours now, twice the size. I cannot find the thing you built instead.", cy: "Ni sydd biau'r atgyweiriadau a ohiriwyd gennych yn {year}, dwywaith y maint. Alla i ddim dod o hyd i'r hyn a adeiladoch yn eu lle.", cy_review: true }
       - { en: "The pipes failed in the winter after {year}. They had been failing in plain sight.", cy: "Methodd y pibau yn y gaeaf ar ôl {year}. Roedden nhw wedi bod yn methu o flaen pawb.", cy_review: true }

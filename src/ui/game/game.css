@@ -655,3 +655,101 @@
 .yf-panel-plan .yf-tray { flex: none; }
 .yf-panel-plan .yf-hand-wrap { min-height: calc(30px + 2 * (var(--ticket-compact-h) + 6px)); }
 .yf-panel-plan .yf-hand { min-height: 0; }
+
+/* ======================================================================
+   Cold playtest 6 (docs/design/playtest-6-cold.md): facts in play, layout
+   ====================================================================== */
+
+/* every card in the hand without "more below": no empty tray sheet (its hint sits in the hand's
+   head), the cap and coins in one head line, the coin sums in one run of words */
+.yf-panel-plan .yf-tray.empty { display: none; }
+.yf-hand-head { gap: 10px; }
+.yf-hand-hint { color: var(--ink-2); text-align: right; }
+.yf-budget-head { align-items: baseline; }
+.yf-cap { margin: 0; font-size: var(--size-ui); line-height: 1.3; }
+.yf-cap b { font-weight: var(--wght-grot-heavy); }
+.yf-budget-why { line-height: 1.35; }
+.yf-budget-why .strong { font-weight: var(--wght-grot-strong); }
+.yf-why-item .data { font-weight: var(--wght-grot-strong); }
+/* the coins and their three piles share a row where the rail has room */
+.yf-budget { grid-template-columns: max-content minmax(0, 1fr); column-gap: 14px; align-items: center; }
+.yf-budget > * { grid-column: 1 / -1; }
+.yf-budget > .yf-coins { grid-column: 1; }
+.yf-budget > .yf-piles { grid-column: 2; }
+.yf-piles { gap: 0 12px; }
+.yf-plan-foot { gap: 6px; }
+@media (max-width: 1360px) {
+  .yf-coin { width: 13px; height: 13px; }
+  .yf-coins { gap: 3px; padding: 4px 5px; }
+  .yf-piles { gap: 0 9px; }
+  .yf-pile dt { font-size: 10.5px; }
+  .yf-pile dd { font-size: 14px; }
+  .yf-plan-foot { padding: 8px 12px 10px; }
+}
+
+/* a note may sit below and to the left of its target (Trust): its arrow points up at the right */
+.yf-note.yf-note-belowleft::before { border: 7px solid transparent; width: 0; height: 0; top: -7px; bottom: auto; right: 22px; left: auto; border-top: 0; border-bottom-color: var(--slate); }
+
+/* choosing where: the opened card gives the map room (the comparison has the figure) */
+.yf-cardopen.choosing { width: min(320px, 36%); }
+@media (max-width: 1360px) {
+  .yf-cardopen.choosing { width: min(300px, 36%); padding: 10px 12px; }
+  .yf-cardopen.choosing .yf-co { grid-template-columns: 5.6em minmax(0, 1fr); }
+}
+
+/* "Wales now" at the start of a turn, under the slow change on the left of the map */
+.rw-now { position: absolute; left: 14px; bottom: 52px; width: 292px; z-index: 3; padding: 10px 14px 12px; display: grid; gap: 4px; color: var(--ink); box-shadow: var(--lit-edge), var(--shadow-sheet); }
+.rw-now-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.rw-now-head .label { color: var(--thread-deep); margin: 0; }
+.rw-now-move { font-family: var(--font-print); font-size: var(--size-story-small); line-height: 1.35; margin: 0; }
+.rw-now-tag { color: var(--ink-3); margin: 0; }
+.rw-now-real { margin: 0; line-height: 1.4; }
+
+/* real figures in a place's invitation */
+.rw-invite { display: grid; gap: 2px; line-height: 1.4; }
+.rw-invite-line { margin: 0; }
+
+/* the end screen: Play again always in view, pinned to the foot of the sheet while the rest scrolls */
+.end-plain .end-actions { position: sticky; bottom: 0; z-index: 2; box-shadow: var(--lit-edge), var(--shadow-lifted); }
+.end-plain .end-actions .yf-actions { flex-wrap: wrap; }
+.yf-main.ended .end { padding-bottom: 0; }
+.end-plain .end-col { padding-bottom: 14px; }
+/* coins and piles side by side when they fit, else the piles take their own row (Welsh labels) */
+.yf-budget { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 14px; }
+.yf-budget > * { flex: 1 1 100%; }
+.yf-budget > .yf-coins { flex: 0 0 auto; }
+.yf-budget > .yf-piles { flex: 1 1 auto; width: auto; }
+.yf-pile dt { white-space: nowrap; }
+.yf-save-btns { align-items: baseline; }
+.yf-save-btns .yf-why-link { margin-left: auto; }
+/* two places asking: "Not this turn" and its note side by side, so the played cards keep their room */
+.yf-panel-offers .yf-visit-stay { display: flex; align-items: center; gap: 12px; padding-top: 8px; padding-bottom: 8px; }
+.yf-panel-offers .yf-visit-stay .yf-actions { flex: none; }
+.yf-panel-offers .yf-visit-offer .story-small { margin: 0; }
+/* the quote on the stage sits above the selection line, and gives way to a map panel (cold playtest 6) */
+.yf-stagevoice { bottom: 52px; }
+.yf-stage:has(.mf-panel) .yf-stagevoice, .yf-stage:has(.mf-panel) .rw-now { display: none; }
+/* while a card is open the turn is not ending: the "no card played" warning steps aside for the hand */
+.yf-panel-plan:has(.yf-tray:not(.empty)) .yf-plan-foot > .yf-warn-line { display: none; }
+.yf-hand-head { padding-bottom: 3px; }
+/* Welsh names are longer: the stubs keep two lines of title in a little less height */
+@media (min-width: 1361px) { .yf[lang="cy"] { --ticket-compact-h: 46px; } }
+/* played stubs: a smaller stamp, so a long Welsh name is not cut */
+.yf-hand .ticket.compact .ticket-stamp-small { font-size: 9.5px; padding: 1px 4px 0; letter-spacing: 0.02em; }
+.yf[lang="cy"] .yf-hand .ticket.compact .ticket-title { font-stretch: var(--wdth-ticket); }
+/* single invitation: its words and button take the room they need; the played cards below give way */
+.yf-panel:has(.yf-visit-offer) > .yf-scroll { flex: none; overflow: visible; }
+.yf-panel:has(.yf-visit-offer) > .yf-hand-wrap { flex: 1 1 0; min-height: 0; }
+.yf-tray-head { justify-content: flex-end; }
+/* a card open: the hand's heading gives its line to the tickets (the tray names what to do) */
+.yf-panel-plan:has(.yf-tray:not(.empty)) .yf-hand-head { display: none; }
+@media (max-width: 1360px) { .yf[lang="cy"] .yf-cap { font-size: var(--size-small); line-height: 1.25; } }
+/* the top bar keeps its height when a card's preview chips appear on the goal tiles: otherwise the
+   hand moves under the pointer, the hover ends, and the board shakes (fix 7) */
+.yf .topbar { height: 113px; overflow: visible; position: relative; z-index: 6; }
+.yf .topbar .yf-bar-middle, .yf .topbar .yf-strands { align-self: start; }
+.rw-now.right { left: auto; right: 14px; }
+/* a card with its own Play button (all of Wales, two regions): "Keep for next turn" sits beside it,
+   not on a line of its own */
+.yf-tray .yf-where { position: relative; }
+.yf-tray .yf-where:has(.yf-tray-actions .btn-stamp):not(:has(.yf-why)) .yf-tray-head { position: absolute; right: 0; bottom: 6px; }

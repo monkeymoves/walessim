@@ -12,7 +12,7 @@ import { lensFor } from "../atlas/data";
 import { useGame } from "./context";
 import { cardRegions, regionLas } from "./names";
 import { cardIndicator } from "./mapFacts";
-import { inplay, noteSource, resetInplay } from "./inplay";
+import { inplay, noteArea, noteSource, resetInplay } from "./inplay";
 import {
   AreaPanel, CompareKey, focusCard, LookUpOverlay, MapControls, NotebookKeeper, openArea, pickRegion, RegionCompare, SelectionLine, showWales, stampMarkers, WalesPanel,
 } from "./MapPanels";
@@ -58,6 +58,8 @@ export function MapStage(props: { children?: JSX.Element }): JSX.Element {
     const pick = ui.regionPick();
     const s = game.state();
     if (pick && s?.step === "plan") {
+      // an area clicked to choose a region was looked at too: the notebook counts it (cold playtest 6, item 10)
+      if (code) noteArea(code);
       const r = code ? laRegion(code) : undefined;
       if (r) pickRegion(game, ui, pick, r);
       return;
@@ -92,6 +94,9 @@ export function MapStage(props: { children?: JSX.Element }): JSX.Element {
   createEffect(on(ui.regionPick, (pick) => {
     inplay.setFlash(null);
     inplay.setRegionHover(null);
+    // choosing a region is reading the atlas: the map takes the card's measure, with its key and
+    // source, as soon as the card asks "Where?" (cold playtest 6); "Back to the plain map" turns it off
+    inplay.setCompare(!!pick && !!cardIndicator(game.model, pick));
     if (!pick) return;
     const card = game.names.card(pick);
     ui.setLaPanel(null);
@@ -138,7 +143,14 @@ export function MapStage(props: { children?: JSX.Element }): JSX.Element {
     if (!m) return;
     const ended = game.state()?.step === "ended";
     const panel = !ui.inPlace() && !ended && (!!ui.laPanel() || !!ui.regionPick() || inplay.walesOpen());
-    m.setPadding({ left: ui.inPlace() || ended ? 16 : panel ? 364 : Math.min(300, Math.round(host.clientWidth * 0.3)), bottom: ui.inPlace() || ended ? 16 : 40 });
+    // the opened card sits on the right of the map: while a region is chosen, Wales sits between
+    // the comparison and the card when there is room for it
+    const s = game.state();
+    const card = !ui.inPlace() && !ended && s?.step === "plan" && !!game.selected() && !game.trace() && !game.ledgerOpen();
+    const w = host.clientWidth;
+    const left = ui.inPlace() || ended ? 16 : panel ? (ui.regionPick() ? (w < 1000 ? 306 : 326) : 364) : Math.min(300, Math.round(w * 0.3));
+    const right = card && ui.regionPick() && w - left - 330 >= 300 ? 330 : 16;
+    m.setPadding({ left, right, bottom: ui.inPlace() || ended ? 16 : 40 });
   });
 
   // the four regions lit while a card waits for one
