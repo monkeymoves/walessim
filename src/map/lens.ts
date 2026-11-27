@@ -14,9 +14,10 @@ export function lensPosition(spec: LensSpec, v: number): number {
   return hi > lo ? Math.max(0, Math.min(1, (v - lo) / (hi - lo))) : 0.5;
 }
 
-/** The ramp stops for a lens: diverging ramps are flipped when lower is better, neutral when no direction. */
+/** The ramp stops for a lens: a sequential lens uses its own stops when given (the goal colour), else the
+ *  palette ramp; diverging ramps are flipped when lower is better, neutral when no direction. */
 export function lensStops(spec: LensSpec, pal: Palette): string[] {
-  if (spec.ramp === "sequential") return pal.lensSeq;
+  if (spec.ramp === "sequential") return spec.stops && spec.stops.length >= 2 ? spec.stops : pal.lensSeq;
   if (spec.higherIsBetter === null) return pal.lensDivNeutral;
   return spec.higherIsBetter ? pal.lensDiv : pal.lensDiv.slice().reverse();
 }

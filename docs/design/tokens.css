@@ -150,6 +150,16 @@
   --lens-peat-1: #F1EBD8; --lens-peat-2: #E0CFA3; --lens-peat-3: #C9A968; --lens-peat-4: #A67C3C; --lens-peat-5: #6E4A1E;
   --lens-woad-1: #E8EEF0; --lens-woad-2: #C3D5DF; --lens-woad-3: #93B4C9; --lens-woad-4: #5C8AA9; --lens-woad-5: #2C5778;
   --lens-moss-1: #EDF0DE; --lens-moss-2: #CFDCB4; --lens-moss-3: #A3BF87; --lens-moss-4: #6E9A5E; --lens-moss-5: #3B6B3F;
+  /* Goal ramps (src/ui/atlas/ramps.ts is the source the map uses): every sequential measure is drawn
+     in its goal's colour, five steps at the same lightness in every goal. Peat stays for measures
+     with no goal. */
+  --lens-prosperous-1: #F6EDDD; --lens-prosperous-2: #DFC79B; --lens-prosperous-3: #C49E53; --lens-prosperous-4: #AA6F00; --lens-prosperous-5: #7D4500;
+  --lens-resilient-1: #E6F2E8; --lens-resilient-2: #B2D5B8; --lens-resilient-3: #7CB488; --lens-resilient-4: #478F59; --lens-resilient-5: #236436;
+  --lens-healthier-1: #E3F2F0; --lens-healthier-2: #AAD5CF; --lens-healthier-3: #6EB4AB; --lens-healthier-4: #2C8E85; --lens-healthier-5: #00635C;
+  --lens-equal-1: #F5EAF8; --lens-equal-2: #DDBEE3; --lens-equal-3: #C091C9; --lens-equal-4: #9D64A8; --lens-equal-5: #703F79;
+  --lens-cohesive-1: #FDEAE5; --lens-cohesive-2: #EFBDB1; --lens-cohesive-3: #DA8E7C; --lens-cohesive-4: #B9604B; --lens-cohesive-5: #873B2A;
+  --lens-culture-1: #EBEDFC; --lens-culture-2: #C3C7EF; --lens-culture-3: #999FDB; --lens-culture-4: #7175BD; --lens-culture-5: #4B4E8B;
+  --lens-global-1: #E2F1FC; --lens-global-2: #A9D0EF; --lens-global-3: #6CACDC; --lens-global-4: #2C84BE; --lens-global-5: #005B8B;
   /* Diverging: woad below the midpoint, peat above. Safe for red-green deficiency. */
   --lens-div-1: #2C5778; --lens-div-2: #7FA3BC; --lens-div-3: #CBD9DE;
   --lens-div-mid: #F1EEE2;

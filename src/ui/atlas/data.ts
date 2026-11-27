@@ -1,5 +1,6 @@
 // Atlas view of the model: indicators grouped by strand, authority names and regions,
 // values per authority and the Wales value, lens specs. Reads only the compiled model.
+import { STRAND_RAMPS } from "./ramps";
 import { STRAND_IDS, type CompiledModel, type Indicator, type StrandId, type Text } from "../../model/schema";
 import type { LensSpec } from "../../map";
 import { ordinal, t } from "../../i18n";
@@ -81,7 +82,7 @@ export function byStrand(inds: AtlasIndicator[]): { strand: StrandId | null; ite
   return groups;
 }
 
-/** A lens over the 22 authorities. Change-over-time indicators diverge about the Wales value. */
+/** A lens over the 22 authorities, in the measure's goal colour (ramps.ts). Change-over-time indicators diverge about the Wales value. */
 export function lensFor(ind: AtlasIndicator): LensSpec {
   const vals = Object.values(ind.laValues);
   const lo = Math.min(...vals), hi = Math.max(...vals);
@@ -92,6 +93,7 @@ export function lensFor(ind: AtlasIndicator): LensSpec {
     ramp: diverging ? "diverging" : "sequential",
     higherIsBetter: ind.higherIsBetter,
     centre: diverging ? (ind.wales ?? undefined) : undefined,
+    stops: !diverging && ind.strand ? [...STRAND_RAMPS[ind.strand]] : undefined,
   };
 }
 

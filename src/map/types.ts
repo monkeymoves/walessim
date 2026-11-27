@@ -52,6 +52,9 @@ export interface LensSpec {
   higherIsBetter: boolean | null;
   /** Diverging centre (for example the Wales value). Defaults to the middle of the domain. */
   centre?: number;
+  /** Sequential only: the ramp stops, light to dark, in place of the palette's default ramp
+   *  (the atlas passes the measure's own goal colour). */
+  stops?: string[];
 }
 
 export type StitchKind = "made-safe" | "planted" | "built" | "generic";
