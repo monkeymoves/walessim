@@ -378,3 +378,32 @@ YAML tune values changed, and why:
 - Ceiling +3.9, A gift 0.0%: ok. Card use 0.71 to 1.51 plays per game in the top decile: ok.
 - Watch: average sits at the top edge of its band (+1.0), and south-east-only and no-contingency at
   the +0.3 allowance. Fairer visit grades lifted every visiting bot; the caretaker never visits.
+
+## Playtest 2 fixes in the engine (results, 200 seeds, 30 runs)
+
+Engine and model changes from `docs/design/playtest-2.md`: slips agree with tickets (no card named before
+its first effects land, except a printed side effect that lands at once; none for a strand its ticket
+does not show; a temporary hit wearing off is recovery; every landed shock has a slip with what the
+response bought; each slip carries its own thread); `Card.helps` lists every strand a card moves and
+`Card.mixed` the ones it can move either way; staged arrival (`Card.arrival`, `PostItem.firstTerm`);
+the jobs ripple starts when a card's first effects land; returned cards are shuffled and a recent hand
+is not dealt again; no voice repeats in a game; a place graded well twice runs itself; Bethesda counts
+earlier threads; voices that name a choice are gated on it; the letter leads with promises when every
+one was kept; `EndResult.worstFell`.
+
+| # | Change | From | To | Why |
+|---|---|---|---|---|
+| P2a | `debt.left_penalty`, cap (and R35) | 0.15, 0.45 | 0.2, 0.6 | After the fixes Left was the lower in 59% of average games (target at least 60): the average bot borrows once and never repays. |
+
+| Bot | Median | p10 | p90 | Lived | Left | Lived lower | Target |
+|---|---|---|---|---|---|---|---|
+| caretaker | -2.4 | -3.8 | -1.1 | -1.2 | -2.2 | 36% | -3.5 to -1.5: ok |
+| careless | -7.2 | -10.1 | -4.4 | -2.3 | -7.2 | 1% | -10 to -4: ok |
+| average | +0.5 | -2.2 | +2.4 | +1.8 | +0.9 | 38% | -1 to +1: ok |
+| thoughtful | +2.0 | +0.1 | +3.5 | +2.5 | +3.8 | 73% | +1.5 to +3.5: ok |
+| growth-only, green-only, borrower, prevention-only | -5.7, -3.9, -0.6, -0.0 | | | | | | at least 1.5 below thoughtful: ok |
+| south-east-only, ignore-places, no-contingency, end-game-dumper | +2.0, +1.7, +2.0, +1.8 | | | | | | at most thoughtful +0.3: ok |
+
+- Thoughtful minus caretaker, same seed: median +4.3, p10 +2.5: ok.
+- Lived the lower in 73% of thoughtful games; Left the lower in 63% of average games: ok.
+- Ceiling +4.1, A gift 0.1%: ok. Card use in the top decile within 0.2 to 1.6 plays per game: ok.

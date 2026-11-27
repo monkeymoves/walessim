@@ -31,5 +31,6 @@
   "engine.letter.named.card": "What I can still point to is {thing}, from {year}.",
   "engine.letter.named.arrival": "{thing} arrived in {year}, after you had gone. It counts.",
   "engine.letter.named.lost_term": "The term you lost the seat, {year}, is still the first thing people mention.",
-  "engine.slip.shock": "{shock} landed."
+  "engine.slip.shock": "{shock} landed.",
+  "engine.visit.stitched_beth": "Already in place from an earlier visit, and counted: {tips}."
 }

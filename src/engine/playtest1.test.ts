@@ -48,8 +48,8 @@ describe("what changed", () => {
           shocks++;
           expect(h.slips.some((x) => x.shock), `${seed} ${h.year}`).toBe(true);
         }
-        const moved = h.strands.filter((c) => c.pipsAfter !== c.pipsBefore).length;
-        expect(h.slips.filter((x) => x.pipChange !== undefined).length, `${seed} ${h.year}`).toBe(Math.min(3, moved));
+        const moved = h.strands.filter((c) => c.pipsAfter !== c.pipsBefore);
+        if (moved.length <= 3) for (const c of moved) expect(h.slips.some((x) => x.strand === c.strand && x.pipChange === c.pipsAfter - c.pipsBefore), `${seed} ${h.year} ${c.strand}`).toBe(true);
         for (const x of h.slips.filter((y) => y.unexpected)) expect(x.cause.kind === "event" || x.rule !== null).toBe(true);
       }
     }
@@ -119,15 +119,9 @@ describe("variety", () => {
         const offers = (g.sim as { pledgeOffers?: string[] }).pledgeOffers ?? [];
         for (let i = 1; i < offers.length; i++) expect(offers[i], `${bot.id} ${seed}`).not.toBe(offers[i - 1]);
         // an opening voice may come back only when its strand's pool is spent, and never in the next term
+        // playtest 2: no voice twice in a game, openings included
         const used = (g.sim as { usedVoices: string[] }).usedVoices;
-        for (let i = 1; i < used.length; i++) expect(used[i], `${bot.id} ${seed}`).not.toBe(used[i - 1]);
-        const repeats = used.filter((v, i) => used.indexOf(v) !== i);
-        for (const r of repeats) {
-          const tpl = m.voices.find((v) => v.id === r)!;
-          expect(tpl.event, r).toBe("opening");
-          const pool = m.voices.filter((v) => v.event === "opening" && v.strand === tpl.strand).map((v) => v.id);
-          expect(pool.every((id) => used.includes(id)), r).toBe(true);
-        }
+        expect(new Set(used).size, `${bot.id} ${seed}`).toBe(used.length);
       }
     }
   });

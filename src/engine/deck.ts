@@ -24,7 +24,11 @@ export function handProblems(ctx: Ctx, hand: string[], active: string[]): string
   return out;
 }
 
-export function deal(ctx: Ctx, deck: string[], held: string | null, size: number, active: string[]): { hand: string[]; deck: string[] } {
+/**
+ * Deal a hand. `recent` are the hands of recent terms: a hand that would share four or more cards with
+ * one of them swaps cards for others further down the deck (playtest 2: term 6 dealt term 2's hand).
+ */
+export function deal(ctx: Ctx, deck: string[], held: string | null, size: number, active: string[], recent: string[][] = []): { hand: string[]; deck: string[] } {
   const rest = [...deck];
   const hand: string[] = held ? [held] : [];
   while (hand.length < size && rest.length) hand.push(rest.shift()!);
@@ -49,6 +53,28 @@ export function deal(ctx: Ctx, deck: string[], held: string | null, size: number
         }
       }
     }
+  }
+  // avoid a recent hand: while some recent hand shares four or more cards, swap one of the shared
+  // cards (newest first) for a card further down the deck that is not in that hand, keeping the constraints
+  for (let guard = 0; guard < 10; guard++) {
+    const clash = recent.find((r) => hand.filter((c) => r.includes(c)).length >= 4);
+    if (!clash) break;
+    let swapped = false;
+    for (let h = hand.length - 1; h >= (held ? 1 : 0) && !swapped; h--) {
+      if (!clash.includes(hand[h]!)) continue;
+      for (let k = 0; k < rest.length && !swapped; k++) {
+        if (clash.includes(rest[k]!)) continue;
+        const trial = [...hand];
+        trial[h] = rest[k]!;
+        if (handProblems(ctx, trial, active).length > handProblems(ctx, hand, active).length) continue;
+        if (recent.some((r) => trial.filter((c) => r.includes(c)).length >= 4 && r !== clash && hand.filter((c) => r.includes(c)).length < 4)) continue;
+        const out = hand[h]!;
+        hand[h] = rest[k]!;
+        rest[k] = out;
+        swapped = true;
+      }
+    }
+    if (!swapped) break;
   }
   return { hand, deck: rest };
 }

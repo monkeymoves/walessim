@@ -7,7 +7,7 @@ import type { Card, CompiledModel, Effect, Grade, LaFlag, RegionId, StrandId, Te
 import { REGION_IDS, STRAND_IDS } from "../model/schema";
 import type * as A from "./api";
 import { EngineError } from "./errors";
-import { hashSeed, uniform } from "./rng";
+import { hashSeed, shuffle, uniform } from "./rng";
 import { bandValue, displayPips, makeContext, walesDelta, walesValue, type Ctx } from "./scores";
 import { buildSchedule, type TermSchedule } from "./schedule";
 import { deal, initialDeck } from "./deck";
@@ -83,8 +83,12 @@ interface Sim {
   caretakerNext: boolean;
   /** Visits offered by the first game's curated script, already used. */
   firstVisits: string[];
+  /** The hand dealt each term (no recent hand is dealt again). */
+  hands?: string[][];
   /** Strands asked for at each opening, oldest first (the pledge rotates). */
   pledgeOffers?: StrandId[];
+  /** Bethesda options placed on earlier visits (they stay in place and count). */
+  bethesdaThreads?: string[];
   /** Rhondda tips made safe on earlier visits (they stay stitched and drop a risk step). */
   stitched?: string[];
   /** Grades per place this term. */
@@ -255,7 +259,8 @@ function openTerm(ctx: Ctx, prev: A.GameState, term: number): A.GameState {
 
   // the hand
   const size = term === 0 ? g.first_hand_size : g.hand_size;
-  const dealt = deal(ctx, state.deck, s.held, size, activeIds);
+  const dealt = deal(ctx, state.deck, s.held, size, activeIds, (s.hands ?? []).slice(-4));
+  s.hands = [...(s.hands ?? []), dealt.hand];
   state.hand = dealt.hand;
   state.deck = dealt.deck;
   s.held = null;
@@ -280,17 +285,19 @@ function openTerm(ctx: Ctx, prev: A.GameState, term: number): A.GameState {
   s.carriedContingency = 0;
 
   // pledge offer and the opening voice
-  const lastVoice = state.lastOutcome?.voice ?? null;
   state.pledgeOffer = term >= 1 && !state.caretaker ? pledgeStrand(ctx, state) : null;
   if (state.pledgeOffer) s.pledgeOffers = [...(s.pledgeOffers ?? []), state.pledgeOffer];
   // no voice twice in a game unless the pool runs out (playtest 1)
-  const ov = state.pledgeOffer ? openingVoice(ctx, state.seed, term, state.pledgeOffer, mostMovedLa(ctx, s), s.usedVoices) : null;
+  const ovPick = state.pledgeOffer ? openingVoice(ctx, state.seed, term, state.pledgeOffer, mostMovedLa(ctx, s), s.usedVoices) : null;
+  // never a voice twice in a game: a spent pool gives no opening voice rather than a repeat
+  const ov = ovPick && !s.usedVoices.includes(ovPick.template) ? ovPick : null;
   if (ov) s.usedVoices = [...s.usedVoices, ov.template];
   state.opening = {
     year: state.year,
     arrivals: state.post.filter((p) => p.arrivesTerm === term),
     newTrend: sch.newTrend,
-    voice: ov ?? lastVoice,
+    // the opening voice asks for the promise; it is never a voice already heard this game
+    voice: ov,
     caretaker: state.caretaker,
     returning: state.returning,
   };
@@ -328,7 +335,9 @@ function pledgeStrand(ctx: Ctx, state: A.GameState): StrandId {
   const order = [...state.strands].sort((a, b) => fall(a.strand) - fall(b.strand) || a.flowPips - b.flowPips || a.flow - b.flow);
   const fresh = order.filter((x) => !recent.includes(x.strand));
   const pool = fresh.length ? fresh : order;
-  const withVoice = pool.find((x) => ctx.model.voices.some((v) => v.event === "opening" && v.strand === x.strand));
+  // prefer a strand whose own opening voice has not been heard this game (playtest 2)
+  const used = sim(state).usedVoices;
+  const withVoice = pool.find((x) => ctx.model.voices.some((v) => v.event === "opening" && v.strand === x.strand && !used.includes(v.id)));
   return (withVoice ?? pool[0]!).strand;
 }
 
@@ -643,7 +652,8 @@ function commit(ctx: Ctx, prev: A.GameState, plays: A.Plays, caretaker: boolean)
   s.held = held;
   const played = plays.cards.map((c) => c.card);
   const discarded = state.hand.filter((c) => !played.includes(c) && c !== held);
-  state.deck = [...state.deck, ...played, ...discarded];
+  // played and discarded cards go to the bottom in a seeded shuffle, so the deck does not replay its order
+  state.deck = [...state.deck, ...shuffle([...played, ...discarded], hashSeed(`${state.seed}:return:${state.term}`))];
   state.hand = [];
   state.plays = plays;
 
@@ -651,11 +661,13 @@ function commit(ctx: Ctx, prev: A.GameState, plays: A.Plays, caretaker: boolean)
   const post = [...state.post];
   for (const rec of s.plays.filter((p) => p.term === term)) {
     const card = ctx.cards.get(rec.card)!;
-    const delay = Math.max(0, ...card.effects.filter((e) => !e.side).map((e) => effectDelay(ctx, card, e)));
-    if (delay > 0) {
-      const arrivesTerm = term + delay;
+    // one rule for the ticket and the post: the build's staged arrival (first effects, then in full)
+    const full = card.arrival?.full ?? Math.max(0, ...card.effects.filter((e) => !e.side).map((e) => effectDelay(ctx, card, e)));
+    const first = card.arrival?.first ?? full;
+    if (full > 0) {
+      const arrivesTerm = term + full;
       const arrivesYear = g.years[0]! + 4 * arrivesTerm;
-      post.push({ card: card.id, playedTerm: term, playedYear: state.year, arrivesTerm, arrivesYear, regions: rec.regions, countsInLeft: arrivesYear <= g.post_counts_until });
+      post.push({ card: card.id, playedTerm: term, playedYear: state.year, arrivesTerm, arrivesYear, firstTerm: term + first, firstYear: g.years[0]! + 4 * (term + first), regions: rec.regions, countsInLeft: arrivesYear <= g.post_counts_until });
     }
   }
   state.post = post;
@@ -676,6 +688,11 @@ function effectDelay(ctx: Ctx, card: Card, e: Effect): number {
   return d;
 }
 
+/** A place graded well twice runs itself: no third visit, its trigger cards deliver well (playtest 2). */
+function masteredPlace(state: A.GameState, place: string): boolean {
+  return state.ledger.grades.filter((g) => g.place === place && g.grade === "well").length >= 2;
+}
+
 function visitOffer(ctx: Ctx, state: A.GameState): A.VisitOffer | null {
   const s = sim(state);
   // a trigger card offers the visit only if it landed in the place's own authority (playtest 1)
@@ -687,12 +704,12 @@ function visitOffer(ctx: Ctx, state: A.GameState): A.VisitOffer | null {
     .filter((p) => p.term === state.term && ctx.cards.has(p.card))
     .filter((p) => {
       const v = ctx.cards.get(p.card)!.visit;
-      return !!v && landsIn(p, v);
+      return !!v && landsIn(p, v) && !masteredPlace(state, v);
     })
     .map((p) => ctx.cards.get(p.card)!);
   const triggers = played.sort((a, b) => b.cost - a.cost);
   let place: "rhondda" | "bethesda" | null = triggers[0]?.visit ?? null;
-  if (state.options.firstGame) {
+  if (state.options.firstGame && !(place && masteredPlace(state, place))) {
     // the curated first game: the Rhondda asks in term 2, Bethesda by term 4
     const curated: "rhondda" | "bethesda" | null =
       state.term === 1 && !s.firstVisits.includes("rhondda")
@@ -712,7 +729,7 @@ function visitOffer(ctx: Ctx, state: A.GameState): A.VisitOffer | null {
     place,
     triggeredBy,
     threads: board.threads - (fewer ? 1 : 0),
-    ...(place === "rhondda" ? { tipRisk: tipRisk(board, activeIds.includes("wet-decade"), s.stitched ?? []), stitched: [...(s.stitched ?? [])] } : {}),
+    ...(place === "rhondda" ? { tipRisk: tipRisk(board, activeIds.includes("wet-decade"), s.stitched ?? []), stitched: [...(s.stitched ?? [])] } : { stitched: [...(s.bethesdaThreads ?? [])] }),
     activeTrends: activeIds,
   };
 }
@@ -734,6 +751,7 @@ export function gradeVisit(model: CompiledModel, state: A.GameState, choice: A.V
       ? gradeRhondda(board, choice.threads, active.includes("wet-decade"), { stitched: s.stitched ?? [], text: ctx.model.engine_text, threadsAllowed: offer.threads })
       : gradeBethesda(board, choice.threads, {
           text: ctx.model.engine_text,
+          stitched: s.bethesdaThreads ?? [],
           active,
           inPlay: s.plays.filter((p) => p.term === state.term).map((p) => p.card),
           everPlayed: s.plays.map((p) => p.card),
@@ -754,6 +772,7 @@ function chooseVisit(ctx: Ctx, prev: A.GameState, choice: A.VisitChoice): A.Game
     s.firstVisits = [...s.firstVisits, outcome.place];
     // tips covered in the Rhondda stay made safe for later visits
     if (outcome.place === "rhondda") s.stitched = [...new Set([...(s.stitched ?? []), ...outcome.threads])];
+    else s.bethesdaThreads = [...new Set([...(s.bethesdaThreads ?? []), ...outcome.threads])];
     state.ledger = { ...state.ledger, grades: [...state.ledger.grades, { place: outcome.place, year: state.year, grade: outcome.grade }] };
   }
   return toPassing(ctx, state);
@@ -878,7 +897,7 @@ function cardDeliveries(ctx: Ctx, state: A.GameState, rec: PlayRec, grade: { pla
   const earlier = s.plays.filter((p) => p.card === rec.card && p.term < rec.term);
   const repeat = earlier.some((p) => rec.term - p.term <= (ctx.rules.get("R30")?.window ?? 2));
   const regional = !!rec.regions && card.scope !== "two_regions";
-  const visitedPlace = grade && card.visit === grade.place ? grade : null;
+  const visitedPlace = grade && card.visit === grade.place ? grade : card.visit && masteredPlace(state, card.visit) ? { place: card.visit, grade: "well" as Grade, threads: [] as string[] } : null;
   const mult = visitedPlace ? g.grade_multiplier[visitedPlace.grade] : g.grade_multiplier.adequately;
   const flag: LaFlag | undefined = card.visit ? ctx.places.get(card.visit)?.applies_to_flag : undefined;
   const compacts = compactsInForce(state, rec.term);
@@ -1052,10 +1071,13 @@ function buildTermInput(ctx: Ctx, state: A.GameState, response: A.ShockResponse 
     }
   }
 
-  // the jobs ripple (R25), this term's plays
+  // the jobs ripple (R25) runs as delivery starts: from the term a card's first effects land, for two terms
   const ripples: TermInput["ripples"] = s.plays
-    .filter((p) => p.term === term && ctx.cards.get(p.card)!.sector)
-    .map((p) => ({ cause: causeOf(state, p.caretaker ? "caretaker" : "card", p.card, term, p.regions), play: p.id, cost: p.cost, sector: ctx.cards.get(p.card)!.sector!, weights: ctx.las.map((_, i) => (p.las.includes(i) ? 1 : 0)) }));
+    .filter((p) => {
+      const card = ctx.cards.get(p.card)!;
+      return !!card.sector && p.term + (card.arrival?.first ?? card.delay) === term;
+    })
+    .map((p) => ({ cause: causeOf(state, p.caretaker ? "caretaker" : "card", p.card, p.term, p.regions), play: p.id, cost: p.cost, sector: ctx.cards.get(p.card)!.sector!, weights: ctx.las.map((_, i) => (p.las.includes(i) ? 1 : 0)) }));
 
   return {
     input: { term, year: state.year, deliveries, reversePlays, events, employers: s.employers, ripples, seed: state.seed },
@@ -1145,11 +1167,17 @@ function resolveTerm(ctx: Ctx, prev: A.GameState, response: A.ShockResponse): A.
   const shockOutcome: A.ShockOutcome | null = state.shock
     ? { curveball: state.shock.curveball, response: resp, prepared: state.shock.prepared, preparedBy: state.shock.preparedBy, hit: resp === 2 ? state.shock.hit.respond2 : resp === 1 ? state.shock.hit.respond1 : state.shock.hit.absorb }
     : null;
+  const masteredHere = s.plays
+    .filter((p) => p.term === term)
+    .map((p) => ctx.cards.get(p.card)?.visit)
+    .find((v): v is "rhondda" | "bethesda" => !!v && masteredPlace(state, v));
   const visit: A.VisitOutcome | null = s.termGrade
     ? { place: s.termGrade.place, grade: s.termGrade.grade, threads: s.termGrade.threads, stayed: s.termGrade.stayed, tests: [] }
     : state.visitOffer
       ? { place: state.visitOffer.place, grade: "adequately", threads: [], stayed: true, tests: [] }
-      : null;
+      : masteredHere
+        ? { place: masteredHere, grade: "well", threads: [], stayed: true, tests: [], mastered: true }
+        : null;
   if (visit && !visit.stayed && state.visit) visit.tests = gradeVisit(model, { ...state, step: "visit" }, state.visit).tests;
 
   const trustOut = computeTrust(g, {
@@ -1201,7 +1229,7 @@ function resolveTerm(ctx: Ctx, prev: A.GameState, response: A.ShockResponse): A.
     sharp: e[i]!.flowSharp,
     stockSharp: e[i]!.stockSharp,
   }));
-  const slips = pickSlips(ctx, contribs, changes, state.shock?.curveball ?? null);
+  const slips = pickSlips(ctx, state, contribs, changes, shockOutcome);
   const gameEvents: A.GameEvent[] = [
     ...events.map((ev) => ({ kind: ev.kind as A.GameEvent["kind"], id: ev.id, ...(ev.la !== undefined ? { la: ctx.las[ev.la]!.code, region: ctx.laRegion[ev.la]! } : {}), ...(ev.play ? { detail: ev.play } : {}) })),
     ...neglected.map((r) => ({ kind: "neglect" as const, id: r, region: r })),
@@ -1277,48 +1305,111 @@ function strandShares(ctx: Ctx, c: A.Contribution): { strand: number; part: "flo
 }
 
 /**
- * The "what changed" slips (playtest 1): first, for every strand whose shown pips changed, its
- * biggest cause in the direction it moved (largest pip changes first); a shock that landed always
- * gets a slip; then the largest other causes; one "unexpected" slip only for effects no played ticket
- * prints (chained rules and threshold events). Up to four slips.
+ * The "what changed" slips (playtests 1 and 2). They must agree with the tickets:
+ * - one slip for every strand whose shown pips changed (largest changes first), naming its biggest
+ *   cause in the direction it moved;
+ * - a card is never named before its first effects arrive, nor for a strand its ticket does not show
+ *   (helps when up, frays when down, or mixed), and its one-term effects wearing off are recovery, not
+ *   the card working;
+ * - a shock that landed always gets a slip, with the pips spent on it; the end of a shock's hit is
+ *   recovery ("recovering from"), never a shock lifting a strand;
+ * - at most one "unexpected" slip, for threshold events or chained effects of trends;
+ * - every slip carries the key of its own thread (`thread`), built from the same contributions.
+ * If no strand moved, one quiet slip for the largest change ("held").
  */
-function pickSlips(ctx: Ctx, contribs: A.Contribution[], changes: A.StrandChange[], shockId: string | null): A.Slip[] {
-  type Agg = A.Slip & { chained: boolean };
+function pickSlips(ctx: Ctx, state: A.GameState, contribs: A.Contribution[], changes: A.StrandChange[], shock: A.ShockOutcome | null): A.Slip[] {
+  const term = state.term;
+  type Agg = A.Slip & { chained: boolean; recovery: boolean; allSide: boolean };
+  const isCard = (c: A.Cause) => c.kind === "card" || c.kind === "caretaker";
+  const eligible = (c: A.Contribution, strand: StrandId, delta: number): boolean => {
+    if (!isCard(c.cause)) return true;
+    const card = ctx.cards.get(c.cause.id);
+    if (!card) return true;
+    // before the post arrives only the printed side effects that land at once may be named
+    const printedSide = c.side && !c.via && c.rule !== "R25";
+    if (term < c.cause.term + (card.arrival?.first ?? card.delay) && !printedSide) return false;
+    if (c.recovery) return true;
+    return delta > 0 ? !!(card.helps?.includes(strand) || card.mixed?.includes(strand)) : !!(card.frays?.includes(strand) || card.mixed?.includes(strand));
+  };
   const agg = new Map<string, Agg>();
   for (const c of contribs) {
     for (const sh of strandShares(ctx, c)) {
       if (sh.part !== "flow") continue;
+      const strand = STRAND_IDS[sh.strand]!;
+      if (!eligible(c, strand, sh.delta)) continue;
       const chained = !!c.via || c.cause.kind === "event";
-      const k = `${sh.strand}|${causeKey(c.cause)}|${chained}`;
+      const recovery = !!c.recovery;
+      const k = `${sh.strand}|${causeKey(c.cause)}|${recovery}`;
       const prev = agg.get(k);
-      if (prev) prev.delta += sh.delta;
-      else agg.set(k, { strand: STRAND_IDS[sh.strand]!, part: "flow", cause: c.cause, delta: sh.delta, unexpected: false, chained, rule: c.rule, shock: c.cause.kind === "shock" });
+      if (prev) {
+        prev.delta += sh.delta;
+        prev.chained = prev.chained && chained;
+        prev.allSide = prev.allSide && c.side && !c.via;
+      } else {
+        agg.set(k, {
+          strand,
+          part: "flow",
+          cause: c.cause,
+          delta: sh.delta,
+          unexpected: false,
+          chained,
+          recovery,
+          allSide: c.side && !c.via,
+          rule: c.rule,
+          shock: c.cause.kind === "shock" && !recovery,
+          thread: { term, strand, part: "flow", key: causeKey(c.cause) },
+        });
+      }
     }
   }
   const all = [...agg.values()].filter((x) => Math.abs(x.delta) > 1e-4).sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
   const out: Agg[] = [];
-  const has = (x: Agg) => out.includes(x);
-  // 1. every strand whose pips moved, its biggest cause in that direction
+  const same = (a: A.Slip, b: A.Slip) => a.strand === b.strand && causeKey(a.cause) === causeKey(b.cause);
+  // 1. every strand whose pips moved: its biggest cause in that direction (working before wearing off)
   const moved = changes.filter((c) => c.pipsAfter !== c.pipsBefore).sort((a, b) => Math.abs(b.pipsAfter - b.pipsBefore) - Math.abs(a.pipsAfter - a.pipsBefore));
   for (const c of moved) {
     const dir = Math.sign(c.pipsAfter - c.pipsBefore);
-    const top = all.find((x) => x.strand === c.strand && Math.sign(x.delta) === dir && !has(x));
-    if (top && out.length < 3) out.push({ ...top, pipChange: c.pipsAfter - c.pipsBefore } as Agg);
+    const pool = all.filter((x) => x.strand === c.strand && Math.sign(x.delta) === dir && !out.some((y) => same(y, x)));
+    const top = pool.find((x) => !x.recovery && !(x.cause.kind === "shock" && dir > 0)) ?? pool[0];
+    if (top) out.push({ ...top, pipChange: c.pipsAfter - c.pipsBefore });
   }
-  // 2. a shock that landed always gets a slip
-  if (shockId && !out.some((x) => x.cause.kind === "shock")) {
-    const sh = all.find((x) => x.cause.kind === "shock" && x.cause.id === shockId);
-    if (sh) out.push(sh);
+  // 2. a shock that landed always gets a slip, with what the response bought
+  if (shock && !out.some((x) => x.cause.kind === "shock" && !x.recovery)) {
+    const opportunity = !!ctx.curveballs.get(shock.curveball)?.opportunity;
+    let sh = all.find((x) => x.cause.kind === "shock" && x.cause.id === shock.curveball && !x.recovery && (opportunity || x.delta < 0));
+    if (!sh) {
+      // a shock that only scarred what is handed on: its slip is on the stock part of the strand
+      const stock = new Map<string, Agg>();
+      for (const c of contribs) {
+        if (c.cause.kind !== "shock" || c.cause.id !== shock.curveball || c.recovery) continue;
+        for (const shr of strandShares(ctx, c)) {
+          if (shr.part !== "stock") continue;
+          const strand = STRAND_IDS[shr.strand]!;
+          const prev = stock.get(strand);
+          if (prev) prev.delta += shr.delta;
+          else stock.set(strand, { strand, part: "stock", cause: c.cause, delta: shr.delta, unexpected: false, chained: false, recovery: false, allSide: false, rule: c.rule, shock: true, thread: { term, strand, part: "stock", key: causeKey(c.cause) } });
+        }
+      }
+      sh = [...stock.values()].sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))[0];
+    }
+    // the shock slip always fits: it takes the place of the smallest pip slip if four strands moved
+    if (sh) {
+      if (out.length >= 4) out.splice(3);
+      out.push(sh);
+    }
   }
-  // 3. fill to three with the largest other causes
-  for (const x of all) {
-    if (out.length >= 3) break;
-    if (!out.some((y) => y.strand === x.strand && causeKey(y.cause) === causeKey(x.cause))) out.push(x);
-  }
-  // 4. one unexpected slip: an effect no played ticket prints (a chained rule or a threshold event)
-  const unexpected = all.find((x) => x.chained && x.cause.kind !== "baseline" && !out.some((y) => y.strand === x.strand && causeKey(y.cause) === causeKey(x.cause)));
+  for (const x of out) if (x.cause.kind === "shock" && !x.recovery && shock) x.response = { pips: shock.response, hit: shock.hit, prepared: shock.prepared };
+  // 3. one unexpected slip: a threshold event or a chained effect of a trend (never a card or shock)
+  const unexpected = all.find((x) => x.chained && !isCard(x.cause) && x.cause.kind !== "shock" && x.cause.kind !== "baseline" && !x.recovery && !out.some((y) => same(y, x)));
   if (unexpected && out.length < 4) out.push({ ...unexpected, unexpected: true });
-  return out.map(({ chained: _c, ...x }) => x);
+  // 4. nothing moved: one quiet slip
+  if (!out.length && all[0]) out.push({ ...all[0], pipChange: 0 });
+  return out.slice(0, 4).map(({ chained: _c, recovery, allSide, ...x }) => ({
+    ...x,
+    ...(recovery ? { recovery: true } : {}),
+    ...(allSide && (x.cause.kind === "card" || x.cause.kind === "caretaker") ? { sideEffect: true } : {}),
+    pipChange: x.pipChange ?? 0,
+  }));
 }
 
 function voiceCandidates(
@@ -1337,10 +1428,14 @@ function voiceCandidates(
   const out: VoiceEventCandidate[] = [];
   const laOfRegion = (r: RegionId | null | undefined) => (r ? ctx.regionLas[r][0]! : 0);
   const mostMoved = mostMovedLa(ctx, s);
-  if (visit && !visit.stayed) out.push({ event: "visit", place: visit.place, grade: visit.grade, la: ctx.laIndex.get(ctx.places.get(visit.place)!.la)! });
+  const played = s.plays.map((p) => p.card);
+  if (visit && !visit.stayed) {
+    const placed = visit.place === "rhondda" ? [...(s.stitched ?? []), ...visit.threads] : [...(s.bethesdaThreads ?? []), ...visit.threads];
+    out.push({ event: "visit", place: visit.place, grade: visit.grade, la: ctx.laIndex.get(ctx.places.get(visit.place)!.la)!, threads: placed, tests: Object.fromEntries(visit.tests.map((t) => [t.id, t.pass])), cards: played });
+  }
   if (shock) {
     const tip = events.find((e) => e.kind === "tip_moved");
-    out.push({ event: "shock", curveball: shock.curveball, response: shock.prepared ? "ready" : shock.response > 0 ? "responded" : "absorbed", la: tip?.la ?? mostMoved });
+    out.push({ event: "shock", curveball: shock.curveball, response: shock.prepared ? "ready" : shock.response > 0 ? "responded" : "absorbed", la: tip?.la ?? mostMoved, cards: shock.preparedBy });
   }
   for (const u of state.plays?.skipUpkeep ?? []) {
     const rec = s.upkeeps.find((x) => x.id === u);
@@ -1479,16 +1574,26 @@ export function pullThread(model: CompiledModel, state: A.GameState, term: numbe
   const out = state.history[term];
   if (!out) return [];
   const si = STRAND_IDS.indexOf(strand);
-  const groups = new Map<string, { cause: A.Cause; rule: string | null; component: string; delta: number; perLa: number[] }>();
+  // one thread per cause (its key), shown through its largest component and rule
+  const groups = new Map<string, { cause: A.Cause; rule: string | null; component: string; delta: number; perLa: number[]; parts: Map<string, number> }>();
   for (const c of out.contributions) {
     for (const sh of strandShares(ctx, c)) {
       if (sh.strand !== si || sh.part !== part) continue;
-      const k = `${causeKey(c.cause)}|${c.rule}|${c.component}`;
-      const g = groups.get(k);
-      if (g) {
-        g.delta += sh.delta;
-        g.perLa = g.perLa.map((v, i) => v + c.perLa[i]!);
-      } else groups.set(k, { cause: c.cause, rule: c.rule, component: c.component, delta: sh.delta, perLa: [...c.perLa] });
+      const k = causeKey(c.cause);
+      const g = groups.get(k) ?? { cause: c.cause, rule: c.rule, component: c.component, delta: 0, perLa: ctx.las.map(() => 0), parts: new Map<string, number>() };
+      g.delta += sh.delta;
+      g.perLa = g.perLa.map((v, i) => v + c.perLa[i]!);
+      const pk = `${c.rule}|${c.component}`;
+      g.parts.set(pk, (g.parts.get(pk) ?? 0) + sh.delta);
+      groups.set(k, g);
+    }
+  }
+  for (const g of groups.values()) {
+    const [pk] = [...g.parts.entries()].sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))[0] ?? [];
+    if (pk) {
+      const [rule, component] = pk.split("|");
+      g.rule = rule === "null" ? null : rule!;
+      g.component = component!;
     }
   }
   const change = out.strands[si]!;
@@ -1523,7 +1628,7 @@ export function pullThread(model: CompiledModel, state: A.GameState, term: numbe
         .filter((x) => x.v > 1e-6)
         .sort((a, b) => b.v - a.v)
         .map((x) => ctx.las[x.i]!.code);
-      return { strand, part, delta: g.delta, stops, las };
+      return { strand, part, delta: g.delta, stops, las, key: causeKey(g.cause) };
     });
   return threads;
 }
@@ -1641,6 +1746,8 @@ function computeResult(ctx: Ctx, state: A.GameState, weights: Record<StrandId, n
   const result = { ...score(Math.min(livedV, leftV), perRun.map((p) => Math.min(p.lived, p.left))), which } as A.EndResult["result"];
   const counted = wt.slice(first);
   const worstTerm = first + counted.indexOf(Math.min(...counted));
+  // only call a term the worst if people were worse off in it: below 2026 or below the term before
+  const worstFell = wt[worstTerm]! < W0 || (worstTerm > 0 && wt[worstTerm]! < wt[worstTerm - 1]!);
   const perStrand = STRAND_IDS.map((id, k) => {
     const ft = medFlowTerms.map((f) => f[k]!);
     const f0 = s.start.flow[k]!, k0 = s.start.stock[k]!;
@@ -1666,7 +1773,7 @@ function computeResult(ctx: Ctx, state: A.GameState, weights: Record<StrandId, n
   const named = ledgerLines(ctx, state, archetype, archetype === "uneven" ? overlooked : null);
   // the uneven letter is written from the overlooked region
   const la = archetype === "uneven" && overlooked ? mostMovedLa(ctx, s, ctx.regionLas[overlooked]) : mostMovedLa(ctx, s);
-  const letter = writeLetter(ctx, state.seed, archetype, named, la, g.years[worstTerm]!, state.ledger.lostTerms[0] ?? null);
+  const letter = writeLetter(ctx, state.seed, archetype, named, la, worstFell ? g.years[worstTerm]! : null, state.ledger.lostTerms[0] ?? null);
   void level;
   void archetypeOf;
 
@@ -1694,6 +1801,7 @@ function computeResult(ctx: Ctx, state: A.GameState, weights: Record<StrandId, n
     wellbeingByTerm: wt,
     worstTerm,
     dippedBelowStart: Math.min(...counted) < W0,
+    worstFell,
     start: { lived: W0, left: S0 },
     caretakerGhost: s.ghost,
     vsCaretaker: s.ghost ? result.value - s.ghost.result : null,
@@ -1789,9 +1897,11 @@ function ledgerLines(ctx: Ctx, state: A.GameState, archetype: string, overlooked
   const tipMoved = state.history.find((h) => h.events.some((e) => e.kind === "tip_moved"));
   const tipUnmade: NamedLine | null = !safe && (tipMoved || !s.plays.some((p) => p.card === "make-coal-tips-safe")) ? { kind: "tip", ledger: "tip", id: "make-coal-tips-safe", year: tipMoved?.year ?? null, thing: ctx.cards.get("make-coal-tips-safe")!.name } : null;
 
-  if (archetype === "uneven") out.push(neglect, tipSafe, visit, debt, repairs, card);
-  else if (positive) out.push(tipSafe, visit, pledgeKept, arrival, card, debt, repairs, pledgeBroken, neglect, lost);
-  else out.push(lost, debt, repairs, pledgeBroken, neglect, tipUnmade, tipSafe, visit, card, arrival);
+  // every promise kept (three or more) is the first thing named, whatever the letter (playtest 2)
+  const allKept = made.length >= 3 && kept === made.length ? pledgeKept : null;
+  if (archetype === "uneven") out.push(neglect, allKept, tipSafe, visit, debt, repairs, card);
+  else if (positive) out.push(allKept, tipSafe, visit, pledgeKept, arrival, card, debt, repairs, pledgeBroken, neglect, lost);
+  else out.push(allKept, lost, debt, repairs, pledgeBroken, neglect, tipUnmade, tipSafe, visit, pledgeKept, card, arrival);
   // two different things; the second always as a ledger line (engine copy) so it is never the archetype's stock phrase
   const picked: NamedLine[] = [];
   for (const n of out) {

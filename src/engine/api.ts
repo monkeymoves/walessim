@@ -2,6 +2,19 @@
  * The engine's public surface. The UI imports from this file only.
  *
  * CHANGES (newest first; every change is backward compatible in shape):
+ * - v4.0 (playtest 2): slips agree with tickets. A card is never named before its first effects land
+ *   or for a strand its ticket does not show; `Card.helps` now includes every strand a card moves
+ *   (one chained rule on, the jobs ripple's Prosperous) and `Card.mixed` lists strands it can move
+ *   either way by where it lands (equal). `Slip.recovery` (a temporary hit wearing off), `Slip.response`
+ *   (pips spent on the shock, share of the hit, prepared), `Slip.thread` (key of its own thread);
+ *   `Thread.key`; `pullThread` returns one thread per cause. `Contribution.recovery`. Delay:
+ *   `Card.arrival` {first, full} from the effects' delays and rule lags; the post uses `full`, and
+ *   `PostItem.firstTerm/firstYear` say when the first effects land ("first effects in 1, the rest in 2").
+ *   Also: `VisitOffer.stitched` covers Bethesda (earlier options count, with a note); `VisitOutcome.mastered`
+ *   (a place graded well twice runs itself: no third visit, its cards deliver well); voice templates can
+ *   be gated (`requires_threads`, `requires_tests`, `requires_card`); `EndResult.worstFell`; the letter
+ *   names all promises kept first when every one (three or more) was kept; no voice repeats in a game,
+ *   openings included; returned cards are shuffled and a recent hand is not dealt again.
  * - v3.0 (playtest 1): `VisitOutcome.tests[].explanation` (filled bilingual text naming the player's
  *   threads) and `VisitOutcome.notes`; grades are by tests held (all: well, any: adequately, none:
  *   poorly); `VisitOffer.stitched` (Rhondda tips made safe on earlier visits, they count as covered and
@@ -273,9 +286,12 @@ export interface PostItem {
   card: string;
   playedTerm: number;
   playedYear: number;
-  /** Term index (0 = 2026) when the main effect lands. 6 and beyond is after 2050. */
+  /** Term index (0 = 2026) when the card's main effects have all landed (in full). 6 and beyond is after 2050. */
   arrivesTerm: number;
   arrivesYear: number;
+  /** When its first main effects land (equal to `arrivesTerm` unless it arrives in stages). Same rule as `Card.arrival`. */
+  firstTerm?: number;
+  firstYear?: number;
   regions: RegionId[] | null;
   /** Counts in Left (arrives by 2058). */
   countsInLeft: boolean;
@@ -316,7 +332,7 @@ export interface VisitOffer {
   threads: number;
   /** For the Rhondda: current movement risk step per tip id (wet-decade raises them; made-safe tips drop one). */
   tipRisk?: Record<string, 1 | 2 | 3>;
-  /** For the Rhondda: tips made safe on earlier visits. Draw them stitched; they count as covered. */
+  /** Threads from earlier visits (Rhondda tips made safe, Bethesda options in place). Draw them stitched; they count. */
   stitched?: string[];
   /** Trends active that change the Bethesda sums. */
   activeTrends: string[];
@@ -451,6 +467,8 @@ export interface Contribution {
   wales: number;
   /** Change per authority, in points, in `model.authorities` order. */
   perLa: number[];
+  /** The end of a temporary effect (a shock's hit or a one-term side effect wearing off): word it as recovery. */
+  recovery?: boolean;
 }
 
 /** One stop on a thread (game-design 2.3). */
@@ -480,6 +498,8 @@ export interface Thread {
   stops: TraceStop[];
   /** Authorities to draw the red thread through (most moved first). */
   las: string[];
+  /** The cause's key: a slip's `thread.key` names the thread that explains it. */
+  key?: string;
 }
 
 /** The change of one strand over a term. */
@@ -498,8 +518,11 @@ export interface StrandChange {
 }
 
 /**
- * A "what changed" slip. Up to four per term: one for each strand whose pips moved (its biggest
- * cause), one for a shock that landed, then the largest others, and at most one marked unexpected.
+ * A "what changed" slip (up to four a term). One for every strand whose shown pips moved, naming its
+ * biggest cause in that direction; one for a shock that landed; at most one unexpected. A card is
+ * never named before its first effects arrive or for a strand its ticket does not show. Each slip
+ * names the thread that explains it (`thread`): open `pullThread(term, strand, part)` and take the
+ * thread whose `key` equals `thread.key`.
  */
 export interface Slip {
   strand: StrandId;
@@ -507,14 +530,22 @@ export interface Slip {
   cause: Cause;
   /** Change of the strand score carried by this cause (points). Show as direction, not a number. */
   delta: number;
-  /** Only for effects no played ticket prints: a chained rule or a threshold event. */
+  /** Only for threshold events or chained effects of trends: things no ticket prints. */
   unexpected: boolean;
-  /** The rule that carried it (R25 is the jobs ripple: "spending on X made work for a while"). */
+  /** The rule that carried it (R25 is the jobs ripple: "the building work for X made jobs for a while"). */
   rule?: string | null;
   /** This slip is the shock that landed (every landed shock gets one). */
   shock?: boolean;
-  /** Set when this slip explains a strand whose shown pips changed: the pip change. */
+  /** A temporary effect wearing off: word it as recovery ("Resilient is recovering from Storm winter"). */
+  recovery?: boolean;
+  /** A card's printed side effect (on its ticket's side note), which lands at once, even while the card is in the post. */
+  sideEffect?: boolean;
+  /** The strand's shown pip change this term (0: a quiet "held" slip). */
   pipChange?: number;
+  /** For the shock slip: the pips spent responding, the share of the hit that landed, and whether a card had made you ready. */
+  response?: { pips: number; hit: number; prepared: boolean };
+  /** The thread behind this slip: `pullThread(model, state, term, strand, part)` has one with this `key`. */
+  thread?: { term: number; strand: StrandId; part: "flow" | "stock"; key: string };
 }
 
 /** One reason Trust moved. */
@@ -596,6 +627,8 @@ export interface VisitOutcome {
   threads: string[];
   /** True if the player stayed (adequate by default). */
   stayed: boolean;
+  /** The place was graded well twice before: it runs itself, no visit is offered, and delivery is well. */
+  mastered?: boolean;
   /**
    * Each test with a player-facing explanation in terms of the player's threads (bilingual, filled,
    * from model/i18n/{en,cy}/engine.json `engine.visit.*`). `share` is the share of runs it held in.
@@ -699,6 +732,11 @@ export interface EndResult {
   worstTerm: number;
   /** A counted term fell below the 2026 start (mark it in rust). */
   dippedBelowStart: boolean;
+  /**
+   * The worst counted term really was a fall (below 2026 or below the term before). When false, do
+   * not call it the worst term: say "weakest" or nothing (playtest 2).
+   */
+  worstFell?: boolean;
   /** 2026 starting levels (weighted flow and stock, 0 to 10). */
   start: { lived: number; left: number };
   /** "Wales under a caretaker" on the same seed, in the same change units (null if disabled). */

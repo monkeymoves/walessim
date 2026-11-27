@@ -5,6 +5,7 @@
   event: visit
   place: rhondda
   grade: poorly
+  requires_tests: { lifelines: false }
   towns:
     - { en: "Tonypandy", cy: "Tonypandy" }
   text:
@@ -15,6 +16,7 @@
   event: visit
   place: rhondda
   grade: poorly
+  requires_tests: { fairness: false }
   towns:
     - { en: "Pentre", cy: "Pentre" }
   text:
@@ -35,6 +37,7 @@
   event: visit
   place: rhondda
   grade: well
+  requires_tests: { lifelines: true }
   towns:
     - { en: "Treherbert", cy: "Treherbert" }
   text:
@@ -65,6 +68,7 @@
   event: visit
   place: bethesda
   grade: poorly
+  requires_threads: [rework-tips]
   towns:
     - { en: "Tregarth", cy: "Tregarth" }
   text:
@@ -75,6 +79,7 @@
   event: visit
   place: bethesda
   grade: adequately
+  requires_threads: [chapel-homes, rework-tips]
   towns:
     - { en: "Deiniolen", cy: "Deiniolen" }
   text:
@@ -95,6 +100,7 @@
   event: visit
   place: bethesda
   grade: well
+  requires_threads: [room-for-river]
   towns:
     - { en: "Tregarth", cy: "Tregarth" }
   text:
@@ -105,6 +111,7 @@
   event: shock
   curveball: wet-decade
   response: ready
+  requires_card: build-flood-walls
   towns:
     - { en: "Rhyl", cy: "Y Rhyl" }
   text:

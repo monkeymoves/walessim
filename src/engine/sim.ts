@@ -233,7 +233,7 @@ export function stepRun(
   // 1. reversals due
   const due = run.reversals.filter((x) => x.term <= input.term);
   run.reversals = run.reversals.filter((x) => x.term > input.term);
-  for (const x of due) apply(t, x.comp, x.perLa.map((v) => -v), x.cause, x.rule, x.side, null);
+  for (const x of due) apply(t, x.comp, x.perLa.map((v) => -v), x.cause, x.rule, x.side, null, true);
 
   // 2. baseline clock rules
   for (const rule of ctx.model.rules) {
@@ -342,7 +342,7 @@ export function maskWeights(ctx: Ctx, where?: Effect["where"], emphasis?: Effect
 }
 
 /** Add a change to the scores and record it (run 0). */
-function apply(t: TermCtx, c: number, perLa: number[], cause: CauseRef, rule: string | null, side: boolean, via: string | null) {
+function apply(t: TermCtx, c: number, perLa: number[], cause: CauseRef, rule: string | null, side: boolean, via: string | null, recovery = false) {
   const row = t.run.s[c]!;
   const d = t.delta[c]!;
   let any = false;
@@ -354,7 +354,7 @@ function apply(t: TermCtx, c: number, perLa: number[], cause: CauseRef, rule: st
     d[i] = d[i]! + v;
   }
   if (!any || !t.contribs) return;
-  t.contribs.push({ component: t.ctx.comps[c]!.id, cause, rule, via, side, wales: walesDelta(t.ctx, c, perLa), perLa: [...perLa] });
+  t.contribs.push({ component: t.ctx.comps[c]!.id, cause, rule, via, side, wales: walesDelta(t.ctx, c, perLa), perLa: [...perLa], ...(recovery ? { recovery: true } : {}) });
   if (PLAYER_KINDS.has(cause.kind) && t.run.playerCum) {
     const pc = t.run.playerCum[c]!;
     for (let i = 0; i < perLa.length; i++) pc[i] = pc[i]! + perLa[i]!;
@@ -577,7 +577,7 @@ function chain(t: TermCtx, rule: Rule) {
         // run 0: one contribution per upstream cause, exactly coef times its change
         for (const sc of srcContribs) {
           const perLa = sc.perLa.map((v, i) => v * coef * (mask ? (mask[i]! > 0 ? 1 : 0) : 1));
-          apply(t, co, perLa, sc.cause, rule.id, true, inId);
+          apply(t, co, perLa, sc.cause, rule.id, true, inId, !!sc.recovery);
         }
         // any part of the input change not covered by contributions (clamping) goes to the rule
         const covered = ctx.las.map((_, i) => srcContribs.reduce((a, sc) => a + sc.perLa[i]!, 0));

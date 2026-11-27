@@ -87,7 +87,7 @@ rules:
   - id: R25
     theme: economy
     name: { en: Spending creates jobs for a while, cy: Mae gwario'n creu swyddi am gyfnod, cy_review: true }
-    note: { en: "A card's spend creates jobs through supply chains and wages, by its sector's employment multiplier, this term and next only. Confidence is medium to 2034 and low after.", cy: "Mae gwariant cerdyn yn creu swyddi drwy gadwyni cyflenwi a chyflogau, yn ôl lluosydd cyflogaeth ei sector, y tymor hwn a'r nesaf yn unig. Mae'r hyder yn ganolig hyd at 2034 ac yn isel wedi hynny.", cy_review: true }
+    note: { en: "A card's spend creates jobs through supply chains and wages, by its sector's employment multiplier, for two terms from when its first effects land. Confidence is medium to 2034 and low after.", cy: "Mae gwariant cerdyn yn creu swyddi drwy gadwyni cyflenwi a chyflogau, yn ôl lluosydd cyflogaeth ei sector, am ddau dymor o'r adeg y mae ei effeithiau cyntaf yn glanio. Mae'r hyder yn ganolig hyd at 2034 ac yn isel wedi hynny.", cy_review: true }
     kind: io
     medium_until: 2034
     inputs: [card cost, card sector]

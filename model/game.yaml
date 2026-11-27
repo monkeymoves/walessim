@@ -68,7 +68,7 @@ curveballs:
   first_game_shock: { term: 3, curveball: downturn }
 response_multiplier: { absorb: 1.0, respond1: 0.5, respond2: 0.25, prepared: 0.7 }
 fragile_infrastructure: { below: 4, multiplier: 1.25 }
-debt: { interest: 1, clear_cost: 3, max_tokens: 3, left_penalty: 0.15, left_penalty_cap: 0.45 }
+debt: { interest: 1, clear_cost: 3, max_tokens: 3, left_penalty: 0.2, left_penalty_cap: 0.6 }
 caretaker: { return_trust: 40, return_budget_penalty: 1, contingency: 2, shadow_pledge_bonus: 5 }
 # Design decision 14 (docs/design/balance-decision.md): the result is judged as change since 2026, in
 # net strand pips (number of strands x weighted change), the lower of Lived and Left. The engine reads

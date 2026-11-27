@@ -33,5 +33,6 @@
   "engine.letter.named.card": "Yr hyn y gallaf bwyntio ato o hyd yw {thing}, o {year}.",
   "engine.letter.named.arrival": "Cyrhaeddodd {thing} yn {year}, ar ôl i chi fynd. Mae'n cyfrif.",
   "engine.letter.named.lost_term": "Y tymor y collwyd y sedd, {year}, yw'r peth cyntaf mae pobl yn sôn amdano o hyd.",
-  "engine.slip.shock": "Glaniodd {shock}."
+  "engine.slip.shock": "Glaniodd {shock}.",
+  "engine.visit.stitched_beth": "Eisoes yn eu lle o ymweliad cynharach, ac yn cyfrif: {tips}."
 }

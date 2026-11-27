@@ -114,10 +114,14 @@ export interface BethesdaContext {
   runs: number;
   /** Engine copy for explanations (model.engine_text). */
   text?: Record<string, Text>;
+  /** Options placed on earlier visits: they stay in place and count (playtest 2). */
+  stitched?: string[];
 }
 
 /** Bethesda: Aros, Iaith, Pwysau, each held in at least hold_share of runs. */
-export function gradeBethesda(board: PlaceBoard, threads: string[], c: BethesdaContext): BoardResult {
+export function gradeBethesda(board: PlaceBoard, newThreads: string[], c: BethesdaContext): BoardResult {
+  // earlier threads stay in place and count, exactly as the Rhondda's made-safe tips do
+  const threads = [...new Set([...newThreads, ...(c.stitched ?? [])])];
   const opts = (board.options ?? []).filter((o) => threads.includes(o.id));
   const th = board.thresholds ?? { homes: 0.8, work: 0.8, iaith: 0.8 };
   const cap = board.pressure_capacity ?? 0.3;
@@ -159,6 +163,11 @@ export function gradeBethesda(board: PlaceBoard, threads: string[], c: BethesdaC
     return { id, share, pass, explanation: say(copy, `engine.visit.${id}.${pass ? "pass" : "fail"}`, params) };
   });
   const notes: Text[] = [];
+  const earlier = (board.options ?? []).filter((o) => (c.stitched ?? []).includes(o.id));
+  if (earlier.length) {
+    const n = say(copy, "engine.visit.stitched_beth", { tips: joinNames(earlier.map((o) => o.name)) });
+    if (n) notes.push(n);
+  }
   for (const p of board.trend_penalties ?? []) {
     if (!c.active.includes(p.curveball)) continue;
     const n = say(copy, "engine.visit.trend", { note: p.note });

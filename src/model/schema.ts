@@ -444,9 +444,20 @@ export interface Card {
   upkeep?: Upkeep;
   /** Ddoe lesson that upgrades the card in v1.1 (stored and shown greyed). */
   upgraded_by: Text;
-  /** Filled by the build: strands this card helps and frays (from its effects). */
+  /**
+   * Filled by the build: strands this card helps and frays, from every effect it has (direct, one
+   * chained rule on, and the jobs ripple for a card with a sector). Every strand a card can move is
+   * in `helps`, `frays` or `mixed`, so slips never name a strand the ticket does not show.
+   */
   helps?: StrandId[];
   frays?: StrandId[];
+  /** Strands it can move either way depending on where it lands (gaps between places: `equal`). */
+  mixed?: StrandId[];
+  /**
+   * Filled by the build: terms after play when the main effects land, first and in full (a rule's lag
+   * can hold an effect back past the headline delay). Show "first effects in 1 term, the rest in 2".
+   */
+  arrival?: { first: number; full: number };
   /** Filled by the build: curveball ids this card is a listed good response to. */
   responds_to?: string[];
 }
@@ -682,6 +693,15 @@ export interface VoiceTemplate {
   kept?: boolean;
   /** For shock voices: the response taken. */
   response?: "ready" | "responded" | "absorbed";
+  /**
+   * Gates (playtest 2): a voice that names a choice is heard only if that choice was made.
+   * `requires_threads`: every listed board item was placed at this place (this visit or earlier).
+   * `requires_tests`: the visit's tests came out as listed (test id to held or not).
+   * `requires_card`: the card has been played (or, for a shock, made you ready).
+   */
+  requires_threads?: string[];
+  requires_tests?: Record<string, boolean>;
+  requires_card?: string;
   /** Optional fixed towns; otherwise the engine picks a town in the most affected authority. */
   towns?: Text[];
   /** Slots: {place}, {year}, {thing}, {direction}, {season}, {who}. */

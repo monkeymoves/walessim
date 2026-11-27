@@ -439,6 +439,7 @@ export function compileModel(raw: RawModelFiles, opts: CompileOptions = {}): Com
       : undefined;
     const helps = new Set<StrandId>();
     const frays = new Set<StrandId>();
+    const mixed = new Set<StrandId>();
     // a card helps the strands of its targets, and of what chained rules carry them to (one step)
     const chained = (comp: string): string[] => {
       const out = [comp];
@@ -455,10 +456,23 @@ export function compileModel(raw: RawModelFiles, opts: CompileOptions = {}): Com
       // fcm pressures: lower pressure helps nature
       const helpsIt = e.target.startsWith("fcm:pressure") || e.target.startsWith("fcm:driver") ? e.sign < 0 : e.sign > 0;
       for (const comp of comps) for (const s of strandsOf(comp)) (helpsIt ? helps : frays).add(s);
-      // aimed at the five worst-off: it moves the gap components of the measures it targets
-      if (e.where?.flags?.includes("worst5"))
-        for (const comp of comps) for (const g of components.filter((x) => x.aggregate === "gap" && x.of === comp)) for (const s of strandsOf(g.id)) (helpsIt ? helps : frays).add(s);
+      // gap components (equal): aimed at the worst-off (the five, or the coal valleys where four of them
+      // are) it narrows the gap; anywhere else it depends where it lands, so the ticket says "mixed"
+      for (const comp of comps) {
+        for (const g of components.filter((x) => x.aggregate === "gap" && x.of === comp)) {
+          for (const s of strandsOf(g.id)) {
+            if (e.where?.flags?.some((fl) => fl === "worst5" || fl === "coal_valley")) (helpsIt ? helps : frays).add(s);
+            else mixed.add(s);
+          }
+        }
+      }
     }
+    // the jobs ripple (R25): spending in a sector makes work for a while (employment, and what it chains to)
+    if (c.sector) for (const s of strandsOf("employment")) helps.add(s);
+    // when the main effects land: first and in full (a rule's lag can hold an effect back)
+    const delays = (effects as Effect[])
+      .filter((e) => !e.side && e.target !== "trust" && e.target !== "budget" && e.target !== "card_cost")
+      .map((e) => Math.max(e.delay ?? c.delay, e.rule ? (rules.find((r) => r.id === e.rule)?.lag ?? 0) : 0));
     if (upkeep) for (const e of upkeep.lapse) for (const s of strandsOf(e.target)) frays.add(s);
     const card: Card = {
       ...c,
@@ -471,6 +485,8 @@ export function compileModel(raw: RawModelFiles, opts: CompileOptions = {}): Com
       tags: c.tags ?? [],
       helps: STRAND_IDS.filter((s) => helps.has(s)),
       frays: STRAND_IDS.filter((s) => frays.has(s) && !helps.has(s)).concat(STRAND_IDS.filter((s) => frays.has(s) && helps.has(s))),
+      mixed: STRAND_IDS.filter((s) => mixed.has(s) && !helps.has(s) && !frays.has(s)),
+      arrival: { first: delays.length ? Math.min(...delays) : c.delay, full: delays.length ? Math.max(...delays) : c.delay },
       responds_to: [],
     };
     return card;
@@ -599,6 +615,11 @@ export function compileModel(raw: RawModelFiles, opts: CompileOptions = {}): Com
       if (v.grade && !["poorly", "adequately", "well"].includes(v.grade)) err(f, v.id, `unknown grade ${v.grade}`);
       if (v.response && !["ready", "responded", "absorbed"].includes(v.response)) err(f, v.id, `unknown response ${v.response}`);
       if (v.direction && v.direction !== "up" && v.direction !== "down") err(f, v.id, `unknown direction ${v.direction}`);
+      if (v.requires_card && !allCardIds.has(v.requires_card)) err(f, v.id, `requires unknown card ${v.requires_card}`);
+      for (const th of v.requires_threads ?? []) {
+        const known = Object.values(raw.places).some((p: any) => (p?.options ?? []).some((o: any) => o.id === th)) || th.startsWith("bgs/") || th.startsWith("way/");
+        if (!known) err(f, v.id, `requires unknown board item ${th}`);
+      }
       const t = text(f, v.id, "text", v.text);
       if (/[–—]/.test(t.en + t.cy)) err(f, v.id, "contains an em or en dash");
       if (/!/.test(t.en)) warn(`voices.yaml: ${v.id}: exclamation mark (tone rule)`);

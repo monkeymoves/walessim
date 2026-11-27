@@ -23,6 +23,10 @@ export interface VoiceEventCandidate {
   response?: VoiceTemplate["response"];
   /** Authority most affected (index), for the town when the template names none. */
   la: number;
+  /** What happened, for gated templates: board items placed at the place (all visits), test outcomes, cards played or that made you ready. */
+  threads?: string[];
+  tests?: Record<string, boolean>;
+  cards?: string[];
 }
 
 const matches = (v: VoiceTemplate, e: VoiceEventCandidate) =>
@@ -35,7 +39,10 @@ const matches = (v: VoiceTemplate, e: VoiceEventCandidate) =>
   (v.grade === undefined || v.grade === e.grade) &&
   (v.region === undefined || v.region === e.region) &&
   (v.kept === undefined || v.kept === e.kept) &&
-  (v.response === undefined || v.response === e.response);
+  (v.response === undefined || v.response === e.response) &&
+  (!v.requires_threads || v.requires_threads.every((t) => e.threads?.includes(t))) &&
+  (!v.requires_tests || Object.entries(v.requires_tests).every(([id, pass]) => e.tests?.[id] === pass)) &&
+  (!v.requires_card || !!e.cards?.includes(v.requires_card));
 
 /** Pick the voice for the first candidate with a matching template, avoiding voices already used. */
 export function pickVoice(ctx: Ctx, seed: number, term: number, candidates: VoiceEventCandidate[], used: string[]): VoiceLine | null {
@@ -127,7 +134,7 @@ export function writeLetter(
   archetype: LetterArchetype,
   named: NamedLine[],
   la: number,
-  worstYear: number,
+  worstYear: number | null,
   lostYear: number | null,
 ): Letter {
   const tpl = ctx.model.letters.find((l) => l.archetype === archetype) ?? ctx.model.letters[0];
@@ -138,7 +145,7 @@ export function writeLetter(
       place: town,
       year: n?.year ?? ctx.model.game.end_year,
       thing: n?.thing ?? "",
-      worst_year: worstYear,
+      worst_year: worstYear ?? "",
       lost_year: lostYear ?? "",
     });
   const first = named[0] ?? { kind: "none" as NamedThingKind, id: null, year: null, thing: null, ledger: "none" };
@@ -152,7 +159,8 @@ export function writeLetter(
   };
   const lines: Letter["lines"] = [
     { slot: "salutation", text: fillWith(pick(tpl.salutation, "salutation")) },
-    { slot: "lived", text: fillWith(pick(tpl.lived, "lived")) },
+    // a "worst year" is only named if people were worse off in it
+    { slot: "lived", text: fillWith(pick(worstYear === null && tpl.lived.some((t) => !t.en.includes("{worst_year}")) ? tpl.lived.filter((t) => !t.en.includes("{worst_year}")) : tpl.lived, "lived")) },
     { slot: "left", text: fillWith(pick(tpl.left, "left")) },
     ...named.slice(0, 2).map((n, k) => ({ slot: "named" as LetterSlot, text: namedLine(n, k) })),
     ...(named.length ? [] : [{ slot: "named" as LetterSlot, text: fillWith(pick(tpl.named.none, "named0")) }]),
