@@ -89,3 +89,24 @@
 .end-next { margin: 0; }
 .end-plain .end-envelope { padding: 16px 22px; grid-template-columns: auto 1fr auto; align-items: center; gap: 18px; }
 .end-plain .end-envelope .t-1 { margin: 0; }
+
+/* playtest 7, item 2: the result scrolls on its own, and the Play again bar sits below it, never
+   over it. The bar is one compact row so the letter has the height to open whole. */
+.end.end-plain { display: flex; flex-direction: column; align-items: stretch; overflow: hidden; padding: 0; }
+.end-scroll { position: relative; flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 20px 24px 16px; }
+.end-plain .end-actions {
+  flex: none; position: static; width: min(760px, calc(100% - 48px)); margin: 0 auto 12px;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 2px 16px; padding: 10px 16px;
+  box-shadow: var(--lit-edge), var(--shadow-lifted);
+}
+.end-plain .end-actions .end-next { grid-column: 1; grid-row: 1; }
+.end-plain .end-actions > .small { grid-column: 1; grid-row: 2; margin: 0; }
+.end-plain .end-actions .yf-actions { grid-column: 2; grid-row: 1 / span 2; flex-wrap: nowrap; }
+@media (max-width: 1360px) {
+  .end-scroll { padding: 14px 16px 12px; }
+  .end-plain .end-actions { width: min(760px, calc(100% - 32px)); margin-bottom: 10px; }
+}
+@media (max-height: 860px) {
+  .end-plain .end-letter { padding: 20px 26px 22px; }
+  .end-plain .end-poster { font-size: 54px; line-height: 52px; }
+}

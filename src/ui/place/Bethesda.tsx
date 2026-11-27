@@ -192,6 +192,7 @@ function OptionCard(props: { opt: ThreadOption; stitched: boolean; full: boolean
         <h3 id="pl-opt-title" class="t-2">{pick(o().name)}</h3>
         <CloseButton label={t("place.common.close")} onClick={props.onClose} />
       </div>
+      <div class="pl-below-body" tabIndex={0}>
       <ul class="pl-flags">
         <For each={FLAGS}>
           {(f) => (
@@ -209,6 +210,7 @@ function OptionCard(props: { opt: ThreadOption; stitched: boolean; full: boolean
       <Show when={o().half_without_card}><p class="small">{t("place.bethesda.half_without", { card: game.names.cardName(o().half_without_card!) })}</p></Show>
       <Show when={o().pairs_with && pairName()}><p class="small">{t("place.bethesda.pairs", { n: pairName()! })}</p></Show>
       <Show when={o().river_flips_in}><p class="small">{t("place.bethesda.river_flips")}</p></Show>
+      </div>
       <p class="pl-below-foot">
         <Show when={props.stitched} fallback={<StitchButton onClick={props.onStitch} disabled={props.full}>{t("place.bethesda.stitch")}</StitchButton>}>
           <TabButton onClick={props.onStitch}>{t("place.common.unstitch")}</TabButton>

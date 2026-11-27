@@ -18,7 +18,7 @@ cards:
     what: { en: "Wet bogs on the hills hold back rain and store carbon.", cy: "Mae corsydd gwlyb ar y bryniau'n dal glaw yn ôl ac yn storio carbon.", cy_review: true }
     catch: { en: "It takes 8 years to work. Hill farms earn a little less at first.", cy: "Mae'n cymryd 8 mlynedd i weithio. Mae ffermydd y bryniau'n ennill ychydig llai i ddechrau.", cy_review: true }
     picture: { en: "A stream below the moor rises slowly after a storm, not all at once.", cy: "Mae nant o dan y rhos yn codi'n araf ar ôl storm, nid i gyd ar unwaith.", cy_review: true }
-    fact: { indicator: flood_exposure, pick: highest }
+    fact: none
     effects:
       - { target: peat_condition, size: S, sign: 1, rule: R06 }
       - { target: "fcm:pressure:drainage", size: M, sign: -1, rule: R29 }

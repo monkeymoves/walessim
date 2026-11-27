@@ -3,7 +3,7 @@
 // employer leaving pushed it up"). The slip's header shows the bar's own change this turn, the
 // sentence says how the named cause relates to that change, and both come from the same whole-point
 // move, so a slip can never say "held level" beside an arrow, or "went down" beside a rise.
-import type { Slip, StrandChange } from "../../engine/api";
+import type { PostItem, Slip, StrandChange } from "../../engine/api";
 
 export type SlipDir = "up" | "down" | "level";
 
@@ -50,4 +50,35 @@ export function shareOfHit(hit: number): "all" | "most" | "half" | "third" | "qu
   if (hit >= 0.29) return "third";
   if (hit >= 0.18) return "quarter";
   return "little";
+}
+
+/** A line on the results step about a card starting work: an i18n key and its fill-ins. */
+export interface StartLine { key: string; card: string; vars: Record<string, number> }
+
+/**
+ * When a slow card's work shows (cold playtest 7, item 8: "Works from 2034" first seen in the 2038
+ * results, and Everyone online, "works from 2030", never reported). A card works from the start of a
+ * turn, so its results show when that turn ends. After each turn: a card that started work in it but
+ * moved no goal a whole point says so; a card that starts next turn says which results will show it.
+ */
+export function startLines(
+  o: { term: number; year: number; arrivals: PostItem[]; slips: Pick<Slip, "cause">[] },
+  post: PostItem[],
+): StartLine[] {
+  const out: StartLine[] = [];
+  const firstOf = (p: PostItem) => p.firstTerm ?? p.arrivesTerm;
+  const started = [...o.arrivals, ...post.filter((p) => p.arrivesTerm > o.term)].filter((p) => firstOf(p) === o.term && p.playedTerm < o.term);
+  const seen = new Set<string>();
+  for (const p of started) {
+    const key = `${p.playedTerm}:${p.card}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const moved = o.slips.some((sl) => sl.cause.kind === "card" && sl.cause.id === p.card && sl.cause.term === p.playedTerm);
+    if (!moved) out.push({ key: "play5.changed.started_quiet", card: p.card, vars: {} });
+  }
+  for (const p of post) {
+    if (firstOf(p) !== o.term + 1 || p.playedTerm > o.term) continue;
+    out.push({ key: "play5.changed.starts_next", card: p.card, vars: { from: o.year + 4, to: o.year + 8 } });
+  }
+  return out;
 }

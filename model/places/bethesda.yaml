@@ -161,6 +161,6 @@ options:
 data_note: { en: "Sources: Census 2021 Welsh speakers by small area. Second homes and holiday lets from Gwynedd council tax. ONS house prices against pay. NRW flood zones. The World Heritage boundary. OpenStreetMap. Facts say 'to check' until sourced. How strong each choice is, is illustrative.", cy: "Ffynonellau: siaradwyr Cymraeg fesul ardal fach, Cyfrifiad 2021. Ail gartrefi a llety gwyliau o dreth gyngor Gwynedd. Prisiau tai o'u cymharu â chyflog, ONS. Parthau llifogydd CNC. Ffin Treftadaeth y Byd. OpenStreetMap. Mae ffeithiau'n dweud 'i'w wirio' nes cael ffynhonnell. Mae cryfder pob dewis yn enghreifftiol.", cy_review: true }
 data_file: places/bethesda.json
 # the place data's small-area ranks are WIMD 2019 (1,909 areas); the atlas uses WIMD 2025 (1,917)
-wimd: { edition: WIMD 2019, areas: 1909 }
+wimd: { edition: "2019", areas: 1909 }
 confidence: low
 sources: [census-2021-welsh, language-housing]

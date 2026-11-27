@@ -6,8 +6,8 @@
 // bottom right; the atlas and the rule book open over the game and give it back as it was.
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
-import { Pair, pick, t } from "../../i18n";
-import { CloseButton, SourceTag } from "../parts";
+import { Pair, pick, t, tn } from "../../i18n";
+import { CloseButton, SourceTag, StampButton } from "../parts";
 import { Atlas } from "../atlas/Atlas";
 import { LensKey } from "../atlas/LensKey";
 import { lensFor, rankLine, type AtlasIndicator } from "../atlas/data";
@@ -35,7 +35,22 @@ export function focusCard(game: Game, ui: Ui): string | null {
   return ui.regionPick() ?? game.selected() ?? null;
 }
 
-/** Play the waiting card in a region (from the map or the comparison), then zoom there. */
+/** A region clicked on the map for the waiting card: lit and named, played only by the button. */
+export function chooseRegion(game: Game, ui: Ui, cardId: string, r: RegionId): boolean {
+  const card = game.names.card(cardId);
+  if (!card || !cardRegions(game.model, card).includes(r)) {
+    inplay.setFlash(t("facts.sel.not_here", { card: game.names.cardName(cardId), region: game.names.regionName(r) }));
+    return false;
+  }
+  inplay.setFlash(null);
+  inplay.setMapChoice({ card: cardId, region: r });
+  inplay.setRegionHover(r);
+  ui.map()?.setHighlight(regionLas(game.model, r));
+  ui.setAnnounce(t("play4.map.chosen", { region: game.names.regionName(r), card: game.names.cardName(cardId) }));
+  return true;
+}
+
+/** Play the waiting card in a region (from the comparison's buttons), then zoom there. */
 export function pickRegion(game: Game, ui: Ui, cardId: string, r: RegionId): boolean {
   const card = game.names.card(cardId);
   if (!card || !cardRegions(game.model, card).includes(r)) {
@@ -52,6 +67,7 @@ export function pickRegion(game: Game, ui: Ui, cardId: string, r: RegionId): boo
   ui.guide.done("play");
   ui.setAnnounce(game.names.regionName(r));
   inplay.setFlash(null);
+  inplay.setMapChoice(null);
   ui.setLaPanel(null);
   ui.map()?.setSelected(null);
   ui.map()?.focusLas(regionLas(game.model, r));
@@ -283,17 +299,30 @@ export function RegionCompare(props: { card: string }): JSX.Element {
     const names = [...new Set(ps.map((p) => game.names.cardName(p.card)))];
     return names.length ? t("facts.cmp.yours", { list: game.names.list(names) }) : t("facts.cmp.yours_none");
   };
+  const chosen = (): RegionId | null => (inplay.mapChoice()?.card === props.card ? (inplay.mapChoice()!.region as RegionId) : null);
   const hover = (r: RegionId | null) => {
-    inplay.setRegionHover(r);
+    inplay.setRegionHover(r ?? chosen());
     const m = ui.map();
-    if (m) m.setHighlight(r && legal().includes(r) ? regionLas(game.model, r) : legal().flatMap((x) => regionLas(game.model, x)));
+    const lit = r && legal().includes(r) ? r : chosen();
+    if (m) m.setHighlight(lit ? regionLas(game.model, lit) : legal().flatMap((x) => regionLas(game.model, x)));
   };
+  const cost = () => (chosen() ? game.costOf({ card: props.card, region: chosen()! }) : 0);
   return (
     <aside class="mf-panel sheet mf-compare" aria-labelledby="mf-cmp-title" data-testid="region-compare">
       <div class="mf-head">
         <h2 class="t-2" id="mf-cmp-title">{t("facts.cmp.title", { card: game.names.cardName(props.card) })}</h2>
         <CloseButton label={t("facts.area.close")} onClick={() => ui.setRegionPick(null)} />
       </div>
+      <Show when={chosen()}>
+        {(r) => (
+          <div class="mf-confirm" data-testid="map-choice">
+            <p class="small strong">{t("play4.map.chosen", { region: game.names.regionName(r()), card: game.names.cardName(props.card) })}</p>
+            <StampButton data-testid="map-play" disabled={!game.isPlayed(props.card) && !!game.blockOf(props.card)} onClick={() => pickRegion(game, ui, props.card, r())}>
+              {game.isPlayed(props.card) ? t("play4.map.move", { region: game.names.regionName(r()) }) : tn("play4.map.play", cost(), { region: game.names.regionName(r()) })}
+            </StampButton>
+          </div>
+        )}
+      </Show>
       <div class="mf-body" ref={watchMore}>
         <Show when={ind()} fallback={<p class="small">{t("facts.cmp.no_fact")}</p>}>
           <p class="mf-lead">
@@ -310,7 +339,7 @@ export function RegionCompare(props: { card: string }): JSX.Element {
               const ok = () => legal().includes(r.id);
               const spread = () => (ind() ? regionSpread(game.model, ind()!, r.id) : null);
               return (
-                <li class="mf-region" classList={{ hot: inplay.regionHover() === r.id, off: !ok() }} onMouseEnter={() => hover(r.id)}>
+                <li class="mf-region" classList={{ hot: inplay.regionHover() === r.id, off: !ok(), chosen: chosen() === r.id }} onMouseEnter={() => hover(r.id)}>
                   <button
                     type="button"
                     class="mf-region-pick"
@@ -427,6 +456,8 @@ export function SelectionLine(): JSX.Element {
   const text = () => {
     if (inplay.flash()) return inplay.flash()!;
     const pickCard = ui.regionPick();
+    const mc = inplay.mapChoice();
+    if (pickCard && mc?.card === pickCard) return t("play4.map.chosen", { region: game.names.regionName(mc.region as RegionId), card: game.names.cardName(pickCard) });
     if (pickCard) return t("facts.sel.region_pick", { card: game.names.cardName(pickCard) });
     const la = ui.laPanel();
     if (la) return t("facts.sel.area", { area: game.names.laName(la) });

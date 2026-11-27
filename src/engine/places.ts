@@ -138,6 +138,8 @@ export interface BethesdaContext {
   text?: Record<string, Text>;
   /** Options placed on earlier visits: they stay in place and count (playtest 2). */
   stitched?: string[];
+  /** A card's name, for the reason a test failed ("works at half strength until you play {card}"). */
+  cardName?: (id: string) => Text;
 }
 
 /** Bethesda: Aros, Iaith, Pwysau, each held in at least hold_share of runs. */
@@ -151,6 +153,8 @@ export function gradeBethesda(board: PlaceBoard, newThreads: string[], c: Bethes
   let aros = 0, iaith = 0, pwysau = 0;
   /** The central run's river balance: the explanation names the river only when it really fell short. */
   let river0 = 0, pressure0 = 0;
+  /** The central run's sums, for the reason a test failed (cold playtest 7, item 6). */
+  let central = { homes: 0, work: 0, iaith: 0 };
   const runs = Math.max(1, c.runs);
   for (let r = 0; r < runs; r++) {
     const sum = { homes: -penalty("homes"), work: -penalty("work"), iaith: -penalty("iaith"), pressure: penalty("pressure"), river: -penalty("river") };
@@ -174,6 +178,7 @@ export function gradeBethesda(board: PlaceBoard, newThreads: string[], c: Bethes
     if (r === 0) {
       river0 = sum.river;
       pressure0 = sum.pressure;
+      central = { homes: sum.homes, work: sum.work, iaith: sum.iaith };
     }
   }
   const hold = board.hold_share ?? 0.6;
@@ -190,10 +195,11 @@ export function gradeBethesda(board: PlaceBoard, newThreads: string[], c: Bethes
   const pressureShort = pressure0 > cap || !riverShort;
   const pwysauFail = riverShort && pressureShort ? "fail_both" : riverShort ? "fail_river" : "fail";
   const shares = { aros: aros / runs, iaith: iaith / runs, pwysau: pwysau / runs };
+  const why = (id: "aros" | "iaith"): Text => failReason(board, id, threads, central, th, c, penalty) ?? { en: "", cy: "" };
   const tests = (["aros", "iaith", "pwysau"] as const).map((id) => {
     const share = shares[id];
     const pass = share >= hold;
-    const params: Record<string, SlotValue> = { runs: Math.round(share * 10), homes: by("homes"), work: by("work"), iaith: by("iaith"), pressure: by("pressure") };
+    const params: Record<string, SlotValue> = { runs: Math.round(share * 10), homes: by("homes"), work: by("work"), iaith: by("iaith"), pressure: by("pressure"), ...(!pass && id !== "pwysau" ? { why: why(id) } : {}) };
     const key = pass ? "pass" : id === "pwysau" ? pwysauFail : "fail";
     return { id, share, pass, explanation: say(copy, `engine.visit.${id}.${key}`, params) };
   });
@@ -219,4 +225,44 @@ export function gradeBethesda(board: PlaceBoard, newThreads: string[], c: Bethes
   const room = grade !== "very_well" && tests.every((t) => t.pass) ? say(copy, "engine.visit.room.bethesda", { share: Math.round(roomShare * 10) }) : undefined;
   if (room) notes.push(room);
   return { grade, tests, notes };
+}
+
+/**
+ * Why a Bethesda test failed, in one sentence from the central run (cold playtest 7, item 6: "Can
+ * young people stay? Not yet, about 0 times in 10" after a homes pick and a work pick, with no
+ * reason). In order: a measure with no pick at all (or only a pick whose card is not played this
+ * turn); a slow change that took away what the picks gave; a pick at half strength without its card;
+ * picks too small together; or picks that only just reach it, so most runs fall short.
+ */
+function failReason(
+  board: PlaceBoard,
+  id: "aros" | "iaith",
+  threads: string[],
+  central: { homes: number; work: number; iaith: number },
+  th: { homes: number; work: number; iaith: number },
+  c: BethesdaContext,
+  penalty: (m: string) => number,
+): Text | undefined {
+  const copy = c.text;
+  const name = (card: string): Text => c.cardName?.(card) ?? { en: card, cy: card };
+  const opts = (board.options ?? []).filter((o) => threads.includes(o.id));
+  const blocked = (o: (typeof opts)[number]) => !!o.requires_card && !c.inPlay.includes(o.requires_card);
+  const measures = id === "aros" ? (["homes", "work"] as const) : (["iaith"] as const);
+  const short = measures.filter((m) => central[m] < th[m]);
+  for (const m of short) {
+    if (opts.some((o) => o[m] > 0 && !blocked(o))) continue;
+    const b = opts.find((o) => o[m] > 0 && blocked(o));
+    return b ? say(copy, "engine.visit.why.blocked", { pick: b.name, card: name(b.requires_card!) }) : say(copy, `engine.visit.why.no_${m}`, {});
+  }
+  for (const m of short) {
+    const p = penalty(m);
+    const trend = (board.trend_penalties ?? []).find((x) => x.measure === m && c.active.includes(x.curveball));
+    if (trend && p > 0 && central[m] + p >= th[m]) return say(copy, "engine.visit.why.trend", { note: trend.note });
+  }
+  for (const m of short) {
+    const h = opts.find((o) => o[m] > 0 && o.half_without_card && !c.everPlayed.includes(o.half_without_card));
+    if (h) return say(copy, "engine.visit.why.half", { pick: h.name, card: name(h.half_without_card!) });
+  }
+  if (short.length) return say(copy, `engine.visit.why.small_${id}`, {});
+  return say(copy, "engine.visit.why.close", {});
 }

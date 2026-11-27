@@ -54,9 +54,21 @@ export function walesMover(model: CompiledModel, state: GameState): WalesMover |
     if (Math.abs(d) < SAME || (best && Math.abs(d) <= Math.abs(best.d))) continue;
     // the band runs floor (score 0) to goal (score 10); the measure rises with the score when goal > floor
     const rises = band.goal > band.floor && !band.invert;
-    best = { indicator: id, dir: (d > 0) === rises ? "up" : "down", size: Math.abs(d) >= LOT ? "lot" : "little", better: d > 0, d };
+    // "a lot" only beside a goal bar that has itself moved a whole point the same way (cold playtest 7,
+    // item 7: "life expectancy a lot lower" while the Health bar stayed at 5)
+    const lot = Math.abs(d) >= LOT && barMoved(model, state, comp.id, d > 0);
+    best = { indicator: id, dir: (d > 0) === rises ? "up" : "down", size: lot ? "lot" : "little", better: d > 0, d };
   }
   if (!best) return null;
   const { d: _d, ...out } = best;
   return out;
+}
+
+/** The goal bar a measure feeds has moved at least one whole point since 2026, for the better or the worse. */
+export function barMoved(model: CompiledModel, state: GameState, component: string, better: boolean): boolean {
+  const strand = model.strands.find((x) => x.flow.includes(component));
+  const start = strand ? state.history[0]?.strands.find((c) => c.strand === strand.id)?.pipsBefore : undefined;
+  const now = strand ? state.strands.find((v) => v.strand === strand.id)?.flowPips : undefined;
+  if (start == null || now == null) return false;
+  return better ? now - start >= 1 : start - now >= 1;
 }

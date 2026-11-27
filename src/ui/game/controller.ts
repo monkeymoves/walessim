@@ -4,7 +4,7 @@
 import { batch, createMemo, createSignal, type Accessor } from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
 import {
-  cardCost, dailySeed, dispatch, loadGame, newGame, preview, pullThread, saveGame, validatePlays,
+  cardCost, cardsCapped, dailySeed, dispatch, loadGame, newGame, preview, pullThread, saveGame, validatePlays,
 } from "./engine";
 import {
   type Action, type CardPlay, type GameState, type NewGameOptions, type Plays, type Preview, type Problem,
@@ -224,6 +224,15 @@ export function createGame(model: CompiledModel, opts: { overrides?: Accessor<Re
     const limit = s?.cardLimit ?? 0;
     return { limit, played: draft.cards.length, left: Math.max(0, limit - draft.cards.length) };
   });
+  /**
+   * The plan can play no more cards (cold playtest 7, item 5): Trust's card limit is reached, or every
+   * card left costs more than the coins left. The end-of-turn sheet then never says "spend them".
+   */
+  const capped = createMemo<"limit" | "price" | null>(() => {
+    const s = state();
+    if (!s || s.step !== "plan" || budget().left <= 0) return null;
+    try { return cardsCapped(model, s, plays()); } catch { return null; }
+  });
   function setSaved(n: number): void { setDraft("saved", Math.max(0, Math.min(n, Math.max(0, budget().left)))); }
 
   function canAfford(id: string, region?: RegionId): boolean {
@@ -366,7 +375,7 @@ export function createGame(model: CompiledModel, opts: { overrides?: Accessor<Re
 
   return {
     model, names, state, draft, plays, problems, budget, planPreview, ghost, threads, trace, letters,
-    selected, setSelected, hovered, setHovered, ledgerOpen, setLedgerOpen, shared, error, setError, lastSave, usefulSave, setSaved, previewRegion, setPreviewRegion, previewRegionFor, previewRegionIsGuess, savedAt, cardCap,
+    selected, setSelected, hovered, setHovered, ledgerOpen, setLedgerOpen, shared, error, setError, lastSave, usefulSave, setSaved, previewRegion, setPreviewRegion, previewRegionFor, previewRegionIsGuess, savedAt, cardCap, capped,
     start, boot, act, commit,
     isPlayed, playOf, costOf, canAfford, blockOf, play, unplay, setRegion, setStanding, setRepay, setRepair, toggleUpkeep, setHold,
     pull, setTrace,

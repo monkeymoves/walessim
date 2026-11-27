@@ -1,0 +1,36 @@
+{
+ "_note": "Rheolau ac amseru wedi'u dweud yn blaen ar ôl y seithfed prawf chwarae (oer). Drafft newydd, geiriau plaen, dim brawddeg dros 18 gair. Angen adolygiad gan siaradwr rhugl.",
+ "_cy_review": true,
+
+ "guide.how4": "Mae dwy sgôr: bywyd nawr, a'r hyn sydd ar ôl erbyn 2050. Eich canlyniad yw pa un bynnag sy'n gwneud waethaf.",
+ "guide.coins_capped": "Allwch chi ddim chwarae cerdyn arall y tro hwn. Cadwch y darnau arian hyn: mae hyd at 2 yn cario drosodd.",
+
+ "end.rule_line": "Mae dwy sgôr yn cyfrif. Eich canlyniad yw'r un a wnaeth waethaf ers 2026: {side}.",
+ "end.counts_up_less.one": "eich canlyniad: i fyny 1 pwynt ers 2026, llai na'r llall",
+ "end.counts_up_less.other": "eich canlyniad: i fyny {n} pwynt ers 2026, llai na'r llall",
+ "end.counts_up.one": "eich canlyniad: i fyny 1 pwynt ers 2026",
+ "end.counts_up.other": "eich canlyniad: i fyny {n} pwynt ers 2026",
+ "end.counts_down.one": "eich canlyniad: i lawr 1 pwynt ers 2026",
+ "end.counts_down.other": "eich canlyniad: i lawr {n} pwynt ers 2026",
+ "end.counts_level.one": "eich canlyniad: yr un fath ag yn 2026",
+ "end.counts_level.other": "eich canlyniad: yr un fath ag yn 2026",
+
+ "endturn.capped_limit.one": "Mae Ymddiriedaeth yn gadael i chi chwarae 1 cerdyn y tro hwn, ac mae wedi'i chwarae. All y darnau arian hyn ddim prynu cerdyn.",
+ "endturn.capped_limit.other": "Mae Ymddiriedaeth yn gadael i chi chwarae {n} cerdyn y tro hwn. Maen nhw i gyd wedi'u chwarae. All y darnau arian hyn ddim prynu cerdyn.",
+ "endturn.capped_price.one": "Mae pob cerdyn sydd ar ôl yn eich llaw yn costio mwy nag sydd gennych. All y darnau arian hyn ddim prynu cerdyn.",
+ "endturn.capped_price.other": "Mae pob cerdyn sydd ar ôl yn eich llaw yn costio mwy nag sydd gennych. All y darnau arian hyn ddim prynu cerdyn.",
+ "endturn.back_plain": "Mynd yn ôl",
+ "endturn.capped_lost.one": "All yr 1 arall ddim cael ei gadw. Nid eich camgymeriad chi yw hynny: doedd dim cerdyn ar ôl i'w wario arno.",
+ "endturn.capped_lost.other": "All y {n} arall ddim cael eu cadw. Nid eich camgymeriad chi yw hynny: doedd dim cerdyn ar ôl i'w gwario arno.",
+
+ "changed.started_quiet": "Dechreuodd {card} weithio y tro hwn. Dydy e ddim wedi symud nod o bwynt cyfan eto.",
+ "changed.starts_next": "Mae {card} yn dechrau gweithio y tro nesaf. Chwiliwch amdano yn Beth ddigwyddodd, {from} i {to}.",
+ "opening.started_line": "{card}, chwaraewyd {year}: yn dechrau gweithio nawr, yn llawn o {full}",
+ "opening.full_line": "{card}, chwaraewyd {year}: yn gweithio'n llawn nawr, ar ôl dechrau yn {from}",
+
+ "visit.stay_card": "Os arhoswch i ffwrdd, mae {card} yn dal i weithio fel arfer. Dim ond na chewch chi ddewis sut.",
+ "visit.stay_cards": "Os arhoswch i ffwrdd, mae {card} yn dal i weithio fel arfer. Dim ond na chewch chi ddewis sut.",
+ "visit.stay_none": "Does dim un o'ch cardiau'n aros am yr ymweliad hwn. Os arhoswch i ffwrdd, does dim yn newid yma.",
+
+ "crisis.from": "Tyfodd yr argyfwng hwn o newid araf: {trend}, ar droed ers {year}."
+}

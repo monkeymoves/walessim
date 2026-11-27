@@ -691,9 +691,9 @@
 .yf-note.yf-note-belowleft::before { border: 7px solid transparent; width: 0; height: 0; top: -7px; bottom: auto; right: 22px; left: auto; border-top: 0; border-bottom-color: var(--slate); }
 
 /* choosing where: the opened card gives the map room (the comparison has the figure) */
-.yf-cardopen.choosing { width: min(320px, 36%); }
+.yf-cardopen.choosing { width: min(292px, 34%); }
 @media (max-width: 1360px) {
-  .yf-cardopen.choosing { width: min(300px, 36%); padding: 10px 12px; }
+  .yf-cardopen.choosing { width: min(272px, 34%); padding: 10px 12px; }
   .yf-cardopen.choosing .yf-co { grid-template-columns: 5.6em minmax(0, 1fr); }
 }
 
@@ -709,11 +709,8 @@
 .rw-invite { display: grid; gap: 2px; line-height: 1.4; }
 .rw-invite-line { margin: 0; }
 
-/* the end screen: Play again always in view, pinned to the foot of the sheet while the rest scrolls */
-.end-plain .end-actions { position: sticky; bottom: 0; z-index: 2; box-shadow: var(--lit-edge), var(--shadow-lifted); }
+/* the end screen: Play again always in view, in its own bar under the scrolling sheet (end.css) */
 .end-plain .end-actions .yf-actions { flex-wrap: wrap; }
-.yf-main.ended .end { padding-bottom: 0; }
-.end-plain .end-col { padding-bottom: 14px; }
 /* coins and piles side by side when they fit, else the piles take their own row (Welsh labels) */
 .yf-budget { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 14px; }
 .yf-budget > * { flex: 1 1 100%; }
@@ -753,3 +750,17 @@
    not on a line of its own */
 .yf-tray .yf-where { position: relative; }
 .yf-tray .yf-where:has(.yf-tray-actions .btn-stamp):not(:has(.yf-why)) .yf-tray-head { position: absolute; right: 0; bottom: 6px; }
+
+/* playtest 7, item 12: the crisis and the arrivals sit right of the slow change column, never on it,
+   and the arrivals stand above the "Showing" line at the foot of the map */
+@media (min-width: 1361px) {
+  .yf-shock { left: 326px; transform: none; width: min(420px, calc(100% - 340px)); }
+  .yf-arrivals { left: 326px; transform: none; bottom: 48px; max-width: min(520px, calc(100% - 340px)); }
+}
+@media (min-width: 1180px) and (max-width: 1360px) {
+  .yf-shock, .yf-arrivals { transform: none; }
+  .yf-arrivals { bottom: 48px; }
+  .yf-shock, .yf-arrivals { left: 298px; }
+  .yf-shock { width: min(420px, calc(100% - 312px)); }
+  .yf-arrivals { max-width: min(520px, calc(100% - 312px)); }
+}

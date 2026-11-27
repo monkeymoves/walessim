@@ -14,7 +14,7 @@ import { cardRegions, regionLas } from "./names";
 import { cardIndicator } from "./mapFacts";
 import { inplay, noteArea, noteSource, resetInplay } from "./inplay";
 import {
-  AreaPanel, CompareKey, focusCard, LookUpOverlay, MapControls, NotebookKeeper, openArea, pickRegion, RegionCompare, SelectionLine, showWales, stampMarkers, WalesPanel,
+  AreaPanel, chooseRegion, CompareKey, focusCard, LookUpOverlay, MapControls, NotebookKeeper, openArea, RegionCompare, SelectionLine, showWales, stampMarkers, WalesPanel,
 } from "./MapPanels";
 
 function stitchKind(card: string): StitchKind {
@@ -61,7 +61,8 @@ export function MapStage(props: { children?: JSX.Element }): JSX.Element {
       // an area clicked to choose a region was looked at too: the notebook counts it (cold playtest 6, item 10)
       if (code) noteArea(code);
       const r = code ? laRegion(code) : undefined;
-      if (r) pickRegion(game, ui, pick, r);
+      // a click on the map chooses the region; the button in the comparison plays the card (playtest 7)
+      if (r) chooseRegion(game, ui, pick, r);
       return;
     }
     if (code) openArea(game, ui, code);
@@ -75,8 +76,10 @@ export function MapStage(props: { children?: JSX.Element }): JSX.Element {
     if (!card) return;
     const legal = cardRegions(game.model, card);
     const r = code ? laRegion(code) : undefined;
-    inplay.setRegionHover(r ?? null);
-    map.setHighlight(r && legal.includes(r) ? regionLas(game.model, r) : legal.flatMap((x) => regionLas(game.model, x)));
+    const chosen = inplay.mapChoice()?.card === pick ? (inplay.mapChoice()!.region as RegionId) : null;
+    inplay.setRegionHover(r ?? chosen);
+    const lit = r && legal.includes(r) ? r : chosen;
+    map.setHighlight(lit ? regionLas(game.model, lit) : legal.flatMap((x) => regionLas(game.model, x)));
   }
 
   // a selection never outlives its step or turn: no stale panel or outline later (cold playtest 1)
@@ -93,6 +96,7 @@ export function MapStage(props: { children?: JSX.Element }): JSX.Element {
   // a card waiting for a region: zoom to the regions it can go to, and close the area panel
   createEffect(on(ui.regionPick, (pick) => {
     inplay.setFlash(null);
+    inplay.setMapChoice(null);
     inplay.setRegionHover(null);
     // choosing a region is reading the atlas: the map takes the card's measure, with its key and
     // source, as soon as the card asks "Where?" (cold playtest 6); "Back to the plain map" turns it off
@@ -147,10 +151,18 @@ export function MapStage(props: { children?: JSX.Element }): JSX.Element {
     // the comparison and the card when there is room for it
     const s = game.state();
     const card = !ui.inPlace() && !ended && s?.step === "plan" && !!game.selected() && !game.trace() && !game.ledgerOpen();
-    const w = host.clientWidth;
+    const w = host.clientWidth, h = host.clientHeight;
     const left = ui.inPlace() || ended ? 16 : panel ? (ui.regionPick() ? (w < 1000 ? 306 : 326) : 364) : Math.min(300, Math.round(w * 0.3));
-    const right = card && ui.regionPick() && w - left - 330 >= 300 ? 330 : 16;
-    m.setPadding({ left, right, bottom: ui.inPlace() || ended ? 16 : 40 });
+    const bottom = ui.inPlace() || ended ? 16 : 40;
+    // playtest 7, item 10: the card gets room only so far as Wales keeps about three quarters of the
+    // size it has at full height; past that the card sits over Wales's eastern edge, never squeezing it
+    let right = 16;
+    if (card && ui.regionPick()) {
+      const fullW = Math.max(0, h - 16 - bottom) * m.walesAspect();
+      const keep = Math.min(w - left - 16, fullW * 0.74);
+      right = Math.max(16, Math.min(w < 900 ? 290 : 310, Math.round(w - left - keep)));
+    }
+    m.setPadding({ left, right, bottom });
   });
 
   // the four regions lit while a card waits for one

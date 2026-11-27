@@ -86,18 +86,19 @@ export function RhonddaBoard(props: { data: PlaceData; api: BoardApi }): JSX.Ele
   return (
     <div class="pl-rhondda">
       <p class="pl-prompt print">{tn("place.rhondda.prompt", props.api.max)}</p>
+      <p class="small pl-hint" data-testid="rh-hint">{t("play4.rh.hint", { button: t("place.rhondda.stitch") })}</p>
       <div class="pl-table-wrap">
         <table class="pl-ledger" aria-label={tn("place.rhondda.prompt", props.api.max)}>
           <thead>
             <tr>
               <th scope="col">{t("place.rhondda.table_tip")}</th>
-              <th scope="col" class="num">{t("place.rhondda.table_homes")}</th>
+              <th scope="col" class="num">{t("place.rhondda.table_homes")} <span class="pl-unit">{t("play4.rh.unit")}</span></th>
               <th scope="col">{t("place.rhondda.table_risk")}</th>
-              <th scope="col" class="flag">{t("place.rhondda.table_school")}</th>
-              <th scope="col" class="flag">{t("place.rhondda.table_rail")}</th>
-              <th scope="col" class="flag">{t("place.rhondda.table_bus")}</th>
-              <th scope="col" class="flag">{t("place.rhondda.table_flood")}</th>
-              <th scope="col" class="flag">{t("place.rhondda.table_deprived")}</th>
+              <th scope="col" class="flag"><span class="pl-flaghead">{t("place.rhondda.table_school")}</span></th>
+              <th scope="col" class="flag"><span class="pl-flaghead">{t("place.rhondda.table_rail")}</span></th>
+              <th scope="col" class="flag"><span class="pl-flaghead">{t("place.rhondda.table_bus")}</span></th>
+              <th scope="col" class="flag"><span class="pl-flaghead">{t("place.rhondda.table_flood")}</span></th>
+              <th scope="col" class="flag"><span class="pl-flaghead">{t("place.rhondda.table_deprived")}</span></th>
             </tr>
           </thead>
           <tbody>
@@ -117,7 +118,7 @@ export function RhonddaBoard(props: { data: PlaceData; api: BoardApi }): JSX.Ele
                       </button>
                     </th>
                     <td class="num data">
-                      {t("place.rhondda.ha", { n: Math.round(b()?.residentialHa ?? r.facts?.residentialHa ?? 0) })}
+                      {formatNum(Math.round(b()?.residentialHa ?? r.facts?.residentialHa ?? 0))}
                       <i class="pl-bar" style={{ width: `${((b()?.residentialHa ?? 0) / maxHa()) * 100}%` }} aria-hidden="true" />
                     </td>
                     <td class="pl-risk" data-risk={r.risk}>
@@ -136,6 +137,7 @@ export function RhonddaBoard(props: { data: PlaceData; api: BoardApi }): JSX.Ele
           </tbody>
         </table>
       </div>
+      <p class="small pl-unitnote">{t("play4.rh.unit_note")}</p>
       <TermConditions place="rhondda" activeTrends={offer().activeTrends} conditions={offer().termConditions} class="pl-wet" />
       <TestQuestions place="rhondda" />
       <ThreadButton onClick={() => setRule(!rule())} aria-expanded={rule()}>{t("place.common.how")}</ThreadButton>
@@ -175,6 +177,7 @@ function BelowCard(props: {
         <h3 id="pl-below-title" class="t-2">{props.name}</h3>
         <CloseButton label={t("place.common.close")} onClick={props.onClose} />
       </div>
+      <div class="pl-below-body" tabIndex={0}>
       <p class="small">{/bgs/i.test(props.row.source) ? t("place.rhondda.tip_source_bgs") : t("place.rhondda.tip_source_osm")}</p>
       <p class="pl-riskline label" data-risk={props.row.risk}>
         <span class="pl-riskmark" aria-hidden="true"><i /><i /><i /></span>
@@ -185,7 +188,7 @@ function BelowCard(props: {
       </Show>
       <dl class="pl-facts">
         <dt>{t("place.rhondda.below_homes")}</dt>
-        <dd><b class="print pl-fig">{t("place.rhondda.ha", { n: Math.round(b()?.residentialHa ?? 0) })}</b></dd>
+        <dd><b class="pl-fig">{t("place.rhondda.ha", { n: Math.round(b()?.residentialHa ?? 0) })}</b></dd>
         <dt>{t("place.rhondda.below_buildings")}</dt>
         <dd class="data">{b()?.buildings ?? 0} <span class="small">{t("place.rhondda.buildings_note")}</span></dd>
         <dt>{t("place.rhondda.below_schools")}</dt>
@@ -211,6 +214,7 @@ function BelowCard(props: {
           {b()?.wimdLsoa ? t("place.rhondda.wimd", { name: pick({ en: b()!.wimdLsoa!.en, cy: b()!.wimdLsoa!.cy ?? b()!.wimdLsoa!.en }), rank: b()!.wimdRank ?? "", edition: game.names.place("rhondda")?.wimd?.edition ?? "WIMD 2019", areas: formatNum(game.names.place("rhondda")?.wimd?.areas ?? 1909) }) : none()}
         </dd>
       </dl>
+      </div>
       <p class="pl-below-foot">
         <ThreadButton onClick={props.onRule}>{t("place.common.how")}</ThreadButton>
         <Show when={props.stitched} fallback={

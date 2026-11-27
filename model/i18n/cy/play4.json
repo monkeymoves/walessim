@@ -1,0 +1,12 @@
+{
+ "_note": "Trwsio'r gosodiad ar ôl y seithfed prawf chwarae (oer). Geiriau plaen, dim brawddeg dros 18 gair.",
+ "_cy_review": true,
+ "rh.hint": "Cliciwch ar domen, yn y rhestr neu ar y map, i weld beth sydd oddi tani. Yna dewiswch “{button}”.",
+ "rh.unit": "(hectarau)",
+ "rh.unit_note": "Sgwâr 100 wrth 100 metr yw hectar.",
+ "map.chosen": "Rhanbarth a ddewiswyd ar gyfer {card}: {region}. Chwaraewch y cerdyn gyda'r botwm, neu cliciwch ranbarth arall.",
+ "map.play.one": "Ei chwarae yma: {region} (1 darn arian)",
+ "map.play.two": "Ei chwarae yma: {region} (2 ddarn arian)",
+ "map.play.other": "Ei chwarae yma: {region} ({n} darn arian)",
+ "map.move": "Ei symud yma: {region}"
+}

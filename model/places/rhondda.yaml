@@ -33,9 +33,9 @@ tests:
   - id: lifelines
     name: { en: "Are the schools and the railway safe?", cy: "Ydy'r ysgolion a'r rheilffordd yn ddiogel?", cy_review: true }
     description: { en: "You must make safe at least half of the high-risk tips above a school or the railway.", cy: "Rhaid i chi wneud o leiaf hanner y tomenni risg uchel uwchben ysgol neu'r rheilffordd yn ddiogel.", cy_review: true }
-data_note: { en: "The tips on this map come from open data. They are BGS landslide records that mention a tip, and spoil heaps on OpenStreetMap. The official list of old tips is not open, so it is not used. How sure: low.", cy: "Daw'r tomenni ar y map hwn o ddata agored. Cofnodion tirlithriad BGS sy'n sôn am domen ydyn nhw, a thomenni rwbel ar OpenStreetMap. Nid yw'r rhestr swyddogol o hen domenni yn agored, felly ni chaiff ei defnyddio. Pa mor siŵr: isel.", cy_review: true }
+data_note: { en: "The tips on this map come from open data. Some are landslide records that mention a tip, from the British Geological Survey. Others are coal waste heaps on OpenStreetMap. The official list of old tips is not open, so it is not used. How sure: low.", cy: "Daw'r tomenni ar y map hwn o ddata agored. Mae rhai yn gofnodion tirlithriad sy'n sôn am domen, gan Arolwg Daearegol Prydain. Mae eraill yn bentyrrau o wastraff glo ar OpenStreetMap. Nid yw'r rhestr swyddogol o hen domenni yn agored, felly ni chaiff ei defnyddio. Pa mor siŵr: isel.", cy_review: true }
 data_file: places/rhondda.json
 # the place data's small-area ranks are WIMD 2019 (1,909 areas); the atlas uses WIMD 2025 (1,917)
-wimd: { edition: WIMD 2019, areas: 1909 }
+wimd: { edition: "2019", areas: 1909 }
 confidence: low
 sources: [bgs-landslide, coal-tip-safety]

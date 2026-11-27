@@ -1,0 +1,35 @@
+{
+ "_note": "Rules and timing said plainly after the seventh (cold) playtest (docs/design/playtest-7-cold.md, items 3 to 8 and 12). Plain words, reading age 11, no sentence over 18 words.",
+
+ "guide.how4": "There are two scores: life now, and what is left for 2050. Your result is whichever does worse.",
+ "guide.coins_capped": "You cannot play another card this turn. Save these coins: up to 2 carry over.",
+
+ "end.rule_line": "Two scores count. Your result is the one that did worse since 2026: {side}.",
+ "end.counts_up_less.one": "your result: up 1 point since 2026, less than the other",
+ "end.counts_up_less.other": "your result: up {n} points since 2026, less than the other",
+ "end.counts_up.one": "your result: up 1 point since 2026",
+ "end.counts_up.other": "your result: up {n} points since 2026",
+ "end.counts_down.one": "your result: down 1 point since 2026",
+ "end.counts_down.other": "your result: down {n} points since 2026",
+ "end.counts_level.one": "your result: level with 2026",
+ "end.counts_level.other": "your result: level with 2026",
+
+ "endturn.capped_limit.one": "Trust lets you play 1 card this turn, and it is played. These coins cannot buy a card.",
+ "endturn.capped_limit.other": "Trust lets you play {n} cards this turn, and all {n} are played. These coins cannot buy a card.",
+ "endturn.capped_price.one": "Every card left in your hand costs more than you have. These coins cannot buy a card.",
+ "endturn.capped_price.other": "Every card left in your hand costs more than you have. These coins cannot buy a card.",
+ "endturn.back_plain": "Go back",
+ "endturn.capped_lost.one": "The other 1 cannot be kept. That is not your mistake: no card was left to spend it on.",
+ "endturn.capped_lost.other": "The other {n} cannot be kept. That is not your mistake: no card was left to spend them on.",
+
+ "changed.started_quiet": "{card} started work this turn. It has not moved a goal by a whole point yet.",
+ "changed.starts_next": "{card} starts work next turn. Look for it in What happened, {from} to {to}.",
+ "opening.started_line": "{card}, played {year}: starts work now, in full from {full}",
+ "opening.full_line": "{card}, played {year}: now works in full, after starting in {from}",
+
+ "visit.stay_card": "If you stay away, {card} still works as normal. You just do not choose how.",
+ "visit.stay_cards": "If you stay away, {card} still work as normal. You just do not choose how.",
+ "visit.stay_none": "No card of yours is waiting on this visit. If you stay away, nothing changes here.",
+
+ "crisis.from": "This crisis grew out of a slow change: {trend}, under way since {year}."
+}

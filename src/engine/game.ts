@@ -101,6 +101,8 @@ interface Sim {
   spent: number;
   /** Coins left unspent and not saved at this term's commit (`Plays.save`): lost. */
   notSaved?: number;
+  /** At this term's commit, no more cards could be played: the card limit, or every card left cost too much. */
+  capped?: "limit" | "price" | null;
   ghost: { lived: number; left: number; result: number } | null;
 }
 
@@ -254,6 +256,7 @@ function openTerm(ctx: Ctx, prev: A.GameState, term: number): A.GameState {
   s.pledgeBrokenByUpkeep = false;
   s.spent = 0;
   s.notSaved = 0;
+  s.capped = null;
 
   const sch = s.schedule[term]!;
   const active = [...state.activeTrends];
@@ -488,6 +491,22 @@ function availableFor(model: CompiledModel, state: A.GameState, plays: A.Plays):
   return state.budget.available + standingBonus(model, plays) + refund;
 }
 
+/**
+ * Whether the plan has run out of cards it could still play (cold playtest 7, item 5): "limit" when
+ * Trust's card limit is reached, "price" when every card left in the hand costs more than the coins
+ * left, else null. Coins left in a capped plan were never the player's to spend on a card.
+ */
+export function cardsCapped(model: CompiledModel, state: A.GameState, plays: A.Plays): "limit" | "price" | null {
+  if (plays.cards.length >= state.cardLimit) return "limit";
+  const left = availableFor(model, state, plays) - playCost(model, state, plays);
+  const played = new Set(plays.cards.map((c) => c.card));
+  const rest = state.hand.filter((id) => !played.has(id) && id !== plays.holdOver);
+  return rest.every((id) => cardCost(model, state, { card: id }) > left) ? "price" : null;
+}
+
+/** The most saved coins that can still be useful: a crisis uses at most 2, and up to `carry` carry over. */
+const usefulSaveMax = (carry: number): number => Math.min(2, carry);
+
 export function validatePlays(model: CompiledModel, state: A.GameState, plays: A.Plays): A.Problem[] {
   const ctx = makeContext(model);
   const out: A.Problem[] = [];
@@ -683,6 +702,8 @@ function commit(ctx: Ctx, prev: A.GameState, plays: A.Plays, caretaker: boolean)
   const spent = playCost(model, state, plays);
   s.spent = spent;
   const left = availableFor(model, state, plays) - spent;
+  // coins the player could not have put on a card (cold playtest 7, item 5): never counted as theirs to spend
+  s.capped = left > 0 ? cardsCapped(model, state, plays) : null;
   // only the coins the player saved are held for a crisis and can carry over; the rest are lost now
   const available = plays.save == null || !Number.isFinite(plays.save) ? left : Math.max(0, Math.min(left, Math.floor(plays.save)));
   s.notSaved = Math.max(0, left - available);
@@ -836,6 +857,7 @@ export function gradeVisit(model: CompiledModel, state: A.GameState, choice: A.V
           everPlayed: s.plays.map((p) => p.card),
           seed: uniformSeed(state.seed, state.term),
           runs: Math.max(50, state.options.runs),
+          cardName: (id) => ctx.cards.get(id)?.name ?? { en: id, cy: id },
         });
   return { place, grade: res.grade, threads: choice.threads, stayed: false, tests: res.tests, notes: res.notes };
 }
@@ -1341,6 +1363,7 @@ function resolveTerm(ctx: Ctx, prev: A.GameState, response: A.ShockResponse): A.
     spent: s.spent,
     contingencyHeld,
     ...(s.notSaved ? { coinsNotSaved: s.notSaved } : {}),
+    ...(s.capped ? { cardsCapped: s.capped } : {}),
     arrivals,
     newTrend: s.schedule[term]!.newTrend,
     shock: shockOutcome,
@@ -2104,15 +2127,25 @@ export function whatMattered(model: CompiledModel, state: A.GameState, limit = 3
     .slice(0, limit);
 }
 
-/** Coins not spent and then lost (not used by a crisis, not carried over), per finished turn. */
-export function unusedCoins(state: A.GameState, carry: number): { coins: number; turns: number; firstTerm: number; perTurn: number[] } {
+/**
+ * Coins not spent and then lost (not used by a crisis, not carried over), per finished turn, counting
+ * only what the player could have avoided (cold playtest 7, item 5: "Next time: spend your coins" to
+ * players the card limit had stopped). In a turn where no more cards could be played, the coins
+ * beyond what saving could keep were lost whatever the player did: they are `forced`, not counted.
+ */
+export function unusedCoins(state: A.GameState, carry: number): { coins: number; turns: number; firstTerm: number; perTurn: number[]; forced: number } {
+  let forced = 0;
   const perTurn = state.history.map((h) => {
     if (h.caretaker) return 0;
     const left = Math.max(0, h.contingencyHeld - (h.shock?.response ?? 0));
-    return Math.max(0, left - carry) + (h.coinsNotSaved ?? 0);
+    const lost = Math.max(0, left - carry) + (h.coinsNotSaved ?? 0);
+    if (!h.cardsCapped) return lost;
+    const stuck = Math.min(lost, Math.max(0, h.contingencyHeld + (h.coinsNotSaved ?? 0) - usefulSaveMax(carry)));
+    forced += stuck;
+    return lost - stuck;
   });
   const turns = perTurn.filter((n) => n > 0).length;
-  return { coins: perTurn.reduce((a, b) => a + b, 0), turns, firstTerm: Math.max(0, perTurn.findIndex((n) => n > 0)), perTurn };
+  return { coins: perTurn.reduce((a, b) => a + b, 0), turns, firstTerm: Math.max(0, perTurn.findIndex((n) => n > 0)), perTurn, forced };
 }
 
 function postItemsLeft(ctx: Ctx, state: A.GameState): A.PostItem[] {

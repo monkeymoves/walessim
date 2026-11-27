@@ -4,7 +4,6 @@
 import { createEffect, createMemo, createSignal, For, Match, onCleanup, onMount, Show, Switch, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
 import { STRAND_IDS } from "../../model/schema";
-import { serialOf } from "../parts/Ticket";
 import { pick, t, tn } from "../../i18n";
 import { tw } from "./cymraeg";
 import { CloseButton, TabButton } from "../parts/Buttons";
@@ -185,9 +184,6 @@ function Stop(props: { stop: TraceStop; sharp: boolean }): JSX.Element {
         {(s) => (
           <>
             <p class="yf-stop-title strong">{game.names.cause(s().cause)}</p>
-            <Show when={s().cause.kind === "card" || s().cause.kind === "caretaker"}>
-              <p class="serial">{t("parts.ticket.no")} {serialOf(s().cause.id)}</p>
-            </Show>
             <p class="story-small">
               {t("game.trace.push_line", {
                 direction: s().delta >= 0 ? t("game.trace.direction_up") : t("game.trace.direction_down"),

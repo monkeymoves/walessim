@@ -181,6 +181,8 @@ export class PaperMap {
   setThread(thread: { la: LaCode; to: Pt } | null): void { this.nat.thread = thread; this.requestRender(); }
 
   setPadding(p: Partial<Padding>): void { this.padding = { ...this.padding, ...p }; this.resize(true); }
+  /** Width over height of Wales on the national sheet, so a host can give it room before fitting. */
+  walesAspect(): number { const b = this.nat.bbox; return (b[2] - b[0]) / Math.max(1, b[3] - b[1]); }
 
   setAriaLabel(national: string, place?: string): void {
     this.natCanvas.setAttribute("aria-label", national);

@@ -40,8 +40,10 @@ const store = createRoot(() => {
   const [regionHover, setRegionHover] = createSignal<string | null>(null);
   /** The region the map zoomed to after a card was given one: { card, region }. */
   const [focusRegion, setFocusRegion] = createSignal<{ card: string; region: string } | null>(null);
+  /** A region clicked on the map for the waiting card: chosen, not yet played (playtest 7). */
+  const [mapChoice, setMapChoice] = createSignal<{ card: string; region: string } | null>(null);
   const [notebook, setNotebookSignal] = createSignal<Notebook>(readNotebook());
-  return { walesOpen, setWalesOpen, compare, setCompare, overlay, setOverlay, flash, setFlash, regionHover, setRegionHover, focusRegion, setFocusRegion, notebook, setNotebookSignal };
+  return { walesOpen, setWalesOpen, compare, setCompare, overlay, setOverlay, flash, setFlash, regionHover, setRegionHover, focusRegion, setFocusRegion, mapChoice, setMapChoice, notebook, setNotebookSignal };
 });
 
 export const inplay = store;

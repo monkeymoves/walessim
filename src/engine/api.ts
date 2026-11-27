@@ -718,6 +718,11 @@ export interface TermOutcome {
   contingencyHeld: number;
   /** Coins left unspent and not saved: lost at the end of the plan step (`Plays.save`). */
   coinsNotSaved?: number;
+  /**
+   * No more cards could be played at the commit: Trust's card limit was reached ("limit"), or every
+   * card left in the hand cost more than the coins left ("price"). Absent otherwise.
+   */
+  cardsCapped?: "limit" | "price";
   arrivals: PostItem[];
   newTrend: string | null;
   shock: ShockOutcome | null;
@@ -1077,9 +1082,18 @@ export function whatMattered(model: CompiledModel, state: GameState, limit?: num
   return impl.whatMattered(model, state, limit);
 }
 
-/** Coins left unspent and lost over the game (not used by a crisis, not carried over). */
-export function unusedCoins(model: CompiledModel, state: GameState): { coins: number; turns: number; firstTerm: number; perTurn: number[] } {
+/**
+ * Coins left unspent and lost over the game (not used by a crisis, not carried over) that the player
+ * could have used. `forced` counts the coins lost in turns where no more cards could be played and
+ * saving could not keep them: those are not the player's doing and are left out of `coins`.
+ */
+export function unusedCoins(model: CompiledModel, state: GameState): { coins: number; turns: number; firstTerm: number; perTurn: number[]; forced: number } {
   return impl.unusedCoins(state, model.game.contingency_carry);
+}
+
+/** Whether a plan can play no more cards: Trust's card limit ("limit"), or every card left costs too much ("price"). */
+export function cardsCapped(model: CompiledModel, state: GameState, plays: Plays): "limit" | "price" | null {
+  return impl.cardsCapped(model, state, plays);
 }
 
 /** Raised for illegal actions or unreadable saves. `code` is stable for i18n. */

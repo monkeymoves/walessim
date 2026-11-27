@@ -3,6 +3,7 @@
 // Expensive layers are cached to offscreen canvases per size; a lens change
 // only recolours the authorities over a cached neutral relief.
 import { pointInRings, type LaIndex } from "./hit";
+import { clearLabels, textBox, type Box } from "./declutter";
 import { lensColour } from "./lens";
 import { rampColours, rgbCss, type Palette } from "./palette";
 import { grainOver, grainTile, haloText, multiPolygonPath, newCanvas, ringsPath, setShadow, sheet, type Ctx, type View } from "./paper";
@@ -64,7 +65,9 @@ export class NationalSheet {
       return { s, cx: (left + right) / 2, cy: (top + bottom) / 2, mx: (x0 + x1) / 2, my: (y0 + y1) / 2 };
     };
     const whole = fitBox(this.bbox);
-    const f = focus ? fitBox(focus) : whole;
+    // a focus only ever zooms in: a padded box around most of Wales never shrinks Wales (playtest 7)
+    const fb = focus ? fitBox(focus) : whole;
+    const f = fb.s > whole.s ? fb : whole;
     const s = Math.min(f.s, whole.s * maxZoom);
     return { W, H, dpr, s, ox: f.cx - f.mx * s, oy: f.cy - f.my * s };
   }
@@ -106,6 +109,19 @@ export class NationalSheet {
     this.relief.sea.forEach((mp, i) => sheet(ctx, multiPolygonPath(mp, this.view), pal.sea[i + 1] ?? pal.sea[pal.sea.length - 1]!, { c: "rgba(20,40,55,.28)", b: 5 * k, x: 1.3 * k, y: 1.8 * k }));
     grainOver(ctx, W, H, 0.5);
     sheet(ctx, multiPolygonPath(this.relief.beyond, this.view), pal.paperBeyond, { c: "rgba(20,35,40,.4)", b: 7 * k, x: 2.4 * k, y: 3.2 * k });
+    // England carries on east of the surveyed grid: no straight-edged white box when Wales is small
+    // (east of the grid, and north and south of it from the border's last point on each edge)
+    const pts = this.relief.beyond.flat(2);
+    if (pts.length) {
+      let east = -Infinity, top = Infinity, bot = -Infinity;
+      for (const p of pts) { east = Math.max(east, p[0]!); top = Math.min(top, p[1]!); bot = Math.max(bot, p[1]!); }
+      const xAt = (y: number) => Math.min(...pts.filter((p) => Math.abs(p[1]! - y) < 0.6).map((p) => p[0]!));
+      const [ex, ty] = this.project(east, top), by = this.project(east, bot)[1], tx = this.project(xAt(top), top)[0], bx = this.project(xAt(bot), bot)[0];
+      ctx.fillStyle = pal.paperBeyond;
+      if (ex - 4 < W) ctx.fillRect(ex - 4, ty, W - ex + 4, by - ty);
+      if (ty > 0 && tx < W) ctx.fillRect(tx, 0, W - tx, ty + 4);
+      if (by < H && bx < W) ctx.fillRect(bx, by - 4, W - bx, H - by + 4);
+    }
     // Wales casts its shadow once here, so the land and lens layers need no blur of their own
     this.paths();
     ctx.save();
@@ -214,9 +230,24 @@ export class NationalSheet {
     const [cv, ctx] = newCanvas(W, H, dpr);
     const P = (x: number, y: number) => this.project(x, y);
     const nm = (o: { en: string; cy?: string | null }) => (lang === "cy" ? o.cy || o.en : o.en);
+    // clearance first: town names (cities first), then hills and seas, each kept only where it is clear
+    const width = (text: string, font: string, spacing = 0) => { ctx.save(); ctx.font = font; const w = ctx.measureText(text).width; ctx.restore(); return w + spacing * text.length; };
+    const townFont = (c: boolean) => `${c ? 700 : 500} ${c ? 13 : 11.5}px ${pal.fontSans}`;
+    const towns = L.towns ? this.geo.towns.map((t, i) => ({ t, i })).sort((a, b) => Number(b.t.kind === "city") - Number(a.t.kind === "city")) : [];
+    const houses = L.towns ? this.geo.towns.map((t, i) => { const [x, y] = P(t.x, t.y); return { box: [x - 6, y - 9, x + 6, y + 2] as Box, owner: i }; }) : [];
+    const townBoxes = towns.map(({ t, i }) => {
+      const [x, y] = P(t.x, t.y), c = t.kind === "city", [dx, dy, a] = t.label ?? [7, 4, "start"];
+      return { box: textBox(x + dx, y + dy, width(nm(t), townFont(c)), c ? 13 : 11.5, anchor(a)), always: c, own: i };
+    });
+    const keptTowns = clearLabels(townBoxes, houses);
+    const townShown = new Set(towns.filter((_, k) => keptTowns.has(k)).map((x) => x.i));
+    const taken: { box: Box }[] = [...townBoxes.filter((_, k) => keptTowns.has(k)), ...houses];
+    const clear = (b: Box) => clearLabels([{ box: b }], taken).size > 0 && (taken.push({ box: b }), true);
     if (L.labels) {
       for (const g of this.geo.labels) {
         const [x, y] = P(g.x, g.y);
+        const size = g.kind === "sea" ? Math.max(14, s * 5.6) : g.kind === "beyond" ? 12 : Math.max(13, s * 5.2);
+        if (!clear(textBox(x, y, width(nm(g), `italic 400 ${size.toFixed(1)}px ${pal.fontSerif}`, size * (g.kind === "beyond" ? 0.2 : 0.1)), size, "center"))) continue;
         if (g.kind === "sea") haloText(ctx, nm(g), x, y, { font: `italic 400 ${Math.max(14, s * 5.6).toFixed(1)}px ${pal.fontSerif}`, fill: "rgba(32,62,74,.72)", align: "center", letterSpacing: "0.12em" });
         else if (g.kind === "beyond") haloText(ctx, nm(g), x, y, { font: `400 12px ${pal.fontSans}`, fill: "rgba(60,64,60,.55)", align: "center", letterSpacing: "0.2em" });
         else haloText(ctx, nm(g), x, y, { font: `italic 400 ${Math.max(13, s * 5.2).toFixed(1)}px ${pal.fontSerif}`, fill: "rgba(40,35,30,.62)", halo: "rgba(236,232,220,.45)", haloW: 2.4, align: "center", letterSpacing: "0.06em" });
@@ -226,6 +257,7 @@ export class NationalSheet {
     if (L.peaks) {
       for (const p of this.geo.peaks) {
         const [x, y] = P(p.x, p.y), [dx, dy, a] = p.label ?? [7, 4, "start"];
+        if (!clear(textBox(x + dx, y + dy, width(nm(p), `italic 400 12.5px ${pal.fontSerif}`), 12.5, anchor(a)))) continue;
         peak(ctx, x, y, pal);
         haloText(ctx, nm(p), x + dx, y + dy, { font: `italic 400 12.5px ${pal.fontSerif}`, fill: "#2A2522", halo: "rgba(240,238,230,.8)", haloW: 2.6, align: anchor(a) });
       }
@@ -240,10 +272,11 @@ export class NationalSheet {
     }
     if (L.towns) {
       for (const t of this.geo.towns) { const [x, y] = P(t.x, t.y), c = t.kind === "city"; house(ctx, x, y, c ? 11 : 8, c ? 9 : 7, c, pal); }
-      for (const t of this.geo.towns) {
+      this.geo.towns.forEach((t, i) => {
+        if (!townShown.has(i)) return;
         const [x, y] = P(t.x, t.y), c = t.kind === "city", [dx, dy, a] = t.label ?? [7, 4, "start"];
-        haloText(ctx, nm(t), x + dx, y + dy, { font: `${c ? 700 : 500} ${c ? 13 : 11.5}px ${pal.fontSans}`, fill: pal.ink, halo: pal.halo, haloW: 3, align: anchor(a) });
-      }
+        haloText(ctx, nm(t), x + dx, y + dy, { font: townFont(c), fill: pal.ink, halo: pal.halo, haloW: 3, align: anchor(a) });
+      });
     }
     this.labels = { key, canvas: cv };
     return cv;

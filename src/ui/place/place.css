@@ -207,3 +207,19 @@
 }
 @media (max-width: 1360px) { .pl-flaghead { max-height: 46px; } }
 .pl-verdict { margin: 2px 0 6px; font-weight: var(--wght-print-title); }
+
+/* playtest 7, item 1: the tip table fits its panel (land as a figure, the unit in the head), a
+   line says how to choose, and the card's button is pinned to its foot while the facts scroll */
+.pl-hint { color: var(--ink); margin: 0; }
+.pl-unit { display: block; font-weight: var(--wght-grot-text); }
+.pl-unitnote { margin: 0; color: var(--ink-2); }
+.pl-rhondda .pl-ledger td.num { width: 1%; padding-left: 8px; }
+.pl-below { display: flex; flex-direction: column; overflow: hidden; gap: 0; }
+.pl-below > .pl-below-head { flex: none; padding-bottom: 6px; }
+.pl-below-body { flex: 0 1 auto; min-height: 0; overflow-y: auto; display: grid; gap: 7px; align-content: start; padding-right: 4px; }
+.pl-below > .pl-below-foot { flex: none; margin-top: 8px; }
+.pl-below .pl-fig { font-family: var(--font-grot); font-size: var(--size-ui); line-height: 1.35; font-weight: var(--wght-grot-strong); }
+/* the Rhondda's flag heads wrap onto a second upright line, as Bethesda's do, so none is cut */
+.pl-rhondda .pl-ledger th.flag { writing-mode: horizontal-tb; transform: none; height: auto; vertical-align: bottom; text-align: center; padding: 0 0 3px; line-height: 1; }
+.pl-rhondda .pl-flaghead { max-height: 64px; }
+.pl-rhondda .pl-ledger th.num { min-width: 66px; }

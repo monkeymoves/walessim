@@ -477,8 +477,11 @@ function CardOpen(props: { card: Card }): JSX.Element {
       <h2 class="t-2 yf-co-name">{pick(c().name)}</h2>
       <p class="yf-co-cost data">{tn("play.card.costs", cost())} {works()}</p>
       <dl class="yf-co">
-        <dt class="label">{t("play.card.what")}</dt>
-        <dd class="story-small">{pick(c().what ?? c().description)}</dd>
+        {/* choosing where: the card keeps to what changes by region, so Wales keeps its room */}
+        <Show when={!choosing()}>
+          <dt class="label">{t("play.card.what")}</dt>
+          <dd class="story-small">{pick(c().what ?? c().description)}</dd>
+        </Show>
         <dt class="label">{where() ? tw(!pl() && game.previewRegionIsGuess(c().id) ? "play2.card.if_example" : "play.card.if_in", { place: where()! }) : t("play.card.if")}</dt>
         <dd class="story-small" aria-live="polite">
           <Show when={cp()} fallback={<span class="small">{t("play.card.working")}</span>}>

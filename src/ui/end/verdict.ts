@@ -48,6 +48,20 @@ export function verdictScore(r: EndResult): { side: Side; start: number; end: nu
 }
 
 /**
+ * The label on the score that counts (cold playtest 7, item 3: "the weaker one" beside 53 while the
+ * other read 50). The result is the score that did worse since 2026, judged on change, so the label
+ * names that change, from the same rounded numbers the line beside it shows ("was 50, about 53").
+ */
+export function countsLabel(r: EndResult): { side: Side; key: string; n: number } {
+  const side = r.result.which;
+  const me = sideScore(r, side).change;
+  const other = sideScore(r, side === "lived" ? "left" : "lived").change;
+  if (me > 0) return { side, key: me < other ? "play5.end.counts_up_less" : "play5.end.counts_up", n: me };
+  if (me < 0) return { side, key: "play5.end.counts_down", n: -me };
+  return { side, key: "play5.end.counts_level", n: 0 };
+}
+
+/**
  * Which sentence explains the result. Each claim it makes about a score matches that score's shown
  * direction: "held up" only when Life in your years did not fall, "you left a lot for 2050" only when
  * Left for 2050 rose, "both rose" only when both did. Anything else says each side plainly ("mixed").

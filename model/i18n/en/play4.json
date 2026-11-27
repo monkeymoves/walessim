@@ -1,0 +1,10 @@
+{
+ "_note": "Layout fixes after the seventh (cold) playtest (docs/design/playtest-7-cold.md). Plain words, reading age 11, no sentence over 18 words.",
+ "rh.hint": "Click a tip, in the list or on the map, to see what lies below it. Then choose “{button}”.",
+ "rh.unit": "(hectares)",
+ "rh.unit_note": "A hectare is a square 100 by 100 metres.",
+ "map.chosen": "{region} chosen for {card}. Play it with the button, or click another region.",
+ "map.play.one": "Play it in {region} (1 coin)",
+ "map.play.other": "Play it in {region} ({n} coins)",
+ "map.move": "Move it to {region}"
+}

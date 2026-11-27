@@ -17,3 +17,4 @@ export const dailySeed = (_m: CompiledModel, date: string): number => api.dailyS
 export const headline = api.headline;
 export const whatMattered = api.whatMattered;
 export const unusedCoins = api.unusedCoins;
+export const cardsCapped = api.cardsCapped;

@@ -26,7 +26,11 @@ function queueFor(ui: Ui): [Accessor<NoteId[]>, Setter<NoteId[]>] {
   return q;
 }
 
-/** What a note must never sit on. */
+/** What a note must never sit on: the controls weigh far more than the panels being read (playtest 7). */
+const CONTROLS = [
+  '[data-testid="end-turn"]', '[data-testid="play-card"]', ".yf-tray .yf-region", ".yf-tray .btn-tab", '[data-testid="trust"]',
+  ".yf-rail .btn-stamp", ".yf-shock .btn-stamp", ".yf-shock .btn-tab",
+];
 const KEEP_CLEAR = [
   '[data-testid="end-turn"]', '[data-testid="play-card"]', ".yf-tray .yf-region", ".yf-tray .btn-tab",
   '[data-testid="scoreboard"]', '[data-testid="trust"]', ".yf-rail .btn-stamp", '[data-testid="card-open"]',
@@ -86,11 +90,13 @@ export function Note(props: { id: NoteId; when: boolean; class?: string; childre
     const r = host.getBoundingClientRect();
     setHostShown(r.width > 0 || r.height > 0);
     const h = note?.offsetHeight ?? 90;
-    const clear: Box[] = [];
+    const clear: { box: Box; weight: number }[] = [];
+    const controls = CONTROLS.join(",");
     for (const el of document.querySelectorAll<HTMLElement>(KEEP_CLEAR.join(","))) {
-      if (el === host || host.contains(el) || el.contains(host)) continue;
+      if (el === host || el.contains(host)) continue;
       const b = el.getBoundingClientRect();
-      if (b.width > 0 && b.height > 0) clear.push(b);
+      // a control inside the host (the Trust slate in its box) still counts: it is what the note is about
+      if (b.width > 0 && b.height > 0) clear.push({ box: b, weight: el.matches(controls) ? 40 : 1 });
     }
     // never on the thing it points at either
     const self: Box = { left: r.left, top: r.top, right: r.right, bottom: r.bottom };
@@ -99,7 +105,7 @@ export function Note(props: { id: NoteId; when: boolean; class?: string; childre
     let best: { side: Side; box: Box; cost: number } | null = null;
     for (const s of order) {
       const box = at(s, r, h);
-      const cost = clear.reduce((a, b) => a + overlap(box, b), 0) + overlap(box, self) * 0.5;
+      const cost = clear.reduce((a, c) => a + overlap(box, c.box) * c.weight, 0) + overlap(box, self) * 20;
       if (!best || cost < best.cost - 1) best = { side: s, box, cost };
       if (cost === 0) break;
     }

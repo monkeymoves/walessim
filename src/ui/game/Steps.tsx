@@ -8,9 +8,9 @@ import { StrandName } from "./StrandName";
 import { cardIcon, Icon } from "../parts/Icon";
 import { iPlace, maePlace, midEn, soft, softYn, tw, ynPlace } from "./cymraeg";
 import { trustDirection, type Slip, type StrandChange, type StrandId, type TrustReason, type VisitOffer } from "../../engine/api";
-import { shareOfHit, slipWording } from "./slips";
+import { shareOfHit, slipWording, startLines } from "./slips";
 import { promiseHelpersOf } from "./promise";
-import { fundWords, responseKey, saveNoteKey, visitWhyLines } from "./endturn";
+import { endSheetWords, fundWords, responseKey, saveNoteKey, stayNoteKey, visitWhyLines } from "./endturn";
 import { isGoodGrade, STRAND_IDS } from "../../model/schema";
 import { useGame } from "./context";
 import { BudgetRow } from "./Budget";
@@ -28,6 +28,8 @@ export function OpeningPanel(): JSX.Element {
   const s = () => game.state()!;
   const o = () => s().opening;
   const first = () => s().term === 0 && s().log.length === 0;
+  /** Cards whose first work lands this turn while the rest is still on its way. */
+  const startedNow = () => s().post.filter((p) => p.firstTerm === s().term && p.arrivesTerm > s().term);
   return (
     <div class="yf-panel">
       <Show
@@ -54,11 +56,17 @@ export function OpeningPanel(): JSX.Element {
           <Show when={o()?.returning}>
             <WarnStrip>{t("game.opening.returning")}</WarnStrip>
           </Show>
-          <Show when={o()?.arrivals.length}>
+          <Show when={o()?.arrivals.length || startedNow().length}>
             <h3 class="label">{t("game.opening.arrived")}</h3>
             <ul class="yf-list">
               <For each={o()!.arrivals}>
-                {(a) => <li>{t("game.opening.arrival_line", { card: game.names.cardName(a.card), year: a.playedYear })}</li>}
+                {(a) => <li>{a.firstYear != null && a.firstYear < a.arrivesYear
+                  ? t("play5.opening.full_line", { card: game.names.cardName(a.card), year: a.playedYear, from: a.firstYear })
+                  : t("game.opening.arrival_line", { card: game.names.cardName(a.card), year: a.playedYear })}</li>}
+              </For>
+              {/* a staged card's first work is news in its own turn, not only when it is in full (cold playtest 7, item 8) */}
+              <For each={startedNow()}>
+                {(a) => <li>{t("play5.opening.started_line", { card: game.names.cardName(a.card), year: a.playedYear, full: a.arrivesYear })}</li>}
               </For>
             </ul>
           </Show>
@@ -188,7 +196,7 @@ export function PlanPanel(): JSX.Element {
           <p class="small yf-first-note">{t("play.budget.first_turn")}</p>
         </Show>
         <Note id="coins_left" when={first() && game.draft.cards.length > 0 && b().unused > 0 && (ui.guide.hasSeen("slow_card") || game.isPlayed(GUIDE_SLOW))} class="yf-note-coins" placement="above">
-          {tn("play.guide.coins_left", b().unused)}
+          {game.capped() ? t("play5.guide.coins_capped") : tn("play.guide.coins_left", b().unused)}
         </Note>
         <Note id="upkeep" when={s().upkeepDue.length > 0} class="yf-note-upkeep" placement="above">{t("play.guide.upkeep")}</Note>
         <Note id="borrow" when={showLedger() && (ui.shortfall() || s().term >= 2)} class="yf-note-borrow" placement="above">{t("play.guide.borrow")}</Note>
@@ -208,19 +216,24 @@ export function PlanPanel(): JSX.Element {
         </Show>
       </div>
       <Show when={sheet()}>
-        <EndTurnSheet unused={b().unused} save={canSave()} pending={pending()} first={first()} last={s().term >= game.model.game.years.length - 1} carry={game.model.game.contingency_carry ?? 2} onBack={() => setSheet(false)} onSave={saveAndEnd} onEnd={doCommit} />
+        <EndTurnSheet unused={b().unused} save={canSave()} pending={pending()} first={first()} last={s().term >= game.model.game.years.length - 1} carry={game.model.game.contingency_carry ?? 2} capped={game.capped()} limit={s().cardLimit} onBack={() => setSheet(false)} onSave={saveAndEnd} onEnd={doCommit} />
       </Show>
     </div>
   );
 }
 
-/** The end-of-turn choice sheet: coins not used are never saved or lost without a word. */
-function EndTurnSheet(props: { unused: number; save: number; pending: string | null; first: boolean; last: boolean; carry: number; onBack: () => void; onSave: () => void; onEnd: () => void }): JSX.Element {
+/**
+ * The end-of-turn choice sheet: coins not used are never saved or lost without a word. When no more
+ * cards can be played (cold playtest 7, item 5) it says why, makes saving the first choice, and says
+ * the coins that cannot be kept are not the player's mistake: never "go back and spend them".
+ */
+function EndTurnSheet(props: { unused: number; save: number; pending: string | null; first: boolean; last: boolean; carry: number; capped: "limit" | "price" | null; limit: number; onBack: () => void; onSave: () => void; onEnd: () => void }): JSX.Element {
   const { game } = useGame();
-  onMount(() => document.querySelector<HTMLElement>("[data-testid=end-back]")?.focus());
+  onMount(() => document.querySelector<HTMLElement>(props.capped && props.save > 0 && !props.pending ? "[data-testid=end-save]" : "[data-testid=end-back]")?.focus());
   const lost = () => props.unused - props.save;
   /** What the saved coins are for, every time (cold playtest 5: "Save 4" offered when only 2 carry over). */
   const saveNote = () => saveNoteKey(props.save, props.carry, props.first, props.last);
+  const words = () => endSheetWords(props.capped, props.unused, props.save, !!props.pending);
   return (
     <div class="yf-endsheet-wrap">
       <section class="yf-endsheet sheet" role="dialog" aria-modal="true" aria-labelledby="yf-endsheet-title" data-testid="end-sheet"
@@ -231,19 +244,27 @@ function EndTurnSheet(props: { unused: number; save: number; pending: string | n
         </Show>
         <Show when={props.unused > 0}>
           <p class="story-small">{tn("play.endturn.unused", props.unused)}</p>
+          <Show when={words().why}><p class="story-small" data-testid="end-capped">{tn(words().why!, props.limit)}</p></Show>
           <Show when={props.first}><p class="small">{t("play.endturn.first_turn")}</p></Show>
         </Show>
         <div class="yf-endsheet-actions">
-          <StampButton class="yf-go" data-testid="end-back" onClick={props.onBack}>{t("play.endturn.back")}</StampButton>
+          <Show when={words().saveFirst} fallback={
+            <StampButton class="yf-go" data-testid="end-back" onClick={props.onBack}>{t(words().back)}</StampButton>
+          }>
+            <StampButton class="yf-go" data-testid="end-save" onClick={props.onSave}>{tn("play.endturn.save", props.save)}</StampButton>
+            <TabButton data-testid="end-back" onClick={props.onBack}>{t(words().back)}</TabButton>
+          </Show>
           <Show when={props.unused > 0} fallback={
             <TabButton data-testid="end-anyway" onClick={props.onEnd}>{t("play.endturn.end_anyway")}</TabButton>
           }>
             <Show when={props.save > 0} fallback={
               <TabButton data-testid="end-lose" onClick={props.onEnd}>{tn("play.endturn.lose", props.unused)}</TabButton>
             }>
-              <TabButton data-testid="end-save" onClick={props.onSave}>{tn("play.endturn.save", props.save)}</TabButton>
+              <Show when={!words().saveFirst}>
+                <TabButton data-testid="end-save" onClick={props.onSave}>{tn("play.endturn.save", props.save)}</TabButton>
+              </Show>
               <Show when={saveNote()}><p class="small" data-testid="end-save-note">{t(saveNote()!, { carry: props.carry })}</p></Show>
-              <Show when={lost() > 0}><p class="small">{tn("play.endturn.lost", lost())}</p></Show>
+              <Show when={lost() > 0}><p class="small">{tn(words().lost, lost())}</p></Show>
             </Show>
           </Show>
         </div>
@@ -252,7 +273,7 @@ function EndTurnSheet(props: { unused: number; save: number; pending: string | n
   );
 }
 
-/** Turn 1 of a first game: three lines on how it works, before the hand (plain-wales 4, screen 1). */
+/** Turn 1 of a first game: four lines on how it works, before the hand (plain-wales 4, screen 1). */
 function HowItWorks(): JSX.Element {
   const { ui } = useGame();
   return (
@@ -262,6 +283,8 @@ function HowItWorks(): JSX.Element {
         <li><span class="yf-how-art" aria-hidden="true"><i class="yf-coin unused" /><i class="yf-coin unused" /><i class="yf-coin unused" /></span><p class="story-small">{t("play.guide.how1")}</p></li>
         <li><span class="yf-how-art" aria-hidden="true"><i class="yf-how-ticket" /><i class="yf-how-ticket" /></span><p class="story-small">{t("play.guide.how2")}</p></li>
         <li><span class="yf-how-art yf-how-bars" aria-hidden="true"><i /><i /><i /><i /><i /><i /><i /></span><p class="story-small">{t("play.guide.how3")}</p></li>
+        {/* the rule that decides the result, said in turn 1, not first met at the end (cold playtest 7, item 4) */}
+        <li><span class="yf-how-art yf-how-bars" aria-hidden="true"><i /><i /></span><p class="story-small" data-testid="how-result">{t("play5.guide.how4")}</p></li>
       </ol>
       <div class="yf-actions">
         <StampButton class="yf-go" data-testid="show-cards" onClick={() => ui.guide.done("how")}>{t("play.guide.how_go")}</StampButton>
@@ -280,6 +303,11 @@ export function VisitOfferPanel(): JSX.Element {
   /** Two places asking: each shrinks to a heading, one reason line and its button, all in view (playtest 4). */
   const many = () => offers().length > 1;
   const go = (o: VisitOffer) => { ui.setVisitPick(o); ui.setInPlace(true); };
+  /** What staying away means, naming the card that asked, or saying no card did (cold playtest 7, item 12). */
+  const stayNote = () => {
+    const k = stayNoteKey(offers().flatMap((o) => o.triggeredBy));
+    return t(k.key, { card: game.names.list(k.cards.map((c) => game.names.cardName(c))) });
+  };
   return (
     <div class="yf-panel" classList={{ "yf-panel-offers": many() }}>
       <div class="yf-scroll">
@@ -315,7 +343,7 @@ export function VisitOfferPanel(): JSX.Element {
           <div class="yf-actions">
             <TabButton onClick={() => game.act({ type: "visit", choice: null })}>{t("game.visit.stay")}</TabButton>
           </div>
-          <p class="small">{t("game.visit.stay_note")}</p>
+          <p class="small" data-testid="stay-note">{stayNote()}</p>
         </div>
       </div>
       <Hand interactive={false} />
@@ -391,6 +419,7 @@ export function ShockSlip(): JSX.Element {
   const sh = () => s().shock!;
   const cb = () => game.names.curveball(sh().curveball);
   const c = () => sh().contingency;
+  const from = () => s().activeTrends.find((a) => a.curveball === sh().curveball)?.sinceYear ?? null;
   return (
     <div class="yf-shock" role="dialog" aria-modal="false" aria-labelledby="yf-shock-title">
       <div class="slipwrap arriving">
@@ -399,6 +428,10 @@ export function ShockSlip(): JSX.Element {
           <p class="slip-from">{t("game.shock.label")}</p>
           <h3 id="yf-shock-title" class="slip-title">{pick(cb()?.shock?.name ?? cb()?.name)}</h3>
           <p class="yf-slip-desc">{pick(cb()?.shock?.description ?? cb()?.description)}</p>
+          {/* the slow change this crisis grew from, so a warned Recession then a Storm winter reads as two things (cold playtest 7, item 12) */}
+          <Show when={from()}>
+            <p class="small yf-on-slate-2" data-testid="crisis-from">{t("play5.crisis.from", { trend: pick(cb()?.name), year: from()! })}</p>
+          </Show>
           <Show when={sh().prepared && sh().hit.absorb < 0.95}>
             <p class="stampmark yf-ready" aria-live="polite">{t("game.shock.ready")}</p>
             <p class="small yf-on-slate-2">{t("game.shock.ready_by", { cards: game.names.list(sh().preparedBy.map((id) => game.names.cardName(id))) })}</p>
@@ -545,8 +578,11 @@ export function ChangedPanel(): JSX.Element {
     const p = o().plays.cards.find((c) => c.card === GUIDE_SLOW);
     if (!p) return null;
     const item = s().post.find((x) => x.card === GUIDE_SLOW && x.playedTerm === o().term);
-    return t("play.guide.on_way", { card: game.names.cardName(GUIDE_SLOW), year: item?.firstYear ?? item?.arrivesYear ?? o().year + 8 });
+    const year = item?.firstYear ?? item?.arrivesYear ?? o().year + 8;
+    return t("play.guide.on_way", { card: game.names.cardName(GUIDE_SLOW), year, to: year + 4 });
   };
+  /** Cards that started work this turn with nothing whole to show, and cards that start next turn (cold playtest 7, item 8). */
+  const starts = () => startLines(o(), s().post).filter((l) => !(guided() && l.card === GUIDE_SLOW));
 
   return (
     <div class="yf-panel yf-panel-changed">
@@ -592,6 +628,13 @@ export function ChangedPanel(): JSX.Element {
             <li class="yf-slip-paper sheet guide held"><p class="story-small">{slowOnWay()}</p></li>
           </Show>
         </ol>
+      </Show>
+      <Show when={starts().length}>
+        <ul class="yf-slips yf-starts" data-testid="start-lines">
+          <For each={starts()}>
+            {(l) => <li class="yf-slip-paper sheet held"><p class="story-small">{t(l.key, { card: game.names.cardName(l.card), ...l.vars })}</p></li>}
+          </For>
+        </ul>
       </Show>
       <ol class="yf-slips" aria-label={t("game.step.changed")}>
         <Show when={slips().length || guideEngineSlip()} fallback={<li class="yf-slip-paper sheet"><p class="story-small">{t("game.changed.no_slips")}</p></li>}>

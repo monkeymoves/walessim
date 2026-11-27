@@ -11,6 +11,22 @@ export function saveNoteKey(save: number, carry: number, first: boolean, last: b
   return save > carry ? "play.endturn.save_note_some" : "play.endturn.save_note";
 }
 
+/**
+ * The end-of-turn sheet's words when coins are left (cold playtest 7, item 5). When no more cards can
+ * be played ("limit": Trust's card limit; "price": every card left costs more) the sheet says why, the
+ * first choice is to save, the way back never says "spend them", and coins that cannot be kept are
+ * not called the player's loss. Otherwise "Go back and spend them" stays the first choice.
+ */
+export function endSheetWords(capped: "limit" | "price" | null, unused: number, save: number, pending: boolean): { why: string | null; back: string; saveFirst: boolean; lost: string } {
+  if (!capped || unused <= 0) return { why: null, back: "play.endturn.back", saveFirst: false, lost: "play.endturn.lost" };
+  return {
+    why: capped === "limit" ? "play5.endturn.capped_limit" : "play5.endturn.capped_price",
+    back: "play5.endturn.back_plain",
+    saveFirst: save > 0 && !pending,
+    lost: "play5.endturn.capped_lost",
+  };
+}
+
 /** One line of the results step's account of the coins: an i18n key and its count. */
 export interface FundLine { key: string; n?: number }
 
@@ -36,6 +52,17 @@ export function fundWords(o: { caretaker: boolean; contingencyHeld: number; coin
   if (carried > 0) out.push({ key: "play.result.carried", n: carried });
   if (lost > 0) out.push({ key: "play.result.lost", n: lost });
   return out;
+}
+
+/**
+ * What staying away from a visit means (cold playtest 7, item 12: "If you stay away, the card still
+ * works" named no card, and was said when no card had asked). Names the cards that asked, or says
+ * that none did and nothing changes.
+ */
+export function stayNoteKey(triggeredBy: string[]): { key: string; cards: string[] } {
+  const cards = [...new Set(triggeredBy.filter((c) => c !== "curveball"))];
+  if (!cards.length) return { key: "play5.visit.stay_none", cards };
+  return { key: cards.length > 1 ? "play5.visit.stay_cards" : "play5.visit.stay_card", cards };
 }
 
 /** A line of the visit invitation: an i18n key and its fill-ins, or a card's own authored line. */

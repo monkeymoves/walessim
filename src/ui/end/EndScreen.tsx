@@ -13,7 +13,7 @@ import { Snip } from "../parts/Notice";
 import { strandVars } from "../parts/strands";
 import { useGame } from "../game/context";
 import { shareLink } from "../game/save";
-import { autopilotScore, direction, hardestTurn, resultRange, sideScore, verdictReason, verdictScore } from "./verdict";
+import { autopilotScore, countsLabel, direction, hardestTurn, resultRange, sideScore, verdictReason, verdictScore } from "./verdict";
 
 /** The year of a point in `wellbeingByTerm` (0 = 2026, 6 = 2050). */
 const yearOf = (i: number): number => TERM_YEARS[0]! + 4 * i;
@@ -50,6 +50,12 @@ export function EndScreen(): JSX.Element {
   }
   let timer = 0;
   onCleanup(() => clearInterval(timer));
+  // layout: the opened letter scrolls to the top of the sheet, so it reads whole, never squeezed
+  let scroller: HTMLDivElement | undefined;
+  let letterBox: HTMLElement | undefined;
+  const revealLetter = () => requestAnimationFrame(() => {
+    if (scroller && letterBox) scroller.scrollTo({ top: Math.max(0, letterBox.offsetTop - 12), behavior: reduced() ? "auto" : "smooth" });
+  });
   onMount(() => { if (reduced()) open(); });
 
   async function copy(text: string, what: string): Promise<void> {
@@ -67,17 +73,18 @@ export function EndScreen(): JSX.Element {
 
   return (
     <div class="end end-plain" data-testid="end-screen">
+      <div class="end-scroll" ref={scroller}>
       <div class="end-col">
         <Verdict result={result()} />
         <Mattered />
-        <section class="end-letter-col" aria-label={t("play.end.letter_title")}>
+        <section class="end-letter-col" ref={letterBox} aria-label={t("play.end.letter_title")}>
           <Show
             when={opened()}
             fallback={
               <div class="end-envelope sheet">
                 <Icon name="envelope" size={72} />
                 <p class="t-1">{t("play.end.letter_title")}</p>
-                <StampButton class="yf-go" data-testid="open-letter" onClick={open}>{t("play.end.open_letter")}</StampButton>
+                <StampButton class="yf-go" data-testid="open-letter" onClick={() => { open(); revealLetter(); }}>{t("play.end.open_letter")}</StampButton>
               </div>
             }
           >
@@ -121,6 +128,8 @@ export function EndScreen(): JSX.Element {
             </p>
           </div>
         </details>
+      </div>
+      </div>
 
         <div class="end-actions sheet">
           <p class="story-small end-next" data-testid="end-next">{nextTime(game, result())}</p>
@@ -130,7 +139,6 @@ export function EndScreen(): JSX.Element {
           </div>
           <p class="small">{t("play.end.new_game_note")}</p>
         </div>
-      </div>
     </div>
   );
 }
@@ -198,6 +206,8 @@ function Verdict(props: { result: EndResult }): JSX.Element {
       <h2 id="end-result-title" class="t-1 end-result-line">{t("play.end.result", { band: lowerFirst(pick(r().result.band.name)) })}</h2>
       <p class="story end-score" data-testid="end-score">{t(scores().side === "lived" ? "play.end.score_lived" : "play.end.score", { start: scores().start, end: scores().end })}</p>
       <p class="story-small end-why" data-testid="end-why">{why()}</p>
+      {/* which score is the result, on the headline, not only in the detail (cold playtest 7, item 4) */}
+      <p class="small end-rule" data-testid="end-rule">{t("play5.end.rule_line", { side: t(scores().side === "lived" ? "play.end.life_years" : "play.score.left") })}</p>
     </section>
   );
 }
@@ -394,7 +404,7 @@ function Band(props: { which: "lived" | "left"; score: EndResult["lived"]; lower
   return (
     <figure class="end-band" classList={{ lower: props.lower }}>
       <figcaption>
-        <span class="t-3">{props.which === "lived" ? t("play.end.life_years") : t("play.score.left")}<Show when={props.lower}> <span class="small">({t("play.end.weaker")})</span></Show></span>
+        <span class="t-3">{props.which === "lived" ? t("play.end.life_years") : t("play.score.left")}<Show when={props.lower}> <span class="small" data-testid="end-counts">({tn(countsLabel(r()).key, countsLabel(r()).n)})</span></Show></span>
         <span class="small">{props.which === "lived" ? t("play.end.life_years_note") : t("play.end.left_note")}</span>
         <span class="label">{t("play.score.value", { n: sideScore(r(), props.which).end })}, {t("play.score.was", { n: sideScore(r(), props.which).start })}</span>
       </figcaption>

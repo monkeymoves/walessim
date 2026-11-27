@@ -137,3 +137,8 @@
 .mf-compare .mf-region-pick:not(:disabled) .mf-region-go { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .mf-compare .mf-region-pick:not(:disabled) .mf-region-name { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
 .mf-compare .mf-region-pick { position: relative; }
+
+/* a region chosen on the map: named, lit, and played by one clear button (playtest 7) */
+.mf-confirm { display: grid; gap: 6px; justify-items: start; padding: 8px 10px; margin: 0 0 4px; background: var(--paper-2); box-shadow: inset 3px 0 0 var(--stitch); }
+.mf-confirm p { margin: 0; }
+.mf-region.chosen { border-color: var(--stitch-deep); box-shadow: inset 3px 0 0 var(--stitch); }

@@ -81,7 +81,7 @@ describe("place visits after playtest 1", () => {
       expect(t.explanation!.cy).not.toMatch(/\{[a-z_]+\}/);
     }
     expect(r.tests.find((t) => t.id === "exposure")!.explanation!.en).toMatch(/Maerdy Spoil Tips/);
-    expect(r.tests.find((t) => t.id === "fairness")!.explanation!.en).toMatch(/WIMD 2019/);
+    expect(r.tests.find((t) => t.id === "fairness")!.explanation!.en).toMatch(/2019 deprivation index/);
     const b = gradeBethesda(be, ["chapel-homes", "quarry-workshops", "welsh-youth-centre"], { active: ["price-of-a-home"], inPlay: [], everPlayed: [], seed: 3, runs: 50, text: copy });
     expect(b.tests.find((t) => t.id === "aros")!.explanation!.en).toMatch(/Empty chapel/);
     // the grade's own reason first (cold playtest 5), then the trend that weighed on the visit
