@@ -173,3 +173,14 @@
   .pl-foot .yf-actions .btn-stamp { font-size: 15px; padding-left: 10px; padding-right: 10px; line-height: 1.15; }
   .pl-foot .yf-actions .btn-tab { font-size: 13px; padding-left: 10px; padding-right: 10px; line-height: 1.15; }
 }
+
+/* after confirming: the board folds away and the grade takes the rail, its button always in view */
+.pl-board.pl-folded { display: none; }
+.pl-visit .pl-grade { flex: 1; min-height: 0; max-height: none; overflow: hidden; display: flex; flex-direction: column; }
+.pl-grade-body { flex: 1; min-height: 0; overflow-y: auto; display: grid; gap: 8px; align-content: start; padding-right: 4px; }
+.pl-visit .pl-grade > .btn-stamp { flex: none; align-self: flex-start; }
+.pl-notes { display: grid; gap: 4px; padding-left: 14px; list-style: disc; }
+/* the Rhondda's flag heads are vertical at every size, so "Poorest tenth" is never off the edge */
+.pl-rhondda .pl-ledger th.flag, .pl-rhondda .pl-ledger td.flag { width: 22px; padding: 0 2px; }
+.pl-rhondda .pl-ledger th.flag { writing-mode: vertical-rl; transform: rotate(180deg); height: 62px; white-space: nowrap; text-align: left; vertical-align: top; padding: 2px 0; line-height: 22px; }
+.pl-rhondda .pl-table-wrap { margin: 0; }

@@ -51,7 +51,8 @@ export function Timeline(props: { passing?: boolean }): JSX.Element {
     if (props.passing || st.step === "changed" || st.step === "election") return Math.min(st.year + 4, Y1);
     return st.year;
   };
-  const worst = () => s().result?.worstTerm ?? null;
+  // only a term that really fell is marked "worst" on the strip
+  const worst = () => (s().result && s().result!.worstFell !== false ? s().result!.worstTerm : null);
 
   return (
     <section class="yf-timeline strip" aria-label={t("game.timeline.label")}>

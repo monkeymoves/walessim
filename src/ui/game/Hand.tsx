@@ -14,10 +14,18 @@ import { cardRegions } from "./names";
 import { Note } from "./Note";
 import { iPlace } from "./cymraeg";
 
+/** "First effects in 1 term, the rest in 2", when a card arrives in stages. */
+export function stagedNote(card: Card): string | null {
+  const a = card.arrival;
+  if (!a || a.first === a.full) return null;
+  const words = (n: number) => (n <= 0 ? t("parts.ticket.paysNow") : tn("parts.ticket.terms", n));
+  return t("game.plan.staged", { first: words(a.first), full: words(a.full) });
+}
+
 export function ticketOf(card: Card, cost?: number): TicketCard {
   return {
     id: card.id, name: card.name, cost: cost ?? card.cost, delay: card.delay, scope: card.scope,
-    tags: card.tags, needs_partners: card.needs_partners, helps: card.helps, frays: card.frays,
+    tags: card.tags, needs_partners: card.needs_partners, helps: card.helps, frays: card.frays, mixed: card.mixed,
   };
 }
 
@@ -84,6 +92,7 @@ export function Hand(props: { interactive: boolean }): JSX.Element {
     setBelow(slots.filter((el) => el.getBoundingClientRect().bottom > bottom + 2).length);
   };
   onMount(() => {
+    if (!props.interactive && list) list.scrollTop = 0;
     measure();
     const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
     ro?.observe(list);
@@ -127,7 +136,7 @@ export function Hand(props: { interactive: boolean }): JSX.Element {
   };
 
   return (
-    <div class="yf-hand-wrap">
+    <div class="yf-hand-wrap" style={{ "--hand-n": hand().length }}>
       <div class="yf-hand-head">
         <h2 class="yf-hand-title print">{t("game.plan.hand")}</h2>
         <p class="small data">{tn("game.plan.limit", s().cardLimit)}</p>
@@ -143,6 +152,7 @@ export function Hand(props: { interactive: boolean }): JSX.Element {
       <div
         class="yf-hand"
         ref={list}
+        style={{ "--hand-n": hand().length }}
         role="group"
         aria-label={`${t("game.plan.hand")}. ${t("game.plan.keys")}`}
         onKeyDown={onKey}
@@ -167,7 +177,7 @@ export function Hand(props: { interactive: boolean }): JSX.Element {
             const cost = () => game.costOf(pl() ?? { card: id, region: card().regions?.[0] });
             const budgetLabel = () =>
               played() || !props.interactive
-                ? t("parts.ticket.ofPips", { n: game.budget().total || s().budget.available })
+                ? t("game.plan.pips_plain")
                 : t("game.plan.of_left", { n: Math.max(0, game.budget().left) });
             return (
               <div
@@ -195,8 +205,9 @@ export function Hand(props: { interactive: boolean }): JSX.Element {
                     played={played() || !props.interactive ? s().year : null}
                     blocked={props.interactive && block() ? { on: block() === "game.plan.cannot_limit" ? "trust" : "cost", reason: t(block()!) } : null}
                     selected={sel()}
-                    compact={!roomy() && !(sel() && oneFull())}
+                    compact={!roomy()}
                     lifted={game.hovered() === id || sel()}
+                    note={stagedNote(card()) ?? undefined}
                     class="yf-ticket"
                   />
                 </div>
@@ -233,22 +244,14 @@ export function TicketTray(): JSX.Element {
         {(c) => (
           <>
             <WherePicker card={c()} onPlay={playNow} />
-            <div class="yf-tray-notes">
-              <ul class="pulls yf-tray-pulls">
-                <For each={c().helps ?? []}>
-                  {(x) => <li><Snip strand={x} />{(c().frays ?? []).includes(x) ? t("parts.ticket.mixed", { strand: game.names.strandName(x) }) : game.names.strandName(x)}</li>}
-                </For>
-                <For each={(c().frays ?? []).filter((x) => !(c().helps ?? []).includes(x))}>
-                  {(x) => <li class="strain"><Snip strand={x} frays />{t("parts.ticket.frays", { strand: game.names.strandName(x) })}</li>}
-                </For>
-              </ul>
-              <p class="story-small">{pick(c().description)}</p>
-              <Show when={c().needs_partners}><p class="small">{t("game.plan.partners_note")}</p></Show>
-              <Show when={c().upkeep}><p class="small">{pick(c().upkeep!.note)}</p></Show>
-              <Show when={c().side_note}><p class="small">{pick(c().side_note)}</p></Show>
-              <Show when={c().visit}><p class="small">{t("game.plan.visit_card", { place: game.names.placeName(c().visit!), i_place: iPlace(game.names.placeName(c().visit!)) })}</p></Show>
-              <Show when={s().term + c().delay > 5}><p class="small yf-after2050">{t("game.plan.after_2050")}</p></Show>
-            </div>
+            <ul class="pulls yf-tray-pulls">
+              <For each={[...(c().helps ?? []), ...(c().mixed ?? []).filter((x) => !(c().helps ?? []).includes(x))]}>
+                {(x) => <li><Snip strand={x} />{(c().frays ?? []).includes(x) || (c().mixed ?? []).includes(x) ? t("parts.ticket.mixed", { strand: game.names.strandName(x) }) : game.names.strandName(x)}</li>}
+              </For>
+              <For each={(c().frays ?? []).filter((x) => !(c().helps ?? []).includes(x) && !(c().mixed ?? []).includes(x))}>
+                {(x) => <li class="strain"><Snip strand={x} frays />{t("parts.ticket.frays", { strand: game.names.strandName(x) })}</li>}
+              </For>
+            </ul>
           </>
         )}
       </Show>
@@ -268,7 +271,8 @@ function WherePicker(props: { card: Card; onPlay: (id: string, region?: RegionId
   const [two, setTwo] = createSignal<RegionId[]>(pl()?.regions ?? []);
   const scope = () => props.card.scope;
   const block = () => game.blockOf(props.card.id);
-  const canHold = () => !played() && (game.model.game.hold_over ?? 1) > 0;
+  // nothing carries past the last term
+  const canHold = () => !played() && (game.model.game.hold_over ?? 1) > 0 && (game.state()?.term ?? 0) < 5;
   const toggleTwo = (r: RegionId) => {
     const cur = two();
     const next = cur.includes(r) ? cur.filter((x) => x !== r) : [...cur, r].slice(-2);
@@ -355,5 +359,34 @@ function WherePicker(props: { card: Card; onPlay: (id: string, region?: RegionId
         <p class="small yf-why">{t(block()!)}</p>
       </Show>
     </div>
+  );
+}
+
+/** On the stage, beside the hand: the selected ticket's plain words, never squeezed by the rail. */
+export function TicketNotes(): JSX.Element {
+  const { game } = useGame();
+  const s = () => game.state()!;
+  const card = () => (s().step === "plan" && game.selected() ? game.names.card(game.selected()!) ?? null : null);
+  return (
+    <Show when={card() && !game.trace() && !game.ledgerOpen()}>
+      {(() => {
+        const c = () => card()!;
+        return (
+          <aside class="yf-cardnotes sheet" aria-label={pick(c().name)}>
+            <p class="t-3">{pick(c().name)}</p>
+              <p class="story-small">{pick(c().description)}</p>
+              <Show when={stagedNote(c())}><p class="small strong">{stagedNote(c())}</p></Show>
+              <Show when={c().needs_partners}><p class="small">{t("game.plan.partners_note")}</p></Show>
+              <Show when={c().upkeep}>
+                <p class="small">{c().upkeep!.every > 1 ? t("game.plan.upkeep_note", { n: c().upkeep!.pips, every: c().upkeep!.every }) : t("game.plan.upkeep_note_each", { n: c().upkeep!.pips })}</p>
+              </Show>
+              <Show when={c().side_note}><p class="small">{pick(c().side_note)}</p></Show>
+              <Show when={c().visit}><p class="small">{t("game.plan.visit_card", { place: game.names.placeName(c().visit!), i_place: iPlace(game.names.placeName(c().visit!)) })}</p></Show>
+              <Show when={s().term + c().delay > 5}><p class="small yf-after2050">{t("game.plan.after_2050")}</p></Show>
+            
+          </aside>
+        );
+      })()}
+    </Show>
   );
 }

@@ -100,7 +100,7 @@ export function PlaceVisit(): JSX.Element {
 
   return (
     <div class="pl-visit">
-      <div class="pl-board sheet">
+      <div class="pl-board sheet" classList={{ "pl-folded": !!result() }}>
         <header class="pl-head">
           <Pair text={board?.name} as="h2" class="t-1" />
           <Show when={offer().triggeredBy.some((c) => c !== "curveball")}>
@@ -168,6 +168,7 @@ function GradeSheet(props: { result: VisitOutcome; onDone: () => void; busy: boo
     <aside class="pl-grade sheet" role="region" aria-labelledby="pl-grade-title">
       <h2 id="pl-grade-title" class="t-2">{t("place.common.result", { place: game.names.placeName(props.result.place), grade: "" })}</h2>
       <p class="stampmark pl-grade-stamp">{t(`game.grade.${props.result.grade}`)}</p>
+      <div class="pl-grade-body">
       <ul class="pl-tests">
         <For each={props.result.tests}>
           {(x) => (
@@ -182,7 +183,6 @@ function GradeSheet(props: { result: VisitOutcome; onDone: () => void; busy: boo
                 </>
               }>
                 <span class="story-small">{reasonOf(x)}</span>
-                <span class="small">{shareWords(x.share)}</span>
               </Show>
             </li>
           )}
@@ -191,6 +191,7 @@ function GradeSheet(props: { result: VisitOutcome; onDone: () => void; busy: boo
       <Show when={props.result.notes?.length}>
         <ul class="pl-notes small"><For each={props.result.notes!}>{(n) => <li>{game.names.text(n)}</li>}</For></ul>
       </Show>
+      </div>
       <StampButton class="yf-go" disabled={props.busy} onClick={props.onDone}>{t("place.common.continue")}</StampButton>
     </aside>
   );

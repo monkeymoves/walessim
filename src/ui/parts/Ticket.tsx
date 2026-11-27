@@ -20,6 +20,8 @@ export interface TicketCard {
   needs_partners?: boolean;
   helps?: StrandId[];
   frays?: StrandId[];
+  /** Strands it can move either way depending on where it lands. */
+  mixed?: StrandId[];
 }
 
 export interface TicketProps {
@@ -51,6 +53,8 @@ export interface TicketProps {
   budgetLabel?: string;
   /** Replaces the whole cost cell (standing tickets: "Gives 3 pips"). */
   fare?: JSX.Element;
+  /** A line under the pulls, e.g. "First effects in 1 term, the rest in 2". */
+  note?: string;
   /** Shown at the top right of the body when selected ("Play this card" stamp). */
   action?: JSX.Element;
   onSelect?: () => void;
@@ -89,9 +93,10 @@ const STOCK: Record<TicketScope, string> = {
 
 export function Ticket(props: TicketProps): JSX.Element {
   const scope = () => ticketScope(props.card, props.scope);
-  const helps = () => props.card.helps ?? [];
-  /** A strand both helped and frayed is printed once, as "mixed", never as help and fray of itself. */
-  const mixed = (s: StrandId) => (props.card.frays ?? []).includes(s);
+  /** A strand that can go either way (or is both helped and frayed) is printed once, as "mixed". */
+  const mixedSet = () => new Set([...(props.card.mixed ?? []), ...(props.card.helps ?? []).filter((s) => (props.card.frays ?? []).includes(s))]);
+  const helps = () => [...(props.card.helps ?? []), ...(props.card.mixed ?? []).filter((s) => !(props.card.helps ?? []).includes(s))];
+  const mixed = (s: StrandId) => mixedSet().has(s);
   const frays = () => (props.card.frays ?? []).filter((s) => !helps().includes(s));
   const serial = () => `${t("parts.ticket.no")} ${props.serial ?? serialOf(props.card.id)}`;
   const budget = () => props.budget ?? 8;
@@ -101,7 +106,7 @@ export function Ticket(props: TicketProps): JSX.Element {
     [
       pick(props.card.name),
       t(`parts.scope.${scope()}`),
-      props.fare ? "" : t("parts.ticket.costAria", { n: props.card.cost, of: budget() }),
+      props.fare ? "" : props.budgetLabel ? `${t("parts.ticket.cost")} ${props.card.cost} ${props.budgetLabel}` : t("parts.ticket.costAria", { n: props.card.cost, of: budget() }),
       props.card.delay <= 0 ? t("parts.ticket.paysNowAria") : t("parts.ticket.paysAria", { when: payout() }),
       props.played ? t("parts.ticket.playedAria", { year: props.played }) : "",
       props.blocked ? props.blocked.reason : "",
@@ -177,6 +182,7 @@ export function Ticket(props: TicketProps): JSX.Element {
               )}
             </For>
           </ul>
+          <Show when={props.note}><p class="ticket-note small">{props.note}</p></Show>
           <Show when={props.card.needs_partners || props.where}>
             <p class="ticket-note small">
               <Show when={props.where}>{pick(props.where)} </Show>

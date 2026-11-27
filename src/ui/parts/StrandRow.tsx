@@ -32,6 +32,13 @@ export interface StrandMeterProps {
    * name stays in the tooltip and the accessible name is built from it.
    */
   label?: Text;
+  /**
+   * A forecast in words ("about 1 pip"), shown inside the strip in place of the other-language line
+   * while a card is previewed, so the bar keeps its height and nothing floats over the board.
+   */
+  ghostLabel?: string | null;
+  /** The forecast is a fall. */
+  ghostDown?: boolean;
 }
 
 /** "No change": a short level bar, cut square; the words are in the accessible name and tooltip. */
@@ -87,7 +94,12 @@ export function StrandMeter(props: StrandMeterProps): JSX.Element {
           </span>
         </Show>
       </div>
-      <span class="other" lang={otherLang()}>{otherName()}</span>
+      <Show when={props.ghostLabel} fallback={<span class="other" lang={otherLang()}>{otherName()}</span>}>
+        <span class="meter-ghostlabel" classList={{ fuzzy: props.ghostSharp === false, down: !!props.ghostDown }}>
+          <svg viewBox="0 0 9 8" width="8" height="7" aria-hidden="true"><path fill="currentColor" d={props.ghostDown ? "M0 0h9L4.5 8z" : "M0 8h9L4.5 0z"} /></svg>
+          {props.ghostLabel}
+        </span>
+      </Show>
       <div class="yarn" classList={{ sharp: props.sharp !== false, fuzzy: props.sharp === false }} style={{ "--n": flow() }}>
         <i />
         <Show when={ghostLen() > 0}>
@@ -145,6 +157,8 @@ export interface StrandRowProps {
   ghostSharp?: Partial<Record<StrandId, boolean>>;
   /** Per strand: the name to show on the strip (short forms for tight bars). */
   labels?: Partial<Record<StrandId, Text>>;
+  /** Per strand: a forecast in words shown inside the strip (see StrandMeter.ghostLabel). */
+  ghostLabels?: Partial<Record<StrandId, { text: string; down: boolean } | null>>;
   pullable?: StrandId[];
   onPull?: (strand: StrandId) => void;
   class?: string;
@@ -166,6 +180,8 @@ export function StrandRow(props: StrandRowProps): JSX.Element {
             ghost={props.ghosts?.[id]}
             ghostSharp={props.ghostSharp?.[id]}
             label={props.labels?.[id]}
+            ghostLabel={props.ghostLabels?.[id]?.text ?? null}
+            ghostDown={props.ghostLabels?.[id]?.down}
             note={props.notes?.[id]}
             pullable={props.pullable?.includes(id)}
             onPull={props.onPull}

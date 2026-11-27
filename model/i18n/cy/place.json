@@ -128,5 +128,7 @@
  "common.needed": "Roedd angen: {what}",
  "common.earlier": "yn ddiogel {year}",
  "common.earlier_plain": "yn ddiogel",
- "bethesda.about": "Y lle, a’r hyn y bydd yn ei farnu"
+ "bethesda.about": "Y lle, a’r hyn y bydd yn ei farnu",
+ "common.earlier_beth": "yn ei le ers {year}",
+ "common.earlier_beth_plain": "yn ei le"
 }

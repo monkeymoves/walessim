@@ -15,10 +15,11 @@ import { Timeline } from "./Timeline";
 import { LedgerDrawer } from "./Ledger";
 import { TracePanel } from "./Trace";
 import {
-  ArrivalStrip, CaretakerPanel, ChangedPanel, ElectionPanel, OpeningPanel, PassingPanel, PlanPanel, PledgePanel, ShockSlip, VisitOfferPanel,
+  ArrivalStrip, CaretakerPanel, ChangedPanel, StageVoice, ElectionPanel, OpeningPanel, PassingPanel, PlanPanel, PledgePanel, ShockSlip, VisitOfferPanel,
 } from "./Steps";
 import { PlaceVisit } from "../place/PlaceVisit";
 import { EndScreen } from "../end/EndScreen";
+import { TicketNotes } from "./Hand";
 import "./game.css";
 import "../place/place.css";
 import "../end/end.css";
@@ -95,6 +96,8 @@ function BoardBody(): JSX.Element {
             <LaPanel code={ui.laPanel()!} />
           </Show>
           <ArrivalStrip />
+          <TicketNotes />
+          <StageVoice />
           <Show when={game.trace()}>
             <TracePanel />
           </Show>

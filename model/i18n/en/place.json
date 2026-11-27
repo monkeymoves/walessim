@@ -125,5 +125,7 @@
  "common.needed": "It needed: {what}",
  "common.earlier": "made safe {year}",
  "common.earlier_plain": "made safe",
- "bethesda.about": "The place, and what it will judge"
+ "bethesda.about": "The place, and what it will judge",
+ "common.earlier_beth": "in place since {year}",
+ "common.earlier_beth_plain": "in place"
 }

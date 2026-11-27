@@ -234,8 +234,23 @@ export function slipText(game: ReturnType<typeof useGame>["game"], sl: Slip): st
   const strand = game.names.strandName(sl.strand);
   const cause = game.names.cause(sl.cause);
   const up = sl.delta >= 0;
-  const key = sl.part === "stock" ? (up ? "game.changed.stock_up" : "game.changed.stock_down") : up ? "game.changed.up" : "game.changed.down";
-  return t(key, { cause, strand });
+  if (sl.pipChange === 0 && !sl.shock && !sl.recovery) return t(up ? "game.changed.held_up" : "game.changed.held_down", { strand, cause });
+  let sentence: string;
+  if (sl.recovery) sentence = t("game.changed.recovery", { strand, cause });
+  else if (sl.rule === "R25" && sl.cause.kind === "card") sentence = t("game.changed.ripple", { strand, cause: game.names.cardName(sl.cause.id) });
+  else if (sl.sideEffect) sentence = t("game.changed.side", { strand, cause, dir: t(up ? "game.dir.up_word" : "game.dir.down_word") });
+  else {
+    const key = sl.part === "stock" ? (up ? "game.changed.stock_up" : "game.changed.stock_down") : up ? "game.changed.up" : "game.changed.down";
+    sentence = t(key, { cause, strand });
+  }
+  return sentence;
+}
+
+/** The shock slip's account of what the player spent and what landed. */
+export function responseText(r: NonNullable<Slip["response"]>): string {
+  const share = r.hit >= 0.95 ? t("game.share.all") : r.hit >= 0.6 ? t("game.share.most") : r.hit >= 0.4 ? t("game.share.half") : t("game.share.quarter");
+  const spent = r.pips > 0 ? tn("game.changed.response_spent", r.pips, { share }) : t("game.changed.response_none");
+  return r.prepared ? `${t("game.changed.response_ready")} ${spent}` : spent;
 }
 
 export function reasonText(game: ReturnType<typeof useGame>["game"], r: TrustReason): string {
@@ -283,10 +298,14 @@ export function ChangedPanel(): JSX.Element {
       <div class="yf-scroll">
       <div class="yf-step sheet">
         <h2 class="t-2">{t("game.changed.title", { from: o().year, to: o().year + 4 })}</h2>
+        <SharpKey />
         <Show when={o().shock?.prepared}>
           <p class="stampmark yf-ready-paper">{t("game.shock.ready")}</p>
         </Show>
-        <Show when={o().visit && !o().visit!.stayed}>
+        <Show when={o().visit?.mastered && !s().history.slice(0, -1).some((h) => h.visit?.place === o().visit!.place && h.visit.mastered)}>
+          <p class="story-small yf-mastered">{t("game.changed.mastered", { place: game.names.placeName(o().visit!.place) })}</p>
+        </Show>
+                <Show when={o().visit && !o().visit!.stayed}>
           <p class="yf-visit-result">
             <span>{t("place.common.result", { place: game.names.placeName(o().visit!.place), grade: "" })}</span>
             <span class="stampmark">{t(`game.grade.${o().visit!.grade}`)}</span>
@@ -297,7 +316,7 @@ export function ChangedPanel(): JSX.Element {
         <Show when={o().slips.length} fallback={<li class="yf-slip-paper sheet"><p class="story-small">{t("game.changed.no_slips")}</p></li>}>
           <For each={o().slips}>
             {(sl, i) => (
-              <li class="yf-slip-paper sheet" classList={{ unexpected: sl.unexpected, shock: !!sl.shock }} style={{ "--i": i() }}>
+              <li class="yf-slip-paper sheet" classList={{ unexpected: sl.unexpected, shock: !!sl.shock, held: sl.pipChange === 0 }} style={{ "--i": i() }}>
                 <Show when={sl.shock}>
                   <p class="yf-shocklabel label">{t("game.changed.shock_label", { name: game.names.shockName(sl.cause.id) })}</p>
                 </Show>
@@ -316,10 +335,13 @@ export function ChangedPanel(): JSX.Element {
                     {sharpOf(sl.strand) ? t("game.sharpkey.sharp") : t("game.sharpkey.fuzzy")}
                   </span>
                 </h3>
-                <p class="story-small">{slipText(game, sl)}</p>
-                <ThreadButton onClick={() => { game.pull(sl.strand, sl.part, o().term); ui.guide.done("pull"); }}>
-                  {t("game.changed.pull")}
-                </ThreadButton>
+                <p class="story-small yf-slip-text">
+                  {slipText(game, sl)}{" "}
+                  <Show when={sl.shock && sl.response}>{responseText(sl.response!)}{" "}</Show>
+                  <ThreadButton onClick={() => { game.pull(sl.thread?.strand ?? sl.strand, sl.thread?.part ?? sl.part, sl.thread?.term ?? o().term, sl.thread?.key); ui.guide.done("pull"); }}>
+                    {t("game.changed.pull")}
+                  </ThreadButton>
+                </p>
                 <Show when={i() === 0}>
                   <Note id="pull" when={ui.ticked() >= 7} class="yf-note-pull" placement="left">{t("game.onboard.pull")}</Note>
                 </Show>
@@ -332,8 +354,6 @@ export function ChangedPanel(): JSX.Element {
         <h3 class="t-3">{t(`game.trust.${trustDir()}`)}</h3>
         <TrustReasons reasons={o().trust.top} />
       </div>
-      <SharpKey />
-      <VoiceSheet voice={o().voice} year={o().year + 4} compact />
       </div>
       <div class="yf-panel-foot">
         <StampButton class="yf-go" onClick={() => game.act({ type: "continue" })}>{t("game.changed.continue")}</StampButton>
@@ -411,8 +431,10 @@ export function ArrivalStrip(): JSX.Element {
   const { game } = useGame();
   const s = () => game.state()!;
   const items = () => s().opening?.arrivals ?? [];
+  /** Cards whose first effects land this term while the rest stays in the post. */
+  const firsts = () => s().post.filter((p) => p.firstTerm === s().term && p.arrivesTerm > s().term);
   return (
-    <Show when={s().step === "opening" && items().length}>
+    <Show when={s().step === "opening" && (items().length || firsts().length)}>
       <aside class="yf-arrivals" aria-label={t("game.opening.arrivals_label")}>
         <p class="label yf-arrivals-head">{t("game.opening.arrivals_label")}</p>
         <ul>
@@ -424,12 +446,23 @@ export function ArrivalStrip(): JSX.Element {
                   {a.regions?.length
                     ? t("game.opening.arrives", { card: game.names.cardName(a.card), where: game.names.regionsText(a.regions) })
                     : t("game.opening.arrives_wales", { card: game.names.cardName(a.card) })}
+                  <Show when={a.firstYear != null && a.firstYear < a.arrivesYear}>
+                    <span class="yf-arrival-on small">{" "}({t("game.opening.in_full", { year: a.firstYear! })})</span>
+                  </Show>
                   <Show when={game.names.card(a.card)?.helps?.length}>
                     <span class="yf-arrival-on small">
                       {" "}{t("game.opening.lands_on", { strands: game.names.list((game.names.card(a.card)!.helps ?? []).map((x) => game.names.strandName(x))) })}
                     </span>
                   </Show>
                 </span>
+              </li>
+            )}
+          </For>
+          <For each={firsts()}>
+            {(a) => (
+              <li class="yf-arrival">
+                <span class="yf-arrival-stub"><Icon name={cardIcon(game.names.card(a.card) ?? { id: a.card })} size={20} /></span>
+                <span>{t("game.opening.first_effects", { card: game.names.cardName(a.card), year: a.arrivesYear })}</span>
               </li>
             )}
           </For>
@@ -454,5 +487,18 @@ export function TrustReasons(props: { reasons: TrustReason[] }): JSX.Element {
         )}
       </For>
     </ul>
+  );
+}
+
+/** On the "What changed" step the term's voice sits on the stage, always in view. */
+export function StageVoice(): JSX.Element {
+  const { game } = useGame();
+  const s = () => game.state()!;
+  return (
+    <Show when={s().step === "changed" && s().lastOutcome?.voice && !game.trace()}>
+      <div class="yf-stagevoice">
+        <VoiceSheet voice={s().lastOutcome!.voice} year={s().lastOutcome!.year + 4} />
+      </div>
+    </Show>
   );
 }

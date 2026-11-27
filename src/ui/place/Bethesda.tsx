@@ -141,8 +141,13 @@ export function BethesdaBoard(props: { data: PlaceData; api: BoardApi }): JSX.El
                 <tr classList={{ sel: sel() === o.id, stitched: stitched(o.id) }}>
                   <th scope="row">
                     <button type="button" class="pl-rowbtn" aria-pressed={sel() === o.id} onClick={() => select(sel() === o.id ? null : o.id)}>
-                      <span class="pl-tag data" classList={{ stitched: stitched(o.id) }}>{o.n}</span>
-                      <span class="pl-name">{pick(o.name)}</span>
+                      <span class="pl-tag data" classList={{ stitched: stitched(o.id), earlier: props.api.earlier().has(o.id) }}>{o.n}</span>
+                      <span class="pl-name">
+                        {pick(o.name)}
+                        <Show when={props.api.earlier().has(o.id)}>
+                          {" "}<span class="pl-earlier small">{props.api.earlier().get(o.id) ? t("place.common.earlier_beth", { year: props.api.earlier().get(o.id)! }) : t("place.common.earlier_beth_plain")}</span>
+                        </Show>
+                      </span>
                     </button>
                   </th>
                   <For each={FLAGS}>

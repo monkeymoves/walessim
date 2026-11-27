@@ -25,7 +25,7 @@ export interface Draft {
 
 const emptyDraft = (): Draft => ({ cards: [], standing: null, repayDebt: 0, repair: false, skipUpkeep: [], holdOver: null });
 
-export interface TraceRef { term: number; strand: StrandId; part: "flow" | "stock"; index: number }
+export interface TraceRef { term: number; strand: StrandId; part: "flow" | "stock"; index: number; key?: string }
 
 export interface StartOptions {
   seed?: number | string;
@@ -287,14 +287,22 @@ export function createGame(model: CompiledModel, opts: { overrides?: Accessor<Re
     const s = state();
     const tr = trace();
     if (!s || !tr) return [];
-    try { return pullThread(model, s, tr.term, tr.strand, tr.part); } catch (e) { console.warn("pullThread failed", e); return []; }
+    try {
+      const all = pullThread(model, s, tr.term, tr.strand, tr.part);
+      // a slip opens its own thread first; the rest follow
+      if (tr.key) {
+        const i = all.findIndex((x) => (x as { key?: string }).key === tr.key);
+        if (i > 0) return [all[i]!, ...all.slice(0, i), ...all.slice(i + 1)];
+      }
+      return all;
+    } catch (e) { console.warn("pullThread failed", e); return []; }
   });
 
-  function pull(strand: StrandId, part: "flow" | "stock" = "flow", term?: number): void {
+  function pull(strand: StrandId, part: "flow" | "stock" = "flow", term?: number, key?: string): void {
     const s = state();
     if (!s) return;
     const t = term ?? (s.lastOutcome?.term ?? s.history[s.history.length - 1]?.term ?? 0);
-    setTrace({ term: t, strand, part, index: 0 });
+    setTrace({ term: t, strand, part, index: 0, key });
   }
 
   return {

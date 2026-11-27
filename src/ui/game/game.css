@@ -418,3 +418,53 @@
   .yf-tray .yf-where-row { flex-wrap: nowrap; }
   .yf-tray .yf-where-row .label { font-stretch: var(--wdth-ticket); }
 }
+.yf-ghosthead { color: var(--ink); font-weight: var(--wght-grot-strong); max-width: 15em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; outline: 1.5px dashed var(--ink); outline-offset: 1px; padding: 0 3px; }
+
+/* the results column: voice first, compact slips, Trust whole, the stamp pinned */
+.yf-panel-changed .yf-step { padding: 10px 14px 10px; gap: 6px; }
+.yf-panel-changed .yf-voice { padding: 8px 14px 8px; gap: 4px; }
+.yf-panel-changed .yf-voice-quote { font-size: 14px; line-height: 1.38; }
+.yf-panel-changed .yf-slips { gap: 6px; }
+.yf-panel-changed .yf-slip-paper { padding: 7px 12px 8px; gap: 2px; margin: 0; }
+.yf-panel-changed .yf-slip-paper + .yf-slip-paper { margin-top: 0; }
+.yf-panel-changed .yf-slip-head { font-size: 16px; }
+.yf-slip-text .threadlink { font-family: var(--font-grot); font-size: var(--size-label); white-space: nowrap; }
+.yf-panel-changed .yf-trustwhy { padding: 8px 14px; gap: 4px; }
+.yf-panel-changed .yf-trustwhy .t-3 { font-size: 16px; }
+@media (max-width: 1360px) {
+  .yf-panel-changed .yf-slip-text { font-size: 13px; line-height: 1.35; }
+  .yf-panel-changed .yf-voice-quote { font-size: 13px; }
+  .yf-panel-changed .yf-step h2 { font-size: 18px; }
+}
+
+/* the tray keeps its prose: only the notes scroll, and the tray never takes more than half the rail */
+.yf-tray { display: flex; flex-direction: column; max-height: 50%; min-height: 0; }
+.yf-tray-notes { flex: 1 1 auto; min-height: 0; max-height: none; overflow-y: auto; }
+.yf-tray-notes .story-small { display: block; -webkit-line-clamp: unset; overflow: visible; }
+@media (max-width: 1360px) { .yf-tray-notes { max-height: none; } }
+/* in a stub, a long title gives way to the cost column, never the other way */
+.yf-hand .ticket.compact .ticket-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; }
+.yf-hand .ticket.compact .ticket-title { overflow: hidden; text-overflow: ellipsis; }
+.yf-mapkey { position: absolute; right: 14px; top: 14px; z-index: 3; display: flex; align-items: center; gap: 8px; padding: 6px 10px; max-width: 300px; color: var(--ink); }
+.yf-mapkey .yf-linkbtn { flex: none; }
+.yf-slip-paper.held { background: var(--paper-2) var(--grain); box-shadow: var(--shadow-flat); }
+.yf-slip-paper.held .yf-slip-head { font-size: 14.5px; color: var(--ink-2); }
+.yf-panel-changed .yf-scroll { gap: 6px; }
+.yf-panel-changed .yf-sharpkey { padding: 0; }
+@media (max-width: 1360px) {
+  .yf-panel-changed .yf-slip-paper { padding: 6px 10px 6px; }
+  .yf-panel-changed .yf-slip-head { font-size: 15px; }
+  .yf-panel-changed .yf-trustwhy { padding: 6px 12px; }
+  .yf-panel-changed .yf-voice { padding: 6px 12px; }
+}
+.yf-stagevoice { position: absolute; left: 14px; bottom: 14px; width: min(420px, 46%); z-index: 4; animation: yf-arrive var(--dur-slide) var(--ease-paper) both; }
+.yf-stagevoice .yf-voice { box-shadow: var(--lit-edge), var(--shadow-lifted); }
+
+/* the hand reserves room for every stub; the tray gives way and scrolls its notes */
+.yf-panel-plan .yf-hand-wrap { flex: 1 1 0; min-height: calc(30px + var(--hand-n, 5) * (var(--ticket-compact-h) + 6px)); }
+.yf-panel-plan .yf-hand { min-height: calc(var(--hand-n, 5) * (var(--ticket-compact-h) + 6px)); }
+.yf-panel-plan .yf-tray { flex: 0 1 auto; max-height: none; min-height: 0; }
+
+/* the selected ticket's words, on the stage beside the hand */
+.yf-cardnotes { position: absolute; right: 14px; bottom: 14px; width: min(340px, 40%); z-index: 4; padding: 12px 14px 12px; display: grid; gap: 6px; max-height: calc(100% - 90px); overflow-y: auto; }
+.yf-slip-paper.shock .yf-dir, .yf-slip-paper.shock .yf-pipchange { color: var(--on-slate); }

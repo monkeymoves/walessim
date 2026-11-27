@@ -1,7 +1,7 @@
 // The stage: the paper map in its well, driven by the game. Stitches for what the player did,
 // a pin where a place is asking for you, the four regions lit when a card needs one, and the
 // authority panel when a place is touched.
-import { createEffect, createMemo, onCleanup, onMount, Show, type JSX } from "solid-js";
+import { createEffect, createMemo, createSignal, onCleanup, onMount, Show, type JSX } from "solid-js";
 import { lang, t } from "../../i18n";
 import { PaperMap, type Marker, type Stitch, type StitchKind } from "../../map";
 import { geo } from "../shell/model";
@@ -94,6 +94,7 @@ export function MapStage(props: { children?: JSX.Element }): JSX.Element {
     m.setHighlight(card ? cardRegions(game.model, card).flatMap((r) => regionLas(game.model, r)) : []);
   });
 
+  const [keyHidden, setKeyHidden] = createSignal(false);
   // stitches: every card played, sewn where it moved things most
   const stitches = createMemo<Stitch[]>(() => {
     const s = game.state();
@@ -178,6 +179,15 @@ export function MapStage(props: { children?: JSX.Element }): JSX.Element {
         onKeyDown={onKey}
         onBlur={() => { ui.map()?.focusLa(null); }}
       />
+      <Show when={stitches().length && !ui.inPlace() && game.state()?.step !== "ended" && !keyHidden()}>
+        <aside class="yf-mapkey sheet small">
+          <svg viewBox="0 0 22 22" width="22" height="22" aria-hidden="true">
+            <circle cx="11" cy="11" r="8" fill="none" stroke="var(--stitch)" stroke-width="2.5" stroke-dasharray="3 2" />
+          </svg>
+          <span>{t("game.map.rings")}</span>
+          <button type="button" class="yf-linkbtn" onClick={() => setKeyHidden(true)}>{t("game.map.rings_hide")}</button>
+        </aside>
+      </Show>
       <Show when={!geo()}>
         <p class="yf-map-loading small">{t("game.map.loading")}</p>
       </Show>

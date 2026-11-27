@@ -258,7 +258,10 @@ function Terms(props: { result: EndResult }): JSX.Element {
       </div>
       <p class="small">{t("game.end.terms_note")}</p>
       <Show when={TERM_YEARS[r().worstTerm] != null}>
-        <p class="small">{t("game.end.worst", { year: TERM_YEARS[r().worstTerm]! })}.<Show when={r().dippedBelowStart}> {t("game.end.dipped")}</Show></p>
+        <p class="small">
+          {r().worstFell === false ? t("game.end.weakest_term", { year: TERM_YEARS[r().worstTerm]! }) : t("game.end.worst", { year: TERM_YEARS[r().worstTerm]! })}.
+          <Show when={r().dippedBelowStart}> {t("game.end.dipped")}</Show>
+        </p>
       </Show>
     </div>
   );
@@ -349,7 +352,10 @@ function Prompts(props: { result: EndResult }): JSX.Element {
   const prompts = createMemo(() => {
     const r = props.result;
     const out: string[] = [];
-    out.push(t(r.result.which === "lived" ? "game.end.prompt.lived_lower" : "game.end.prompt.left_lower"));
+    // the "paid for your years" prompt only when Left really is down
+    if (r.result.which === "lived") out.push(t("game.end.prompt.lived_lower"));
+    else if ((r.left.value ?? 0) < -0.5) out.push(t("game.end.prompt.left_lower"));
+    else out.push(t("game.end.prompt.left_fine", { change: changeWords(r.left.value) }));
     out.push(t("game.end.prompt.weakest", { strand: game.names.strandName(worstStrand(r)) }));
     if (r.ledger.lostTerms.length) out.push(t("game.end.prompt.lost_seat", { year: termYear(r.ledger.lostTerms[0]!) }));
     if (r.ledger.debts.length) out.push(t("game.end.prompt.debts"));
