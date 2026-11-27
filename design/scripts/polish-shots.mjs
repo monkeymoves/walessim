@@ -1,7 +1,7 @@
 // Before and after screenshots for the polish pass.
 // Usage: node design/scripts/polish-shots.mjs <before|after> [only]
 import { createRequire } from "module";
-const require = createRequire("package.json");
+const require = createRequire(process.cwd() + "/package.json");
 const { chromium } = require("playwright");
 const tag = process.argv[2] ?? "after";
 const only = process.argv[3] ?? "";

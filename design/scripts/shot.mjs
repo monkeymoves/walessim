@@ -3,7 +3,7 @@
 // lang "cy" clicks nothing; it appends ?lang=cy so pages can read it.
 import { createRequire } from "module";
 import path from "path";
-const require = createRequire("package.json");
+const require = createRequire(process.cwd() + "/package.json");
 const { chromium } = require("playwright");
 const [, , file, out, w = "1440", h = "900", lang = ""] = process.argv;
 const browser = await chromium.launch();

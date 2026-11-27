@@ -1,6 +1,6 @@
 // Load a URL headlessly, report console errors and a screenshot. Usage: node live-check.mjs <url> <out.png>
 import { createRequire } from "module";
-const require = createRequire("package.json");
+const require = createRequire(process.cwd() + "/package.json");
 const { chromium } = require("playwright");
 const [, , url, out] = process.argv;
 const b = await chromium.launch();
