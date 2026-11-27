@@ -145,3 +145,67 @@ for.
 Not changed: effect sizes S, M, L (raising them scales trends and side effects too, so it does not
 buy agency), baseline pressures, Trust numbers (neglect was tried at -7 and put back to -4, because it
 punished the thoughtful bot as hard as the south-east-only bot).
+
+---
+
+# Balance decision 15: a national card reaches every region
+
+*Design lead, 27 November 2026. Answers the engine lead's finding that rotating regions costs about
+two net pips and that concentrating on the South East wins.*
+
+## What the finding really is
+
+The cost of rotating is not mainly dilution by population. I tested that directly (regional cards
+with no size step in the South East, one step in the North and South West, two in Mid Wales): the
+south-east-only bot stayed 1.9 pips ahead of the rotating bot. The cost comes from the neglect rule
+itself. It asks for a card aimed at each region every second term, which is two region-specific cards
+a term out of three, and it counts national cards for nobody. So the rule pushes out the national
+cards (skills, health, warm homes, early years) that build most of Left: the rotating bot's Left
+falls from +4.1 to +0.8. The rule punished governing for the whole of Wales with national
+programmes, and ignoring it cost almost nothing. That is the wrong way round.
+
+## The decision
+
+1. **A national card lands in every region, so it counts for every region.** Model book sentence:
+   "A region is overlooked when two terms pass with nothing landing there; a national card lands
+   everywhere." Neglect now means real neglect (nothing reaching a region for eight years), and it
+   still bites narrow play: the careless bot is overlooked-in-a-region about five times a game, the
+   caretaker about twice.
+2. **Population weighting stays, on every strand.** Half of Wales lives in the South East and four
+   of the five worst-off authorities are there, so the model honestly says a regional card does the
+   most good there. I will not weight people in Powys seven times people in Cardiff to hide that.
+   I tested counting the cohesive strand by region (each a quarter): it moves the south-east-only
+   result by 0.3 of a pip, so it is not worth a new kind of aggregate. See `scripts/region-probe.ts`.
+3. **Concentration is answered by the letter, not the score.** The uneven-hand letter should name a
+   region that never got a card of its own.
+
+## The YAML change (measured, then left off until the bot fix)
+
+| # | Change | From | To | Why |
+|---|---|---|---|---|
+| 15a | `trust.national_counts_for_neglect` in `model/game.yaml` | false | true | Decision 15, point 1. |
+
+The numbers in `balance-log.md` were run with 15a on. I have left the value at `false` in the
+repository, because with it on and the thoughtful bot still forcing rotation, one test fails
+(`bots.test.ts`, "orders the bots": the average bot gains from the rule and passes the hobbled
+thoughtful bot on 16 seeds). Switch 15a on in the same commit as engine spec point 1.
+
+Tried and put back: per-region size steps (everything fell 0.6 of a pip and the gap between
+concentrating and spreading did not move). Not adopted: region-weighted strands; neglect cutting the
+card limit (it would make the same wrong rule bite harder).
+
+## Engine spec
+
+0. **Set `trust.national_counts_for_neglect: true`** in `model/game.yaml`, together with point 1.
+1. **Thoughtful bot: rotate by the engine's own rule.** In `rotateRegions`, a region is due only if
+   the engine would count it neglected next: when `trust.national_counts_for_neglect` is true, a
+   national play (and a national play of a `national_or_region` card) in a term counts for all four
+   regions when working out `last`. The strategy bots built on it inherit the fix. With that, the
+   thoughtful bot should match today's `thoughtful-no-rotate` diagnostic, which can then be deleted.
+2. **Uneven-hand letter trigger.** Replace "neglected in two or more terms" with: any region that
+   received no regional card of its own in the whole game, or one region taking more than two thirds
+   of all regional plays. Keep the existing `equal` flow test. The letter's named thing should be
+   that region.
+3. **Rule text.** Wherever the neglect rule is described (model book, Trust reasons), use the
+   sentence in point 1 through i18n.
+4. No change to scoring, aggregates or targets. The decision 14 targets stand.

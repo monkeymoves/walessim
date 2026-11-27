@@ -242,3 +242,65 @@ unweighted-by-place component. Options for the design lead: weight some strands 
 by population (each region a quarter), add a "spread" component to `equal` or `cohesive` (share of
 regions that gained), or make Trust neglect bite on the card limit. Any of these needs a design
 decision, not tuning.
+
+---
+
+# Design lead's decision 15, 27 November 2026: a national card reaches every region
+
+*Decision and engine spec: `balance-decision.md`, "Balance decision 15".
+Check: `npx tsx scripts/balance.ts --seeds 200 --runs 30`.*
+
+## Reasoning
+
+The engine lead found that the rotating thoughtful bot scores +0.2 and south-east-only +1.9, and put
+it down to population weighting. I tested three explanations.
+
+| Test | What changed | Result |
+|---|---|---|
+| Depth by region size | Regional cards: no size step in the South East, one in North and South West, two in Mid | Rotating thoughtful -0.5, south-east-only +1.4: the gap stays 1.9. Every bot falls about 0.6. |
+| Cohesive counted by region | Each region a quarter in the cohesive strand (estimated by `scripts/region-probe.ts`, 60 seeds) | South-east-only falls 0.3, rotating thoughtful 0.1. |
+| National cards count for neglect | `national_counts_for_neglect: true` | A player who does not force rotation has 0.2 neglected region-terms a game and scores +2.3; south-east-only +2.0. |
+
+So the two pips are the price of obeying a rule that asked for two region-specific cards a term and
+counted national cards for nobody, which crowds out the national cards that build Left (Left +4.1
+without rotation, +0.8 with). The fix is to the rule: nothing landing in a region for two terms is
+neglect; a national card lands everywhere. Population weighting stays, because it is true that half
+of Wales lives in the South East, and weighting whole strands by region would count a person in
+Powys seven times a person in Cardiff.
+
+## Numbers (200 seeds, 30 runs, net strand pips since 2026)
+
+Before is the engine lead's table above. After is with 15a switched on for the run. It is left off
+in the repository until the bot fix lands, because with it on one bots test fails (the average bot
+passes the still-rotating thoughtful bot on the test's 16 seeds); `npm test` is green as committed. The thoughtful bot still forces rotation
+until the engine fix in the spec, so `thoughtful-no-rotate` shows what thoughtful play becomes.
+
+| Bot | Before | After | Lived | Left | Lived lower | Lost terms | Neglect region-terms | Target |
+|---|---|---|---|---|---|---|---|---|
+| caretaker | -2.8 | -2.8 | -1.8 | -2.3 | 39% | 0.12 (was 0.53) | 1.9 (was 9.2) | -3.5 to -1.5: ok |
+| careless | -6.8 | -7.0 | -3.4 | -7.0 | 5% | 0.65 | 4.9 | -10 to -4: ok |
+| average | -0.6 | -0.2 | +1.6 | +0.1 | 30% | 0.03 | 0.3 | -1 to +1: ok |
+| thoughtful (bot still forcing rotation) | +0.2 | +0.2 | +1.4 | +0.9 | 45% | 0.00 | 0.0 | +1.5 to +3.5: miss until the bot fix |
+| thoughtful-no-rotate (what it becomes) | +2.3 | +2.3 | +2.5 | +4.4 | 81% | 0.00 | 0.2 (was 9.6) | +1.5 to +3.5: ok |
+| south-east-only | +1.9 | +2.0 | +2.0 | +5.5 | 98% | 0.00 | 0.1 | not above thoughtful: ok against +2.3 (0.3 below) |
+| prevention-only | -0.8 | -0.7 | -0.5 | +1.0 | 79% | 0.03 | 0.2 | 1.5 below thoughtful: ok against +2.3; it also inherits the forced rotation |
+| growth-only | -5.7 | -5.7 | | | | 0.21 | 1.0 | ok |
+| green-only | -4.2 | -4.2 | | | | 0.14 | 0.8 | ok |
+| borrower | -3.2 | -3.1 | | | | 0.01 | 0.3 | ok |
+
+- Thoughtful minus caretaker: +3.1 with the bot as it is; about +5 once it stops forcing rotation
+  (+2.3 against -2.8).
+- Lived is the lower in 81 per cent of `thoughtful-no-rotate` games (target 50 to 80): one point
+  over, the same weak spot as in decision 14. The 44 per cent the engine lead saw was an effect of
+  forced rotation emptying Left.
+- The one-habit bots (ignore places, no contingency, end-game dumper) are all built on the rotating
+  bot, so their figures (-0.3, +0.1, -0.1) are depressed in the same way and need rerunning after
+  the fix.
+
+## What this does not do, honestly
+
+Concentrating on the South East is no longer ahead, but it is only 0.3 of a pip behind. The score
+does not punish it, because under population weighting it is not wrong: it reaches half of Wales and
+most of the worst-off authorities. What it costs is said in words: the uneven-hand letter (engine
+spec, point 2) and the map. Trust neglect is now rare for any player who plays national cards, so
+Trust is checked mainly by pips lost, broken pledges, gaps widening and shocks.
