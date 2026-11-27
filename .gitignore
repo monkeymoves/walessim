@@ -10,3 +10,4 @@ playwright-report/
 .firebase/
 __pycache__/
 public/data/
+design/shots-build/

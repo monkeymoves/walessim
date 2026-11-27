@@ -6,11 +6,19 @@
 
 > An independent project and a thinking tool, not a forecast and not an official view of any organisation.
 
+![The title screen: a paper relief map of Wales](docs/screenshots/ui-a-title-en.jpg)
+
 ## What is in it
 
 - **Heddiw (Wales today):** the 22 local authorities on a paper relief map, with 19 real measures as map lenses, a panel per authority with sources, and an explorer table and scatter.
 - **Yfory (2026 to 2050):** six Senedd terms. Play policy cards on real places, face curveballs from a horizon scan of Wales, visit the Rhondda or Dyffryn Ogwen to make a hard local choice on real streets, and read the letter from 2050. You are judged on the lower of what people **Lived** through and what you **Left**, so you cannot win by borrowing from the future.
 - **Llyfr y model (the model book):** every rule, indicator and source, readable by anyone, with dials you can turn. Change one and the game tells you that you are playing a modified rule set.
+
+| Heddiw: the atlas | Yfory: a term in play |
+|---|---|
+| ![Atlas with the Welsh speakers lens and the Cardiff panel](docs/screenshots/ui-a-atlas-en.jpg) | ![A hand of railway-ticket policy cards](docs/screenshots/ui-b-2c-hand5-1440.jpg) |
+| **The Rhondda: which tips first** | **2050: the letter and the verdict** |
+| ![The Rhondda coal tip board on real streets](docs/screenshots/ui-b-5b-rhondda-board-1280.jpg) | ![The end screen with Lived and Left](docs/screenshots/ui-b-13-end-1440.jpg) |
 
 Every relationship is a rule written as data in `model/`, with its sources, parameter ranges and a confidence grade. Every figure on screen traces back to a source ("pull the thread").
 
@@ -33,6 +41,7 @@ npx tsx scripts/balance.ts   # bot players over 200 seeds against the balance ta
 | `docs/design/game-design.md` | The game: term loop, strands, Trust, Lived and Left, cards, curveballs, places, voices, the 8/10 checklist |
 | `docs/design/design-system.md`, `tokens.css` | The look: paper, print and weave; Besley and Archivo |
 | `docs/design/balance-decision.md`, `balance-log.md` | How the scoring was tuned, and why |
+| `docs/design/playtest-*.md` | Playtest reports against the 8/10 checklist (their screenshots stay local in `design/shots-build/`, which is not committed) |
 | `docs/adr/` | Decisions that are hard to reverse |
 | `docs/data-licences.md` | Every dataset, its licence and the attribution it needs |
 | `GLOSSARY.md` | The words, in English and Welsh |
