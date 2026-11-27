@@ -83,7 +83,7 @@ export function TitleScreen(props: { geo: WalesGeo | null }): JSX.Element {
         </span>
         <span class="tl-letter-note small">{t("shell.title.letter")}</span>
       </div>
-      <p class="title-foot small">{t("shell.title.attribution")}</p>
+      <p class="title-foot small">{t("shell.title.attribution")} <a class="inklink" href="#/llyfr/attributions">{t("shell.title.sources")}</a></p>
     </div>
   );
 }

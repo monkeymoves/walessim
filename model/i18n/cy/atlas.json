@@ -109,5 +109,8 @@
   "unit.coal_tips": "Tomenni glo segur, pob categori",
   "unit.coal_tips_cd": "Tomenni yng nghategorïau C a D",
   "panel.rankTop": "Yr uchaf o {n}.",
-  "panel.rankBottom": "Yr isaf o {n}."
+  "panel.rankBottom": "Yr isaf o {n}.",
+
+  "key.range": "{a} i {b}",
+  "foot.sources": "Ffynonellau a thrwyddedau"
 }

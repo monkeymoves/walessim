@@ -151,5 +151,18 @@
   "changed.title": "Your changes",
   "changed.none": "You have not changed any parameter. The game plays the default rule set.",
   "changed.intro": "These parameters differ from the default. Games started now play this modified rule set.",
-  "changed.fromTo": "{d} to {v}"
+  "changed.fromTo": "{d} to {v}",
+
+  "attributions.title": "Attributions and licences",
+  "attributions.blurb": "The exact credit each dataset asks for, and its licence.",
+  "attributions.intro": "Every dataset this game and atlas draw on, with the acknowledgement its publisher asks for, word for word, and the licence it is released under. The acknowledgements are kept in their original wording.",
+  "attributions.margin": "The Open Government Licence v3.0 asks for an acknowledgement of the source and a link to the licence. Each entry gives both.",
+  "attributions.logos": "Logos and third party material are not covered by these licences and are not used.",
+  "attributions.licence": "Licence:",
+  "attributions.string": "Attribution:",
+  "attributions.checked": "Where this was checked",
+  "attributions.checkedOn": "Checked on 26 November 2026 against each publisher’s own page. This records what each publisher states and is not legal advice.",
+  "attributions.unconfirmed": "No licence is stated for this table. Written confirmation has been requested; the figures stay flagged until it arrives.",
+  "rule.eqAfter.one": "(after {n} term)",
+  "rule.eqAfter.other": "(after {n} terms)"
 }

@@ -106,7 +106,7 @@ rules:
 
   - id: R29
     theme: nature
-    name: { en: Land, farming and building move the pressures on nature, cy: Mae tir, ffermio ac adeiladu yn symud y pwysau ar natur, cy_review: true }
+    name: { en: "Land, farming and building move the pressures on nature", cy: "Mae tir, ffermio ac adeiladu yn symud y pwysau ar natur", cy_review: true }
     note: { en: "Some cards and trends push SoNaRR pressures up or down on the map's own scale; the map then works out what that does to each ecosystem.", cy: "Mae rhai cardiau a thueddiadau yn gwthio pwysau SoNaRR i fyny neu i lawr ar raddfa'r map ei hun; yna mae'r map yn cyfrifo beth mae hynny'n ei wneud i bob ecosystem.", cy_review: true }
     kind: fcm
     inputs: [pay-farms-for-nature, build-social-homes, grid-and-big-renewables, restore-upland-peat, slow-the-flow, build-flood-walls, tourism-pays-its-way, rivers-in-trouble]

@@ -39,5 +39,7 @@
   "title.honest": "Offeryn meddwl, nid rhagolwg. Prosiect annibynnol, nid barn swyddogol.",
   "title.lineAria": "Llinell amser o 2026, nawr, i 2050, lle mae llythyr wedi’i selio yn aros.",
   "title.letter": "Llythyr, wedi’i selio tan 2050",
-  "title.attribution": "Ffiniau: SYG (OGL). Tirwedd: AWS Terrain Tiles. Rheilffyrdd: cyfranwyr OpenStreetMap (ODbL)."
+  "title.attribution": "Ffiniau: SYG (OGL). Tirwedd: AWS Terrain Tiles. Rheilffyrdd: cyfranwyr OpenStreetMap (ODbL).",
+
+  "title.sources": "Ffynonellau a thrwyddedau"
 }

@@ -49,6 +49,42 @@ function anchors(data: PlaceData): Record<string, Pt> {
   };
 }
 
+/** Option ids whose anchor is a real feature in the place data; they stay put while the rest give way. */
+const FIXED = new Set(["cap-holiday-lets", "welsh-youth-centre", "second-hydro", "room-for-river", "park-and-ride"]);
+
+/**
+ * Keep the number markers apart. Anchors only place an option "about here" (the board draws no
+ * exact sites), so the loose ones are nudged until every pair sits at least `gap` km apart and
+ * clear of the town's own name label, which would otherwise be buried under the tags. Real
+ * features (Gerlan, the school, the rivers, Llandygai) hold their ground. Deterministic.
+ */
+export function spreadAnchors(at: Record<string, Pt>, town: Pt, gap = 0.72): Record<string, Pt> {
+  const ids = Object.keys(at);
+  const p: Record<string, Pt> = Object.fromEntries(ids.map((id) => [id, [...at[id]!] as Pt]));
+  for (let it = 0; it < 240; it++) {
+    for (let a = 0; a < ids.length; a++) for (let b = a + 1; b < ids.length; b++) {
+      const A = p[ids[a]!]!, B = p[ids[b]!]!;
+      let dx = B[0] - A[0], dy = B[1] - A[1];
+      const d = Math.hypot(dx, dy);
+      if (d >= gap) continue;
+      if (d < 1e-6) { dx = 0.01 * (b - a); dy = 0.01; }
+      const k = (gap - d) / Math.max(d, 1e-6);
+      const fa = FIXED.has(ids[a]!), fb = FIXED.has(ids[b]!);
+      const wa = fa ? (fb ? 0.5 : 0) : fb ? 1 : 0.5, wb = fb ? (fa ? 0.5 : 0) : fa ? 1 : 0.5;
+      A[0] -= dx * k * wa; A[1] -= dy * k * wa;
+      B[0] += dx * k * wb; B[1] += dy * k * wb;
+    }
+    // the town's name label is centred on the town point, about 1.2 km wide and drawn 0.1 to 0.33
+    // km above it; each number tag is drawn up and to the right of its point (0.17 km across, 0.25
+    // km up, 0.34 km wide and 0.28 km tall). A point whose tag would land on the label moves clear.
+    for (const id of ids) {
+      const q = p[id]!, dx = q[0] - town[0], dy = q[1] - town[1];
+      if (Math.abs(dx + 0.17) < 0.77 && Math.abs(dy - 0.04) < 0.27) q[1] = town[1] + 0.04 + (dy >= 0.04 ? 0.3 : -0.3);
+    }
+  }
+  return p;
+}
+
 export function BethesdaBoard(props: { data: PlaceData; api: BoardApi }): JSX.Element {
   const { game, ui } = useGame();
   const board = game.names.place("bethesda")!;
@@ -60,7 +96,8 @@ export function BethesdaBoard(props: { data: PlaceData; api: BoardApi }): JSX.El
   onMount(() => {
     const m = ui.map();
     if (!m) return;
-    const at = anchors(props.data);
+    const town = (props.data.places?.find((x) => x.en === "Bethesda") as { x: number; y: number } | undefined);
+    const at = spreadAnchors(anchors(props.data), town ? [town.x, town.y] : [(props.data.bbox.x0 + props.data.bbox.x1) / 2, (props.data.bbox.y0 + props.data.bbox.y1) / 2]);
     m.place.setSelectable(options.map((o) => ({
       id: o.id,
       x: o.x ?? at[o.id]?.[0] ?? props.data.bbox.x0,
@@ -88,7 +125,6 @@ export function BethesdaBoard(props: { data: PlaceData; api: BoardApi }): JSX.El
   return (
     <div class="pl-bethesda">
       <p class="story-small pl-dilemma">{t("place.bethesda.dilemma")}</p>
-      <p class="small pl-history">{t("place.bethesda.history")}</p>
       <p class="pl-prompt print">{t("place.bethesda.prompt")}</p>
       <div class="pl-table-wrap">
         <table class="pl-ledger" aria-label={t("place.bethesda.prompt")}>
@@ -122,13 +158,13 @@ export function BethesdaBoard(props: { data: PlaceData; api: BoardApi }): JSX.El
       <Show when={trends().length}>
         <p class="warnstrip small"><span>{t("place.bethesda.trend_note", { trend: game.names.list(trends().map((c) => game.names.curveballName(c))) })}</span></p>
       </Show>
-      <details class="pl-tests-box" open>
-        <summary class="label">{t("place.common.tests")}</summary>
+      <details class="pl-tests-box pl-about">
+        <summary class="label">{t("place.bethesda.about")}</summary>
+        <p class="small pl-history">{t("place.bethesda.history")}</p>
+        <h3 class="label">{t("place.common.tests")}</h3>
         <ul class="pl-tests-list small"><For each={tests()}>{(x) => <li>{x}</li>}</For></ul>
         <p class="small">{t("place.common.tests_note")}</p>
-      </details>
-      <details class="pl-tests-box">
-        <summary class="label">{t("place.common.sources")}</summary>
+        <h3 class="label">{t("place.common.sources")}</h3>
         <p class="small">{game.names.text(board.data_note)}</p>
         <ConfidenceMark level={board.confidence} />
         <p class="yf-dockets"><For each={board.sources}>{(s) => <SourceTag source={s} />}</For></p>

@@ -8,6 +8,7 @@ import { ConfidenceMark, Snip, TabButton } from "../parts";
 import { BookPage, MarginNote } from "./BookPage";
 import { pageOrder, paramLabel, rulesByTheme, SECTIONS, type Section } from "./names";
 import { clearOverride, isModified, overrides, paramOf, resetOverrides } from "./overrides";
+import { AttributionsPage } from "./Attributions";
 import { RulePage } from "./RulePage";
 import { CardsPage, CurveballsPage, IndicatorsPage, SourcesPage, StrandsPage } from "./Sections";
 import "./book.css";
@@ -68,6 +69,7 @@ export function Book(props: { model: CompiledModel; parts: string[] }): JSX.Elem
           <Match when={section() === "cards"}><CardsPage model={props.model} {...nav("cards")} /></Match>
           <Match when={section() === "curveballs"}><CurveballsPage model={props.model} {...nav("curveballs")} /></Match>
           <Match when={section() === "sources"}><SourcesPage model={props.model} focus={props.parts[1]} {...nav("sources")} /></Match>
+          <Match when={section() === "attributions"}><AttributionsPage {...nav("attributions")} /></Match>
         </Switch>
       </div>
     </div>

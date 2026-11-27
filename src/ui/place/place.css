@@ -135,3 +135,41 @@
 .pl-visit .pl-grade .pl-grade-stamp { font-size: 18px; }
 .pl-tag.earlier { background: var(--stitch-tint); color: var(--stitch-deep); outline: 1.5px dashed var(--stitch-deep); outline-offset: -3px; }
 .pl-earlier { color: var(--stitch-deep); white-space: nowrap; font-stretch: var(--wdth-ticket); }
+
+/* Bethesda: ten options fit the rail without scrolling. Flag heads are set vertically like a
+   printed ledger, names wrap to two lines in a tighter face, and the history, the tests and the
+   sources fold into one closed note at the foot. */
+.pl-bethesda { display: flex; flex-direction: column; gap: 4px; }
+.pl-bethesda .pl-dilemma { font-size: 13.5px; line-height: 1.3; }
+.pl-bethesda .pl-prompt { font-size: 15px; line-height: 1.2; }
+.pl-bethesda .pl-table-wrap { margin: 0; overflow: visible; }
+.pl-bethesda .pl-ledger th[scope="col"] { padding: 0 2px 3px; font-size: 11.5px; }
+.pl-bethesda .pl-ledger th.flag { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; text-align: left; vertical-align: top; height: 46px; padding: 2px 0; line-height: 20px; }
+.pl-bethesda .pl-ledger th.flag, .pl-bethesda .pl-ledger td.flag { width: 20px; padding-left: 0; padding-right: 0; }
+.pl-bethesda .pl-ledger th.num, .pl-bethesda .pl-ledger td.num { width: 1%; white-space: nowrap; font-size: 11.5px; padding-left: 6px; vertical-align: bottom; }
+.pl-bethesda .pl-ledger td, .pl-bethesda .pl-ledger th[scope="row"] { height: 0; padding-top: 1px; padding-bottom: 1px; }
+.pl-bethesda .pl-rowbtn { min-height: 0; gap: 6px; align-items: center; }
+.pl-bethesda .pl-name { font-size: 12.5px; line-height: 1.14; padding: 0; font-stretch: var(--wdth-ticket); }
+.pl-bethesda .pl-tag { min-width: 17px; height: 17px; }
+.pl-bethesda .pl-about { margin-top: 0; }
+.pl-bethesda .pl-about summary { padding: 2px 0; }
+.pl-bethesda .pl-about[open] { padding-bottom: 4px; }
+.pl-bethesda .pl-about h3 { margin-top: 6px; }
+.pl-bethesda .warnstrip { margin: 0; }
+@media (max-width: 1360px) {
+  .pl-bethesda .pl-dilemma { font-size: 12.5px; }
+  .pl-bethesda .pl-prompt { font-size: 14px; }
+  .pl-bethesda .pl-name { font-size: 12px; }
+  .pl-bethesda .pl-ledger th.flag { height: 44px; }
+}
+/* short screens: the board's head gives up its second-language line and some padding */
+@media (max-height: 920px) {
+  .pl-visit:has(.pl-bethesda) .pl-board { padding-top: 8px; padding-bottom: 6px; gap: 4px; }
+  .pl-visit:has(.pl-bethesda) .pl-head .other { display: none; }
+}
+
+/* the foot's two buttons stay at two lines each, in Welsh too */
+@media (max-width: 1360px) {
+  .pl-foot .yf-actions .btn-stamp { font-size: 15px; padding-left: 10px; padding-right: 10px; line-height: 1.15; }
+  .pl-foot .yf-actions .btn-tab { font-size: 13px; padding-left: 10px; padding-right: 10px; line-height: 1.15; }
+}

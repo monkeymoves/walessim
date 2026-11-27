@@ -470,5 +470,7 @@
  "region_short.north": "Gogledd",
  "region_short.mid": "Canolbarth",
  "region_short.southwest": "De-orllewin",
- "region_short.southeast": "De-ddwyrain"
+ "region_short.southeast": "De-ddwyrain",
+
+  "foot.sources": "Ffynonellau a thrwyddedau"
 }

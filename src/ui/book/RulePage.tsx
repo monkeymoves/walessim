@@ -7,7 +7,7 @@ import { ConfidenceMark, SourceTag, WarnStrip } from "../parts";
 import { sourceShort } from "../parts/SourceTag";
 import { sourceById } from "../shell/model";
 import { BookPage, MarginNote } from "./BookPage";
-import { thingName } from "./names";
+import { plainEquation, thingName } from "./names";
 import { overrides } from "./overrides";
 import { ParamSlider } from "./ParamSlider";
 
@@ -67,7 +67,7 @@ export function RulePage(props: { model: CompiledModel; rule: Rule; folio: numbe
       </Show>
       <p class="story rule-sentence" data-testid="rule-sentence">{sentence()}</p>
       <Show when={described()?.equation}>
-        <p class="rule-equation print">{described()!.equation}</p>
+        <p class="rule-equation print">{plainEquation(described()!.equation)}</p>
       </Show>
 
       <dl class="facts">

@@ -70,7 +70,7 @@ rules:
 
   - id: R24
     theme: economy
-    name: { en: Buses, trains and connection improve access, cy: Mae bysiau, trenau a chysylltiad yn gwella mynediad, cy_review: true }
+    name: { en: "Buses, trains and connection improve access", cy: "Mae bysiau, trenau a chysylltiad yn gwella mynediad", cy_review: true }
     note: { en: "Connecting services raise access; getting everyone online raises it by half as much. Unpaid upkeep lets it lapse. There is no authority baseline for access.", cy: "Mae cysylltu gwasanaethau yn codi mynediad; mae cael pawb ar-lein yn ei godi hanner cymaint. Mae cynnal heb ei dalu yn gadael iddo ddod i ben. Nid oes llinell sylfaen awdurdod ar gyfer mynediad.", cy_review: true }
     kind: linear
     drive: card
@@ -94,9 +94,9 @@ rules:
     outputs: [employment]
     lag: 0
     params:
-      band1: { default: 0.2, min: 0.1, max: 0.3, unit: { en: points per pip, low band, cy: pwyntiau y pip, band isel, cy_review: true }, adjustable: true }
-      band2: { default: 0.4, min: 0.2, max: 0.6, unit: { en: points per pip, middle band, cy: pwyntiau y pip, band canol, cy_review: true }, adjustable: true }
-      band3: { default: 0.6, min: 0.3, max: 0.9, unit: { en: points per pip, high band, cy: pwyntiau y pip, band uchel, cy_review: true }, adjustable: true }
+      band1: { default: 0.2, min: 0.1, max: 0.3, unit: { en: "points per pip, low band", cy: "pwyntiau y pip, band isel", cy_review: true }, adjustable: true }
+      band2: { default: 0.4, min: 0.2, max: 0.6, unit: { en: "points per pip, middle band", cy: "pwyntiau y pip, band canol", cy_review: true }, adjustable: true }
+      band3: { default: 0.6, min: 0.3, max: 0.9, unit: { en: "points per pip, high band", cy: "pwyntiau y pip, band uchel", cy_review: true }, adjustable: true }
       scale: { default: 1.0, min: 1.0, max: 1.0, unit: { en: share of the spend reaching the authorities in scope, cy: cyfran y gwariant sy'n cyrraedd yr awdurdodau dan sylw, cy_review: true }, adjustable: false, tune: true }
     sources: [wg-io-2022]
     confidence: medium

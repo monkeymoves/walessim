@@ -45,5 +45,7 @@
   "title.honest": "A thinking tool, not a forecast. An independent project, not an official view.",
   "title.lineAria": "A timeline from 2026, now, to 2050, where a sealed letter waits.",
   "title.letter": "A letter, sealed until 2050",
-  "title.attribution": "Boundaries: ONS (OGL). Terrain: AWS Terrain Tiles. Railways: OpenStreetMap contributors (ODbL)."
+  "title.attribution": "Boundaries: ONS (OGL). Terrain: AWS Terrain Tiles. Railways: OpenStreetMap contributors (ODbL).",
+
+  "title.sources": "Sources and licences"
 }

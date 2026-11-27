@@ -138,11 +138,12 @@ export function Atlas(props: AtlasProps): JSX.Element {
       <div class="stage well" ref={stage}>
         <MapView geo={props.geo} ariaLabel={t("atlas.mapAria", { lens: pick(lens().name) })} onReady={ready} class="atlas-map" />
 
-        <Show when={hover() && hoverValue()}>
+        {/* a pointer on the map, or the keyboard list: never the explorer table's own hover, which would cover its rows */}
+        <Show when={hover() && hoverValue() && (hover()!.source === "pointer" || !!kbd())}>
           <TipSlip
             heading={hoverValue()!.name}
             class={`maptip${hover()!.source === "keyboard" && kbd() ? " kbd" : ""}`}
-            style={{ left: `${Math.min(hover()!.px + 14, (stage?.clientWidth ?? 9999) - 260)}px`, top: `${hover()!.py + 16}px` }}
+            style={{ left: `${Math.max(8, Math.min(hover()!.px + 14, (stage?.clientWidth ?? 9999) - (explorer() !== "closed" && !narrow() ? 640 : 0) - 260))}px`, top: `${hover()!.py + 16}px` }}
           >
             <span class="data">{hoverValue()!.v ?? t("atlas.noData")}</span> {t(`atlas.short.${lens().id}`)}
             <br />
@@ -248,7 +249,7 @@ export function Atlas(props: AtlasProps): JSX.Element {
       </div>
       <footer class="atlas-foot small">
         <p>{t("atlas.foot.honest")}</p>
-        <p>{t("atlas.foot.attribution")}</p>
+        <p>{t("atlas.foot.attribution")} <a class="inklink" href="#/llyfr/attributions">{t("atlas.foot.sources")}</a></p>
       </footer>
     </div>
   );

@@ -11,6 +11,7 @@ import { CloseButton } from "./Buttons";
 export function sourceShort(s: Source | null): string {
   if (!s) return t("parts.source.unknown");
   const p = `${s.publisher ?? ""} ${pick(s.title as never)}`;
+  if (/^(Welsh Government|StatsWales|DataMapWales)/i.test(s.publisher ?? "")) return t("parts.publisher.wg");
   if (/Office for National Statistics|\bONS\b|Nomis/i.test(p)) return "ONS";
   if (/Department for Energy Security/i.test(p)) return "DESNZ";
   if (/Natural Resources Wales/i.test(p)) return t("parts.publisher.nrw");

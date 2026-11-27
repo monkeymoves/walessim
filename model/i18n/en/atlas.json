@@ -108,5 +108,8 @@
   "unit.coal_tips": "Disused coal tips, all categories",
   "unit.coal_tips_cd": "Tips in categories C and D",
   "panel.rankTop": "Highest of {n}.",
-  "panel.rankBottom": "Lowest of {n}."
+  "panel.rankBottom": "Lowest of {n}.",
+
+  "key.range": "{a} to {b}",
+  "foot.sources": "Sources and licences"
 }

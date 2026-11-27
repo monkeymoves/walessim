@@ -35,7 +35,7 @@ rules:
 
   - id: R12
     theme: places
-    name: { en: In a storm, an unmade tip may move, cy: Mewn storm, gall tomen heb ei gwneud symud, cy_review: true }
+    name: { en: "In a storm, an unmade tip may move", cy: "Mewn storm, gall tomen heb ei gwneud symud", cy_review: true }
     note: { en: "When a storm winter lands, each coal valley authority with tips still unmade risks a tip moving: the chance rises with the risk step, which the wet decade raises. Tips made safe lower it.", cy: "Pan ddaw gaeaf stormus, mae pob awdurdod cwm glo gyda thomenni heb eu gwneud mewn perygl o weld tomen yn symud: mae'r siawns yn codi gyda'r cam risg, y mae'r degawd gwlyb yn ei godi. Mae tomenni a wnaed yn ddiogel yn ei ostwng.", cy_review: true }
     kind: threshold
     event: tip_movement

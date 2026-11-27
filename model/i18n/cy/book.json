@@ -156,5 +156,20 @@
   "changed.title": "Eich newidiadau",
   "changed.none": "Nid ydych wedi newid unrhyw baramedr. Mae’r gêm yn chwarae’r set reolau ragosodedig.",
   "changed.intro": "Mae’r paramedrau hyn yn wahanol i’r rhagosodiad. Mae gemau a ddechreuir nawr yn chwarae’r set reolau hon wedi’i newid.",
-  "changed.fromTo": "{d} i {v}"
+  "changed.fromTo": "{d} i {v}",
+
+  "attributions.title": "Priodoliadau a thrwyddedau",
+  "attributions.blurb": "Y cydnabyddiaethau union y mae pob set ddata yn gofyn amdanynt, a’i thrwydded.",
+  "attributions.intro": "Pob set ddata y mae’r gêm a’r atlas hwn yn tynnu arni, gyda’r gydnabyddiaeth y mae ei chyhoeddwr yn gofyn amdani, gair am air, a’r drwydded y’i rhyddheir odani. Cedwir y cydnabyddiaethau yn eu geiriad gwreiddiol.",
+  "attributions.margin": "Mae Trwydded Llywodraeth Agored v3.0 yn gofyn am gydnabod y ffynhonnell a dolen i’r drwydded. Mae pob cofnod yn rhoi’r ddau.",
+  "attributions.logos": "Nid yw’r trwyddedau hyn yn cwmpasu logos na deunydd trydydd parti, ac nid ydynt yn cael eu defnyddio.",
+  "attributions.licence": "Trwydded:",
+  "attributions.string": "Priodoliad:",
+  "attributions.checked": "Lle y gwiriwyd hyn",
+  "attributions.checkedOn": "Gwiriwyd ar 26 Tachwedd 2026 yn erbyn tudalen pob cyhoeddwr ei hun. Mae hyn yn cofnodi’r hyn y mae pob cyhoeddwr yn ei nodi; nid cyngor cyfreithiol mohono.",
+  "attributions.unconfirmed": "Ni nodir trwydded ar gyfer y tabl hwn. Gofynnwyd am gadarnhad ysgrifenedig; mae’r ffigurau’n parhau wedi’u marcio nes iddo gyrraedd.",
+  "rule.eqAfter.one": "(ar ôl {n} tymor)",
+  "rule.eqAfter.two": "(ar ôl {n} dymor)",
+  "rule.eqAfter.few": "(ar ôl {n} thymor)",
+  "rule.eqAfter.other": "(ar ôl {n} tymor)"
 }

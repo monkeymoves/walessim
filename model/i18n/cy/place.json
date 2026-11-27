@@ -127,5 +127,6 @@
  "common.test_failed": "Ni ddaliodd {test}, {share}.",
  "common.needed": "Roedd angen: {what}",
  "common.earlier": "yn ddiogel {year}",
- "common.earlier_plain": "yn ddiogel"
+ "common.earlier_plain": "yn ddiogel",
+ "bethesda.about": "Y lle, a’r hyn y bydd yn ei farnu"
 }

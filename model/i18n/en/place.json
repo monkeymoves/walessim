@@ -124,5 +124,6 @@
  "common.test_failed": "{test} did not hold, {share}.",
  "common.needed": "It needed: {what}",
  "common.earlier": "made safe {year}",
- "common.earlier_plain": "made safe"
+ "common.earlier_plain": "made safe",
+ "bethesda.about": "The place, and what it will judge"
 }

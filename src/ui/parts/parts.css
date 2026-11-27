@@ -195,9 +195,9 @@
   padding: 7px 10px 11px; text-align: left; border: 0; color: var(--ink);
 }
 .meter-button { cursor: pointer; }
-.meter-head { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; }
-.meter-name { font-size: 13.5px; font-stretch: var(--wdth-label); font-weight: var(--wght-grot-strong); white-space: nowrap; overflow: hidden; text-overflow: clip; }
-.meter-move { font-size: 12.5px; font-stretch: var(--wdth-label); font-weight: var(--wght-grot-strong); color: var(--ink-2); display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+.meter-head { display: flex; justify-content: space-between; align-items: baseline; gap: 3px; }
+.meter-name { flex: 0 1 auto; min-width: 0; font-size: 13px; font-stretch: var(--wdth-label); font-weight: var(--wght-grot-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meter-move { font-size: 12.5px; font-stretch: var(--wdth-label); font-weight: var(--wght-grot-strong); color: var(--ink-2); display: flex; align-items: center; flex: none; gap: 3px; margin-right: -4px; white-space: nowrap; }
 .meter .other { font-size: 11.5px; margin-top: 0; white-space: nowrap; overflow: hidden; }
 .yarn { position: relative; height: 9px; margin-top: 7px; }
 .yarn::before { content: ""; position: absolute; left: 0; right: 0; top: 4px; border-top: 1.5px dotted rgba(27, 34, 38, 0.5); }

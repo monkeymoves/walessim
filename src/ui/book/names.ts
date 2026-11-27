@@ -1,5 +1,5 @@
 // Names for the things rules read and write, and the book's page order.
-import { hasKey, pick, t } from "../../i18n";
+import { hasKey, pick, t, tn } from "../../i18n";
 import type { CompiledModel, Rule } from "../../model/schema";
 
 /** A readable name for a rule input or output id (component, card, curveball, or a fixed word). */
@@ -37,7 +37,7 @@ export function rulesByTheme(model: CompiledModel): { theme: string; rules: Rule
     .filter((g) => g.rules.length);
 }
 
-export const SECTIONS = ["indicators", "strands", "cards", "curveballs", "sources"] as const;
+export const SECTIONS = ["indicators", "strands", "cards", "curveballs", "sources", "attributions"] as const;
 export type Section = (typeof SECTIONS)[number];
 
 /** Every page of the book in reading order: contents, the rules, then the sections. */
@@ -63,4 +63,17 @@ export function stepFor(min: number, max: number): number {
 export function paramLabel(name: string): string {
   const key = `book.param.${name}`;
   return hasKey(key) ? t(key) : name;
+}
+
+/**
+ * The engine's equation for a rule, read more plainly: identifiers lose their underscores, the
+ * "/ default" divisor that only rescales the dial is dropped (the slider shows the default), and a
+ * lag of zero terms is not spelled out.
+ */
+export function plainEquation(eq: string): string {
+  return eq
+    .replace(/ \/ -?[\d.]+(?= \(after|,|;|$)/g, "")
+    .replace(/ \(after 0 terms\)/g, "")
+    .replace(/\(after (\d+) terms\)/g, (_m, n: string) => tn("book.rule.eqAfter", Number(n)))
+    .replace(/([A-Za-z])_([A-Za-z])/g, "$1 $2");
 }

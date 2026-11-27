@@ -140,6 +140,7 @@ function BoardBody(): JSX.Element {
           </Show>
           <span>{t("game.foot.honesty")}</span>
           <span>{t("game.foot.attrib")}</span>
+          <a class="inklink" href="#/llyfr/attributions">{t("game.foot.sources")}</a>
         </span>
       </footer>
       <p class="sr-only" aria-live="polite">{ui.announce()}</p>

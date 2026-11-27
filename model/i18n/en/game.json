@@ -468,5 +468,7 @@
  "region_short.north": "North",
  "region_short.mid": "Mid",
  "region_short.southwest": "South West",
- "region_short.southeast": "South East"
+ "region_short.southeast": "South East",
+
+  "foot.sources": "Sources and licences"
 }
