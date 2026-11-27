@@ -251,6 +251,9 @@ export function createGame(model: CompiledModel, opts: { overrides?: Accessor<Re
   function play(id: string, region?: RegionId, regions?: RegionId[]): void {
     const s = state();
     if (!s || s.step !== "plan" || isPlayed(id)) return;
+    // a two-region card is only ever stamped with two different regions, so a turn can never be
+    // left stuck behind a card that looks played but is not (owner's game, 27 Nov 2026)
+    if (names.card(id)?.scope === "two_regions" && !(regions && regions.length === 2 && regions[0] !== regions[1])) return;
     const p: CardPlay = { card: id };
     if (region) p.region = region;
     if (regions) p.regions = regions;

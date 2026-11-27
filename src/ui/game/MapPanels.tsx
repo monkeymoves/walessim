@@ -57,7 +57,19 @@ export function pickRegion(game: Game, ui: Ui, cardId: string, r: RegionId): boo
     inplay.setFlash(t("facts.sel.not_here", { card: game.names.cardName(cardId), region: game.names.regionName(r) }));
     return false;
   }
-  if (game.isPlayed(cardId)) game.setRegion(cardId, r);
+  if (card.scope === "two_regions") {
+    // this card needs two regions: each press adds or removes one, and it plays at two
+    const cur = game.isPlayed(cardId) ? (game.playOf(cardId)?.regions ?? []) : (ui.twoPick()[cardId] ?? []);
+    const next = cur.includes(r) ? cur.filter((x) => x !== r) : [...cur, r].slice(-2);
+    ui.setTwoPick({ ...ui.twoPick(), [cardId]: next });
+    if (next.length < 2) {
+      inplay.setFlash(t("play.card.choose_two", { n: next.length }));
+      return false;
+    }
+    if (game.isPlayed(cardId)) game.setRegion(cardId, undefined, next);
+    else if (!game.blockOf(cardId)) game.play(cardId, undefined, next);
+    else { ui.setAnnounce(t(game.blockOf(cardId)!)); return false; }
+  } else if (game.isPlayed(cardId)) game.setRegion(cardId, r);
   else if (!game.blockOf(cardId)) game.play(cardId, r);
   else { ui.setAnnounce(t(game.blockOf(cardId)!)); return false; }
   ui.setRegionPick(null);
