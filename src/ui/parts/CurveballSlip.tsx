@@ -2,7 +2,7 @@
 // along the bottom, set at minus 1.3 degrees. The only torn, angled thing on the board.
 // It slides down 24px once when it arrives; with reduced motion it is simply there.
 import { Show, type JSX } from "solid-js";
-import { Pair, t } from "../../i18n";
+import { lang, Pair, t } from "../../i18n";
 import type { Text } from "../../model/schema";
 
 export interface CurveballSlipProps {
@@ -24,7 +24,8 @@ export function CurveballSlip(props: CurveballSlipProps): JSX.Element {
       <i class="pin" aria-hidden="true" />
       <article class="slip on-slate">
         <p class="slip-from">{props.from ?? t("parts.slip.from")}</p>
-        <Pair text={props.title} as="h3" class="slip-title" />
+        {/* in Cymraeg the Welsh name alone: the English beneath read as a subtitle (logic agent's note) */}
+        <Pair text={props.title} as="h3" class="slip-title" single={lang() === "cy"} />
         <Show when={props.ripple}>
           <p class="ripple">{props.ripple}</p>
         </Show>

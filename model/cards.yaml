@@ -272,7 +272,7 @@ cards:
     sector: construction
     tags: [flood]
     upgraded_by: { en: The sea walls and the tidal harbours, cy: Y morgloddiau a'r harbwrs llanw, cy_review: true }
-    side_note: { en: "The catch: walls need care. Pay 1 coin every 8 years, or they start to fail. Walls also squeeze the river.", cy: "Y pris: mae angen gofal ar waliau. Talwch 1 darn arian bob 8 mlynedd, neu maen nhw'n dechrau methu. Mae waliau hefyd yn gwasgu'r afon.", cy_review: true }
+    side_note: { en: "The catch: walls need care. Pay 1 coin every 8 years, or they start to fail. Walls also squeeze the river.", cy: "Yr anfantais: mae angen gofal ar waliau. Talwch 1 darn arian bob 8 mlynedd, neu maen nhw'n dechrau methu. Mae waliau hefyd yn gwasgu'r afon.", cy_review: true }
     what: { en: "Strong walls where rivers and the sea reach homes.", cy: "Waliau cryf lle mae afonydd a'r môr yn cyrraedd cartrefi.", cy_review: true }
     catch: { en: "Walls need care. Pay 1 coin every 8 years, or they start to fail.", cy: "Mae angen gofal ar waliau. Talwch 1 darn arian bob 8 mlynedd, neu maen nhw'n dechrau methu.", cy_review: true }
     picture: { en: "A family near the river sleeps through a storm.", cy: "Mae teulu ger yr afon yn cysgu drwy storm.", cy_review: true }
@@ -430,7 +430,7 @@ standing:
     clear_cost: 3
     max_tokens: 3
     rule: R35
-    side_note: { en: "Each loan costs 1 coin every turn until you pay back 3. A loan left in 2050 takes away from Left for 2050. You can have 3 at most.", cy: "Mae pob benthyciad yn costio 1 darn arian bob tro nes i chi dalu 3 yn ôl. Mae benthyciad sydd ar ôl yn 2050 yn tynnu o Ar ôl ar gyfer 2050. Gallwch gael 3 ar y mwyaf.", cy_review: true }
+    side_note: { en: "Each loan costs 1 coin every turn until you pay back 3. A loan left in 2050 takes away from Left for 2050. You can have 3 at most.", cy: "Mae pob benthyciad yn costio 1 darn arian bob tro nes i chi dalu 3 yn ôl. Mae benthyciad sydd ar ôl yn 2050 yn tynnu o'r sgôr Ar ôl erbyn 2050. Gallwch gael 3 ar y mwyaf.", cy_review: true }
     upgraded_by: { en: The company shop, cy: Siop y cwmni, cy_review: true }
   - id: defer-maintenance
     name: { en: "Skip repairs", cy: "Hepgor atgyweiriadau", cy_review: true }

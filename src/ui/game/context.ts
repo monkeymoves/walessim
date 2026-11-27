@@ -10,13 +10,13 @@ export type NoteId =
   | "hand" | "ticket" | "play" | "post" | "commit" | "strands" | "pull" | "trust" | "region"
   // plain-wales section 4: the first-turn script and the later one-time notes
   | "how" | "slow_change" | "card_place" | "slow_card" | "coins_left" | "why" | "handoff"
-  | "promise" | "visit" | "marker" | "crisis" | "upkeep" | "borrow" | "lost";
+  | "promise" | "visit" | "marker" | "crisis" | "upkeep" | "borrow" | "lost" | "lookup";
 
 /** The order the guide teaches in. One note at a time, at most one sentence each. */
 const NOTE_ORDER: NoteId[] = [
   "how", "slow_change", "hand", "card_place", "slow_card", "coins_left", "why", "trust", "handoff",
   "ticket", "play", "region", "post", "commit", "strands", "pull",
-  "promise", "visit", "marker", "crisis", "upkeep", "borrow", "lost",
+  "promise", "visit", "marker", "crisis", "upkeep", "borrow", "lost", "lookup",
 ];
 
 export function createUi() {
@@ -57,6 +57,13 @@ export function createUi() {
     setSkipped(true);
     setSeenTick((n) => n + 1);
   }
+  /** "Show me how to play": forget every note seen, so the guide runs again from the start. */
+  function resetGuide(): void {
+    seen.clear();
+    saveOnboard(seen);
+    setSkipped(false);
+    setSeenTick((n) => n + 1);
+  }
   /** Is this note the one to show now? `when` is the note's own trigger condition. */
   function noteFor(id: NoteId, when: boolean): boolean {
     seenTick();
@@ -67,7 +74,7 @@ export function createUi() {
   return {
     map, setMap, mapView, setMapView, regionPick, setRegionPick, inPlace, setInPlace, visitPick, setVisitPick, laPanel, setLaPanel,
     ticked, setTicked, announce, setAnnounce, shortfall, setShortfall, twoPick, setTwoPick,
-    guide: { hasSeen, done, skip: skipGuide, noteFor, skipped },
+    guide: { hasSeen, done, skip: skipGuide, reset: resetGuide, noteFor, skipped },
   };
 }
 

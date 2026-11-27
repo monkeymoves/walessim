@@ -73,6 +73,8 @@ function BoardBody(): JSX.Element {
   const [confirmNew, setConfirmNew] = createSignal(false);
   // a status line never outlives its step (screen readers would hear it for the rest of the game)
   createEffect(on(step, () => ui.setAnnounce(""), { defer: true }));
+  // nor does a "Why?" panel and its red line (cold playtest: the line stayed after moving on)
+  createEffect(on(step, () => { if (game.trace()) { game.setTrace(null); ui.map()?.setThread(null); } }, { defer: true }));
 
   // Escape closes the outermost floating piece
   const onKey = (e: KeyboardEvent) => {

@@ -14,6 +14,7 @@ import { cardRegions } from "./names";
 import { Note } from "./Note";
 import { iPlace, midEn, tw } from "./cymraeg";
 import { RealWalesLine } from "./RealWales";
+import { previewLines } from "./previewLines";
 
 /** "Starts to work from 2030. Works in full from 2034.", when a card arrives in stages (years, never counts). */
 export function stagedNote(card: Card, year: number): string | null {
@@ -48,6 +49,9 @@ function usePlay() {
     if (needsWhere(card) && !region && !regions) { ui.setRegionPick(id); return; }
     game.play(id, region, regions);
     ui.setRegionPick(null);
+    // the opened card closes once it is played (cold playtest): the map is the player's again,
+    // and pressing the ticket opens it to move it or take it back
+    if (game.isPlayed(id)) game.setSelected(null);
     ui.guide.done("play");
     ui.guide.done("region");
     if (id === GUIDE_CARD) ui.guide.done("card_place");
@@ -88,11 +92,15 @@ export function Hand(props: { interactive: boolean }): JSX.Element {
   /** Room for the selected ticket in full beside the other stubs. */
   const [oneFull, setOneFull] = createSignal(false);
   let list!: HTMLDivElement;
+  /** The tallest full ticket seen so far (a played ticket with many lines is taller than the token). */
+  let fullSeen = 0;
   /** Tickets with any part below the fold of the hand (the scroll cue counts only real ones). */
   const measure = () => {
     if (!list) return;
-    const full = parseFloat(getComputedStyle(list).getPropertyValue("--ticket-h")) || 138;
+    const full0 = parseFloat(getComputedStyle(list).getPropertyValue("--ticket-h")) || 138;
     const stub = parseFloat(getComputedStyle(list).getPropertyValue("--ticket-compact-h")) || 50;
+    if (roomy()) for (const el of list.querySelectorAll<HTMLElement>(".yf-ticket-slot")) fullSeen = Math.max(fullSeen, el.offsetHeight);
+    const full = Math.max(full0, fullSeen);
     setRoomy(hand().length * (full + 8) <= list.clientHeight);
     setOneFull((hand().length - 1) * (stub + 6) + full + 8 <= list.clientHeight);
     // when everything fits, nothing should sit scrolled out of view above the top
@@ -108,12 +116,13 @@ export function Hand(props: { interactive: boolean }): JSX.Element {
     if (list) ro?.observe(list);
     onCleanup(() => ro?.disconnect());
   });
-  // keep the opened ticket in view
+  // keep the opened ticket in view; a hand that is only shown (after the plan) reads from the top
   createEffect(() => {
-    const id = game.selected();
+    const id = props.interactive ? game.selected() : null;
     hand();
     requestAnimationFrame(() => {
       if (id) list?.querySelector<HTMLElement>(`[data-card="${id}"]`)?.scrollIntoView({ block: "nearest" });
+      else if (!props.interactive && list) list.scrollTop = 0;
       measure();
     });
   });
@@ -150,7 +159,10 @@ export function Hand(props: { interactive: boolean }): JSX.Element {
     <div class="yf-hand-wrap" style={{ "--hand-n": hand().length }}>
       <div class="yf-hand-head">
         <h2 class="yf-hand-title print">{t("game.plan.hand")}</h2>
-        <p class="small data">{tn("game.plan.limit", s().cardLimit)}</p>
+        {/* after the last turn there is no "this turn" to play cards in */}
+        <Show when={!(s().term >= 5 && (s().step === "changed" || s().step === "election" || s().step === "ended"))}>
+          <p class="small data">{tn("game.plan.limit", s().cardLimit)}</p>
+        </Show>
       </div>
       <div
         class="yf-hand"
@@ -437,31 +449,11 @@ function CardOpen(props: { card: Card }): JSX.Element {
     const g = game.ghost();
     return g?.card === id ? g.preview?.perCard.find((x) => x.card === id) ?? null : null;
   });
+  /** Every goal on the ticket gets a line, downsides included (previewLines.ts). */
   const lines = createMemo<string[]>(() => {
     const p = cp();
     if (!p) return [];
-    if (p.needsPartner && !p.real.length) return [t("play.card.partner")];
-    if (p.landsAfterGame) return [t("play.card.after_2050")];
-    const end = s().year + 4;
-    const by = p.nothingThisTerm || p.landsYear > end ? Math.max(p.landsYear, end) : end;
-    const out: string[] = [];
-    if (p.nothingThisTerm) out.push(t("play.card.nothing_by", { year: end }));
-    const more: string[] = [], less: string[] = [];
-    for (const id of p.real) {
-      const f = p.strands[id];
-      const st = p.stock[id];
-      const goal = game.names.strandName(id);
-      const d = f?.delta ?? 0;
-      if (Math.abs(d) >= 0.15) {
-        const n = Math.round(Math.abs(d));
-        if (n === 0) out.push(t(d > 0 ? "play.card.up_small" : "play.card.down_small", { goal, year: by }));
-        else out.push(tn(`play.card.${d > 0 ? "up" : "down"}${f?.sharp === false ? "_unsure" : ""}`, n, { goal, year: by }));
-      } else if (Math.abs(st?.delta ?? 0) >= 0.05) (st!.delta > 0 ? more : less).push(goal);
-    }
-    if (more.length) out.push(t("play.card.left_more", { goals: game.names.list(more) }));
-    if (less.length) out.push(t("play.card.left_less", { goals: game.names.list(less) }));
-    if (!out.length || (out.length === 1 && p.nothingThisTerm)) out.push(t("play.card.nothing_seen"));
-    return out;
+    return previewLines(p, c(), s().year, (id) => game.names.strandName(id), (xs) => game.names.list(xs)).map((l) => (l.n != null ? tn(l.key, l.n, l.vars) : t(l.key, l.vars)));
   });
   /** The catch: the authored line, else what the card's upkeep, partners and side note say. */
   const catches = (): string[] => {
@@ -498,7 +490,7 @@ function CardOpen(props: { card: Card }): JSX.Element {
           <dd class="small">{t("game.plan.visit_card", { place: midEn(game.names.placeName(c().visit!)), i_place: iPlace(game.names.placeName(c().visit!)) })}</dd>
         </Show>
       </dl>
-      <RealWalesLine card={c().id} label={t("play.card.real")} />
+      <RealWalesLine card={c().id} label={t("play.card.real")} atlas />
     </aside>
   );
 }

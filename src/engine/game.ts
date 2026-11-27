@@ -720,6 +720,16 @@ function masteredPlace(state: A.GameState, place: string): boolean {
 }
 
 /**
+ * A place visited last turn that went well rests this turn (cold playtest 5: "the same Bethesda visit
+ * is offered nearly every turn"): it does not ask again, and its cards are delivered at that grade, as
+ * a mastered place's are. Returns that grade, or null.
+ */
+function restingGrade(state: A.GameState, place: string): Grade | null {
+  const last = [...state.ledger.grades].reverse().find((g) => g.place === place);
+  return last && last.year === state.year - 4 && isGoodGrade(last.grade) ? last.grade : null;
+}
+
+/**
  * The conditions on a place board this term, in words (playtest 4): Bethesda's trend penalties and any
  * board note (the Rhondda's wet decade) whose trend is active, so the board shows them before choosing.
  */
@@ -748,7 +758,7 @@ function visitOffer(ctx: Ctx, state: A.GameState): A.VisitOffer | null {
     .filter((p) => p.term === state.term && ctx.cards.has(p.card))
     .filter((p) => {
       const v = ctx.cards.get(p.card)!.visit;
-      return !!v && landsIn(p, v) && !masteredPlace(state, v);
+      return !!v && landsIn(p, v) && !masteredPlace(state, v) && !restingGrade(state, v);
     })
     .map((p) => ctx.cards.get(p.card)!);
   const triggers = played.sort((a, b) => b.cost - a.cost);
@@ -949,7 +959,15 @@ function cardDeliveries(ctx: Ctx, state: A.GameState, rec: PlayRec, grade: { pla
   const earlier = s.plays.filter((p) => p.card === rec.card && p.term < rec.term);
   const repeat = earlier.some((p) => rec.term - p.term <= (ctx.rules.get("R30")?.window ?? 2));
   const regional = !!rec.regions && card.scope !== "two_regions";
-  const visitedPlace = grade && card.visit === grade.place ? grade : card.visit && masteredPlace(state, card.visit) ? { place: card.visit, grade: "well" as Grade, threads: [] as string[] } : null;
+  const resting = card.visit ? restingGrade(state, card.visit) : null;
+  const visitedPlace =
+    grade && card.visit === grade.place
+      ? grade
+      : card.visit && masteredPlace(state, card.visit)
+        ? { place: card.visit, grade: "well" as Grade, threads: [] as string[] }
+        : card.visit && resting
+          ? { place: card.visit, grade: resting, threads: [] as string[] }
+          : null;
   const mult = visitedPlace ? g.grade_multiplier[visitedPlace.grade] : g.grade_multiplier.adequately;
   const flag: LaFlag | undefined = card.visit ? ctx.places.get(card.visit)?.applies_to_flag : undefined;
   const compacts = compactsInForce(state, rec.term);
@@ -1829,6 +1847,28 @@ function resultBand(model: CompiledModel, v: number): A.ResultBand {
   return { band: Math.min(5, i + 1) as A.ResultBand["band"], name: bands[i]!.name };
 }
 
+/** Cards still on their way that count in Left for 2050: landing after the last resolved term, by `post_counts_until`. */
+function pendingForLeft(ctx: Ctx, state: A.GameState): Delivery[] {
+  const g = ctx.model.game;
+  const postUntil = Math.floor((g.post_counts_until - g.years[0]!) / 4);
+  return sim(state).deliveries.filter((d) => d.landTerm <= postUntil);
+}
+
+/**
+ * Each run's seven stock scores with the cards on their way landed: the one sum behind Left for 2050,
+ * used by the end result and by the running score on the top bar, so the two always agree.
+ */
+function stocksWithPost(ctx: Ctx, state: A.GameState): number[][] {
+  const s = sim(state);
+  const post = pendingForLeft(ctx, state);
+  return s.runs.map((r, i) => {
+    if (!post.length) return runStrands(ctx, r).stock;
+    const proj = cloneRun(r);
+    landOnly(ctx, proj, s.params[i]!, i, post, state.seed);
+    return runStrands(ctx, proj).stock;
+  });
+}
+
 /**
  * The end result (balance decision 14): judged as the change since 2026 in net strand pips.
  *   counted     = W_F .. W_6 (F = judged_change.lived_first_term)
@@ -1858,10 +1898,10 @@ function computeResult(ctx: Ctx, state: A.GameState, weights: Record<StrandId, n
   };
 
   // per run: Lived from its own terms; Left from 2050 stocks plus cards in the post by 2058
+  void postUntil;
+  const stocks = stocksWithPost(ctx, state);
   const perRun = s.runs.map((r, i) => {
-    const proj = cloneRun(r);
-    landOnly(ctx, proj, s.params[i]!, i, s.deliveries.filter((d) => d.landTerm > lastTerm && d.landTerm <= postUntil), state.seed);
-    const stock = runStrands(ctx, proj).stock;
+    const stock = stocks[i]!;
     const lived = n * (livedLevelOf(r.flowHist.map(W), W0) - W0);
     const left = n * (W(stock) - debtPenalty - S0);
     return { lived, left, stock };
@@ -1968,7 +2008,15 @@ export function headline(model: CompiledModel, state: A.GameState): A.Headline {
   }
   const by = new Map(state.strands.map((v) => [v.strand, v]));
   const flow = STRAND_IDS.map((id, i) => by.get(id)?.flow ?? s.start.flow[i]!);
-  const stock = STRAND_IDS.map((id, i) => by.get(id)?.stock ?? s.start.stock[i]!);
+  // Left for 2050 counts cards on their way exactly as the end result does (cold playtest 5: the top
+  // bar read 41 in the last turn and the end screen 46, because only the end counted them)
+  const post = pendingForLeft(ctx, state);
+  const stock = post.length
+    ? (() => {
+        const per = stocksWithPost(ctx, state);
+        return STRAND_IDS.map((_, k) => median(per.map((p) => p[k]!)));
+      })()
+    : STRAND_IDS.map((id, i) => by.get(id)?.stock ?? s.start.stock[i]!);
   const debtPenalty = Math.min(g.debt.left_penalty_cap, g.debt.left_penalty * state.debts.length);
   return {
     lifeNow: W(flow) * 10,

@@ -243,7 +243,7 @@ export function TopBar(props: { ticking?: boolean }): JSX.Element {
   return (
     <ShellTopBar
       hideNav
-      year={s().step === "ended" ? 2050 : s().step === "changed" || s().step === "election" ? s().year + 4 : s().year}
+      year={s().step === "ended" ? 2050 : s().step === "changed" || s().step === "election" || (s().step === "passing" && !s().shock) ? s().year + 4 : s().year}
       yearNote={
         <>
           <b>{s().caretaker ? t("game.bar.caretaker") : t(s().step === "changed" || s().step === "election" ? "game.bar.term_done" : "game.bar.term", { n: termNo() })}</b>
@@ -278,7 +278,7 @@ export function TopBar(props: { ticking?: boolean }): JSX.Element {
           <Show when={s().step !== "ended"}>
           <Scoreboard showLeft={markerTime() || markerKnown()} />
           <div class="yf-trust">
-            <TrustSlots band={s().step === "changed" || s().step === "election" ? s().lastOutcome?.trust.band ?? s().trustBand : s().trustBand} cards={limitNext()} now={!(s().step === "changed" || s().step === "election")} out={s().step === "caretaker" || (s().caretaker && s().step !== "changed" && s().step !== "election")} />
+            <TrustSlots band={s().step === "changed" || s().step === "election" ? s().lastOutcome?.trust.band ?? s().trustBand : s().trustBand} cards={limitNext()} now={!(s().step === "changed" || s().step === "election")} final={(s().step === "changed" || s().step === "election") && s().term >= game.model.game.years.length - 1} out={s().step === "caretaker" || (s().caretaker && s().step !== "changed" && s().step !== "election")} />
             <Show when={s().step === "election"}>
               <Note id="trust" when={true} class="yf-note-trust" placement="left">{t("play.guide.trust")}</Note>
             </Show>

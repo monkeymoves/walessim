@@ -814,7 +814,11 @@ export interface EndResult {
 export interface Headline {
   /** Life now: weighted average of the seven flow scores, times ten. At the end, `livedLevel` times ten. */
   lifeNow: number;
-  /** Left for 2050: weighted average of the seven stock scores less the debt penalty, times ten. At the end, `leftLevel` times ten. */
+  /**
+   * Left for 2050: weighted average of the seven stock scores, with cards on their way landed (those
+   * arriving by `post_counts_until`, as the end result counts them), less the debt penalty, times ten.
+   * At the end, `leftLevel` times ten; in the last turn's results it already equals it.
+   */
   left2050: number;
   /** Both in 2026. */
   start: { lifeNow: number; left2050: number };

@@ -611,3 +611,47 @@
 /* the opened card keeps the chosen region in view: south regions put it top right, north and mid bottom right */
 .yf-cardopen[data-where="southeast"], .yf-cardopen[data-where="southwest"] { top: 56px; bottom: auto; }
 .yf-strands .meter-count { font-size: 10.5px; font-stretch: var(--wdth-ticket); font-style: normal; white-space: nowrap; overflow: visible; }
+
+/* ======================================================================
+   Cold playtest fixes (docs/design/playtest-5-cold.md)
+   ====================================================================== */
+
+/* a note placed to the right of its target points back at it */
+.yf-note-right::before { left: -7px; top: 18px; border-left: 0; border-right-color: var(--slate); }
+/* the ticket a guide note points at is ringed, so the note never seems to mean the card beside it */
+.yf-ticket-slot.yf-guided .ticket { outline: 2.5px solid var(--slate); outline-offset: 2px; }
+
+/* the PLAYED stamp sits below the fare in its own row, never over the card's words */
+.yf-ticket .ticket-stamp { position: static; justify-self: end; margin: 2px 4px 8px 0; }
+
+/* in the stub stack a long title takes a second line rather than being cut ("Codi waliau llif...") */
+.yf-hand .ticket.compact .ticket-title {
+  white-space: normal; text-overflow: clip; overflow: hidden;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.1;
+}
+
+/* a crisis slip that moved nothing keeps its slate, rather than paper with pale words */
+.yf-slip-paper.shock.held { background: var(--slate) var(--grain); background-blend-mode: overlay; color: var(--on-slate); box-shadow: var(--shadow-slate); }
+.yf-slip-paper.shock.held .yf-slip-head { color: var(--on-slate); }
+
+/* "Show me how to play" under the first screen of a game the guide is not running in */
+.yf-replay { display: grid; gap: 4px; justify-items: start; padding-top: 10px; border-top: 1px solid var(--rule); }
+
+/* "See the 22 council areas" after a card's real figure */
+.rw-atlas { color: var(--ink); font-weight: var(--wght-grot-strong); white-space: nowrap; }
+/* the arrow follows the side the note was placed on, whatever its own class once said
+   (an old fixed-side rule for the Trust note drew a slate band across its first line) */
+.yf-note.yf-note-below::before, .yf-note.yf-note-above::before, .yf-note.yf-note-left::before, .yf-note.yf-note-right::before {
+  border: 7px solid transparent; width: 0; height: 0;
+}
+.yf-note.yf-note-below::before { top: -7px; bottom: auto; left: 22px; right: auto; border-top: 0; border-bottom-color: var(--slate); }
+.yf-note.yf-note-above::before { bottom: -7px; top: auto; left: 22px; right: auto; border-bottom: 0; border-top-color: var(--slate); }
+.yf-note.yf-note-left::before { right: -7px; left: auto; top: 18px; bottom: auto; border-right: 0; border-left-color: var(--slate); }
+.yf-note.yf-note-right::before { left: -7px; right: auto; top: 18px; bottom: auto; border-left: 0; border-right-color: var(--slate); }
+
+/* the opened card's controls are never squeezed under the coins (cold playtest: region buttons cut
+   off with five cards at 1280): the tray keeps its height and the hand gives way and scrolls, with
+   the opened ticket kept in view and the "more below" cue counting the rest */
+.yf-panel-plan .yf-tray { flex: none; }
+.yf-panel-plan .yf-hand-wrap { min-height: calc(30px + 2 * (var(--ticket-compact-h) + 6px)); }
+.yf-panel-plan .yf-hand { min-height: 0; }

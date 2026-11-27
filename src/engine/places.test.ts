@@ -84,13 +84,15 @@ describe("place visits after playtest 1", () => {
     expect(r.tests.find((t) => t.id === "fairness")!.explanation!.en).toMatch(/WIMD 2019/);
     const b = gradeBethesda(be, ["chapel-homes", "quarry-workshops", "welsh-youth-centre"], { active: ["price-of-a-home"], inPlay: [], everPlayed: [], seed: 3, runs: 50, text: copy });
     expect(b.tests.find((t) => t.id === "aros")!.explanation!.en).toMatch(/Empty chapel/);
-    expect(b.notes.length).toBe(1);
+    // the grade's own reason first (cold playtest 5), then the trend that weighed on the visit
+    expect(b.notes.length).toBe(2);
+    expect(b.notes[0]!.en).toMatch(/of 3 tests passed/);
   });
   it("remembers tips made safe: they count as covered and drop a risk step", () => {
     const risk = tipRisk(rh, true, [tip(13)]);
     expect(risk[tip(13)]).toBe(2);
     const r = gradeRhondda(rh, [tip(2), tip(16)], true, { stitched: [tip(13)], threadsAllowed: 2, text: copy });
     expect(r.tests.find((t) => t.id === "lifelines")!.pass).toBe(true);
-    expect(r.notes[0]!.en).toMatch(/Lewis Merthyr Spoil Tip 1/);
+    expect(r.notes.some((n) => /Lewis Merthyr Spoil Tip 1/.test(n.en))).toBe(true);
   });
 });

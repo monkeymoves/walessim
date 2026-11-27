@@ -10,7 +10,8 @@ import { Show, type JSX } from "solid-js";
 import { t } from "../../i18n";
 import { SourceTag } from "../parts";
 import { useGame } from "./context";
-import { cardIndicator } from "./mapFacts";
+import { cardIndicator, indicatorsOf } from "./mapFacts";
+import type { StrandId } from "../../model/schema";
 import { forScaleText, measureName, realWalesText } from "./figures";
 import { inplay, openAtlas, openBook } from "./inplay";
 
@@ -21,9 +22,11 @@ function cardRule(model: ReturnType<typeof useGame>["game"]["model"], cardId: st
 }
 
 /** "Real Wales: Homes at flood risk: highest in Conwy, 54.2 for every 100 homes. Wales: 21.8." and its source tag. */
-export function RealWalesLine(props: { card: string; class?: string; label?: string }): JSX.Element {
+export function RealWalesLine(props: { card: string; class?: string; label?: string; atlas?: boolean }): JSX.Element {
   const { game } = useGame();
   const fact = () => realWalesText(game.model, props.card);
+  /** The measure behind the figure, so "See the 22 council areas" opens the atlas on it. */
+  const ind = () => (props.atlas ? cardIndicator(game.model, props.card)?.id ?? null : null);
   const rule = () => cardRule(game.model, props.card);
   return (
     <p class={`rw-line${props.class ? " " + props.class : ""}`} data-testid="real-wales">
@@ -40,6 +43,9 @@ export function RealWalesLine(props: { card: string; class?: string; label?: str
         }
       >
         <span class="rw-text">{fact()!.text}</span> <SourceTag source={fact()!.source} year={fact()!.year} class="rw-source" />
+        <Show when={ind()}>
+          {" "}<button type="button" class="yf-linkbtn rw-atlas" data-testid="card-atlas" onClick={() => openAtlas(null, ind(), true)}>{t("facts.scale.all")}</button>
+        </Show>
       </Show>
     </p>
   );
@@ -82,9 +88,32 @@ export function CardQuestion(props: { card: string; class?: string }): JSX.Eleme
 }
 
 /** "For scale: Homes at flood risk in Wales: 21.8 for every 100 homes (2025)." and "See the 22 council areas". */
-export function ForScale(props: { card?: string; indicator?: string; class?: string }): JSX.Element {
+/**
+ * The Wales figure that fits each goal best, for a result slip whose card's own figure is about
+ * something else (cold playtest: "People in work" under Climate). First one with a Wales value wins.
+ */
+const GOAL_FIGURES: Record<StrandId, string[]> = {
+  prosperous: ["employment", "earnings", "gva_head"],
+  resilient: ["flood_exposure", "greenspace_access"],
+  healthier: ["life_exp"],
+  equal: ["poor_housing", "deprivation_10"],
+  cohesive: ["affordability", "gp_travel_public"],
+  culture: ["welsh_speakers"],
+  global: ["emissions_head", "renewables"],
+};
+
+/** The figure to show for scale on a slip about `strand`: the card's own if it is about that goal, else the goal's own, else none. */
+export function scaleIndicator(model: ReturnType<typeof useGame>["game"]["model"], card: string | undefined, strand: StrandId | undefined): string | null {
+  const own = card ? cardIndicator(model, card) : null;
+  if (!strand) return own?.id ?? null;
+  if (own && own.strand === strand) return own.id;
+  const all = indicatorsOf(model);
+  return GOAL_FIGURES[strand]?.find((id) => all.get(id)?.wales != null) ?? null;
+}
+
+export function ForScale(props: { card?: string; indicator?: string; strand?: StrandId; class?: string }): JSX.Element {
   const { game } = useGame();
-  const ind = () => props.indicator ?? (props.card ? cardIndicator(game.model, props.card)?.id : undefined) ?? null;
+  const ind = () => props.indicator ?? scaleIndicator(game.model, props.card, props.strand);
   const line = () => (ind() ? forScaleText(game.model, ind()!) : null);
   return (
     <Show when={line()}>

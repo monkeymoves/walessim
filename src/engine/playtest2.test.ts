@@ -76,7 +76,7 @@ describe("Bethesda remembers earlier threads", () => {
     expect(fresh.tests.find((t) => t.id === "aros")!.explanation!.en).toMatch(/none of your picks/);
     expect(after.tests.find((t) => t.id === "aros")!.explanation!.en).toMatch(/Empty chapel/);
     expect(after.tests.filter((t) => t.pass).length).toBeGreaterThan(fresh.tests.filter((t) => t.pass).length);
-    expect(after.notes[0]!.en).toMatch(/Already in place from an earlier visit/);
+    expect(after.notes.some((n) => /Already in place from an earlier visit/.test(n.en))).toBe(true);
   });
 });
 

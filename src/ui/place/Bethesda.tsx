@@ -131,7 +131,7 @@ export function BethesdaBoard(props: { data: PlaceData; api: BoardApi }): JSX.El
           <thead>
             <tr>
               <th scope="col">{t("place.bethesda.table_option")}</th>
-              <For each={FLAGS}>{(f) => <th scope="col" class="flag">{t(`place.bethesda.flags.${f}`)}</th>}</For>
+              <For each={FLAGS}>{(f) => <th scope="col" class="flag"><span class="pl-flaghead">{t(`place.bethesda.flags.${f}`)}</span></th>}</For>
               <th scope="col" class="num">{t("place.bethesda.table_delay")}</th>
             </tr>
           </thead>

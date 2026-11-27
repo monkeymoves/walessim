@@ -413,3 +413,114 @@ for (const [lang, w, h] of [["en", 1440, 900], ["cy", 1280, 800], ["en", 1280, 8
     expect(out.overflow).toBeLessThanOrEqual(1);
   });
 }
+
+// Playtest 5 (cold players): the guide shows one note at a time, points at the right card, and keeps
+// clear of the controls; the opened card closes once played; one click ends a turn.
+const KEEP_CLEAR = ['[data-testid="end-turn"]', '[data-testid="play-card"]', ".yf-tray .yf-region", '[data-testid="scoreboard"]', '[data-testid="trust"]', ".yf-rail .btn-stamp", '[data-testid="card-open"]'];
+
+/** At most one guide note, and it sits on none of the controls the player needs next. */
+async function oneClearNote(page: Page, label: string): Promise<void> {
+  await page.waitForTimeout(300);
+  const r = await page.evaluate((keep) => {
+    const notes = [...document.querySelectorAll(".yf-note")];
+    const hits = notes.flatMap((n) => {
+      const a = n.getBoundingClientRect();
+      return [...document.querySelectorAll(keep.join(","))].filter((e) => {
+        const b = e.getBoundingClientRect();
+        return b.width > 0 && a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+      }).map((e) => `${n.getAttribute("data-note")} on ${e.getAttribute("data-testid") ?? e.className}`);
+    });
+    return { n: notes.length, hits };
+  }, KEEP_CLEAR);
+  expect(r.n, `${label}: notes on screen`).toBeLessThanOrEqual(1);
+  expect(r.hits, `${label}: a note covers a control`).toEqual([]);
+}
+
+for (const [lang, w, h] of [["en", 1440, 900], ["cy", 1280, 800]] as const) {
+  test(`the guide shows one note at a time and points at the slow card (${lang}, ${w}x${h})`, async ({ page }) => {
+    test.setTimeout(120_000);
+    await page.setViewportSize({ width: w, height: h });
+    const errors = await fresh(page, lang, false);
+    const gotIt = async (id: string) => {
+      const b = page.locator(`.yf-note[data-note="${id}"] .yf-note-btn`);
+      await expect(b).toBeVisible();
+      await oneClearNote(page, id);
+      await b.click();
+    };
+    await page.locator(".yf-hook .btn-stamp").click();
+    await page.getByTestId("show-cards").click();
+    await gotIt("slow_change");
+    await gotIt("hand");
+    await page.locator('.yf-ticket-slot[data-card="build-flood-walls"] .yf-ticket-press').click();
+    await expect(page.locator('.yf-note[data-note="card_place"]')).toBeVisible();
+    await oneClearNote(page, "card_place");
+    await page.locator('.yf-tray [data-region="southeast"]').click();
+    // the opened card closes once played, so the slow-card note cannot seem to mean it
+    await expect(page.getByTestId("card-open")).toHaveCount(0);
+    const slow = page.locator('.yf-note[data-note="slow_card"]');
+    await expect(slow).toBeVisible();
+    await page.waitForTimeout(300);
+    // the ticket level with the note's arrow, to its right, is a card that works later
+    const pointed = await slow.evaluate((n) => {
+      const a = n.getBoundingClientRect();
+      const y = a.top + 25;
+      const slot = [...document.querySelectorAll<HTMLElement>(".yf-hand .yf-ticket-slot")].find((s) => {
+        const r = s.getBoundingClientRect();
+        return r.top <= y && r.bottom >= y && r.left >= a.right - 4;
+      });
+      return slot ? { card: slot.dataset.card, ringed: slot.classList.contains("yf-guided"), text: slot.textContent ?? "" } : null;
+    });
+    expect(pointed?.card).toBe("warm-homes");
+    expect(pointed?.ringed).toBe(true);
+    expect(pointed?.text).toMatch(/2034/);
+    await gotIt("slow_card");
+    await gotIt("coins_left");
+    expect(errors).toEqual([]);
+  });
+}
+
+test("one click ends a turn: the next button says something else and the year moves on", async ({ page }) => {
+  const errors = await fresh(page, "en");
+  await page.locator(".yf-hook .btn-stamp").click();
+  await page.locator('.yf-ticket-slot[data-card="everyone-online"] .yf-ticket-press').click();
+  await page.getByTestId("play-card").click();
+  const endWords = (await page.getByTestId("end-turn").textContent())?.trim();
+  await endTurn(page);
+  // the passing step runs by itself; if it is caught on screen its button is not "End the turn" again
+  let sawPassing = false;
+  for (let g = 0; g < 60; g++) {
+    const s = await step(page);
+    if (s === "passing" && !sawPassing && !(await page.locator(".yf-shock").count())) {
+      sawPassing = true;
+      const go = page.locator(".yf-rail .yf-go");
+      if (await go.count()) expect((await go.textContent())?.trim()).not.toBe(endWords);
+      await expect(page.locator(".topbar-year")).toHaveText("2030");
+    }
+    if (s === "visit") await page.locator(".yf-visit-stay .btn-tab").click();
+    if (s === "changed") break;
+    await page.waitForTimeout(100);
+  }
+  await expect(page.locator(".yf")).toHaveAttribute("data-step", "changed");
+  await expect(page.locator(".topbar-year")).toHaveText("2030");
+  // a Why? panel and its red line go when the player moves on
+  await page.locator(".yf-slip-paper .threadlink").first().click();
+  await expect(page.locator(".yf-trace")).toBeVisible();
+  await page.locator(".yf-rail .yf-panel-foot .btn-stamp").click();
+  await expect(page.locator(".yf-trace")).toHaveCount(0);
+  await expect(page.locator(".yf-thread-overlay")).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test("after Play again, Show me how to play runs the guide again", async ({ page }) => {
+  const errors = await fresh(page, "en");
+  await page.evaluate(() => (window as unknown as { __yfory: { game: { start: (o: object) => void } } }).__yfory.game.start({ firstGame: false }));
+  await expect(page.locator(".yf-hook")).toBeVisible();
+  // the hook's button is not a second "Start: you run Wales from 2026"
+  await expect(page.locator(".yf-hook [data-testid=start]")).not.toContainText(/you run Wales/);
+  await page.getByTestId("replay-guide").click();
+  await expect(page.getByTestId("how-it-works")).toBeVisible();
+  await page.getByTestId("show-cards").click();
+  await expect(page.locator('.yf-note[data-note="slow_change"]')).toBeVisible();
+  await expect(page.locator('.yf-ticket-slot[data-card="build-flood-walls"]')).toBeVisible();
+  expect(errors).toEqual([]);
+});

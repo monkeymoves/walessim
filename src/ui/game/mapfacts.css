@@ -99,3 +99,12 @@
 }
 .mf-over-body { position: relative; min-height: 0; padding-top: 10px; }
 .mf-over-body.book { overflow: auto; padding-bottom: 40px; }
+/* the Look it up button carries its one-time guide note */
+.mf-ctl-host { position: relative; display: inline-flex; }
+/* a panel body with more below fades out at its foot and shows a small mark (cold playtest) */
+.mf-body.more { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 34px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 34px), transparent); }
+.mf-more-cue { position: relative; display: block; height: 0; }
+.mf-body.more + .mf-more-cue::before {
+  content: ""; position: absolute; left: 50%; top: -12px; transform: translateX(-50%);
+  border: 6px solid transparent; border-bottom: 0; border-top: 7px solid var(--ink);
+}

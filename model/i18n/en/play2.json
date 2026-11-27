@@ -1,0 +1,11 @@
+{
+ "_note": "Layout and guide fixes after the fifth (cold) playtest (docs/design/playtest-5-cold.md). Plain words, reading age 11, no sentence over 18 words.",
+
+ "hook.go": "Begin turn 1 of 6",
+ "passing.go": "See what happened",
+ "replay.how": "Show me how to play",
+ "replay.note": "Starts a new game with the guide switched on.",
+ "guide.lookup": "Look it up opens the atlas and the rule book. They show every council area and every rule, with sources.",
+ "ctl.notebook": "Notebook: {n} of 22 areas",
+ "ctl.notebook_title": "Counts the council areas you have looked at in this game"
+}

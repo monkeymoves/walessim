@@ -54,10 +54,18 @@ export function TracePanel(): JSX.Element {
     const meter = document.querySelectorAll<HTMLElement>(".yf-strands .meter")[idx];
     const pin = sheet?.querySelector<HTMLElement>(".yf-stop.first .yf-stop-pin");
     if (!meter || !pin) { setPath(null); return; }
-    const a = meter.getBoundingClientRect(), b = pin.getBoundingClientRect();
+    const a = meter.getBoundingClientRect(), b = pin.getBoundingClientRect(), p = sheet.getBoundingClientRect();
     const x0 = a.left + a.width / 2, y0 = a.bottom - 2, x1 = b.left + b.width / 2, y1 = b.top + b.height / 2;
-    const sag = Math.max(30, Math.abs(x1 - x0) * 0.18);
-    setPath(`M${x0} ${y0} C${x0} ${y0 + sag} ${x1 + (x0 - x1) * 0.25} ${y1 - sag * 0.4} ${x1} ${y1}`);
+    // the thread runs round the sheet, never across its words (cold playtest): down from the goal
+    // to just above the sheet, along its top edge, down its left edge, and in to the first pin
+    const top = p.top - 7, side = p.left - 7, r = 8;
+    // the first pin scrolled out of the sheet: no thread rather than one across the words
+    if (y1 < p.top + r || y1 > p.bottom) { setPath(null); return; }
+    if (x0 < side) { setPath(`M${x0} ${y0} L${x1} ${y1}`); return; }
+    setPath(
+      `M${x0} ${y0} L${x0} ${top - r} Q${x0} ${top} ${x0 - Math.sign(x0 - side) * r} ${top} ` +
+      `L${side + r} ${top} Q${side} ${top} ${side} ${top + r} L${side} ${y1 - r} Q${side} ${y1} ${side + r} ${y1} L${x1} ${y1}`,
+    );
   };
   createEffect(() => { ref(); th(); requestAnimationFrame(draw); });
   onMount(() => { window.addEventListener("resize", draw); sheet.addEventListener("scroll", draw); });

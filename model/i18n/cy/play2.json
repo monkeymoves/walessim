@@ -1,0 +1,12 @@
+{
+ "_note": "Trwsio gosodiad a'r canllaw ar ôl y pumed prawf chwarae. Drafft newydd, angen adolygiad gan siaradwr rhugl.",
+ "_cy_review": true,
+
+ "hook.go": "Dechrau tro 1 o 6",
+ "passing.go": "Gweld beth ddigwyddodd",
+ "replay.how": "Dangoswch i mi sut i chwarae",
+ "replay.note": "Mae hyn yn dechrau gêm newydd gyda'r canllaw ymlaen.",
+ "guide.lookup": "Mae Chwilio yn agor yr atlas a'r llyfr rheolau. Maen nhw'n dangos pob ardal cyngor a phob rheol, gyda ffynonellau.",
+ "ctl.notebook": "Llyfr nodiadau: {n} o 22 ardal",
+ "ctl.notebook_title": "Yn cyfrif yr ardaloedd cyngor rydych chi wedi edrych arnyn nhw yn y gêm hon"
+}

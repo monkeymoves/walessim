@@ -26,6 +26,16 @@ const gradeOf = (passed: number, total: number, roomy: boolean): Grade =>
 type Copy = Record<string, Text> | undefined;
 const say = (copy: Copy, key: string, params: Record<string, SlotValue>, places: string[] = []): Text | undefined => (copy?.[key] ? fill(copy[key]!, params, places) : undefined);
 
+/**
+ * The first note on every graded visit: how many tests passed and why that makes the grade (cold
+ * playtest 5: "WELL" stood above a test that said "Not yet" with nothing to say two of three is enough).
+ */
+function gradeSummary(copy: Copy, grade: Grade, tests: { pass: boolean }[]): Text | undefined {
+  const passed = tests.filter((t) => t.pass).length;
+  const key = grade === "well" && passed === tests.length ? "well_all" : grade;
+  return say(copy, `engine.visit.summary.${key}`, { passed, total: tests.length });
+}
+
 /** A tip's name in both languages ("Tip 4" when the source gives none). */
 export function tipName(copy: Copy, t: TipFacts): Text {
   if (t.name) return { en: t.name, cy: t.name };
@@ -102,18 +112,15 @@ export function gradeRhondda(board: PlaceBoard, threads: string[], wetDecade: bo
     },
   ];
   const notes: Text[] = [];
+  const grade = gradeOf(tests.filter((t) => t.pass).length, 3, roomy);
+  const summary = gradeSummary(copy, grade, tests);
+  if (summary) notes.push(summary);
   const counted = tips.filter((t) => stitched.includes(t.id));
   if (counted.length) {
     const n = say(copy, "engine.visit.stitched", { tips: joinNames(counted.map((t) => tipName(copy, t))) });
     if (n) notes.push(n);
   }
-  const grade = gradeOf(tests.filter((t) => t.pass).length, 3, roomy);
-  const room =
-    grade === "very_well"
-      ? say(copy, "engine.visit.very_well", {})
-      : tests.every((t) => t.pass)
-        ? say(copy, "engine.visit.room.rhondda", { needed: Math.round(neededRoomy * 10), tips: vw.fairness_tips ?? 1 })
-        : undefined;
+  const room = grade !== "very_well" && tests.every((t) => t.pass) ? say(copy, "engine.visit.room.rhondda", { needed: Math.round(neededRoomy * 10), tips: vw.fairness_tips ?? 1 }) : undefined;
   if (room) notes.push(room);
   return { grade, tests, notes };
 }
@@ -143,7 +150,7 @@ export function gradeBethesda(board: PlaceBoard, newThreads: string[], c: Bethes
   const penalty = (m: string) => (board.trend_penalties ?? []).filter((p) => p.measure === m && c.active.includes(p.curveball)).reduce((a, p) => a + p.amount, 0);
   let aros = 0, iaith = 0, pwysau = 0;
   /** The central run's river balance: the explanation names the river only when it really fell short. */
-  let river0 = 0;
+  let river0 = 0, pressure0 = 0;
   const runs = Math.max(1, c.runs);
   for (let r = 0; r < runs; r++) {
     const sum = { homes: -penalty("homes"), work: -penalty("work"), iaith: -penalty("iaith"), pressure: penalty("pressure"), river: -penalty("river") };
@@ -164,7 +171,10 @@ export function gradeBethesda(board: PlaceBoard, newThreads: string[], c: Bethes
     if (sum.homes >= th.homes && sum.work >= th.work) aros++;
     if (sum.iaith >= th.iaith) iaith++;
     if (sum.pressure <= cap && sum.river >= 0) pwysau++;
-    if (r === 0) river0 = sum.river;
+    if (r === 0) {
+      river0 = sum.river;
+      pressure0 = sum.pressure;
+    }
   }
   const hold = board.hold_share ?? 0.6;
   const copy = c.text;
@@ -172,36 +182,41 @@ export function gradeBethesda(board: PlaceBoard, newThreads: string[], c: Bethes
     const names = opts.filter((o) => sign * o[measure] > 0 && !(o.requires_card && !c.inPlay.includes(o.requires_card))).map((o) => o.name);
     return names.length ? joinNames(names) : say(copy, "engine.none", {}) ?? { en: "none of your threads", cy: "dim un o'ch edafedd" };
   };
-  // plain-wales cold playtest: an option already in place that gives the river room counts, so the
-  // river is named as a need only when the river balance still falls short (never "the river needed
-  // room" straight after "Room for the river: already in place, counted")
-  const riverNeed = penalty("river") > 0 && river0 < 0 ? say(copy, "engine.visit.room_for_river", {}) ?? { en: "a thread for the river", cy: "edau i'r afon" } : say(copy, "engine.visit.nothing", {}) ?? { en: "nothing", cy: "dim byd" };
+  // why the valley could not cope, named from the central run (cold playtest 5: "The river needed:
+  // nothing" after a river pick). The river is named only when its balance really fell short, and an
+  // option already in place that gives the river room counts (never "the river needed room" straight
+  // after "Room for the river: already in place, counted").
+  const riverShort = river0 < 0;
+  const pressureShort = pressure0 > cap || !riverShort;
+  const pwysauFail = riverShort && pressureShort ? "fail_both" : riverShort ? "fail_river" : "fail";
   const shares = { aros: aros / runs, iaith: iaith / runs, pwysau: pwysau / runs };
   const tests = (["aros", "iaith", "pwysau"] as const).map((id) => {
     const share = shares[id];
     const pass = share >= hold;
-    const params: Record<string, SlotValue> = { runs: Math.round(share * 10), homes: by("homes"), work: by("work"), iaith: by("iaith"), pressure: by("pressure"), river: riverNeed };
-    return { id, share, pass, explanation: say(copy, `engine.visit.${id}.${pass ? "pass" : "fail"}`, params) };
+    const params: Record<string, SlotValue> = { runs: Math.round(share * 10), homes: by("homes"), work: by("work"), iaith: by("iaith"), pressure: by("pressure") };
+    const key = pass ? "pass" : id === "pwysau" ? pwysauFail : "fail";
+    return { id, share, pass, explanation: say(copy, `engine.visit.${id}.${key}`, params) };
   });
+  const roomShare = board.very_well?.share ?? 1;
+  const grade = gradeOf(tests.filter((t) => t.pass).length, 3, tests.every((t) => t.share >= roomShare - 1e-9));
   const notes: Text[] = [];
+  const summary = gradeSummary(copy, grade, tests);
+  if (summary) notes.push(summary);
   const earlier = (board.options ?? []).filter((o) => (c.stitched ?? []).includes(o.id));
   if (earlier.length) {
     const n = say(copy, "engine.visit.stitched_beth", { tips: joinNames(earlier.map((o) => o.name)) });
     if (n) notes.push(n);
   }
+  // a trend's note says what it demands; when the test it weighs on passed anyway, say so (cold
+  // playtest 5: "one homes pick is not enough" beside a very well visit with two homes picks)
+  const testOf: Record<string, "aros" | "iaith" | "pwysau"> = { homes: "aros", work: "aros", iaith: "iaith", pressure: "pwysau", river: "pwysau" };
   for (const p of board.trend_penalties ?? []) {
     if (!c.active.includes(p.curveball)) continue;
-    const n = say(copy, "engine.visit.trend", { note: p.note });
+    const met = tests.find((t) => t.id === testOf[p.measure])?.pass ?? false;
+    const n = say(copy, met ? "engine.visit.trend_met" : "engine.visit.trend", { note: p.note });
     if (n) notes.push(n);
   }
-  const roomShare = board.very_well?.share ?? 1;
-  const grade = gradeOf(tests.filter((t) => t.pass).length, 3, tests.every((t) => t.share >= roomShare - 1e-9));
-  const room =
-    grade === "very_well"
-      ? say(copy, "engine.visit.very_well", {})
-      : tests.every((t) => t.pass)
-        ? say(copy, "engine.visit.room.bethesda", { share: Math.round(roomShare * 10) })
-        : undefined;
+  const room = grade !== "very_well" && tests.every((t) => t.pass) ? say(copy, "engine.visit.room.bethesda", { share: Math.round(roomShare * 10) }) : undefined;
   if (room) notes.push(room);
   return { grade, tests, notes };
 }

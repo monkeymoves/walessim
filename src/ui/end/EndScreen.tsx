@@ -5,7 +5,7 @@ import { createMemo, createSignal, For, onCleanup, onMount, Show, type JSX } fro
 import { lang, pick, t, tn } from "../../i18n";
 import { tw } from "../game/cymraeg";
 import { TERM_YEARS, type EndResult, type Mattered, type StrandId } from "../../engine/api";
-import { headline, recomputeResult, unusedCoins, whatMattered } from "../game/engine";
+import { recomputeResult, unusedCoins, whatMattered } from "../game/engine";
 import { STRAND_IDS, type Text } from "../../model/schema";
 import { StampButton, TabButton, ThreadButton } from "../parts/Buttons";
 import { Icon } from "../parts/Icon";
@@ -13,6 +13,10 @@ import { Snip } from "../parts/Notice";
 import { strandVars } from "../parts/strands";
 import { useGame } from "../game/context";
 import { shareLink } from "../game/save";
+import { autopilotScore, direction, hardestTurn, resultRange, sideScore, verdictScore, whyKind } from "./verdict";
+
+/** The year of a point in `wellbeingByTerm` (0 = 2026, 6 = 2050). */
+const yearOf = (i: number): number => TERM_YEARS[0]! + 4 * i;
 import { NotebookEndLine } from "../game/RealWales";
 
 /** A finite number or null: the end screen never draws a value the engine could not give. */
@@ -154,30 +158,19 @@ function Verdict(props: { result: EndResult }): JSX.Element {
   const { game } = useGame();
   const s = () => game.state()!;
   const r = () => props.result;
-  const h = createMemo(() => {
-    try { return headline(game.model, s()); } catch { return null; }
-  });
-  /** The weaker side's 2026 and 2050 scores out of 100 (the engine's own levels times ten). */
-  const scores = () => {
-    const x = h();
-    if (!x) return null;
-    const lived = r().result.which === "lived";
-    // with custom weights the headline is stale: read the levels off the recomputed result
-    const start = (lived ? r().start.lived : r().start.left) * 10;
-    const end = (lived ? r().livedLevel : r().leftLevel) * 10;
-    return { start: Math.round(fin(start) ?? 0), end: Math.round(fin(end) ?? 0) };
-  };
+  /** The weaker side's 2026 and end scores out of 100, rounded once (verdict.ts), so every line agrees. */
+  const scores = () => verdictScore(r());
   const all = createMemo(() => {
     try { return whatMattered(game.model, s(), 8); } catch { return [] as Mattered[]; }
   });
   const coins = createMemo(() => {
     try { return unusedCoins(game.model, s()); } catch { return { coins: 0, turns: 0, firstTerm: 0, perTurn: [] }; }
   });
-  /** Plain-wales 7.2: one sentence on why, from the weaker side and the largest cause. */
+  /** Plain-wales 7.2: one sentence on why. Each claim matches the direction its score line shows. */
   const why = (): string => {
     const c = coins();
-    if (c.turns >= 3) return t("play.end.why_coins", { n: c.coins, t: c.turns });
-    const lived = fin(r().lived.value) ?? 0, left = fin(r().left.value) ?? 0;
+    const kind = whyKind(r(), c.turns);
+    if (kind === "coins") return t("play.end.why_coins", { n: c.coins, t: c.turns });
     const worst = all().filter((m) => m.size < 0 && m.kind !== "coins_unused")[0];
     const best = all().filter((m) => m.size > 0)[0];
     const goalFell = () => {
@@ -191,24 +184,25 @@ function Verdict(props: { result: EndResult }): JSX.Element {
       return st ? tw("play.end.cause_goal_up", { goal: game.names.strandName(st.strand) }, []) : "";
     };
     const downCause = () => (worst ? causeWords(game, worst) : goalFell());
-    if (lived < -0.5 && left < -0.5) return t("play.end.why_both", { cause: downCause() });
-    if (r().result.which === "left" && left < lived) {
-      if (left < -0.5) return t("play.end.why_left", { cause: downCause() });
-    }
-    if (r().result.which === "lived" && lived < left) {
-      const y = TERM_YEARS[r().worstTerm];
-      if (r().worstFell !== false && y != null) return t("play.end.why_lived", { year: y });
+    const upCause = () => (best ? causeWords(game, best) : goalRose());
+    if (kind === "both") return t("play.end.why_both", { cause: downCause() });
+    if (kind === "left") return t("play.end.why_left", { cause: downCause() });
+    if (kind === "lived") {
+      // the hardest turn: the one that ended in the lowest year (the timeline marks the same turn)
+      const from = yearOf(hardestTurn(r().worstTerm));
+      if (r().worstFell !== false && r().worstTerm > 0) return t("play.end.why_lived", { from, to: from + 4 });
       return t("play.end.why_lived_plain");
     }
-    return t("play.end.why_up", { cause: best ? causeWords(game, best) : goalRose() });
+    if (kind === "up") return t("play.end.why_up", { cause: upCause() });
+    const L = direction(r(), "lived"), F = direction(r(), "left");
+    const cause = L === "down" || F === "down" ? downCause() : upCause();
+    return t("play.end.why_mixed", { life: t(`play.end.part_life_${L}`), left: t(`play.end.part_left_${F}`), cause });
   };
   return (
     <section class="end-verdict-box sheet" aria-labelledby="end-result-title" data-testid="end-result">
       <p class="label">{t("play.end.result_title")}</p>
       <h2 id="end-result-title" class="t-1 end-result-line">{t("play.end.result", { band: lowerFirst(pick(r().result.band.name)) })}</h2>
-      <Show when={scores()}>
-        <p class="story end-score" data-testid="end-score">{t("play.end.score", { start: scores()!.start, end: scores()!.end })}</p>
-      </Show>
+      <p class="story end-score" data-testid="end-score">{t(scores().side === "lived" ? "play.end.score_lived" : "play.end.score", { start: scores().start, end: scores().end })}</p>
       <p class="story-small end-why" data-testid="end-why">{why()}</p>
     </section>
   );
@@ -241,17 +235,12 @@ function Mattered(): JSX.Element {
       case "coins_unused": return t("play.end.m_coins", { n: m.coins ?? 0, t: m.turns ?? 0 });
     }
   };
-  /** Autopilot: the same Wales with a stand-in, as a score out of 100 on the weaker side. */
+  /** Autopilot: the same Wales with a stand-in, on the same scale and start as the score line above. */
   const autopilot = () => {
-    const g = r().caretakerGhost;
-    const vs = fin(r().vsCaretaker);
-    if (!g || vs == null) return null;
-    const n = STRAND_IDS.length;
-    const level = g.lived <= g.left ? r().start.lived + g.lived / n : r().start.left + g.left / n;
-    const d = Math.round(Math.abs((vs / n) * 10));
-    const at = Math.round(level * 10);
-    if (d === 0) return t("play.end.autopilot_level", { n: at });
-    return t(vs > 0 ? "play.end.autopilot_ahead" : "play.end.autopilot_behind", { n: at, d });
+    const a = autopilotScore(r());
+    if (!a) return null;
+    if (a.d === 0) return t("play.end.autopilot_level", { n: a.at });
+    return t(a.d > 0 ? "play.end.autopilot_ahead" : "play.end.autopilot_behind", { n: a.at, d: Math.abs(a.d) });
   };
   const pull = (m: Mattered) => {
     const term = Math.max(0, Math.min(s().history.length - 1, m.kind === "card" ? (s().history.findIndex((h) => h.contributions.some((c) => c.cause.kind === "card" && c.cause.id === m.id && c.cause.term === m.term && h.term >= m.term)) ?? m.term) : m.term));
@@ -280,7 +269,10 @@ function Mattered(): JSX.Element {
   );
 }
 
-/** One suggestion for next time, from what happened (plain-wales 7.6). */
+/**
+ * One suggestion for next time, from what happened (plain-wales 7.6). It never tells a player to do
+ * what they already did (cold playtest 5: "play more cards that last" to a player who had).
+ */
 function nextTime(game: Game, r: EndResult): string {
   const s = game.state()!;
   let coins = { turns: 0 };
@@ -288,11 +280,18 @@ function nextTime(game: Game, r: EndResult): string {
   if (coins.turns >= 2) return t("play.end.next_spend");
   if (s.history.some((h) => h.shock && h.shock.response === 0 && !h.shock.prepared)) return t("play.end.next_save");
   if (s.history.some((h) => h.pledge && !h.pledge.kept)) return t("play.end.next_promise");
-  if (r.result.which === "left" && (fin(r.left.value) ?? 0) < 0.5) return t("play.end.next_left");
+  const stock = new Set(game.model.components.filter((c) => c.role === "stock").map((c) => c.id));
+  const plays = s.history.flatMap((h) => h.plays.cards.map((c) => c.card));
+  const lasting = plays.filter((id) => (game.names.card(id)?.effects ?? []).some((e) => !e.side && stock.has(e.target))).length;
+  if (r.result.which === "left" && direction(r, "left") !== "up") {
+    if (lasting * 2 < plays.length) return t("play.end.next_left");
+    if (r.ledger.debts.length) return t("play.end.next_loans");
+    return t("play.end.next_left_early");
+  }
   if (r.result.which === "lived") return t("play.end.next_life");
   if (!r.ledger.grades.length) return t("play.end.next_visit");
   const firstSlow = s.history[0]?.plays.cards.some((c) => (game.names.card(c.card)?.delay ?? 0) > 0);
-  return firstSlow ? t("play.end.next_left") : t("play.end.next_slow");
+  return firstSlow ? t("play.end.next_beat", { n: verdictScore(r).end }) : t("play.end.next_slow");
 }
 
 // ------------------------------------------------------------------ per goal
@@ -347,33 +346,29 @@ export function changeWords(v0: number | null): string {
   return tn(v > 0 ? "game.end.change_up" : "game.end.change_down", n);
 }
 
-/** The fuzzy edge as words, from p10 and p90: "Between about 1 and 3 up." Nothing if they round the same. */
-function rangeWords(lo: number | null, hi: number | null): string {
-  if (lo == null || hi == null) return "";
-  const k = 10 / STRAND_IDS.length;
-  const a = Math.round(lo * k), b = Math.round(hi * k);
-  if (a === b) return "";
-  if (a >= 0 && b > 0) return t("game.end.range_up", { a: Math.max(a, 0), b });
-  if (a < 0 && b <= 0) return t("game.end.range_down", { a: -b, b: -a });
-  return t("game.end.range_mixed", { a: -a, b });
+/** The spread across runs as words: "With the same choices, luck could have put you anywhere from about 0 to 5 points down." */
+function rangeWords(r: EndResult): string {
+  const x = resultRange(r);
+  if (!x) return "";
+  if (x.lo >= 0) return t("game.end.range_up", { a: x.lo, b: x.hi });
+  if (x.hi <= 0) return t("game.end.range_down", { a: -x.hi, b: -x.lo });
+  return t("game.end.range_mixed", { a: -x.lo, b: x.hi });
 }
 
 function Bands(props: { result: EndResult; custom: boolean }): JSX.Element {
   const r = () => props.result;
-  const vs = () => fin(r().vsCaretaker);
+  /** Ahead or behind autopilot by the same number the "What you did that mattered" line gives. */
   const vsWords = () => {
-    const v0 = vs();
-    if (v0 == null) return "";
-    const v = (v0 * 10) / STRAND_IDS.length;
-    const n = Math.round(Math.abs(v));
-    if (n === 0) return t("game.end.vs_level");
-    return tn(v > 0 ? "game.end.vs_ahead" : "game.end.vs_behind", n);
+    const a = autopilotScore(r());
+    if (!a) return "";
+    if (a.d === 0) return t("game.end.vs_level");
+    return tn(a.d > 0 ? "game.end.vs_ahead" : "game.end.vs_behind", Math.abs(a.d));
   };
   return (
     <div class="end-bands sheet">
       <h3 class="t-3">{t("play.end.two_scores")}</h3>
       <p class="story-small">{t("play.score.rule")}</p>
-      <p class="small">{rangeWords(fin(r().result.p10), fin(r().result.p90))}</p>
+      <p class="small">{rangeWords(r())}</p>
       <Show when={props.custom}><p class="label end-badge">{t("game.end.weights_badge")}</p></Show>
       <div class="end-pair">
         <Band which="lived" score={r().lived} lower={r().result.which === "lived"} result={r()} />
@@ -407,7 +402,7 @@ function Band(props: { which: "lived" | "left"; score: EndResult["lived"]; lower
       <figcaption>
         <span class="t-3">{props.which === "lived" ? t("play.end.life_years") : t("play.score.left")}<Show when={props.lower}> <span class="small">({t("play.end.weaker")})</span></Show></span>
         <span class="small">{props.which === "lived" ? t("play.end.life_years_note") : t("play.end.left_note")}</span>
-        <span class="label">{t("play.score.value", { n: Math.round((level() ?? 0) * 10) })}, {t("play.score.was", { n: Math.round(startV() * 10) })}</span>
+        <span class="label">{t("play.score.value", { n: sideScore(r(), props.which).end })}, {t("play.score.was", { n: sideScore(r(), props.which).start })}</span>
       </figcaption>
       <div class="end-weave" role="img" aria-label={`${t(`game.end.${props.which}`)}: ${changeWords(fin(props.score.value))}, ${pick(props.score.band.name)}`}>
         <div class="end-woven" style={{ width: pct(level()) }}>
@@ -452,7 +447,7 @@ function Terms(props: { result: EndResult }): JSX.Element {
                   <span class="end-col-area">
                     <i style={{ top: `${top()}%`, height: `${Math.max(h(), 1.5)}%` }} classList={{ nodata: fin(w) == null }} aria-hidden="true" />
                   </span>
-                  <span class="data small">{TERM_YEARS[i()]}</span>
+                  <span class="data small">{yearOf(i())}</span>
                   <Show when={i() === 0}><span class="small end-inherited">{t("game.end.inherited")}</span></Show>
                 </li>
               );
@@ -461,9 +456,9 @@ function Terms(props: { result: EndResult }): JSX.Element {
         </ol>
       </div>
       <p class="small">{t("game.end.terms_note")}</p>
-      <Show when={TERM_YEARS[r().worstTerm] != null}>
+      <Show when={r().worstTerm > 0}>
         <p class="small">
-          {r().worstFell === false ? t("game.end.weakest_term", { year: TERM_YEARS[r().worstTerm]! }) : t("game.end.worst", { year: TERM_YEARS[r().worstTerm]! })}.
+          {r().worstFell === false ? t("game.end.weakest_term", { year: yearOf(r().worstTerm) }) : t("game.end.worst", { year: yearOf(r().worstTerm) })}.
           <Show when={r().dippedBelowStart}> {t("game.end.dipped")}</Show>
         </p>
       </Show>

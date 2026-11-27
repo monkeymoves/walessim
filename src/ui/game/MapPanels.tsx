@@ -24,6 +24,7 @@ import {
 import { figValue, measureName, realWalesText, unitWords, valueLine } from "./figures";
 import { RealWalesLine, CompareButton } from "./RealWales";
 import { inplay, noteArea, openAtlas, openBook, useNotebookFor } from "./inplay";
+import { Note } from "./Note";
 import "./mapfacts.css";
 
 type Game = ReturnType<typeof useGame>["game"];
@@ -45,6 +46,8 @@ export function pickRegion(game: Game, ui: Ui, cardId: string, r: RegionId): boo
   else if (!game.blockOf(cardId)) game.play(cardId, r);
   else { ui.setAnnounce(t(game.blockOf(cardId)!)); return false; }
   ui.setRegionPick(null);
+  // the opened card closes once it is played, as it does from the hand
+  if (game.selected() === cardId) game.setSelected(null);
   ui.guide.done("region");
   ui.guide.done("play");
   ui.setAnnounce(game.names.regionName(r));
@@ -98,6 +101,21 @@ function handOrder(game: Game, ui: Ui): string[] {
   const open = focusCard(game, ui);
   const hand = s?.step === "plan" ? s.hand : [];
   return [...(open ? [open] : []), ...hand.filter((id) => id !== open)];
+}
+
+/**
+ * A panel body that scrolls says so (cold playtest: a figure looked cut off at the foot): while there
+ * is more below, its last lines fade and a small mark sits under them.
+ */
+function watchMore(el: HTMLElement): void {
+  const check = () => el.classList.toggle("more", el.scrollTop + el.clientHeight < el.scrollHeight - 4);
+  el.addEventListener("scroll", check);
+  const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(check) : null;
+  ro?.observe(el);
+  const mo = typeof MutationObserver !== "undefined" ? new MutationObserver(check) : null;
+  mo?.observe(el, { childList: true, subtree: true, characterData: true });
+  requestAnimationFrame(check);
+  onCleanup(() => { ro?.disconnect(); mo?.disconnect(); el.removeEventListener("scroll", check); });
 }
 
 // ------------------------------------------------------------------ one figure
@@ -154,6 +172,9 @@ export function AreaPanel(props: { code: string }): JSX.Element {
         if (ind && !seen.has(ind.id) && ind.laValues[props.code] != null) { seen.add(ind.id); out.push({ ind, card: id }); }
       }
     }
+    // three figures at most, so the last is never cut off at the foot of the panel (cold playtest);
+    // "Open in the atlas" below has the rest
+    out.splice(3);
     if (!out.length) for (const ind of widestGaps(game.model, props.code, 3)) out.push({ ind, card: null });
     return out;
   });
@@ -192,7 +213,7 @@ export function AreaPanel(props: { code: string }): JSX.Element {
         </div>
         <CloseButton label={t("facts.area.close_label")} onClick={close} />
       </div>
-      <div class="mf-body">
+      <div class="mf-body" ref={watchMore}>
         <section class="mf-block">
           <h3 class="label">{t("facts.area.cards_head")}</h3>
           <ul class="mf-list">
@@ -227,6 +248,7 @@ export function AreaPanel(props: { code: string }): JSX.Element {
           </Show>
         </section>
       </div>
+      <i class="mf-more-cue" aria-hidden="true" />
       <div class="mf-foot">
         <button type="button" class="yf-linkbtn strong" onClick={() => openAtlas(props.code, lens())}>{t("facts.area.open_atlas", { area: game.names.laName(props.code) })}</button>
         <button type="button" class="yf-linkbtn" onClick={close}>{t("facts.area.close")}</button>
@@ -272,7 +294,7 @@ export function RegionCompare(props: { card: string }): JSX.Element {
         <h2 class="t-2" id="mf-cmp-title">{t("facts.cmp.title", { card: game.names.cardName(props.card) })}</h2>
         <CloseButton label={t("facts.area.close")} onClick={() => ui.setRegionPick(null)} />
       </div>
-      <div class="mf-body">
+      <div class="mf-body" ref={watchMore}>
         <Show when={ind()} fallback={<p class="small">{t("facts.cmp.no_fact")}</p>}>
           <p class="mf-lead">
             {t("facts.cmp.lead", { measure: measureName(ind()!), wales: `${figValue(ind()!, ind()!.wales)} ${unitWords(ind()!)}`.trim() })}{" "}
@@ -320,6 +342,7 @@ export function RegionCompare(props: { card: string }): JSX.Element {
           </For>
         </ul>
       </div>
+      <i class="mf-more-cue" aria-hidden="true" />
     </aside>
   );
 }
@@ -338,7 +361,7 @@ export function WalesPanel(): JSX.Element {
         <h2 class="t-1" id="mf-wales-title">{t("facts.wales.title")}</h2>
         <CloseButton label={t("facts.wales.close_label")} onClick={() => inplay.setWalesOpen(false)} />
       </div>
-      <div class="mf-body">
+      <div class="mf-body" ref={watchMore}>
         <section class="mf-block">
           <h3 class="label">{t("facts.wales.cards_head")}</h3>
           <ul class="mf-list">
@@ -390,6 +413,7 @@ export function WalesPanel(): JSX.Element {
           </Show>
         </section>
       </div>
+      <i class="mf-more-cue" aria-hidden="true" />
       <div class="mf-foot">
         <button type="button" class="yf-linkbtn strong" onClick={() => openAtlas(null, cardIndicator(game.model, focusCard(game, ui) ?? "")?.id ?? null)}>{t("facts.ctl.lookup")}</button>
       </div>
@@ -421,16 +445,24 @@ export function MapControls(): JSX.Element {
   const [open, setOpen] = createSignal(false);
   const nb = () => inplay.notebook();
   const lens = () => cardIndicator(game.model, focusCard(game, ui) ?? "")?.id ?? null;
+  const lookupTime = () => {
+    const s = game.state();
+    return !!s && s.term === 1 && s.step === "plan" && ui.guide.hasSeen("handoff");
+  };
   return (
     <div class="mf-controls" role="group" aria-label={t("facts.ctl.label")}>
       <button type="button" class="mf-ctl" title={t("facts.ctl.wales_title")} aria-pressed={inplay.walesOpen()} onClick={() => { ui.setRegionPick(null); showWales(game, ui, true); }} data-testid="all-wales">
         {t("facts.ctl.wales")}
       </button>
-      <button type="button" class="mf-ctl" title={t("facts.ctl.lookup_title")} onClick={() => openAtlas(ui.laPanel(), lens())} data-testid="look-it-up">
-        {t("facts.ctl.lookup")}
-      </button>
-      <button type="button" class="mf-ctl" title={t("facts.ctl.notebook_title")} aria-expanded={open()} onClick={() => setOpen(!open())} data-testid="notebook">
-        {t("facts.ctl.notebook", { n: nb().las.length })}
+      <span class="mf-ctl-host">
+        <button type="button" class="mf-ctl" title={t("facts.ctl.lookup_title")} onClick={() => { ui.guide.done("lookup"); openAtlas(ui.laPanel(), lens()); }} data-testid="look-it-up">
+          {t("facts.ctl.lookup")}
+        </button>
+        {/* turn 2: nobody found the atlas or the rule book unprompted (cold playtest) */}
+        <Note id="lookup" when={lookupTime()} class="yf-note-lookup" placement="below">{t("play2.guide.lookup")}</Note>
+      </span>
+      <button type="button" class="mf-ctl" title={t("play2.ctl.notebook_title")} aria-expanded={open()} onClick={() => setOpen(!open())} data-testid="notebook">
+        {t("play2.ctl.notebook", { n: nb().las.length })}
       </button>
       <Show when={open()}>
         <div class="mf-notebook sheet" role="dialog" aria-label={t("facts.nb.title")}>

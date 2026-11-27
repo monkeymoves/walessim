@@ -142,7 +142,7 @@ curveballs:
     name: { en: The energy squeeze, cy: Y wasgfa ynni, cy_review: true }
     description: { en: "Conflict abroad keeps fuel prices high and jumpy.", cy: "Mae gwrthdaro dramor yn cadw prisiau tanwydd yn uchel ac yn ansefydlog.", cy_review: true }
     trends: [geopolitical-conflicts]
-    where_note: { en: "All of Wales. It hits homes off the gas grid in Mid and the North hardest.", cy: "Cymru gyfan. Mae'n taro cartrefi heb nwy prif gyflenwad yn y Canolbarth a'r Gogledd galetaf.", cy_review: true }
+    where_note: { en: "All of Wales. It hits homes off the gas grid in Mid and the North hardest.", cy: "Cymru gyfan. Mae'n taro cartrefi heb nwy'r prif gyflenwad yn y Canolbarth a'r Gogledd galetaf.", cy_review: true }
     slow:
       - { target: fuel_poverty, size: S, sign: -1, emphasis: [{ flags: [off_gas], factor: 1.5 }] }
     shock:

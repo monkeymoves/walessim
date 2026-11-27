@@ -1,6 +1,7 @@
 // The coins (plain-wales 3.3): a row of round coins in a well, in three piles that are always
 // shown: on cards, in the emergency fund, not used yet. Nothing goes in the fund until the player
-// puts it there with "Save 1 coin for a crisis". When the budget is not 8, one line says why.
+// puts it there with "Save 1 coin for a crisis". Whenever anything changed it (a carried coin, a
+// loan), one list says how it adds up, even when it comes back to 8 (cold playtest 5).
 import { createSignal, For, Show, type JSX } from "solid-js";
 import { t } from "../../i18n";
 import { useGame } from "./context";
@@ -56,9 +57,9 @@ export function BudgetRow(): JSX.Element {
         <div class="yf-pile fund"><dt>{t("play.budget.fund")}</dt><dd class="data" data-testid="pile-fund">{b().fund}</dd></div>
         <div class="yf-pile unused"><dt>{t("play.budget.unused")}</dt><dd class="data" data-testid="pile-unused">{Math.max(0, b().unused)}</dd></div>
       </dl>
-      <Show when={b().total !== base() && lines().length}>
+      <Show when={lines().length}>
         <div class="yf-budget-why small">
-          <p class="strong">{t("play.budget.why_not", { n: b().total })}</p>
+          <p class="strong">{b().total !== base() ? t("play.budget.why_not", { n: b().total }) : t("play.budget.adds_up", { n: b().total })}</p>
           <ul>
             <For each={lines()}>{([k, n]) => <li><span>{t(k)}</span> <span class="data">{n > 0 ? `+${n}` : n}</span></li>}</For>
           </ul>

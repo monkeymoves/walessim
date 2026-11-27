@@ -80,6 +80,8 @@ export interface TrustSlotsProps {
   now?: boolean;
   /** Out of office this turn: a stand-in plays the cards. */
   out?: boolean;
+  /** The last turn is over: there is no next turn to promise cards for. */
+  final?: boolean;
   class?: string;
 }
 
@@ -90,6 +92,7 @@ export interface TrustSlotsProps {
 export function TrustSlots(props: TrustSlotsProps): JSX.Element {
   const band = () => t(`parts.trust.${props.band}`);
   const line = () => {
+    if (props.final) return t("play.trust.line_final", { band: band() });
     if (props.out) return t("play.trust.line_out");
     if (props.band === "collapsed" || props.cards <= 0) return t("play.trust.line_lost", { band: band() });
     return tn(props.now ? "play.trust.line_now" : "play.trust.line_next", props.cards, { band: band() });

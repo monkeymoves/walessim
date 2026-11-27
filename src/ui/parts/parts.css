@@ -57,6 +57,10 @@
 }
 .langtoggle-tab[aria-pressed="true"], .langtoggle-tab[aria-selected="true"] { background: var(--paper) var(--grain); box-shadow: var(--lit-edge), 1px 1px 0 var(--paper-edge), 2px 2px 0 rgba(40, 46, 42, 0.22); }
 .langtoggle-tab[aria-pressed="false"]:hover, .langtoggle-tab[aria-selected="false"]:hover { background: rgba(245, 243, 234, 0.45); }
+/* the language not in use reads as a quiet choice, the one in use as chosen (cold playtest: the
+   recessed "Cymraeg" looked pressed while the game was in English) */
+.langtoggle-tab[aria-pressed="false"] { color: var(--ink); font-weight: var(--wght-grot-text); }
+.langtoggle-tab[aria-pressed="true"] { color: var(--ink); text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
 
 /* ---------- tooltip ---------- */
 .tip-host { position: relative; display: inline-block; }

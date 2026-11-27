@@ -170,6 +170,10 @@ function GradeSheet(props: { result: VisitOutcome; onDone: () => void; busy: boo
       <h2 id="pl-grade-title" class="t-2">{t("place.common.result", { place: game.names.placeName(props.result.place), grade: "" })}</h2>
       <p class={`stampmark pl-grade-stamp grade-${props.result.grade}`}>{t(`game.grade.${props.result.grade}`)}</p>
       <div class="pl-grade-body">
+      {/* the first note says how the tests add up to the grade, so it is read before them */}
+      <Show when={props.result.notes?.length}>
+        <p class="story-small pl-verdict">{game.names.text(props.result.notes![0]!)}</p>
+      </Show>
       <ul class="pl-tests">
         <For each={props.result.tests}>
           {(x) => (
@@ -189,8 +193,8 @@ function GradeSheet(props: { result: VisitOutcome; onDone: () => void; busy: boo
           )}
         </For>
       </ul>
-      <Show when={props.result.notes?.length}>
-        <ul class="pl-notes small"><For each={props.result.notes!}>{(n) => <li>{game.names.text(n)}</li>}</For></ul>
+      <Show when={(props.result.notes?.length ?? 0) > 1}>
+        <ul class="pl-notes small"><For each={props.result.notes!.slice(1)}>{(n) => <li>{game.names.text(n)}</li>}</For></ul>
       </Show>
       </div>
       <StampButton class="yf-go" disabled={props.busy} onClick={props.onDone}>{t("place.common.continue")}</StampButton>

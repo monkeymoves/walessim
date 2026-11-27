@@ -72,10 +72,11 @@ describe("VERY WELL (item 3)", () => {
     const tight = gradeRhondda(rh, [tip(2), tip(13), tip(16)], true, { text: m.engine_text });
     expect(tight.tests.every((t) => t.pass)).toBe(true);
     expect(tight.grade).toBe("well");
-    expect(tight.notes.some((n) => n.en.startsWith("Every test passed. For room to spare"))).toBe(true);
+    expect(tight.notes[0]!.en).toBe("All 3 tests passed, but only just. So it went well.");
+    expect(tight.notes.some((n) => n.en.startsWith("For room to spare"))).toBe(true);
     const roomy = gradeRhondda(rh, [tip(4), tip(8), tip(14)], true, { stitched: [tip(2), tip(13), tip(16)], text: m.engine_text });
     expect(roomy.grade).toBe("very_well");
-    expect(roomy.notes.some((n) => n.en === "Every test passed, with room to spare.")).toBe(true);
+    expect(roomy.notes[0]!.en).toBe("All 3 tests passed, with room to spare. So it went very well.");
   });
   it("Bethesda: very well only when every test holds in the share of runs the board asks", () => {
     const ids = be.options!.map((o) => o.id);
