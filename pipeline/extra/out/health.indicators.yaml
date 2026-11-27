@@ -1,0 +1,156 @@
+- id: healthy_life_exp
+  name:
+    en: 'Healthy life expectancy at birth'
+    cy: 'Disgwyliad oes iach adeg geni'
+  cy_review: true
+  unit: 'years'
+  format: years
+  higher_is_better: true
+  strand: healthier
+  national_indicator: null
+  source: ons_hle_local
+  notes:
+    en: '2022 to 2024. Years a baby born now can expect to live in good health. Simple mean of the male and female figures, as for life_exp (also used for the Wales value). ONS uses a modelled method for local health because survey samples have shrunk, and the 95 percent confidence ranges are wide in small areas.'
+- id: premature_deaths
+  name:
+    en: 'Deaths before age 75'
+    cy: 'Marwolaethau cyn 75 oed'
+  cy_review: true
+  unit: 'per 100,000 people'
+  format: integer
+  higher_is_better: false
+  strand: healthier
+  national_indicator: null
+  source: statswales_wimd2025_la
+  notes:
+    en: 'WIMD 2025, deaths registered 2015 to 2024. Rate per 100,000 people, indirectly standardised for age and sex so areas with older populations are not penalised.'
+- id: bad_health
+  name:
+    en: 'Residents in bad or very bad health'
+    cy: 'Trigolion mewn iechyd gwael neu wael iawn'
+  cy_review: true
+  unit: 'percent of residents'
+  format: percent
+  higher_is_better: false
+  strand: healthier
+  national_indicator: null
+  source: nomis_census_ts037
+  notes:
+    en: 'Census 2021, self-reported general health. Strongly shaped by how old the population is.'
+- id: gp_mental_health
+  name:
+    en: 'People with a mental health condition on GP records'
+    cy: 'Pobl sydd â chyflwr iechyd meddwl ar gofnodion meddyg teulu'
+  cy_review: true
+  unit: 'percent of people'
+  format: percent
+  higher_is_better: false
+  strand: healthier
+  national_indicator: null
+  source: statswales_wimd2025_la
+  notes:
+    en: 'WIMD 2025 (GP records). Partly reflects how often people see a GP and how GPs record, not only how many people are unwell.'
+- id: low_birth_weight
+  name:
+    en: 'Babies born at low birth weight'
+    cy: 'Babanod a anwyd â phwysau geni isel'
+  cy_review: true
+  unit: 'percent of single live births'
+  format: percent
+  higher_is_better: false
+  strand: healthier
+  national_indicator: null
+  source: statswales_wimd2025_la
+  notes:
+    en: 'WIMD 2025, single live births under 2.5 kg, years pooled. Small numbers in small areas.'
+- id: immunised_age4
+  name:
+    en: 'Children fully immunised by their fourth birthday'
+    cy: 'Plant wedi''u imiwneiddio''n llawn erbyn eu pedwerydd pen-blwydd'
+  cy_review: true
+  unit: 'percent of children'
+  format: percent
+  higher_is_better: true
+  strand: healthier
+  national_indicator: null
+  source: statswales_immunisation
+  notes:
+    en: 'School year 2025-26, all areas (Flying Start and other areas combined). Welsh Government figures built from NHS immunisation records.'
+- id: disabled_limited_lot
+  name:
+    en: 'Residents whose daily activities are limited a lot by a health problem'
+    cy: 'Trigolion y mae problem iechyd yn cyfyngu llawer ar eu gweithgareddau dyddiol'
+  cy_review: true
+  unit: 'percent of residents'
+  format: percent
+  higher_is_better: false
+  strand: healthier
+  national_indicator: null
+  source: nomis_census_ts038
+  notes:
+    en: 'Census 2021, disabled under the Equality Act with day-to-day activities limited a lot. Strongly shaped by age; overlaps bad_health.'
+- id: gp_chronic
+  name:
+    en: 'People with a long-term condition on GP records'
+    cy: 'Pobl sydd â chyflwr hirdymor ar gofnodion meddyg teulu'
+  cy_review: true
+  unit: 'percent of people'
+  format: percent
+  higher_is_better: false
+  strand: healthier
+  national_indicator: null
+  source: statswales_wimd2025_la
+  notes:
+    en: 'WIMD 2025 (GP records). Shaped by age and by how conditions are recorded.'
+- id: unpaid_care_20h
+  name:
+    en: 'Residents giving 20 or more hours of unpaid care a week'
+    cy: 'Trigolion sy''n rhoi 20 awr neu fwy o ofal di-dâl yr wythnos'
+  cy_review: true
+  unit: 'percent of residents aged 5+'
+  format: percent
+  higher_is_better: null
+  strand: healthier
+  national_indicator: null
+  source: nomis_census_ts039
+  notes:
+    en: 'Census 2021, residents aged 5 and over. Context with no direction: caring is valuable but also a sign of need and pressure.'
+- id: cancer_incidence
+  name:
+    en: 'New cancer cases'
+    cy: 'Achosion newydd o ganser'
+  cy_review: true
+  unit: 'per 100,000 people'
+  format: integer
+  higher_is_better: false
+  strand: healthier
+  national_indicator: null
+  source: statswales_wimd2025_la
+  notes:
+    en: 'WIMD 2025, rate per 100,000 people. Partly reflects age and how much screening finds.'
+- id: suicide_rate
+  name:
+    en: 'Suicide rate'
+    cy: 'Cyfradd hunanladdiad'
+  cy_review: true
+  unit: 'per 100,000 people'
+  format: decimal1
+  higher_is_better: false
+  strand: healthier
+  national_indicator: null
+  source: ons_suicides_la
+  notes:
+    en: 'Deaths registered 2023 to 2025, age-standardised rate for all ages and both sexes. ONS marks rates from small counts as less reliable. Sensitive topic: the owner may prefer to leave it out of the game.'
+- id: drug_deaths
+  name:
+    en: 'Deaths from drug poisoning'
+    cy: 'Marwolaethau o wenwyno gan gyffuriau'
+  cy_review: true
+  unit: 'per 100,000 people'
+  format: decimal1
+  higher_is_better: false
+  strand: healthier
+  national_indicator: null
+  source: ons_drug_deaths_la
+  notes:
+    en: 'Deaths registered 2023 to 2025, age-standardised rate, all drug poisoning (the drug misuse subset is hidden for Anglesey so is not used). Sensitive topic: the owner may prefer to leave it out of the game.'

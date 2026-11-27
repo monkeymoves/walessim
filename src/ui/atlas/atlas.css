@@ -11,28 +11,43 @@
 /* ---------- floating pieces ---------- */
 .float-lens { position: absolute; left: 14px; top: 14px; width: 300px; z-index: 14; }
 .float-key { position: absolute; right: 14px; top: 14px; z-index: 11; display: grid; gap: 12px; justify-items: end; transition: right var(--dur-slide) var(--ease-paper); }
-.float-panel { position: absolute; left: 14px; bottom: 14px; width: 372px; z-index: 13; max-height: calc(100% - 196px); display: flex; }
+.float-panel { position: absolute; left: 14px; bottom: 14px; width: 372px; z-index: 13; max-height: calc(100% - var(--lens-h, 158px) - 38px); display: flex; }
 
 /* ---------- lens picker ---------- */
 .lenspicker { position: relative; padding: 12px 14px 12px; }
 .lenspicker-lead { color: var(--ink-2); }
 .lenspicker-name { margin-top: 2px; }
 .lenspicker-meta { margin-top: 3px; color: var(--ink-2); }
-.lenspicker-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 10px; }
+.lenspicker-foot { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 10px; margin-top: 10px; }
+.lenspicker-foot > .btn-tab { white-space: nowrap; margin-left: auto; }
 .lenslist {
-  position: absolute; left: 0; top: calc(100% + 8px); width: 380px; z-index: 30;
-  max-height: min(620px, calc(100vh - 240px)); overflow: auto;
-  padding: 8px 14px 12px;
+  position: absolute; left: 0; top: calc(100% + 8px); width: 400px; z-index: 30;
+  max-height: min(640px, calc(100vh - 290px)); overflow: auto; overscroll-behavior: contain;
+  padding: 0 14px;
 }
-.lensgroup { padding: 8px 0 6px; border-bottom: 1px solid var(--rule); }
-.lensgroup:last-of-type { border-bottom: 0; }
-.lensgroup-head { display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }
-.lensopt { display: grid; grid-template-columns: 18px 1fr auto; align-items: baseline; gap: 6px; padding: 3px 4px; cursor: pointer; }
+.lenslist-hint { color: var(--ink-2); padding: 10px 0 6px; }
+.lensgroup { border-top: 1px solid var(--rule); }
+.lensgroup-head {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto 10px; align-items: center; gap: 8px;
+  width: 100%; min-height: 34px; padding: 6px 4px; border: 0; background: none; color: var(--ink);
+  font: inherit; text-align: left; cursor: pointer;
+}
+.lensgroup-head:not(:has(.snip)) { grid-template-columns: minmax(0, 1fr) auto 10px; }
+.lensgroup-head:hover { background: var(--paper-2); }
+/* an open goal's heading stays in view while its measures scroll under it */
+.lensgroup.open .lensgroup-head { position: sticky; top: 0; z-index: 1; background: var(--paper) var(--grain); }
+.lensgroup.open .lensgroup-head:hover { background: var(--paper-2); }
+.lensgroup-name { font-weight: var(--wght-grot-strong); }
+.lensgroup-count { color: var(--ink-2); white-space: nowrap; }
+.lensgroup-here { color: var(--ink); font-weight: var(--wght-grot-strong); }
+.lensgroup-mark { color: var(--ink-2); }
+.lensgroup-items { padding: 0 0 8px; }
+.lensopt { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; align-items: baseline; gap: 6px; padding: 3px 4px; cursor: pointer; }
 .lensopt:hover { background: var(--paper-2); }
 .lensopt.on { background: var(--paper-2); box-shadow: inset 3px 0 0 var(--ink); }
 .lensopt input { margin: 0; accent-color: var(--ink); width: 14px; height: 14px; translate: 0 2px; }
-.lensopt-year { white-space: nowrap; }
-.lenslist-foot { display: flex; justify-content: flex-end; padding-top: 8px; }
+.lensopt-year { white-space: nowrap; color: var(--ink-2); }
+.lenslist-foot { position: sticky; bottom: 0; display: flex; justify-content: flex-end; padding: 8px 0 12px; border-top: 1px solid var(--rule); background: var(--paper) var(--grain); }
 
 /* ---------- key: a little stack of offcuts ---------- */
 .lenskey { width: 262px; padding: 12px 14px 12px; display: grid; gap: 6px; }
@@ -90,9 +105,22 @@
 .explorer-tabs { display: inline-flex; gap: 3px; padding: 3px; }
 .explorer-table { display: grid; grid-template-rows: auto 1fr; gap: 10px; min-height: 0; }
 .explorer-tools { position: relative; display: flex; align-items: center; gap: 14px; }
-.colchooser { position: absolute; left: 0; top: calc(100% + 8px); z-index: 30; width: 520px; max-height: 520px; overflow: auto; padding: 8px 14px 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 18px; }
-.colgroup { border: 0; margin: 0; padding: 6px 0; min-width: 0; }
-.colgroup legend { display: flex; align-items: center; gap: 8px; padding: 0; margin-bottom: 3px; }
+.colchooser {
+  position: absolute; left: 0; top: calc(100% + 8px); z-index: 30; width: 540px;
+  max-height: min(560px, calc(100vh - 260px)); overflow: auto; overscroll-behavior: contain; padding: 8px 14px 10px;
+}
+.colchooser-hint { color: var(--ink-2); padding: 2px 0 6px; }
+.colgroup { border-top: 1px solid var(--rule); }
+.colgroup-head {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto 10px; align-items: center; gap: 8px;
+  width: 100%; min-height: 34px; padding: 6px 4px; border: 0; background: none; color: var(--ink);
+  font: inherit; text-align: left; cursor: pointer;
+}
+.colgroup-head:not(:has(.snip)) { grid-template-columns: minmax(0, 1fr) auto 10px; }
+.colgroup-head:hover { background: var(--paper-2); }
+.colgroup-name { font-weight: var(--wght-grot-strong); }
+.colgroup-count, .colgroup-mark { color: var(--ink-2); white-space: nowrap; }
+.colgroup-items { border: 0; margin: 0; padding: 2px 4px 10px; min-width: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 0 18px; }
 .colopt { display: grid; grid-template-columns: 18px 1fr; gap: 6px; align-items: baseline; padding: 2px 0; cursor: pointer; }
 .colopt input { margin: 0; accent-color: var(--ink); translate: 0 2px; }
 .ledger-scroll { overflow: auto; min-height: 0; }
@@ -100,6 +128,14 @@
 .ledger { border-collapse: collapse; font-variant-numeric: var(--figures-data); }
 .explorer-ledger { width: 100%; }
 .explorer-ledger thead th { position: sticky; top: 0; z-index: 2; background: var(--paper) var(--grain); vertical-align: bottom; text-align: right; padding: 0 0 0 10px; border-bottom: 1.5px solid var(--ink); white-space: nowrap; }
+.explorer-ledger thead th:not(.col-name) { white-space: normal; min-width: 5.5em; }
+.explorer-ledger .sorthead-name, .explorer-ledger .sorthead-unit { display: block; max-width: 9.5em; }
+/* many columns scroll sideways under a fixed name column */
+.explorer-ledger .col-name { position: sticky; left: 0; z-index: 1; background: var(--paper) var(--grain); }
+.explorer-ledger thead th.col-name { z-index: 3; }
+.explorer-ledger tbody tr.hot > .col-name, .explorer-ledger tbody tr.sel > .col-name { background: var(--paper-2); }
+.explorer-ledger th.col-name { padding-right: 10px; box-shadow: inset -1px 0 0 var(--rule); }
+.explorer-ledger tbody tr.sel th.col-name { box-shadow: inset 3px 0 0 var(--thread), inset -1px 0 0 var(--rule); }
 .explorer-ledger th.col-name, .explorer-ledger td.col-name { text-align: left; padding-left: 0; }
 .sorthead {
   display: inline-grid; justify-items: end; gap: 0; border: 0; background: none; cursor: pointer;
@@ -160,9 +196,9 @@
 
 /* with the drawer open the key and the drawer button stack under the lens card on the left, over
    the sea, so neither covers the strip of Wales left between the two columns */
-.atlas.drawer:not(.narrow) .float-key { right: auto; left: 14px; top: 172px; justify-items: start; }
+.atlas.drawer:not(.narrow) .float-key { right: auto; left: 14px; top: calc(var(--lens-h, 158px) + 28px); justify-items: start; }
 .atlas.drawer:not(.narrow) .lenskey { width: 300px; }
-.atlas.drawer:not(.narrow) .float-panel { max-height: calc(100% - 430px); }
+.atlas.drawer:not(.narrow) .float-panel { max-height: calc(100% - var(--lens-h, 158px) - 284px); }
 
 /* ---------- narrow screens: one column ---------- */
 .atlas.narrow { height: auto; }
@@ -172,8 +208,9 @@
 .atlas.narrow .float-key { position: static; order: 3; justify-items: stretch; }
 .atlas.narrow .lenskey { width: auto; }
 .atlas.narrow .float-panel { position: static; width: auto; max-height: none; order: 4; }
-.atlas.narrow .lenslist { width: min(380px, calc(100vw - 28px)); }
+.atlas.narrow .lenslist { width: min(400px, calc(100vw - 28px)); }
 .atlas.narrow .explorer { position: static; width: auto; order: 5; animation: none; }
-.atlas.narrow .colchooser { width: calc(100vw - 60px); grid-template-columns: 1fr; }
+.atlas.narrow .colchooser { width: calc(100vw - 60px); }
+.atlas.narrow .colgroup-items { grid-template-columns: 1fr; }
 .atlas.narrow .atlas-foot { flex-direction: column; gap: 4px; }
 .atlas.narrow .maptip { display: none; }

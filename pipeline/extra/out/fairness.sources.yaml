@@ -1,0 +1,36 @@
+- id: dwp_children_low_income
+  title: 'Children in low income families: local area statistics, financial years ending 2022 to 2025'
+  publisher: Department for Work and Pensions
+  url: https://www.gov.uk/government/statistics/children-in-low-income-families-local-area-statistics-2022-to-2025
+  api_url: https://assets.publishing.service.gov.uk/media/69b809619d8b52961a62b49a/children-in-low-income-families-local-area-statistics-2022-2025.ods
+  licence: Open Government Licence v3.0
+  licence_url: https://www.gov.uk/government/statistics/children-in-low-income-families-local-area-statistics-2022-to-2025
+  accessed: '2026-11-27'
+  notes: Sheet 7_BHC_Relative_LA (relative low income, before housing costs, children aged under 16), percentage for FYE 2025; Wales from sheet 5_BHC_Relative_Region. Published 26 March 2026. The file address changes each year.
+- id: statswales_fsm
+  title: Pupils eligible for free school meals by local authority (Pupil Level Annual School Census)
+  publisher: Welsh Government via StatsWales
+  url: https://stats.gov.wales/en-GB/7be88416-50db-4a08-917d-ca6e4a17db39
+  api_url: https://api.stats.gov.wales/v2/7be88416-50db-4a08-917d-ca6e4a17db39/data
+  licence: Open Government Licence v3.0 (Welsh Government, via the gov.wales copyright statement; the StatsWales dataset page states no licence of its own)
+  licence_url: https://www.gov.wales/copyright-statement
+  accessed: '2026-11-27'
+  notes: 'Category "Eligible for free school meals", data description "Percentage of pupils", 2025/26.'
+- id: nomis_census_ts011
+  title: Census 2021 TS011 Households by deprivation dimensions via Nomis
+  publisher: Office for National Statistics, via Nomis
+  url: https://www.nomisweb.co.uk/census/2021/ts011
+  api_url: https://www.nomisweb.co.uk/api/v01/dataset/NM_2031_1.data.csv
+  licence: Open Government Licence v3.0 (ONS Crown copyright)
+  licence_url: https://www.nomisweb.co.uk/home/copyright.asp
+  accessed: '2026-11-27'
+  notes: Households deprived in two, three or four dimensions as a share of all households. Census day 21 March 2021.
+- id: statswales_daf
+  title: Discretionary Assistance Fund payments by local authority
+  publisher: Welsh Government via StatsWales
+  url: https://stats.gov.wales/en-GB/4cb5e809-d794-44ef-9f98-0f4e44ad0647
+  api_url: https://api.stats.gov.wales/v2/4cb5e809-d794-44ef-9f98-0f4e44ad0647/data
+  licence: Open Government Licence v3.0 (Welsh Government, via the gov.wales copyright statement; the StatsWales dataset page states no licence of its own)
+  licence_url: https://www.gov.wales/copyright-statement
+  accessed: '2026-11-27'
+  notes: '"Number of payments", emergency and individual assistance payments summed over the 12 months April 2025 to March 2026, divided by ONS mid-2025 population (source nomis_mye).'

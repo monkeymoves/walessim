@@ -28,6 +28,14 @@ const NAV: { id: RouteName; href: string; key: string }[] = [
 export function TopBar(props: TopBarProps): JSX.Element {
   return (
     <header class="topbar">
+      <Show when={route().name !== "title"}>
+        <a class="topbar-home" href="#/" title={t("shell.home")} data-testid="home">
+          <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+            <path d="M3 9.5 10 3l7 6.5M5 8v9h4v-5h2v5h4V8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+          </svg>
+          <span>{t("shell.home_short")}</span>
+        </a>
+      </Show>
       <div class="topbar-slot">
         <Show
           when={props.slot}

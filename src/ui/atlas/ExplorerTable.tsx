@@ -24,6 +24,13 @@ type Sort = { col: string; dir: "asc" | "desc" };
 export function ExplorerTable(props: ExplorerTableProps): JSX.Element {
   const [sort, setSort] = createSignal<Sort>(props.sortBy ? { col: props.sortBy, dir: "desc" } : { col: "name", dir: "asc" });
   const [choosing, setChoosing] = createSignal(false);
+  // each goal's columns fold away: with 10 to 15 measures a goal the full list is too long to scan
+  const [folds, setFolds] = createSignal<Set<string>>(new Set());
+  const flip = (key: string) => {
+    const next = new Set(folds());
+    if (next.has(key)) next.delete(key); else next.add(key);
+    setFolds(next);
+  };
   const cols = () => props.columns.map((id) => props.indicators.find((i) => i.id === id)).filter((x): x is AtlasIndicator => !!x);
   const rows = createMemo(() => {
     const s = sort();
@@ -87,23 +94,39 @@ export function ExplorerTable(props: ExplorerTableProps): JSX.Element {
         <span class="small">{t("atlas.explorer.sortHint")}</span>
         <Show when={choosing()}>
           <div class="colchooser sheet-held" id="column-chooser">
+            <p class="small colchooser-hint">{t("atlas.explorer.columnsHint")}</p>
             <For each={byStrand(props.indicators)}>
-              {(g) => (
-                <fieldset class="colgroup">
-                  <legend class="label">
-                    <Show when={g.strand}><Snip strand={g.strand!} /></Show>
-                    {g.strand ? t(`parts.strand.${g.strand}`) : t("atlas.lens.other")}
-                  </legend>
-                  <For each={g.items}>
-                    {(ind) => (
-                      <label class="colopt">
-                        <input type="checkbox" checked={props.columns.includes(ind.id)} onChange={(e) => toggleCol(ind.id, e.currentTarget.checked)} />
-                        <span>{pick(ind.name)}</span>
-                      </label>
-                    )}
-                  </For>
-                </fieldset>
-              )}
+              {(g) => {
+                const key = g.strand ?? "other";
+                const name = () => (g.strand ? t(`parts.strand.${g.strand}`) : t("atlas.lens.other"));
+                const isOpen = () => folds().has(key);
+                const chosen = () => g.items.filter((i) => props.columns.includes(i.id)).length;
+                return (
+                  <div class="colgroup" classList={{ open: isOpen() }}>
+                    <button type="button" class="colgroup-head" aria-expanded={isOpen()} aria-controls={`colgroup-${key}`} onClick={() => flip(key)} data-testid={`colgroup-${key}`}>
+                      <Show when={g.strand}><Snip strand={g.strand!} /></Show>
+                      <span class="label colgroup-name">{name()}</span>
+                      <span class="small colgroup-count">{t("atlas.explorer.chosen", { k: chosen(), n: g.items.length })}</span>
+                      <svg class="colgroup-mark" viewBox="0 0 10 10" width="10" height="10" aria-hidden="true">
+                        <path fill="currentColor" d={isOpen() ? "M0 3h10L5 8z" : "M3 0v10l5-5z"} />
+                      </svg>
+                    </button>
+                    <Show when={isOpen()}>
+                      <fieldset class="colgroup-items" id={`colgroup-${key}`}>
+                        <legend class="sr-only">{name()}</legend>
+                        <For each={g.items}>
+                          {(ind) => (
+                            <label class="colopt">
+                              <input type="checkbox" checked={props.columns.includes(ind.id)} onChange={(e) => toggleCol(ind.id, e.currentTarget.checked)} data-testid={`col-${ind.id}`} />
+                              <span>{pick(ind.name)}</span>
+                            </label>
+                          )}
+                        </For>
+                      </fieldset>
+                    </Show>
+                  </div>
+                );
+              }}
             </For>
           </div>
         </Show>

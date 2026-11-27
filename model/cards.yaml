@@ -86,7 +86,7 @@ cards:
     catch: { en: "It takes 12 years to show. It needs trained staff, so it is weaker without Skills and apprenticeships.", cy: "Mae'n cymryd 12 mlynedd i'w weld. Mae angen staff wedi'u hyfforddi, felly mae'n wannach heb Sgiliau a phrentisiaethau.", cy_review: true }
     picture: { en: "A girl in Bargoed answers her grandmother in Welsh for the first time.", cy: "Mae merch ym Margod yn ateb ei mam-gu yn Gymraeg am y tro cyntaf.", cy_review: true }
     visit_why: { en: "The new places need homes, work and Welsh around them. Choose what the valley does alongside.", cy: "Mae angen cartrefi, gwaith a'r Gymraeg o gwmpas y lleoedd newydd. Dewiswch beth mae'r dyffryn yn ei wneud ochr yn ochr â nhw.", cy_review: true }
-    fact: { indicator: welsh_speakers, pick: highest }
+    fact: { indicator: welsh_at_home_pupils, pick: wales }
     effects:
       - { target: speakers_stock, size: S, sign: 1, rule: R19, condition: { half_without_card: skills-and-apprenticeships } }
       - { target: welsh_speakers, size: S, sign: 1, rule: R19, condition: { half_without_card: skills-and-apprenticeships } }
@@ -106,7 +106,7 @@ cards:
     what: { en: "Insulate the coldest homes first.", cy: "Inswleiddio'r cartrefi oeraf yn gyntaf.", cy_review: true }
     catch: { en: "8 years of nothing to show. Trust may dip while you wait. It is half as strong if Wales is short of trained workers.", cy: "8 mlynedd heb ddim i'w ddangos. Gall yr ymddiriedaeth ostwng tra byddwch yn aros. Mae'n hanner mor gryf os yw Cymru'n brin o weithwyr wedi'u hyfforddi.", cy_review: true }
     picture: { en: "A pensioner in a cold terrace turns the heating down and stays warm.", cy: "Mae pensiynwr mewn tŷ teras oer yn troi'r gwres i lawr ac yn aros yn gynnes.", cy_review: true }
-    fact: { indicator: poor_housing, pick: highest }
+    fact: { indicator: home_energy_efficiency, pick: lowest }
     effects:
       - { target: fuel_poverty, size: M, sign: 1, rule: R13, condition: { half_if_below: { component: skills_stock, value: 4 } } }
       - { target: emissions_head, size: M, sign: 1, condition: { half_if_below: { component: skills_stock, value: 4 } } }
@@ -148,7 +148,7 @@ cards:
     catch: { en: "Visitors spend less. Second home owners complain, and Trust dips.", cy: "Mae ymwelwyr yn gwario llai. Mae perchnogion ail gartrefi'n cwyno, ac mae'r ymddiriedaeth yn gostwng.", cy_review: true }
     picture: { en: "A nurse in Abersoch finds a house she can afford near the harbour.", cy: "Mae nyrs yn Abersoch yn dod o hyd i dŷ y gall ei fforddio ger yr harbwr.", cy_review: true }
     visit_why: { en: "Local homes only help if young people also find work and hear Welsh here. Choose what goes with them.", cy: "Mae cartrefi lleol yn helpu pan fo pobl ifanc yn cael gwaith ac yn clywed y Gymraeg yma. Dewiswch beth sy'n mynd gyda nhw.", cy_review: true }
-    fact: { indicator: affordability, pick: W06000008 }
+    fact: { indicator: second_homes, pick: highest }
     effects:
       - { target: affordability, size: S, sign: 1, rule: R16 }
       - { target: young_adults, size: S, sign: 1 }
@@ -307,7 +307,7 @@ cards:
     what: { en: "Pay farmers to look after rivers, hedges and wildlife.", cy: "Talu ffermwyr i ofalu am afonydd, gwrychoedd a bywyd gwyllt.", cy_review: true }
     catch: { en: "Farm income dips for 4 years. Welsh-speaking farm areas suffer unless regions work together.", cy: "Mae incwm ffermydd yn gostwng am 4 blynedd. Mae ardaloedd ffermio Cymraeg yn dioddef oni bai bod rhanbarthau'n cydweithio.", cy_review: true }
     picture: { en: "Otters come back to a river in Carmarthenshire.", cy: "Mae dyfrgwn yn dod yn ôl i afon yn Sir Gaerfyrddin.", cy_review: true }
-    fact: none
+    fact: { indicator: river_good_status, pick: wales }
     effects:
       - { target: "fcm:pressure:agricultural_intensification", size: M, sign: -1, rule: R29 }
       - { target: "fcm:driver:land_and_sea_use_change", size: S, sign: -1, rule: R29 }
@@ -327,7 +327,7 @@ cards:
     what: { en: "Plant new woods that take carbon out of the air as they grow.", cy: "Plannu coed newydd sy'n tynnu carbon o'r aer wrth dyfu.", cy_review: true }
     catch: { en: "Trees grow slowly: 12 years before it shows. Farms sold for trees can empty Welsh-speaking villages.", cy: "Mae coed yn tyfu'n araf: 12 mlynedd cyn i chi ei weld. Gall ffermydd a werthir am goed wagio pentrefi Cymraeg.", cy_review: true }
     picture: { en: "Children who helped plant a wood walk their own children through it.", cy: "Mae plant a helpodd i blannu coedwig yn mynd â'u plant eu hunain am dro drwyddi.", cy_review: true }
-    fact: { indicator: emissions_head, pick: highest }
+    fact: { indicator: woodland_cover, pick: lowest }
     effects:
       - { target: woodland_stock, size: S, sign: 1 }
       - { target: carbon_budget, size: S, sign: 1 }
@@ -365,7 +365,7 @@ cards:
     what: { en: "Give children in the poorest places a strong start.", cy: "Rhoi dechrau cryf i blant yn y lleoedd tlotaf.", cy_review: true }
     catch: { en: "It takes 12 years. Most of Wales will not notice it.", cy: "Mae'n cymryd 12 mlynedd. Fydd y rhan fwyaf o Gymru ddim yn sylwi arno.", cy_review: true }
     picture: { en: "A toddler in Tredegar starts school ready to learn.", cy: "Mae plentyn bach yn Nhredegar yn dechrau'r ysgol yn barod i ddysgu.", cy_review: true }
-    fact: { indicator: deprivation_10, pick: highest }
+    fact: { indicator: child_low_income, pick: highest }
     effects:
       - { target: early_years_stock, size: M, sign: 1, rule: R32, where: { flags: [worst5] } }
       - { target: earnings, size: S, sign: 1, where: { flags: [worst5] } }
@@ -421,7 +421,7 @@ cards:
     what: { en: "Get everyone online, with a device and someone to help.", cy: "Cael pawb ar-lein, gyda dyfais a rhywun i helpu.", cy_review: true }
     catch: { en: "Bank and post office counters close in country areas, unless the buses are good.", cy: "Mae cownteri banc a swyddfa bost yn cau yng nghefn gwlad, oni bai bod y bysiau'n dda.", cy_review: true }
     picture: { en: "A farmer in Powys sees his doctor on a video call.", cy: "Mae ffermwr ym Mhowys yn gweld ei feddyg ar alwad fideo.", cy_review: true }
-    fact: { indicator: gp_travel_public, pick: highest }
+    fact: { indicator: slow_broadband, pick: highest }
     effects:
       - { target: access, size: S, sign: 1, rule: R24 }
       - { target: employment, size: S, sign: 1, where: { flags: [worst5] } }

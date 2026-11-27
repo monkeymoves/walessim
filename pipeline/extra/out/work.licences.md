@@ -1,0 +1,7 @@
+| Dataset | Publisher | Licence | Where read (2026-11-27) | Attribution to show |
+|---|---|---|---|---|
+| StatsWales: GDHI per head, business demography, business survival, qualifications of working age adults (`90841eef`, `f2dc5994`, `1ecdcedf`, `b021de56`) | Welsh Government (StatsWales), ONS originals | OGL v3.0 | https://www.gov.wales/copyright-statement (StatsWales pages state no licence of their own) | Contains public sector information licensed under the Open Government Licence v3.0. Source: Office for National Statistics, via Welsh Government (StatsWales). |
+| Nomis: claimant count (`NM_162_1`), jobs density (`NM_57_1`), ASHE workplace analysis (`NM_99_1`), APS inactivity and self-employment (`NM_17_5`) | DWP and ONS, via Nomis | OGL v3.0 | https://www.nomisweb.co.uk/home/copyright.asp ; https://www.ons.gov.uk/help/termsandconditions | Source: Office for National Statistics (claimant count: Department for Work and Pensions), licensed under the Open Government Licence v3.0. |
+| StatsWales WIMD 2025 indicators, employment deprivation (`c28ab0ec`) | Welsh Government | OGL v3.0 | https://www.gov.wales/copyright-statement | Already listed in docs/data-licences.md; no new row needed. |
+
+Caveats: the claimant count is DWP data carried by Nomis under ONS OGL terms. APS-based measures (inactivity, self-employment, level 4) are sample survey estimates with confidence intervals; the app should not over-read small differences.

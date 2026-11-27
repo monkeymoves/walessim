@@ -10,7 +10,7 @@
 
 ## What is in it
 
-- **Heddiw (Wales today):** the 22 local authorities on a paper relief map, with 19 real measures as map lenses, a panel per authority with sources, and an explorer table and scatter.
+- **Heddiw (Wales today):** the 22 local authorities on a paper relief map, with 87 real measures across the seven goals as map lenses, a panel per authority with sources, and an explorer table and scatter.
 - **Yfory (2026 to 2050):** six Senedd terms. Play policy cards on real places, face curveballs from a horizon scan of Wales, visit the Rhondda or Dyffryn Ogwen to make a hard local choice on real streets, and read the letter from 2050. You are judged on the lower of what people **Lived** through and what you **Left**, so you cannot win by borrowing from the future.
 - **Llyfr y model (the model book):** every rule, indicator and source, readable by anyone, with dials you can turn. Change one and the game tells you that you are playing a modified rule set.
 

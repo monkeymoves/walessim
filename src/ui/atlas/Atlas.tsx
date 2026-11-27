@@ -114,6 +114,13 @@ export function Atlas(props: AtlasProps): JSX.Element {
   };
   document.addEventListener("keydown", onKey);
   onCleanup(() => document.removeEventListener("keydown", onKey));
+  // the lens card grows with long measure names; the key and the place panel stack below it
+  let lensEl!: HTMLDivElement;
+  onMount(() => {
+    const lensRo = new ResizeObserver(() => stage.style.setProperty("--lens-h", `${Math.ceil(lensEl.offsetHeight)}px`));
+    lensRo.observe(lensEl);
+    onCleanup(() => lensRo.disconnect());
+  });
   onMount(() => {
     const ro = new ResizeObserver(() => placeThread());
     ro.observe(stage);
@@ -168,7 +175,7 @@ export function Atlas(props: AtlasProps): JSX.Element {
           </TipSlip>
         </Show>
 
-        <div class="float-lens">
+        <div class="float-lens" ref={lensEl}>
           <LensPicker indicators={indicators()} current={lens()} onChange={changeLens} />
         </div>
         <div class="float-key">

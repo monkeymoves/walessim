@@ -1,95 +1,4 @@
 indicators:
-- id: pop
-  name:
-    en: Population (mid-year estimate)
-    cy: Poblogaeth (amcangyfrif canol blwyddyn)
-  cy_review: true
-  unit: people
-  format: integer
-  higher_is_better: null
-  strand: cohesive
-  national_indicator: null
-  source: nomis_mye
-  notes:
-    en: Mid-2025. Context and weighting indicator, no direction.
-- id: pop_change
-  name:
-    en: Population change over 10 years
-    cy: Newid yn y boblogaeth dros 10 mlynedd
-  cy_review: true
-  unit: percent
-  format: percent
-  higher_is_better: null
-  strand: cohesive
-  national_indicator: null
-  source: nomis_mye
-  notes:
-    en: Mid-2015 to mid-2025.
-- id: age65
-  name:
-    en: Share aged 65 and over
-    cy: Cyfran 65 oed a throsodd
-  cy_review: true
-  unit: percent of residents
-  format: percent
-  higher_is_better: false
-  strand: healthier
-  national_indicator: null
-  source: nomis_mye
-  notes:
-    en: Mid-2025. Feeds care_pressure in the game.
-- id: young_adults
-  name:
-    en: Share aged 20 to 34
-    cy: Cyfran 20 i 34 oed
-  cy_review: true
-  unit: percent of residents
-  format: percent
-  higher_is_better: true
-  strand: cohesive
-  national_indicator: null
-  source: nomis_mye
-  notes:
-    en: Mid-2025.
-- id: welsh_speakers
-  name:
-    en: Welsh speakers aged 3 and over
-    cy: Siaradwyr Cymraeg 3 oed a throsodd
-  cy_review: true
-  unit: percent of residents aged 3+
-  format: percent
-  higher_is_better: true
-  strand: culture
-  national_indicator: null
-  source: nomis_census_ts033
-  notes:
-    en: Census 2021. Can speak Welsh divided by all usual residents aged 3+.
-- id: deprivation
-  name:
-    en: Small areas in the most deprived fifth of Wales
-    cy: Ardaloedd bach yn y bumed rhan fwyaf difreintiedig o Gymru
-  cy_review: true
-  unit: percent of LSOAs
-  format: percent
-  higher_is_better: false
-  strand: equal
-  national_indicator: null
-  source: wimd_2025
-  notes:
-    en: WIMD 2025 overall rank, 1917 LSOAs. Wales value is 20 by construction.
-- id: deprivation_10
-  name:
-    en: Small areas in the most deprived tenth of Wales
-    cy: Ardaloedd bach yn y ddegfed ran fwyaf difreintiedig o Gymru
-  cy_review: true
-  unit: percent of LSOAs
-  format: percent
-  higher_is_better: false
-  strand: equal
-  national_indicator: null
-  source: wimd_2025
-  notes:
-    en: WIMD 2025 decile 1. Wales value is 10 by construction.
 - id: gva_head
   name:
     en: Gross value added per head
@@ -103,6 +12,20 @@ indicators:
   source: ons_regional_gdp_la
   notes:
     en: GVA(B), current prices, 2024. Residence-based population denominator; commuting areas distort LAs with large workplace flows.
+- id: gdhi_head
+  name:
+    en: Household income per person
+    cy: Incwm aelwydydd y pen
+  cy_review: true
+  unit: GBP per person
+  format: gbp
+  higher_is_better: true
+  strand: prosperous
+  national_indicator: null
+  source: sw_gdhi
+  notes:
+    en: Gross disposable household income per head, 2024 (provisional). This is money households have left to spend or save
+      after tax and benefits, counted where people live, so it does not get inflated by commuters the way GVA per head does.
 - id: employment
   name:
     en: Employment rate, 16 to 64
@@ -116,6 +39,50 @@ indicators:
   source: nomis_aps
   notes:
     en: Annual Population Survey, July 2025 to June 2026. Sample-based, noisy for small LAs.
+- id: inactivity
+  name:
+    en: Adults not working or looking for work
+    cy: Oedolion nad ydynt yn gweithio nac yn chwilio am waith
+  cy_review: true
+  unit: percent of residents aged 16 to 64
+  format: percent
+  higher_is_better: false
+  strand: prosperous
+  national_indicator: null
+  source: nomis_aps
+  notes:
+    en: Economic inactivity rate, aged 16 to 64, July 2025 to June 2026 (Annual Population Survey variable 111). Includes
+      students, carers, people who are retired early and people who are long-term sick. Sample survey, so small areas have
+      wide margins of error.
+- id: claimant_rate
+  name:
+    en: People claiming out-of-work benefits
+    cy: Pobl sy'n hawlio budd-daliadau diwaith
+  cy_review: true
+  unit: percent of residents aged 16 to 64
+  format: percent
+  higher_is_better: false
+  strand: prosperous
+  national_indicator: null
+  source: nomis_claimant
+  notes:
+    en: Claimant count (Universal Credit and Jobseeker's Allowance claimants who must look for work) as a share of residents
+      aged 16 to 64, mean of the 12 months from November 2025 to October 2026. Not seasonally adjusted at local level, so
+      a 12 month mean is used. Some claimants are in work on low pay.
+- id: employment_deprivation
+  name:
+    en: Working-age people in employment deprivation
+    cy: Pobl oed gweithio mewn amddifadedd cyflogaeth
+  cy_review: true
+  unit: percent of working-age people
+  format: percent
+  higher_is_better: false
+  strand: prosperous
+  national_indicator: null
+  source: statswales_wimd2025_la
+  notes:
+    en: 'Share of working-age people who are in employment deprivation (WIMD 2025): claiming out-of-work benefits or unable
+      to work through ill health. Source years vary by benefit. Benefit-based, so it overlaps the claimant measure.'
 - id: earnings
   name:
     en: Median gross weekly earnings, full-time, residence based
@@ -129,71 +96,104 @@ indicators:
   source: nomis_ashe
   notes:
     en: ASHE 2025, full-time workers by place of residence.
-- id: affordability
+- id: earnings_workplace
   name:
-    en: House price to residence-based earnings ratio (median)
-    cy: Cymhareb pris tŷ i enillion yn ôl preswylfa (canolrifol)
+    en: Weekly pay of jobs in the area
+    cy: Cyflog wythnosol swyddi yn yr ardal
   cy_review: true
-  unit: ratio
+  unit: GBP per week
+  format: gbp
+  higher_is_better: true
+  strand: prosperous
+  national_indicator: null
+  source: nomis_ashe_workplace
+  notes:
+    en: 'Median gross weekly earnings of full-time workers by place of work, 2026. Compare with the residence-based earnings
+      measure: the gap shows commuting.'
+- id: level4
+  name:
+    en: Working-age adults with a degree-level qualification
+    cy: Oedolion oed gweithio a chymhwyster lefel gradd
+  cy_review: true
+  unit: percent of people aged 18 to 64
+  format: percent
+  higher_is_better: true
+  strand: prosperous
+  national_indicator: null
+  source: sw_qualifications
+  notes:
+    en: Adults aged 18 to 64 qualified to level 4 or above (degree level, higher national certificates and similar), 2025.
+      From the Annual Population Survey. Definitions changed in 2022, so compare with earlier years with care.
+- id: jobs_density
+  name:
+    en: Jobs per working-age resident
+    cy: Swyddi fesul preswylydd oed gweithio
+  cy_review: true
+  unit: jobs per resident aged 16 to 64
   format: ratio
-  higher_is_better: false
-  strand: cohesive
-  national_indicator: null
-  source: ons_affordability
-  notes:
-    en: Year ending September 2025.
-- id: life_exp
-  name:
-    en: Life expectancy at birth
-    cy: Disgwyliad oes adeg geni
-  cy_review: true
-  unit: years
-  format: years
   higher_is_better: true
-  strand: healthier
+  strand: prosperous
   national_indicator: null
-  source: ons_life_expectancy_local
+  source: nomis_jobs_density
   notes:
-    en: 2022 to 2024. Simple mean of male and female. Healthy life expectancy is not available by Welsh LA.
-- id: emissions_head
+    en: Jobs located in the area divided by residents aged 16 to 64, 2024. Low values in commuter areas such as Torfaen and
+      Caerphilly do not mean a weak economy, because residents work elsewhere.
+- id: enterprises_10k
   name:
-    en: Territorial greenhouse gas emissions per person
-    cy: Allyriadau nwyon tŷ gwydr tiriogaethol y pen
+    en: Businesses per 10,000 working-age people
+    cy: Busnesau fesul 10,000 o bobl oed gweithio
   cy_review: true
-  unit: tonnes CO2e per person
-  format: decimal1
-  higher_is_better: false
-  strand: global
-  national_indicator: null
-  source: desnz_la_ghg
-  notes:
-    en: 2024, all sectors including net land use. Heavy-industry LAs (Neath Port Talbot) are far above the rest.
-- id: renewables
-  name:
-    en: Installed renewable electricity capacity per person
-    cy: Capasiti trydan adnewyddadwy wedi'i osod y pen
-  cy_review: true
-  unit: kW per person
-  format: decimal2
-  higher_is_better: true
-  strand: global
-  national_indicator: null
-  source: desnz_renewables_la
-  notes:
-    en: End 2025 capacity divided by mid-2025 population.
-- id: renewables_mw
-  name:
-    en: Installed renewable electricity capacity
-    cy: Capasiti trydan adnewyddadwy wedi'i osod
-  cy_review: true
-  unit: MW
+  unit: businesses per 10,000 people aged 16 to 64
   format: integer
   higher_is_better: true
-  strand: global
+  strand: prosperous
   national_indicator: null
-  source: desnz_renewables_la
+  source: sw_business_demography
   notes:
-    en: End 2025, all technologies. Wales value is the sum of the 22 LAs.
+    en: Active enterprises per 10,000 residents aged 16 to 64, 2025. Businesses are counted at their registered address, so
+      head offices can inflate some areas.
+- id: business_births
+  name:
+    en: New businesses started
+    cy: Busnesau newydd a ddechreuwyd
+  cy_review: true
+  unit: percent of active businesses
+  format: percent
+  higher_is_better: true
+  strand: prosperous
+  national_indicator: null
+  source: sw_business_demography
+  notes:
+    en: 'Business birth rate: new enterprises in 2025 as a share of active enterprises. Volatile from year to year.'
+- id: business_survival
+  name:
+    en: New businesses still going after 3 years
+    cy: Busnesau newydd sy'n dal i fynd ar ôl 3 blynedd
+  cy_review: true
+  unit: percent of businesses started
+  format: percent
+  higher_is_better: true
+  strand: prosperous
+  national_indicator: null
+  source: sw_business_survival
+  notes:
+    en: Share of businesses started in 2022 that were still active in 2025. Small start-up groups in small areas make this
+      volatile.
+- id: self_employed
+  name:
+    en: Workers who are self-employed
+    cy: Gweithwyr hunangyflogedig
+  cy_review: true
+  unit: percent of people in work aged 16 to 64
+  format: percent
+  higher_is_better: null
+  strand: prosperous
+  national_indicator: null
+  source: nomis_aps
+  notes:
+    en: 'Self-employed people as a share of those in employment, aged 16 to 64, July 2025 to June 2026 (Annual Population
+      Survey variable 74). Context only: neither high nor low is clearly better, and rural areas are high. Sample survey with
+      wide margins of error.'
 - id: flood_exposure
   name:
     en: Residential properties at risk of flooding, per 100 households
@@ -220,20 +220,451 @@ indicators:
   national_indicator: null
   source: statswales_wimd2025_la
   notes:
-    en: WIMD 2025 indicator. Stands in for woodland cover, which has no open LA table.
-- id: gp_travel_public
+    en: WIMD 2025 indicator. Woodland cover is a separate measure (woodland_cover).
+- id: ndvi_green
   name:
-    en: Average return travel time to a GP surgery by public transport
-    cy: Amser teithio dychwel cyfartalog i feddygfa ar gludiant cyhoeddus
+    en: Greenness around people's homes (satellite score)
+    cy: Gwyrddni o gwmpas cartrefi pobl (sgôr lloeren)
   cy_review: true
-  unit: minutes
+  unit: score from 0 to 1
+  format: decimal2
+  higher_is_better: true
+  strand: resilient
+  national_indicator: null
+  source: statswales_wimd2025_lsoa
+  notes:
+    en: WIMD 2025 ambient green space (vegetation index, NDVI) for each small area, averaged for the authority weighted by
+      Census 2021 residents. The Wales figure is the same weighted average over all of Wales. Computed here because StatsWales
+      has no authority value.
+- id: woodland_cover
+  name:
+    en: Land covered by woodland
+    cy: Tir dan goetir
+  cy_review: true
+  unit: percent of land area
+  format: percent
+  higher_is_better: true
+  strand: resilient
+  national_indicator: null
+  source: fc_nfi_gb_2024
+  notes:
+    en: Forestry Commission National Forest Inventory GB 2024 map, woodland category only (includes felled areas and young
+      trees awaiting restocking, as the inventory does). Woodland polygons were clipped exactly to each council's boundary
+      at the high water mark and divided by its area. The map records woods of about half a hectare or more, so small copses,
+      hedgerows and street trees are not counted. Wales value is the summed woodland area over the summed council area, 312,300
+      ha or 15.0 percent, matching Forestry Statistics 2025 (313,000 ha, 15 percent).
+- id: ancient_woodland
+  name:
+    en: Land covered by ancient woodland
+    cy: Tir dan goetir hynafol
+  cy_review: true
+  unit: percent of land area
+  format: percent
+  higher_is_better: true
+  strand: resilient
+  national_indicator: null
+  source: nrw_ancient_woodland
+  notes:
+    en: Woods that have stood since at least 1600, from the Ancient Woodland Inventory 2021. Computed as the area of inventory
+      polygons inside each authority divided by its land area (local authority boundaries at the high water mark). Counts
+      ancient semi-natural woodland and replanted ancient sites together. Separate from the woodland cover measure.
+- id: sssi_land
+  name:
+    en: Land protected as a Site of Special Scientific Interest
+    cy: Tir a warchodir fel Safle o Ddiddordeb Gwyddonol Arbennig
+  cy_review: true
+  unit: percent of land area
+  format: percent
+  higher_is_better: true
+  strand: resilient
+  national_indicator: null
+  source: nrw_sssi
+  notes:
+    en: All 1,088 SSSIs in the NRW layer, merged where they overlap and clipped to each council's land at the high water mark,
+      so the intertidal and estuary parts of coastal sites are left out (226,100 ha of the 267,800 ha designated). A designation,
+      not a measure of the sites' condition. Wales value is the summed protected area over the summed council area.
+- id: protected_landscape
+  name:
+    en: Land in a National Park or National Landscape
+    cy: Tir mewn Parc Cenedlaethol neu Dirwedd Genedlaethol
+  cy_review: true
+  unit: percent of land area
+  format: percent
+  higher_is_better: true
+  strand: resilient
+  national_indicator: null
+  source: nrw_protected_landscapes
+  notes:
+    en: The three National Parks and the five National Landscapes (the new name for Areas of Outstanding Natural Beauty) in
+      Wales, merged and clipped to each council's boundary at the high water mark. The English half of the Wye Valley falls
+      outside Wales and is dropped. National Parks cover 19.5 percent of Wales and National Landscapes 4.8 percent, 24.3 percent
+      together. Nine councils have none or almost none, which is true but leaves a flat bottom on the map. A landscape designation,
+      not a measure of nature's health.
+- id: river_good_status
+  name:
+    en: River length in good health
+    cy: Hyd afonydd mewn cyflwr da
+  cy_review: true
+  unit: percent of river length
+  format: percent
+  higher_is_better: true
+  strand: resilient
+  national_indicator: null
+  source: nrw_wfd_rivers_2021
+  notes:
+    en: Share of the length of river water bodies inside each council at good or high overall status under the Water Framework
+      Directive, Cycle 3 baseline classification (assessed 2021, published 2023). Status is judged for a whole water body,
+      which can cross council lines, so this is a length share, not a council assessment. Councils with little river length
+      (Cardiff 45 km, Blaenau Gwent 40 km, Merthyr Tydfil 51 km, Torfaen 53 km, Newport 54 km) all score 0 because each of
+      their rivers is moderate or worse. Wales value is by length (44.7 percent); by count of water bodies it is 43.9 percent
+      (315 of 717). The 2024 interim classification is not used because its layer states no licence.
+- id: no2_pop
+  name:
+    en: Nitrogen dioxide in the air (traffic fumes)
+    cy: Nitrogen deuocsid yn yr aer (mygdarth traffig)
+  cy_review: true
+  unit: micrograms per cubic metre
   format: decimal1
   higher_is_better: false
-  strand: cohesive
+  strand: resilient
+  national_indicator: null
+  source: statswales_air_quality
+  notes:
+    en: Yearly average for 2024, modelled on a 1 km grid and averaged across the people who live in each authority. Modelled,
+      not measured at one spot. Defra is the data provider.
+- id: pm25_pop
+  name:
+    en: Tiny dust particles in the air (PM2.5)
+    cy: Gronynnau llwch bach yn yr aer (PM2.5)
+  cy_review: true
+  unit: micrograms per cubic metre
+  format: decimal1
+  higher_is_better: false
+  strand: resilient
+  national_indicator: null
+  source: statswales_air_quality
+  notes:
+    en: Yearly average for 2024, modelled on a 1 km grid and averaged across the people who live in each authority. Modelled,
+      not measured at one spot. Defra is the data provider.
+- id: noise_exposed
+  name:
+    en: People living with road, rail or industry noise
+    cy: Pobl sy'n byw gyda sŵn ffyrdd, rheilffyrdd neu ddiwydiant
+  cy_review: true
+  unit: percent of residents
+  format: percent
+  higher_is_better: false
+  strand: resilient
+  national_indicator: null
+  source: statswales_wimd2025_lsoa
+  notes:
+    en: WIMD 2025, from strategic noise mapping that covers main roads, railways and large towns only. Weighted by Census
+      2021 residents from small areas, so the authority and Wales figures are shares of people. Computed here because StatsWales
+      has no authority value.
+- id: life_exp
+  name:
+    en: Life expectancy at birth
+    cy: Disgwyliad oes adeg geni
+  cy_review: true
+  unit: years
+  format: years
+  higher_is_better: true
+  strand: healthier
+  national_indicator: null
+  source: ons_life_expectancy_local
+  notes:
+    en: 2022 to 2024. Simple mean of male and female. Healthy life expectancy is a separate measure (healthy_life_exp).
+- id: healthy_life_exp
+  name:
+    en: Healthy life expectancy at birth
+    cy: Disgwyliad oes iach adeg geni
+  cy_review: true
+  unit: years
+  format: years
+  higher_is_better: true
+  strand: healthier
+  national_indicator: null
+  source: ons_hle_local
+  notes:
+    en: 2022 to 2024. Years a baby born now can expect to live in good health. Simple mean of the male and female figures,
+      as for life_exp (also used for the Wales value). ONS uses a modelled method for local health because survey samples
+      have shrunk, and the 95 percent confidence ranges are wide in small areas.
+- id: premature_deaths
+  name:
+    en: Deaths before age 75
+    cy: Marwolaethau cyn 75 oed
+  cy_review: true
+  unit: per 100,000 people
+  format: integer
+  higher_is_better: false
+  strand: healthier
   national_indicator: null
   source: statswales_wimd2025_la
   notes:
-    en: WIMD 2025 indicator. The only LA-level public transport access measure found; stands in for bus access.
+    en: WIMD 2025, deaths registered 2015 to 2024. Rate per 100,000 people, indirectly standardised for age and sex so areas
+      with older populations are not penalised.
+- id: bad_health
+  name:
+    en: Residents in bad or very bad health
+    cy: Trigolion mewn iechyd gwael neu wael iawn
+  cy_review: true
+  unit: percent of residents
+  format: percent
+  higher_is_better: false
+  strand: healthier
+  national_indicator: null
+  source: nomis_census_ts037
+  notes:
+    en: Census 2021, self-reported general health. Strongly shaped by how old the population is.
+- id: disabled_limited_lot
+  name:
+    en: Residents whose daily activities are limited a lot by a health problem
+    cy: Trigolion y mae problem iechyd yn cyfyngu llawer ar eu gweithgareddau dyddiol
+  cy_review: true
+  unit: percent of residents
+  format: percent
+  higher_is_better: false
+  strand: healthier
+  national_indicator: null
+  source: nomis_census_ts038
+  notes:
+    en: Census 2021, disabled under the Equality Act with day-to-day activities limited a lot. Strongly shaped by age; overlaps
+      bad_health.
+- id: gp_chronic
+  name:
+    en: People with a long-term condition on GP records
+    cy: Pobl sydd â chyflwr hirdymor ar gofnodion meddyg teulu
+  cy_review: true
+  unit: percent of people
+  format: percent
+  higher_is_better: false
+  strand: healthier
+  national_indicator: null
+  source: statswales_wimd2025_la
+  notes:
+    en: WIMD 2025 (GP records). Shaped by age and by how conditions are recorded.
+- id: gp_mental_health
+  name:
+    en: People with a mental health condition on GP records
+    cy: Pobl sydd â chyflwr iechyd meddwl ar gofnodion meddyg teulu
+  cy_review: true
+  unit: percent of people
+  format: percent
+  higher_is_better: false
+  strand: healthier
+  national_indicator: null
+  source: statswales_wimd2025_la
+  notes:
+    en: WIMD 2025 (GP records). Partly reflects how often people see a GP and how GPs record, not only how many people are
+      unwell.
+- id: cancer_incidence
+  name:
+    en: New cancer cases
+    cy: Achosion newydd o ganser
+  cy_review: true
+  unit: per 100,000 people
+  format: integer
+  higher_is_better: false
+  strand: healthier
+  national_indicator: null
+  source: statswales_wimd2025_la
+  notes:
+    en: WIMD 2025, rate per 100,000 people. Partly reflects age and how much screening finds.
+- id: low_birth_weight
+  name:
+    en: Babies born at low birth weight
+    cy: Babanod a anwyd â phwysau geni isel
+  cy_review: true
+  unit: percent of single live births
+  format: percent
+  higher_is_better: false
+  strand: healthier
+  national_indicator: null
+  source: statswales_wimd2025_la
+  notes:
+    en: WIMD 2025, single live births under 2.5 kg, years pooled. Small numbers in small areas.
+- id: immunised_age4
+  name:
+    en: Children fully immunised by their fourth birthday
+    cy: Plant wedi'u imiwneiddio'n llawn erbyn eu pedwerydd pen-blwydd
+  cy_review: true
+  unit: percent of children
+  format: percent
+  higher_is_better: true
+  strand: healthier
+  national_indicator: null
+  source: statswales_immunisation
+  notes:
+    en: School year 2025-26, all areas (Flying Start and other areas combined). Welsh Government figures built from NHS immunisation
+      records.
+- id: suicide_rate
+  name:
+    en: Suicide rate
+    cy: Cyfradd hunanladdiad
+  cy_review: true
+  unit: per 100,000 people
+  format: decimal1
+  higher_is_better: false
+  strand: healthier
+  national_indicator: null
+  source: ons_suicides_la
+  notes:
+    en: 'Deaths registered 2023 to 2025, age-standardised rate for all ages and both sexes. ONS marks rates from small counts
+      as less reliable. Sensitive topic: the owner may prefer to leave it out of the game.'
+- id: drug_deaths
+  name:
+    en: Deaths from drug poisoning
+    cy: Marwolaethau o wenwyno gan gyffuriau
+  cy_review: true
+  unit: per 100,000 people
+  format: decimal1
+  higher_is_better: false
+  strand: healthier
+  national_indicator: null
+  source: ons_drug_deaths_la
+  notes:
+    en: 'Deaths registered 2023 to 2025, age-standardised rate, all drug poisoning (the drug misuse subset is hidden for Anglesey
+      so is not used). Sensitive topic: the owner may prefer to leave it out of the game.'
+- id: unpaid_care_20h
+  name:
+    en: Residents giving 20 or more hours of unpaid care a week
+    cy: Trigolion sy'n rhoi 20 awr neu fwy o ofal di-dâl yr wythnos
+  cy_review: true
+  unit: percent of residents aged 5+
+  format: percent
+  higher_is_better: null
+  strand: healthier
+  national_indicator: null
+  source: nomis_census_ts039
+  notes:
+    en: 'Census 2021, residents aged 5 and over. Context with no direction: caring is valuable but also a sign of need and
+      pressure.'
+- id: age65
+  name:
+    en: Share aged 65 and over
+    cy: Cyfran 65 oed a throsodd
+  cy_review: true
+  unit: percent of residents
+  format: percent
+  higher_is_better: false
+  strand: healthier
+  national_indicator: null
+  source: nomis_mye
+  notes:
+    en: Mid-2025. Feeds care_pressure in the game.
+- id: deprivation
+  name:
+    en: Small areas in the most deprived fifth of Wales
+    cy: Ardaloedd bach yn y bumed rhan fwyaf difreintiedig o Gymru
+  cy_review: true
+  unit: percent of LSOAs
+  format: percent
+  higher_is_better: false
+  strand: equal
+  national_indicator: null
+  source: wimd_2025
+  notes:
+    en: WIMD 2025 overall rank, 1917 LSOAs. Wales value is 20 by construction.
+- id: deprivation_10
+  name:
+    en: Small areas in the most deprived tenth of Wales
+    cy: Ardaloedd bach yn y ddegfed ran fwyaf difreintiedig o Gymru
+  cy_review: true
+  unit: percent of LSOAs
+  format: percent
+  higher_is_better: false
+  strand: equal
+  national_indicator: null
+  source: wimd_2025
+  notes:
+    en: WIMD 2025 decile 1. Wales value is 10 by construction.
+- id: income_deprivation
+  name:
+    en: People on a very low income
+    cy: Pobl ar incwm isel iawn
+  cy_review: true
+  unit: percent of people
+  format: percent
+  higher_is_better: false
+  strand: equal
+  national_indicator: null
+  source: statswales_wimd2025_la
+  notes:
+    en: WIMD 2025 indicator, people in income deprivation (in households on means tested benefits or tax credits, below a
+      low income line). Source years vary by benefit but are mostly 2023 to 2024.
+- id: child_low_income
+  name:
+    en: Children in low income families
+    cy: Plant mewn teuluoedd incwm isel
+  cy_review: true
+  unit: percent of children under 16
+  format: percent
+  higher_is_better: false
+  strand: equal
+  national_indicator: null
+  source: dwp_children_low_income
+  notes:
+    en: Children under 16 in relative low income families, before housing costs, financial year ending 2025. Local figures
+      are modelled from a national survey, so small gaps between areas are not reliable. The Wales value is the DWP figure
+      for Wales.
+- id: older_income_deprivation
+  name:
+    en: Older people on a very low income
+    cy: Pobl hŷn ar incwm isel iawn
+  cy_review: true
+  unit: percent of older people
+  format: percent
+  higher_is_better: false
+  strand: equal
+  national_indicator: null
+  source: statswales_wimd2025_la
+  notes:
+    en: WIMD 2025 indicator, older people in income deprivation (people aged 60 and over on means tested benefits such as
+      Pension Credit). Not everyone who is entitled claims Pension Credit, so the true figure is likely higher.
+- id: free_school_meals
+  name:
+    en: Pupils who can get free school meals
+    cy: Disgyblion sy'n gymwys i gael prydau ysgol am ddim
+  cy_review: true
+  unit: percent of pupils
+  format: percent
+  higher_is_better: false
+  strand: equal
+  national_indicator: null
+  source: statswales_fsm
+  notes:
+    en: Pupils eligible for free school meals on the means test (a household income test), 2025/26 school year. Free meals
+      for all primary pupils do not change this figure, but fewer families may be applying for the means test now.
+- id: hh_deprived_2plus
+  name:
+    en: Households short in two or more ways
+    cy: Aelwydydd dan anfantais mewn dwy ffordd neu fwy
+  cy_review: true
+  unit: percent of households
+  format: percent
+  higher_is_better: false
+  strand: equal
+  national_indicator: null
+  source: nomis_census_ts011
+  notes:
+    en: Census 2021. A household is short in a way if no one has a school qualification at level 2, or someone is out of work
+      through illness or disability, or someone has bad health or a disability, or the home is overcrowded, shared or has
+      no central heating. This counts households short in two, three or four of those ways.
+- id: low_pay_hourly
+  name:
+    en: Hourly pay of the lowest paid fifth of workers
+    cy: Cyflog yr awr y bumed ran isaf o weithwyr
+  cy_review: true
+  unit: GBP per hour
+  format: decimal2
+  higher_is_better: true
+  strand: equal
+  national_indicator: null
+  source: nomis_ashe
+  notes:
+    en: ASHE 2026, 20th percentile of gross hourly pay for full-time workers by place of residence. One in five full-time
+      workers earns less than this. Part-time workers are not included. Sample based, so small differences between areas are
+      not reliable.
 - id: poor_housing
   name:
     en: Poor quality housing
@@ -247,3 +678,550 @@ indicators:
   source: statswales_wimd2025_la
   notes:
     en: WIMD 2025 indicator. Stands in for housing quality / EPC band, which has no open LA table.
+- id: daf_payments
+  name:
+    en: Emergency cash grants paid
+    cy: Grantiau arian brys a dalwyd
+  cy_review: true
+  unit: payments per 1,000 people
+  format: integer
+  higher_is_better: null
+  strand: equal
+  national_indicator: null
+  source: statswales_daf
+  notes:
+    en: Discretionary Assistance Fund payments (emergency and individual assistance) from April 2025 to March 2026, per 1,000
+      residents (ONS mid-2025). No direction is given, because the number shows how many people needed help and how well the
+      scheme is known locally. Wales value is the 22 authorities added together, which equals the published Wales total.
+- id: pop
+  name:
+    en: Population (mid-year estimate)
+    cy: Poblogaeth (amcangyfrif canol blwyddyn)
+  cy_review: true
+  unit: people
+  format: integer
+  higher_is_better: null
+  strand: cohesive
+  national_indicator: null
+  source: nomis_mye
+  notes:
+    en: Mid-2025. Context and weighting indicator, no direction.
+- id: pop_change
+  name:
+    en: Population change over 10 years
+    cy: Newid yn y boblogaeth dros 10 mlynedd
+  cy_review: true
+  unit: percent
+  format: percent
+  higher_is_better: null
+  strand: cohesive
+  national_indicator: null
+  source: nomis_mye
+  notes:
+    en: Mid-2015 to mid-2025.
+- id: young_adults
+  name:
+    en: Share aged 20 to 34
+    cy: Cyfran 20 i 34 oed
+  cy_review: true
+  unit: percent of residents
+  format: percent
+  higher_is_better: true
+  strand: cohesive
+  national_indicator: null
+  source: nomis_mye
+  notes:
+    en: Mid-2025.
+- id: affordability
+  name:
+    en: House price to residence-based earnings ratio (median)
+    cy: Cymhareb pris tŷ i enillion yn ôl preswylfa (canolrifol)
+  cy_review: true
+  unit: ratio
+  format: ratio
+  higher_is_better: false
+  strand: cohesive
+  national_indicator: null
+  source: ons_affordability
+  notes:
+    en: Year ending September 2025.
+- id: second_homes
+  name:
+    en: Second homes per 100 homes
+    cy: Cartrefi eilaidd fesul 100 o gartrefi
+  cy_review: true
+  unit: per 100 chargeable dwellings
+  format: decimal1
+  higher_is_better: false
+  strand: cohesive
+  national_indicator: null
+  source: statswales_ct1
+  notes:
+    en: Council tax records for 2026-27, second homes as a share of chargeable dwellings. Homes that moved to business rates
+      as holiday lets are not counted. Blaenau Gwent and Torfaen report almost none.
+- id: empty_homes
+  name:
+    en: Empty homes per 100 homes
+    cy: Cartrefi gwag fesul 100 o gartrefi
+  cy_review: true
+  unit: per 100 chargeable dwellings
+  format: decimal1
+  higher_is_better: false
+  strand: cohesive
+  national_indicator: null
+  source: statswales_ct1
+  notes:
+    en: Council tax records for 2026-27, all chargeable empty properties (short and long term) as a share of chargeable dwellings.
+- id: new_homes
+  name:
+    en: New homes built each year
+    cy: Cartrefi newydd a godir bob blwyddyn
+  cy_review: true
+  unit: per 1,000 existing dwellings
+  format: decimal1
+  higher_is_better: true
+  strand: cohesive
+  national_indicator: null
+  source: statswales_new_dwellings
+  notes:
+    en: Mean of new dwellings completed in 2023-24, 2024-25 and 2025-26, per 1,000 dwellings at 31 March 2025. Three years
+      are pooled because small areas vary a lot from year to year.
+- id: social_housing
+  name:
+    en: Council and housing association homes
+    cy: Cartrefi cyngor a chymdeithas dai
+  cy_review: true
+  unit: percent of dwellings
+  format: percent
+  higher_is_better: null
+  strand: cohesive
+  national_indicator: null
+  source: statswales_dwelling_stock
+  notes:
+    en: Social housing as a share of all dwellings at 31 March 2025. Computed from stock counts, which are rounded to the
+      nearest 100. Context only, no direction.
+- id: overcrowding
+  name:
+    en: Overcrowded households
+    cy: Aelwydydd gorlawn
+  cy_review: true
+  unit: percent of households
+  format: percent
+  higher_is_better: false
+  strand: cohesive
+  national_indicator: null
+  source: statswales_wimd2025_la
+  notes:
+    en: WIMD 2025 indicator, based on Census 2021 bedroom standard.
+- id: temp_accommodation
+  name:
+    en: Homeless people in temporary accommodation
+    cy: Pobl ddigartref mewn llety dros dro
+  cy_review: true
+  unit: per 10,000 residents
+  format: decimal1
+  higher_is_better: false
+  strand: cohesive
+  national_indicator: null
+  source: statswales_temp_accommodation
+  notes:
+    en: Mean of the 12 month-end counts from October 2025 to September 2026, per 10,000 residents (ONS mid-2025). Shows council
+      practice and housing supply as well as need.
+- id: burglary
+  name:
+    en: Burglaries
+    cy: Byrgleriaethau
+  cy_review: true
+  unit: per 100 dwellings
+  format: decimal2
+  higher_is_better: false
+  strand: cohesive
+  national_indicator: null
+  source: statswales_wimd2025_la
+  notes:
+    en: WIMD 2025 indicator, police recorded burglary per 100 residential dwellings. Recording practice differs between the
+      four Welsh police forces.
+- id: gp_travel_public
+  name:
+    en: Average return travel time to a GP surgery by public transport
+    cy: Amser teithio dychwel cyfartalog i feddygfa ar gludiant cyhoeddus
+  cy_review: true
+  unit: minutes
+  format: decimal1
+  higher_is_better: false
+  strand: cohesive
+  national_indicator: null
+  source: statswales_wimd2025_la
+  notes:
+    en: WIMD 2025 indicator. The only LA-level public transport access measure found; stands in for bus access.
+- id: slow_broadband
+  name:
+    en: Homes unable to get superfast broadband
+    cy: Cartrefi na allant gael band eang cyflym iawn
+  cy_review: true
+  unit: percent of residential premises
+  format: percent
+  higher_is_better: false
+  strand: cohesive
+  national_indicator: null
+  source: statswales_wimd2025_la
+  notes:
+    en: WIMD 2025 indicator from Ofcom data. Coverage changes quickly, so the true figure today is likely lower.
+- id: welsh_speakers
+  name:
+    en: Welsh speakers aged 3 and over
+    cy: Siaradwyr Cymraeg 3 oed a throsodd
+  cy_review: true
+  unit: percent of residents aged 3+
+  format: percent
+  higher_is_better: true
+  strand: culture
+  national_indicator: null
+  source: nomis_census_ts033
+  notes:
+    en: Census 2021. Can speak Welsh divided by all usual residents aged 3+.
+- id: welsh_daily
+  name:
+    en: People aged 3+ who speak Welsh every day
+    cy: Pobl 3 oed a throsodd sy'n siarad Cymraeg bob dydd
+  cy_review: true
+  unit: percent of residents aged 3+
+  format: percent
+  higher_is_better: true
+  strand: culture
+  national_indicator: null
+  source: statswales_aps_welsh_frequency
+  notes:
+    en: 'Annual Population Survey, year ending 31 March 2026. Sample survey: small authorities carry sampling error. The survey
+      gives higher Welsh ability than the Census, so use it to compare places, not to replace the Census.'
+- id: welsh_literate
+  name:
+    en: People aged 3+ who can speak, read and write Welsh
+    cy: Pobl 3 oed a throsodd sy'n gallu siarad, darllen ac ysgrifennu Cymraeg
+  cy_review: true
+  unit: percent of residents aged 3+
+  format: percent
+  higher_is_better: true
+  strand: culture
+  national_indicator: null
+  source: nomis_census_ts032
+  notes:
+    en: Census 2021 TS032 (Nomis NM_2050_1). Can speak, read and write Welsh divided by all usual residents aged 3 and over.
+- id: welsh_at_home_pupils
+  name:
+    en: Pupils who speak Welsh at home
+    cy: Disgyblion sy'n siarad Cymraeg gartref
+  cy_review: true
+  unit: percent of pupils
+  format: percent
+  higher_is_better: true
+  strand: culture
+  national_indicator: null
+  source: statswales_plasc_welsh_home
+  notes:
+    en: PLASC 2025/26. Pupils aged 5 and over recorded by their parents as speaking Welsh at home, divided by all pupils in
+      the table total (which includes those who cannot speak Welsh). Parent-reported.
+- id: welsh_medium_pupils
+  name:
+    en: Pupils in Welsh-medium schools or provision
+    cy: Disgyblion mewn ysgolion neu ddarpariaeth cyfrwng Cymraeg
+  cy_review: true
+  unit: percent of pupils
+  format: percent
+  higher_is_better: true
+  strand: culture
+  national_indicator: null
+  source: statswales_plasc_school_language
+  notes:
+    en: Pupil Level Annual School Census 2025/26, all schools. Pupils in Welsh medium school or provision (including transitional)
+      divided by all pupils. Dual language provision is not counted. Language categories changed in 2024/25, so only two years
+      are comparable.
+- id: welsh_medium_teachers
+  name:
+    en: Teachers working through the medium of Welsh
+    cy: Athrawon sy'n gweithio trwy gyfrwng y Gymraeg
+  cy_review: true
+  unit: percent of teachers
+  format: percent
+  higher_is_better: true
+  strand: culture
+  national_indicator: null
+  source: statswales_school_workforce_welsh
+  notes:
+    en: School workforce census 2025/26, all schools. Teachers teaching or working through the medium of Welsh in their current
+      post divided by total teachers (headcount). Some small cells are confidential in the source and sit inside the totals.
+- id: welsh_identity
+  name:
+    en: People whose national identity is Welsh
+    cy: Pobl sydd â hunaniaeth genedlaethol Gymreig
+  cy_review: true
+  unit: percent of residents
+  format: percent
+  higher_is_better: null
+  strand: culture
+  national_indicator: null
+  source: nomis_census_ts027
+  notes:
+    en: Census 2021 TS027 (Nomis NM_2046_1). Welsh only plus Welsh and British only, divided by all usual residents. Other
+      combinations that include Welsh are folded into wider groups in this table, so this slightly understates Welsh identity.
+      Context only, no direction.
+- id: library_travel
+  name:
+    en: Average return travel time to a public library by public transport
+    cy: Amser teithio dychwel cyfartalog i lyfrgell gyhoeddus ar gludiant cyhoeddus
+  cy_review: true
+  unit: minutes
+  format: decimal1
+  higher_is_better: false
+  strand: culture
+  national_indicator: null
+  source: statswales_wimd2025_la
+  notes:
+    en: WIMD 2025 indicator. Measures access, not use of libraries. Rural authorities score long times.
+- id: listed_buildings
+  name:
+    en: Listed buildings per 1,000 people
+    cy: Adeiladau rhestredig fesul 1,000 o bobl
+  cy_review: true
+  unit: per 1,000 residents
+  format: decimal1
+  higher_is_better: null
+  strand: culture
+  national_indicator: null
+  source: cadw_listed_buildings
+  notes:
+    en: Count of the 30,110 listed buildings on Cadw's live register (fetched 27 November 2026), placed in councils by their
+      map point (76 points on the foreshore below the high water line go to the nearest council; the result matches Cadw's
+      own authority field for all but 2 records), divided by ONS mid-2025 population. Counts designations, not their use or
+      condition. Per head favours rural councils; by area, towns and cities with historic centres rank higher. Context only,
+      no direction.
+- id: scheduled_monuments
+  name:
+    en: Scheduled monuments per 100 square kilometres
+    cy: Henebion cofrestredig fesul 100 cilomedr sgwâr
+  cy_review: true
+  unit: per 100 km2
+  format: decimal1
+  higher_is_better: null
+  strand: culture
+  national_indicator: null
+  source: cadw_scheduled_monuments
+  notes:
+    en: Count of Cadw scheduled monument records by unitary authority, divided by land area from the DataMapWales local authority
+      boundaries. Counts designations, not condition or visits. Context only, no direction.
+- id: historic_place_names
+  name:
+    en: Recorded historic place names per square kilometre
+    cy: Enwau lleoedd hanesyddol cofnodedig fesul cilomedr sgwâr
+  cy_review: true
+  unit: per km2
+  format: decimal1
+  higher_is_better: null
+  strand: culture
+  national_indicator: null
+  source: rcahmw_place_names
+  notes:
+    en: Points in the RCAHMW List of Historic Place Names (666,308 records) placed in each authority by point in polygon,
+      divided by land area. Shows where names have been recorded, not only how many exist. 660,414 records fall inside the
+      22 authorities. Context only, no direction.
+- id: emissions_head
+  name:
+    en: Territorial greenhouse gas emissions per person
+    cy: Allyriadau nwyon tŷ gwydr tiriogaethol y pen
+  cy_review: true
+  unit: tonnes CO2e per person
+  format: decimal1
+  higher_is_better: false
+  strand: global
+  national_indicator: null
+  source: desnz_la_ghg
+  notes:
+    en: 2024, all sectors including net land use. Heavy-industry LAs (Neath Port Talbot) are far above the rest.
+- id: home_transport_emissions
+  name:
+    en: Greenhouse gases from homes and travel, per person
+    cy: Nwyon tŷ gwydr o gartrefi a theithio, y pen
+  cy_review: true
+  unit: tonnes CO2e per person
+  format: decimal1
+  higher_is_better: false
+  strand: global
+  national_indicator: null
+  source: desnz_la_ghg
+  notes:
+    en: 2024. Territorial emissions from the Domestic and Transport sectors only, divided by mid-year population. Leaves out
+      industry, farming and land use, so it avoids the Neath Port Talbot steelworks distortion in emissions_head. Transport
+      includes through-traffic on motorways and trunk roads, so Monmouthshire and Powys read high. Wales value is the sum
+      of the 22 authorities over their population.
+- id: renewables
+  name:
+    en: Installed renewable electricity capacity per person
+    cy: Capasiti trydan adnewyddadwy wedi'i osod y pen
+  cy_review: true
+  unit: kW per person
+  format: decimal2
+  higher_is_better: true
+  strand: global
+  national_indicator: null
+  source: desnz_renewables_la
+  notes:
+    en: End 2025 capacity divided by mid-2025 population.
+- id: renewables_mw
+  name:
+    en: Installed renewable electricity capacity
+    cy: Capasiti trydan adnewyddadwy wedi'i osod
+  cy_review: true
+  unit: MW
+  format: integer
+  higher_is_better: true
+  strand: global
+  national_indicator: null
+  source: desnz_renewables_la
+  notes:
+    en: End 2025, all technologies. Wales value is the sum of the 22 LAs.
+- id: heat_pumps
+  name:
+    en: Heat pumps per 1,000 homes
+    cy: Pympiau gwres fesul 1,000 o gartrefi
+  cy_review: true
+  unit: heat pump projects per 1,000 dwellings
+  format: decimal1
+  higher_is_better: true
+  strand: global
+  national_indicator: null
+  source: statswales_heat_pumps
+  notes:
+    en: 2024. Heat pump projects in the Welsh Government low carbon energy projects data (domestic and non-domestic, some
+      small ones estimated), divided by the dwelling stock at 31 March 2024. Counts all projects, so a business heat pump
+      adds to the figure. High values in rural Ceredigion and Powys partly reflect homes off the gas grid. Wales value is
+      the published Wales count over the Wales dwelling stock.
+- id: home_energy_efficiency
+  name:
+    en: How well homes keep their heat in
+    cy: Pa mor dda mae cartrefi yn cadw eu gwres
+  cy_review: true
+  unit: average SAP score (0 to 100, higher is better)
+  format: decimal1
+  higher_is_better: true
+  strand: global
+  national_indicator: null
+  source: statswales_wimd2025_la
+  notes:
+    en: WIMD 2025 (source data from the early 2020s). Average Standard Assessment Procedure score of residential properties.
+      Modelled for all homes, so it does not depend on which homes have had an energy certificate. Wales value as published.
+- id: gas_use_median
+  name:
+    en: Gas used by a typical home
+    cy: Nwy a ddefnyddir gan gartref cyffredin
+  cy_review: true
+  unit: kWh per gas meter per year
+  format: integer
+  higher_is_better: false
+  strand: global
+  national_indicator: null
+  source: desnz_gas_la
+  notes:
+    en: 2024. Median domestic gas use per meter, corrected for the weather so years compare fairly. Only covers homes on the
+      gas grid, so read it alongside off_gas_grid. Colder, older and larger homes use more. Wales value as published.
+- id: off_gas_grid
+  name:
+    en: Homes not connected to mains gas
+    cy: Cartrefi heb eu cysylltu â nwy prif gyflenwad
+  cy_review: true
+  unit: percent of homes
+  format: percent
+  higher_is_better: null
+  strand: global
+  national_indicator: null
+  source: desnz_off_gas_la
+  notes:
+    en: '2024. Estimated share of homes with no mains gas, from meter counts and address counts. No direction: these homes
+      often burn oil or coal, which is bad for carbon, but they are also the easiest to move straight to heat pumps. High
+      in rural Wales. Wales value as published.'
+- id: plug_in_cars
+  name:
+    en: Privately owned cars that plug in
+    cy: Ceir preifat sy'n plygio i mewn
+  cy_review: true
+  unit: percent of private cars
+  format: percent
+  higher_is_better: true
+  strand: global
+  national_indicator: null
+  source: dft_vehicle_licensing
+  notes:
+    en: End of June 2026. Battery electric, plug-in hybrid and range-extended cars as a share of all privately kept licensed
+      cars. Company cars are left out because they are registered at the address of the leasing firm, which inflates places
+      such as Bridgend and Swansea. Wales value as published in the same tables.
+- id: ev_chargers
+  name:
+    en: Public electric car charging points
+    cy: Pwyntiau gwefru ceir trydan cyhoeddus
+  cy_review: true
+  unit: devices per 100,000 people
+  format: integer
+  higher_is_better: true
+  strand: global
+  national_indicator: null
+  source: dft_evci
+  notes:
+    en: 1 October 2026. Publicly available charging devices working at that date, per 100,000 residents (ONS mid-2024 population,
+      as used by DfT). Rural and tourist areas score high because they have few residents per charger. Wales value is the
+      sum of the 22 authorities over their summed population, worked out from the DfT counts and rates.
+- id: ev_chargers_rapid
+  name:
+    en: Rapid public charging points
+    cy: Pwyntiau gwefru cyflym cyhoeddus
+  cy_review: true
+  unit: devices per 100,000 people
+  format: integer
+  higher_is_better: true
+  strand: global
+  national_indicator: null
+  source: dft_evci
+  notes:
+    en: 1 October 2026. Rapid and ultra-rapid chargers (50 kW or more) per 100,000 residents. These are the chargers that
+      fill a battery in the time of a coffee stop, and tend to sit on main roads. Wales value computed as for ev_chargers.
+- id: drive_to_work
+  name:
+    en: Commuters who drive to work
+    cy: Cymudwyr sy'n gyrru i'r gwaith
+  cy_review: true
+  unit: percent of workers who travel to work
+  format: percent
+  higher_is_better: false
+  strand: global
+  national_indicator: null
+  source: nomis_census_ts061
+  notes:
+    en: Census 2021 (taken in March 2021 during pandemic restrictions, so ONS advises caution). Usual residents aged 16 and
+      over in work who drive a car or van, as a share of those in work who do not mainly work from home. Wales value computed
+      the same way from the published Wales counts.
+- id: recycling_rate
+  name:
+    en: Council waste that is recycled, reused or composted
+    cy: Gwastraff y cyngor sy'n cael ei ailgylchu, ei ailddefnyddio neu ei gompostio
+  cy_review: true
+  unit: percent of municipal waste
+  format: percent
+  higher_is_better: true
+  strand: global
+  national_indicator: null
+  source: statswales_waste_la
+  notes:
+    en: 2024-25. Statutory target measure for local authority municipal waste (household and non-household waste the council
+      collects). All authorities are high, so the spread is narrow (about 62 to 74 percent). Wales value as published.
+- id: residual_waste_head
+  name:
+    en: Rubbish per person that is not recycled
+    cy: Sbwriel y pen nad yw'n cael ei ailgylchu
+  cy_review: true
+  unit: kg per person per year
+  format: integer
+  higher_is_better: false
+  strand: global
+  national_indicator: null
+  source: statswales_residual_waste
+  notes:
+    en: 2024-25. Residual household waste (the black bag rubbish sent for disposal) per person, in kilograms a year. Measures
+      producing less waste, where the recycling rate only measures sorting it. Wales value as published.

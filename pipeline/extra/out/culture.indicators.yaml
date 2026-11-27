@@ -1,0 +1,130 @@
+- id: welsh_medium_pupils
+  name:
+    en: "Pupils in Welsh-medium schools or provision"
+    cy: "Disgyblion mewn ysgolion neu ddarpariaeth cyfrwng Cymraeg"
+  cy_review: true
+  unit: percent of pupils
+  format: percent
+  higher_is_better: true
+  strand: culture
+  national_indicator: null
+  source: statswales_plasc_school_language
+  notes:
+    en: "Pupil Level Annual School Census 2025/26, all schools. Pupils in Welsh medium school or provision (including transitional) divided by all pupils. Dual language provision is not counted. Language categories changed in 2024/25, so only two years are comparable."
+- id: welsh_at_home_pupils
+  name:
+    en: "Pupils who speak Welsh at home"
+    cy: "Disgyblion sy'n siarad Cymraeg gartref"
+  cy_review: true
+  unit: percent of pupils
+  format: percent
+  higher_is_better: true
+  strand: culture
+  national_indicator: null
+  source: statswales_plasc_welsh_home
+  notes:
+    en: "PLASC 2025/26. Pupils aged 5 and over recorded by their parents as speaking Welsh at home, divided by all pupils in the table total (which includes those who cannot speak Welsh). Parent-reported."
+- id: welsh_daily
+  name:
+    en: "People aged 3+ who speak Welsh every day"
+    cy: "Pobl 3 oed a throsodd sy'n siarad Cymraeg bob dydd"
+  cy_review: true
+  unit: percent of residents aged 3+
+  format: percent
+  higher_is_better: true
+  strand: culture
+  national_indicator: null
+  source: statswales_aps_welsh_frequency
+  notes:
+    en: "Annual Population Survey, year ending 31 March 2026. Sample survey: small authorities carry sampling error. The survey gives higher Welsh ability than the Census, so use it to compare places, not to replace the Census."
+- id: welsh_speakers_aps
+  name:
+    en: "People aged 3+ who can speak Welsh (survey estimate)"
+    cy: "Pobl 3 oed a throsodd sy'n gallu siarad Cymraeg (amcangyfrif arolwg)"
+  cy_review: true
+  unit: percent of residents aged 3+
+  format: percent
+  higher_is_better: true
+  strand: culture
+  national_indicator: null
+  source: statswales_aps_welsh_speakers
+  notes:
+    en: "Annual Population Survey, year ending 30 June 2026, Can speak Welsh divided by all aged 3 or over. Sample survey, and it reads higher than the 2021 Census figure in welsh_speakers."
+- id: welsh_literate
+  name:
+    en: "People aged 3+ who can speak, read and write Welsh"
+    cy: "Pobl 3 oed a throsodd sy'n gallu siarad, darllen ac ysgrifennu Cymraeg"
+  cy_review: true
+  unit: percent of residents aged 3+
+  format: percent
+  higher_is_better: true
+  strand: culture
+  national_indicator: null
+  source: nomis_census_ts032
+  notes:
+    en: "Census 2021 TS032 (Nomis NM_2050_1). Can speak, read and write Welsh divided by all usual residents aged 3 and over."
+- id: welsh_medium_teachers
+  name:
+    en: "Teachers working through the medium of Welsh"
+    cy: "Athrawon sy'n gweithio trwy gyfrwng y Gymraeg"
+  cy_review: true
+  unit: percent of teachers
+  format: percent
+  higher_is_better: true
+  strand: culture
+  national_indicator: null
+  source: statswales_school_workforce_welsh
+  notes:
+    en: "School workforce census 2025/26, all schools. Teachers teaching or working through the medium of Welsh in their current post divided by total teachers (headcount). Some small cells are confidential in the source and sit inside the totals."
+- id: library_travel
+  name:
+    en: "Average return travel time to a public library by public transport"
+    cy: "Amser teithio dychwel cyfartalog i lyfrgell gyhoeddus ar gludiant cyhoeddus"
+  cy_review: true
+  unit: minutes
+  format: decimal1
+  higher_is_better: false
+  strand: culture
+  national_indicator: null
+  source: statswales_wimd2025_la
+  notes:
+    en: "WIMD 2025 indicator. Measures access, not use of libraries. Rural authorities score long times."
+- id: welsh_identity
+  name:
+    en: "People whose national identity is Welsh"
+    cy: "Pobl sydd â hunaniaeth genedlaethol Gymreig"
+  cy_review: true
+  unit: percent of residents
+  format: percent
+  higher_is_better: null
+  strand: culture
+  national_indicator: null
+  source: nomis_census_ts027
+  notes:
+    en: "Census 2021 TS027 (Nomis NM_2046_1). Welsh only plus Welsh and British only, divided by all usual residents. Other combinations that include Welsh are folded into wider groups in this table, so this slightly understates Welsh identity. Context only, no direction."
+- id: scheduled_monuments
+  name:
+    en: "Scheduled monuments per 100 square kilometres"
+    cy: "Henebion cofrestredig fesul 100 cilomedr sgwâr"
+  cy_review: true
+  unit: per 100 km2
+  format: decimal1
+  higher_is_better: null
+  strand: culture
+  national_indicator: null
+  source: cadw_scheduled_monuments
+  notes:
+    en: "Count of Cadw scheduled monument records by unitary authority, divided by land area from the DataMapWales local authority boundaries. Counts designations, not condition or visits. Context only, no direction."
+- id: historic_place_names
+  name:
+    en: "Recorded historic place names per square kilometre"
+    cy: "Enwau lleoedd hanesyddol cofnodedig fesul cilomedr sgwâr"
+  cy_review: true
+  unit: per km2
+  format: decimal1
+  higher_is_better: null
+  strand: culture
+  national_indicator: null
+  source: rcahmw_place_names
+  notes:
+    en: "Points in the RCAHMW List of Historic Place Names (666,308 records) placed in each authority by point in polygon, divided by land area. Shows where names have been recorded, not only how many exist. 660,414 records fall inside the 22 authorities. Context only, no direction."

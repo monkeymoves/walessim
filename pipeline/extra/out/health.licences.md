@@ -1,0 +1,15 @@
+Rows for the docs/data-licences.md table. Checked 2026-11-27 on the publisher's own pages and in the cover sheets of the downloaded workbooks.
+
+| Dataset | Licence | Attribution the app must show | Evidence |
+|---|---|---|---|
+| ONS Healthy life expectancy, UK, 2022 to 2024 (workbook released 19 February 2026) | OGL v3.0 (Crown copyright 2026) | Source: Office for National Statistics licensed under the Open Government Licence. | Cover sheet of the workbook ("You may re-use this publication (not including logos) free of charge ... under the terms of the Open Government Licence. Users should include a source accreditation to ONS"); https://www.ons.gov.uk/help/termsandconditions |
+| ONS Suicides in England and Wales by local authority (2025 registrations) | OGL v3.0 | Source: Office for National Statistics licensed under the Open Government Licence. | Cover sheet of `suicidebylocalauthority2025.xlsx`; https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/suicidesbylocalauthority |
+| ONS Deaths related to drug poisoning in England and Wales by local authority (published 4 November 2026) | OGL v3.0 | Source: Office for National Statistics licensed under the Open Government Licence. | Cover sheet of `2025localauthorities.xlsx`; https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/drugmisusedeathsbylocalauthority |
+| ONS Census 2021 TS037 General health, TS038 Disability, TS039 Provision of unpaid care, via Nomis | OGL v3.0 (ONS Crown copyright) | Source: Office for National Statistics, licensed under the Open Government Licence v3.0. | https://www.nomisweb.co.uk/home/copyright.asp (same entry as the existing Nomis row) |
+| StatsWales: Children fully immunised by their fourth birthday (`f5060a7c-8b2c-41c4-985f-f0a75a5dac5f`); WIMD 2025 indicators (`c28ab0ec-5893-46c2-a372-98d4058ba415`): premature deaths, GP recorded mental health and chronic conditions, low birth weight, cancer incidence | OGL v3.0, by the Welsh Government copyright statement. The StatsWales dataset pages state no licence of their own. | Contains public sector information licensed under the Open Government Licence v3.0. Source: Welsh Government (StatsWales). | https://www.gov.wales/copyright-statement ; https://stats.gov.wales/en-GB/f5060a7c-8b2c-41c4-985f-f0a75a5dac5f ; https://stats.gov.wales/en-GB/c28ab0ec-5893-46c2-a372-98d4058ba415 |
+
+Caveats
+- Healthy life expectancy: ONS cover sheet says estimates use an interim modelled method (logistic regression for good-health prevalence) because the Annual Population Survey sample has shrunk. Say "modelled" in any wording.
+- Public Health Wales data was not used (terms forbid republishing), per the plan's rejects.
+- The existing source `statswales_wimd2025_la` is reused for the five WIMD indicators; its notes line currently names only the three earlier indicators, so the merge step should extend it.
+- Suicide and drug poisoning deaths are sensitive topics for a game aimed at young people; both are flagged in their notes so the owner can drop them without touching the others.

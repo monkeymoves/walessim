@@ -1,0 +1,130 @@
+- id: second_homes
+  name:
+    en: Second homes per 100 homes
+    cy: Cartrefi eilaidd fesul 100 o gartrefi
+  cy_review: true
+  unit: per 100 chargeable dwellings
+  format: decimal1
+  higher_is_better: false
+  strand: cohesive
+  national_indicator: null
+  source: statswales_ct1
+  notes:
+    en: Council tax records for 2026-27, second homes as a share of chargeable dwellings. Homes that moved to business rates as holiday lets are not counted. Blaenau Gwent and Torfaen report almost none.
+- id: empty_homes
+  name:
+    en: Empty homes per 100 homes
+    cy: Cartrefi gwag fesul 100 o gartrefi
+  cy_review: true
+  unit: per 100 chargeable dwellings
+  format: decimal1
+  higher_is_better: false
+  strand: cohesive
+  national_indicator: null
+  source: statswales_ct1
+  notes:
+    en: Council tax records for 2026-27, all chargeable empty properties (short and long term) as a share of chargeable dwellings.
+- id: social_housing
+  name:
+    en: Council and housing association homes
+    cy: Cartrefi cyngor a chymdeithas dai
+  cy_review: true
+  unit: percent of dwellings
+  format: percent
+  higher_is_better: null
+  strand: cohesive
+  national_indicator: null
+  source: statswales_dwelling_stock
+  notes:
+    en: Social housing as a share of all dwellings at 31 March 2025. Computed from stock counts, which are rounded to the nearest 100. Context only, no direction.
+- id: temp_accommodation
+  name:
+    en: Homeless people in temporary accommodation
+    cy: Pobl ddigartref mewn llety dros dro
+  cy_review: true
+  unit: per 10,000 residents
+  format: decimal1
+  higher_is_better: false
+  strand: cohesive
+  national_indicator: null
+  source: statswales_temp_accommodation
+  notes:
+    en: Mean of the 12 month-end counts from October 2025 to September 2026, per 10,000 residents (ONS mid-2025). Shows council practice and housing supply as well as need.
+- id: new_homes
+  name:
+    en: New homes built each year
+    cy: Cartrefi newydd a godir bob blwyddyn
+  cy_review: true
+  unit: per 1,000 existing dwellings
+  format: decimal1
+  higher_is_better: true
+  strand: cohesive
+  national_indicator: null
+  source: statswales_new_dwellings
+  notes:
+    en: Mean of new dwellings completed in 2023-24, 2024-25 and 2025-26, per 1,000 dwellings at 31 March 2025. Three years are pooled because small areas vary a lot from year to year.
+- id: rough_sleepers
+  name:
+    en: People sleeping rough
+    cy: Pobl sy'n cysgu ar y stryd
+  cy_review: true
+  unit: per 100,000 residents
+  format: decimal1
+  higher_is_better: false
+  strand: cohesive
+  national_indicator: null
+  source: statswales_rough_sleepers
+  notes:
+    en: Mean of the 12 monthly counts from October 2025 to September 2026, per 100,000 residents (ONS mid-2025). Numbers are small, so single people make a visible difference.
+- id: overcrowding
+  name:
+    en: Overcrowded households
+    cy: Aelwydydd gorlawn
+  cy_review: true
+  unit: percent of households
+  format: percent
+  higher_is_better: false
+  strand: cohesive
+  national_indicator: null
+  source: statswales_wimd2025_la
+  notes:
+    en: WIMD 2025 indicator, based on Census 2021 bedroom standard.
+- id: slow_broadband
+  name:
+    en: Homes unable to get superfast broadband
+    cy: Cartrefi na allant gael band eang cyflym iawn
+  cy_review: true
+  unit: percent of residential premises
+  format: percent
+  higher_is_better: false
+  strand: cohesive
+  national_indicator: null
+  source: statswales_wimd2025_la
+  notes:
+    en: WIMD 2025 indicator from Ofcom data. Coverage changes quickly, so the true figure today is likely lower.
+- id: burglary
+  name:
+    en: Burglaries
+    cy: Byrgleriaethau
+  cy_review: true
+  unit: per 100 dwellings
+  format: decimal2
+  higher_is_better: false
+  strand: cohesive
+  national_indicator: null
+  source: statswales_wimd2025_la
+  notes:
+    en: WIMD 2025 indicator, police recorded burglary per 100 residential dwellings. Recording practice differs between the four Welsh police forces.
+- id: road_ksi
+  name:
+    en: People killed or seriously hurt on the roads
+    cy: Pobl a laddwyd neu a anafwyd yn ddifrifol ar y ffyrdd
+  cy_review: true
+  unit: per 100,000 residents per year
+  format: decimal1
+  higher_is_better: false
+  strand: cohesive
+  national_indicator: null
+  source: dft_stats19
+  notes:
+    en: Mean of 2023, 2024 and 2025 casualties recorded by police as fatal or serious, per 100,000 residents (ONS mid-2025). Counted where the crash happened, so rural areas with through traffic rank high. Wales value is the sum of the 22 authorities.

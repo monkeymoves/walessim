@@ -1,0 +1,54 @@
+- id: statswales_ct1
+  title: Council tax dwellings by authority and band (CT1)
+  publisher: Welsh Government via StatsWales, from local authority council tax returns
+  url: https://stats.gov.wales/en-GB/062488e2-3fd6-4755-9b0b-a64547fc570f
+  api_url: https://api.stats.gov.wales/v2/062488e2-3fd6-4755-9b0b-a64547fc570f/data
+  licence: Open Government Licence v3.0 (Welsh Government, via the gov.wales copyright statement; the StatsWales dataset page states no licence of its own)
+  licence_url: https://www.gov.wales/copyright-statement
+  accessed: '2026-11-27'
+  notes: Year 2026-27, band Total. second_homes is row H8 (chargeable second homes) and empty_homes is row H7 (chargeable empty properties), both measure "Number of dwellings", divided by row A1 (all chargeable dwellings, published as "Taxbase"). Wales is the Total Unitary Authorities row.
+- id: statswales_dwelling_stock
+  title: Dwelling stock estimates by tenure and local authority area
+  publisher: Welsh Government via StatsWales
+  url: https://stats.gov.wales/en-GB/6476cc20-ddeb-46a5-be64-10a23c8a159f
+  api_url: https://api.stats.gov.wales/v2/6476cc20-ddeb-46a5-be64-10a23c8a159f/data
+  licence: Open Government Licence v3.0 (Welsh Government, via the gov.wales copyright statement; the StatsWales dataset page states no licence of its own)
+  licence_url: https://www.gov.wales/copyright-statement
+  accessed: '2026-11-27'
+  notes: 31 March 2025, "Dwelling stock estimates (number)", tenure Total social Housing over All tenures. Counts are rounded to the nearest 100. Also the denominator for new_homes.
+- id: statswales_temp_accommodation
+  title: Homeless individuals temporarily accommodated at the end of the month
+  publisher: Welsh Government via StatsWales, from local authorities
+  url: https://stats.gov.wales/en-GB/35713e0f-e755-4444-ab14-915d8d9432e1
+  api_url: https://api.stats.gov.wales/v2/35713e0f-e755-4444-ab14-915d8d9432e1/data
+  licence: Open Government Licence v3.0 (Welsh Government, via the gov.wales copyright statement; the StatsWales dataset page states no licence of its own)
+  licence_url: https://www.gov.wales/copyright-statement
+  accessed: '2026-11-27'
+  notes: Measure "Total number of homeless people temporarily accommodated", accommodation type Total, mean of the month-ends 31 October 2025 to 30 September 2026, divided by ONS mid-2025 population (Nomis). Wales is the published Wales row, same method.
+- id: statswales_new_dwellings
+  title: New dwellings completed by local authority, tenure, dwelling type and number of bedrooms
+  publisher: Welsh Government via StatsWales, from local authorities
+  url: https://stats.gov.wales/en-GB/60138097-1bda-4bde-8631-28b5f6a97764
+  api_url: https://api.stats.gov.wales/v2/60138097-1bda-4bde-8631-28b5f6a97764/data
+  licence: Open Government Licence v3.0 (Welsh Government, via the gov.wales copyright statement; the StatsWales dataset page states no licence of its own)
+  licence_url: https://www.gov.wales/copyright-statement
+  accessed: '2026-11-27'
+  notes: Measure "Total new dwellings completed", dwelling type Total, bedrooms Total, financial years 2023-24 to 2025-26 averaged, divided by dwelling stock at 31 March 2025 (statswales_dwelling_stock).
+- id: statswales_rough_sleepers
+  title: Rough sleepers by local authority
+  publisher: Welsh Government via StatsWales, from local authorities
+  url: https://stats.gov.wales/en-GB/116be6b0-97bb-4abc-8cfb-13ff4b5d5d7e
+  api_url: https://api.stats.gov.wales/v2/116be6b0-97bb-4abc-8cfb-13ff4b5d5d7e/data
+  licence: Open Government Licence v3.0 (Welsh Government, via the gov.wales copyright statement; the StatsWales dataset page states no licence of its own)
+  licence_url: https://www.gov.wales/copyright-statement
+  accessed: '2026-11-27'
+  notes: Measure "Number of rough sleepers", mean of the monthly counts October 2025 to September 2026, divided by ONS mid-2025 population (Nomis). Wales is the published Wales row, same method.
+- id: dft_stats19
+  title: Road safety data (STATS19 collision and casualty files), 2023 to 2025
+  publisher: Department for Transport
+  url: https://www.gov.uk/government/statistical-data-sets/road-safety-open-data
+  api_url: https://data.dft.gov.uk/road-accidents-safety-data/dft-road-casualty-statistics-casualty-2025.csv
+  licence: Open Government Licence v3.0 (stated in the GOV.UK footer of the dataset page)
+  licence_url: https://www.gov.uk/government/statistical-data-sets/road-safety-open-data
+  accessed: '2026-11-27'
+  notes: Casualties with severity 1 (fatal) or 2 (serious), joined to the collision file's local_authority_ons_district, summed over 2023 to 2025, divided by three, then by ONS mid-2025 population (Nomis). Wales is the sum of the 22 authorities.

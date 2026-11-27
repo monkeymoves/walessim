@@ -1,0 +1,143 @@
+- id: gdhi_head
+  name:
+    en: Household income per person
+    cy: Incwm aelwydydd y pen
+  cy_review: true
+  unit: GBP per person
+  format: gbp
+  higher_is_better: true
+  strand: prosperous
+  national_indicator: null
+  source: sw_gdhi
+  notes:
+    en: Gross disposable household income per head, 2024 (provisional). This is money households have left to spend or save after tax and benefits, counted where people live, so it does not get inflated by commuters the way GVA per head does.
+- id: claimant_rate
+  name:
+    en: People claiming out-of-work benefits
+    cy: Pobl sy'n hawlio budd-daliadau diwaith
+  cy_review: true
+  unit: percent of residents aged 16 to 64
+  format: percent
+  higher_is_better: false
+  strand: prosperous
+  national_indicator: null
+  source: nomis_claimant
+  notes:
+    en: Claimant count (Universal Credit and Jobseeker's Allowance claimants who must look for work) as a share of residents aged 16 to 64, mean of the 12 months from November 2025 to October 2026. Not seasonally adjusted at local level, so a 12 month mean is used. Some claimants are in work on low pay.
+- id: inactivity
+  name:
+    en: Adults not working or looking for work
+    cy: Oedolion nad ydynt yn gweithio nac yn chwilio am waith
+  cy_review: true
+  unit: percent of residents aged 16 to 64
+  format: percent
+  higher_is_better: false
+  strand: prosperous
+  national_indicator: null
+  source: nomis_aps
+  notes:
+    en: Economic inactivity rate, aged 16 to 64, July 2025 to June 2026 (Annual Population Survey variable 111). Includes students, carers, people who are retired early and people who are long-term sick. Sample survey, so small areas have wide margins of error.
+- id: self_employed
+  name:
+    en: Workers who are self-employed
+    cy: Gweithwyr hunangyflogedig
+  cy_review: true
+  unit: percent of people in work aged 16 to 64
+  format: percent
+  higher_is_better: null
+  strand: prosperous
+  national_indicator: null
+  source: nomis_aps
+  notes:
+    en: 'Self-employed people as a share of those in employment, aged 16 to 64, July 2025 to June 2026 (Annual Population Survey variable 74). Context only: neither high nor low is clearly better, and rural areas are high. Sample survey with wide margins of error.'
+- id: enterprises_10k
+  name:
+    en: Businesses per 10,000 working-age people
+    cy: Busnesau fesul 10,000 o bobl oed gweithio
+  cy_review: true
+  unit: businesses per 10,000 people aged 16 to 64
+  format: integer
+  higher_is_better: true
+  strand: prosperous
+  national_indicator: null
+  source: sw_business_demography
+  notes:
+    en: Active enterprises per 10,000 residents aged 16 to 64, 2025. Businesses are counted at their registered address, so head offices can inflate some areas.
+- id: business_births
+  name:
+    en: New businesses started
+    cy: Busnesau newydd a ddechreuwyd
+  cy_review: true
+  unit: percent of active businesses
+  format: percent
+  higher_is_better: true
+  strand: prosperous
+  national_indicator: null
+  source: sw_business_demography
+  notes:
+    en: 'Business birth rate: new enterprises in 2025 as a share of active enterprises. Volatile from year to year.'
+- id: level4
+  name:
+    en: Working-age adults with a degree-level qualification
+    cy: Oedolion oed gweithio a chymhwyster lefel gradd
+  cy_review: true
+  unit: percent of people aged 18 to 64
+  format: percent
+  higher_is_better: true
+  strand: prosperous
+  national_indicator: null
+  source: sw_qualifications
+  notes:
+    en: Adults aged 18 to 64 qualified to level 4 or above (degree level, higher national certificates and similar), 2025. From the Annual Population Survey. Definitions changed in 2022, so compare with earlier years with care.
+- id: jobs_density
+  name:
+    en: Jobs per working-age resident
+    cy: Swyddi fesul preswylydd oed gweithio
+  cy_review: true
+  unit: jobs per resident aged 16 to 64
+  format: ratio
+  higher_is_better: true
+  strand: prosperous
+  national_indicator: null
+  source: nomis_jobs_density
+  notes:
+    en: Jobs located in the area divided by residents aged 16 to 64, 2024. Low values in commuter areas such as Torfaen and Caerphilly do not mean a weak economy, because residents work elsewhere.
+- id: earnings_workplace
+  name:
+    en: Weekly pay of jobs in the area
+    cy: Cyflog wythnosol swyddi yn yr ardal
+  cy_review: true
+  unit: GBP per week
+  format: gbp
+  higher_is_better: true
+  strand: prosperous
+  national_indicator: null
+  source: nomis_ashe_workplace
+  notes:
+    en: 'Median gross weekly earnings of full-time workers by place of work, 2026. Compare with the residence-based earnings measure: the gap shows commuting.'
+- id: employment_deprivation
+  name:
+    en: Working-age people in employment deprivation
+    cy: Pobl oed gweithio mewn amddifadedd cyflogaeth
+  cy_review: true
+  unit: percent of working-age people
+  format: percent
+  higher_is_better: false
+  strand: prosperous
+  national_indicator: null
+  source: statswales_wimd2025_la
+  notes:
+    en: 'Share of working-age people who are in employment deprivation (WIMD 2025): claiming out-of-work benefits or unable to work through ill health. Source years vary by benefit. Benefit-based, so it overlaps the claimant measure.'
+- id: business_survival
+  name:
+    en: New businesses still going after 3 years
+    cy: Busnesau newydd sy'n dal i fynd ar ôl 3 blynedd
+  cy_review: true
+  unit: percent of businesses started
+  format: percent
+  higher_is_better: true
+  strand: prosperous
+  national_indicator: null
+  source: sw_business_survival
+  notes:
+    en: Share of businesses started in 2022 that were still active in 2025. Small start-up groups in small areas make this volatile.

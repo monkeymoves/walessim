@@ -26,6 +26,10 @@ test("changing the lens changes the map", async ({ page }) => {
   await page.waitForTimeout(400);
   const before = await canvas.screenshot();
   await page.getByRole("button", { name: "Colour the map by..." }).click();
+  // the list opens on the current measure's goal; other goals fold until opened
+  await expect(page.getByTestId("lens-employment")).toHaveCount(0);
+  await page.getByTestId("lensgroup-prosperous").click();
+  await expect(page.getByTestId("lensgroup-prosperous")).toHaveAttribute("aria-expanded", "true");
   await page.getByTestId("lens-employment").check();
   await expect(page.getByTestId("lens-name")).toHaveText("Employment rate, 16 to 64");
   await page.keyboard.press("Escape");
@@ -65,9 +69,17 @@ test("the explorer table sorts by a column", async ({ page }) => {
   await page.getByTestId("sort-pop").click();
   await expect(firstRow()).toHaveText("Merthyr Tydfil");
   await expect(table.locator("th[aria-sort=ascending]")).toHaveCount(1);
+  // the column chooser folds by goal; a new measure can be added as a column and sorted
+  await page.getByRole("button", { name: "Choose the columns" }).click();
+  await page.getByTestId("colgroup-resilient").click();
+  await page.getByTestId("col-woodland_cover").check();
+  await page.keyboard.press("Escape");
+  await page.getByTestId("sort-woodland_cover").click();
+  await expect(firstRow()).toHaveText("Neath Port Talbot");
   await page.getByTestId("tab-scatter").click();
   await expect(page.getByTestId("scatter")).toBeVisible();
   await expect(page.getByTestId("scatter").locator("g.mark")).toHaveCount(22);
+  await expect(page.getByTestId("scatter-x").locator("optgroup")).toHaveCount(7);
 });
 
 test("switching to Cymraeg changes the interface and the place names", async ({ page }) => {
@@ -86,4 +98,13 @@ test("a narrow screen gets the notice and a stacked atlas", async ({ page }) => 
   await openAtlas(page);
   await expect(page.getByTestId("phone-notice")).toBeVisible();
   await expect(page.getByTestId("explorer-table")).toBeVisible();
+});
+
+test("Home goes back to the title from the atlas and the rule book", async ({ page }) => {
+  await openAtlas(page);
+  await page.getByTestId("home").click();
+  await expect(page).toHaveURL(/#\/$/);
+  await page.goto("/#/llyfr");
+  await page.getByTestId("home").click();
+  await expect(page).toHaveURL(/#\/$/);
 });

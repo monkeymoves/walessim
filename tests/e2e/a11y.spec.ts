@@ -39,6 +39,22 @@ test("the explorer drawer has no serious violations", async ({ page }) => {
   expect(await serious(page)).toEqual([]);
 });
 
+test("the folding measure lists have no serious violations", async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem("etifeddiaeth.v1.lang", "en"));
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/#/heddiw");
+  await page.getByRole("button", { name: "Colour the map by..." }).click();
+  await page.getByTestId("lensgroup-healthier").click();
+  await expect(page.getByTestId("lens-healthy_life_exp")).toBeVisible();
+  expect(await serious(page)).toEqual([]);
+  await page.keyboard.press("Escape");
+  await page.getByTestId("explorer-toggle").click();
+  await page.getByRole("button", { name: "Choose the columns" }).click();
+  await page.getByTestId("colgroup-global").click();
+  await expect(page.getByTestId("col-heat_pumps")).toBeVisible();
+  expect(await serious(page)).toEqual([]);
+});
+
 test("keyboard focus is drawn as the cobalt stitch", async ({ page }) => {
   await page.goto("/#/heddiw");
   await page.keyboard.press("Tab");

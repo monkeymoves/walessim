@@ -1,0 +1,36 @@
+- id: statswales_air_quality
+  title: Air quality, population weighted annual mean concentrations (NO2, PM2.5) for local authorities
+  publisher: Welsh Government via StatsWales, from Defra Pollution Climate Mapping modelling and ONS small area populations
+  url: https://stats.gov.wales/en-GB/36f88bfb-36a3-4b54-9c24-51dcab107a62
+  api_url: https://api.stats.gov.wales/v2/36f88bfb-36a3-4b54-9c24-51dcab107a62/data
+  licence: Open Government Licence v3.0 (Welsh Government, via the gov.wales copyright statement; the StatsWales dataset page states no licence of its own; data provider Defra)
+  licence_url: https://www.gov.wales/copyright-statement
+  accessed: '2026-11-27'
+  notes: Pollutants NO2 and PM2.5, year 2024, µg/m3. Wales value as published.
+- id: statswales_wimd2025_lsoa
+  title: WIMD 2025 indicator data for lower layer super output areas (ambient green space, noise)
+  publisher: Welsh Government via StatsWales, from NRW and Ordnance Survey data (green space) and strategic noise mapping
+  url: https://stats.gov.wales/en-GB/2f8dfe38-bfa8-4f61-bc34-1d84d470a940
+  api_url: https://api.stats.gov.wales/v2/2f8dfe38-bfa8-4f61-bc34-1d84d470a940/data
+  licence: Open Government Licence v3.0 (Welsh Government, via the gov.wales copyright statement; the StatsWales dataset page states no licence of its own)
+  licence_url: https://www.gov.wales/copyright-statement
+  accessed: '2026-11-27'
+  notes: Source of ndvi_green and noise_exposed. The authority rows in this dataset are empty (Not available) for these indicators, so values are small area (1917 LSOA) values averaged to authority and Wales, weighted by Census 2021 usual residents from Nomis NM_2028_1.
+- id: statswales_flytipping
+  title: Fly-tipping incidents by local authority
+  publisher: Welsh Government via StatsWales, from local authority returns to WasteDataFlow
+  url: https://stats.gov.wales/en-GB/1d891896-2866-4fe8-a6fd-90f7caea2a24
+  api_url: https://api.stats.gov.wales/v2/1d891896-2866-4fe8-a6fd-90f7caea2a24/data
+  licence: Open Government Licence v3.0 (Welsh Government, via the gov.wales copyright statement; the StatsWales dataset page states no licence of its own)
+  licence_url: https://www.gov.wales/copyright-statement
+  accessed: '2026-11-27'
+  notes: Variable "Total recorded incidents", 2024-25, divided by ONS mid-2024 population (nomis_mye, Nomis NM_2002_1 for 2024). Wales is total incidents over Wales population.
+- id: nrw_ancient_woodland
+  title: Ancient Woodland Inventory 2021 (Wales), with local authority boundaries
+  publisher: Natural Resources Wales via DataMapWales; boundaries from Welsh Government via DataMapWales
+  url: https://datamap.gov.wales/layers/inspire-nrw:NRW_ANCIENT_WOODLAND_INVENTORY_2021
+  api_url: https://datamap.gov.wales/geoserver/ows (typeNames inspire-nrw:NRW_ANCIENT_WOODLAND_INVENTORY_2021 and inspire-wg:localauthorities)
+  licence: Open Government Licence v3.0 (layer page states Open Government Licence for Public Sector Information, OGL)
+  licence_url: https://datamap.gov.wales/layers/inspire-nrw:NRW_ANCIENT_WOODLAND_INVENTORY_2021
+  accessed: '2026-11-27'
+  notes: 48,839 polygons, layer published 27 July 2026. Intersected with LA boundaries (EPSG:27700) with shapely; area share of each LA's land area. Attribution asked for is the NRW statement, which reads Contains Natural Resources Wales information (c) Natural Resources Wales and Database Right. All rights Reserved. Contains Ordnance Survey Data. Ordnance Survey Licence number AC0000849444. Crown Copyright and Database Right.

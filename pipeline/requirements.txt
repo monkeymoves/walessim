@@ -1,0 +1,5 @@
+# Python packages the data pipeline needs (python 3.11). Install with: pip install -r pipeline/requirements.txt
+pyyaml>=6
+numpy>=1.26
+shapely>=2.0
+odfpy==1.4.1   # reads .ods spreadsheets (pipeline/extra/odsread.py, used by fetch_fairness.py)

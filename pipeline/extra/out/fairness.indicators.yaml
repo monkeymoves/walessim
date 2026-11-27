@@ -1,0 +1,91 @@
+- id: child_low_income
+  name:
+    en: Children in low income families
+    cy: Plant mewn teuluoedd incwm isel
+  cy_review: true
+  unit: percent of children under 16
+  format: percent
+  higher_is_better: false
+  strand: equal
+  national_indicator: null
+  source: dwp_children_low_income
+  notes:
+    en: Children under 16 in relative low income families, before housing costs, financial year ending 2025. Local figures are modelled from a national survey, so small gaps between areas are not reliable. The Wales value is the DWP figure for Wales.
+- id: free_school_meals
+  name:
+    en: Pupils who can get free school meals
+    cy: Disgyblion sy'n gymwys i gael prydau ysgol am ddim
+  cy_review: true
+  unit: percent of pupils
+  format: percent
+  higher_is_better: false
+  strand: equal
+  national_indicator: null
+  source: statswales_fsm
+  notes:
+    en: Pupils eligible for free school meals on the means test (a household income test), 2025/26 school year. Free meals for all primary pupils do not change this figure, but fewer families may be applying for the means test now.
+- id: older_income_deprivation
+  name:
+    en: Older people on a very low income
+    cy: Pobl hŷn ar incwm isel iawn
+  cy_review: true
+  unit: percent of older people
+  format: percent
+  higher_is_better: false
+  strand: equal
+  national_indicator: null
+  source: statswales_wimd2025_la
+  notes:
+    en: WIMD 2025 indicator, older people in income deprivation (people aged 60 and over on means tested benefits such as Pension Credit). Not everyone who is entitled claims Pension Credit, so the true figure is likely higher.
+- id: income_deprivation
+  name:
+    en: People on a very low income
+    cy: Pobl ar incwm isel iawn
+  cy_review: true
+  unit: percent of people
+  format: percent
+  higher_is_better: false
+  strand: equal
+  national_indicator: null
+  source: statswales_wimd2025_la
+  notes:
+    en: WIMD 2025 indicator, people in income deprivation (in households on means tested benefits or tax credits, below a low income line). Source years vary by benefit but are mostly 2023 to 2024.
+- id: low_pay_hourly
+  name:
+    en: Hourly pay of the lowest paid fifth of workers
+    cy: Cyflog yr awr y bumed ran isaf o weithwyr
+  cy_review: true
+  unit: GBP per hour
+  format: decimal2
+  higher_is_better: true
+  strand: equal
+  national_indicator: null
+  source: nomis_ashe
+  notes:
+    en: ASHE 2026, 20th percentile of gross hourly pay for full-time workers by place of residence. One in five full-time workers earns less than this. Part-time workers are not included. Sample based, so small differences between areas are not reliable.
+- id: hh_deprived_2plus
+  name:
+    en: Households short in two or more ways
+    cy: Aelwydydd dan anfantais mewn dwy ffordd neu fwy
+  cy_review: true
+  unit: percent of households
+  format: percent
+  higher_is_better: false
+  strand: equal
+  national_indicator: null
+  source: nomis_census_ts011
+  notes:
+    en: Census 2021. A household is short in a way if no one has a school qualification at level 2, or someone is out of work through illness or disability, or someone has bad health or a disability, or the home is overcrowded, shared or has no central heating. This counts households short in two, three or four of those ways.
+- id: daf_payments
+  name:
+    en: Emergency cash grants paid
+    cy: Grantiau arian brys a dalwyd
+  cy_review: true
+  unit: payments per 1,000 people
+  format: integer
+  higher_is_better: null
+  strand: equal
+  national_indicator: null
+  source: statswales_daf
+  notes:
+    en: Discretionary Assistance Fund payments (emergency and individual assistance) from April 2025 to March 2026, per 1,000 residents (ONS mid-2025). No direction is given, because the number shows how many people needed help and how well the scheme is known locally. Wales value is the 22 authorities added together, which equals the published Wales total.

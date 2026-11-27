@@ -1,5 +1,6 @@
 {
   "home": "Etifeddiaeth, back to the start",
+  "home_short": "Home",
   "subtitle": "Inheritance: a game of Wales",
   "nav.label": "Ways round",
   "nav.heddiw": "Wales today (atlas)",
@@ -32,7 +33,7 @@
   "title.resume": "Carry on your game",
   "title.resumeNote": "Your last game is saved in this browser.",
   "title.explore": "Explore Wales today",
-  "title.exploreNote": "22 council areas and 21 real measures, each with its source.",
+  "title.exploreNote": "22 council areas and 87 real measures, each with its source.",
   "title.read": "Read the rule book",
   "title.readNote": "Every rule, number and source. You can change some of the rules.",
   "title.honest": "A thinking tool, not a forecast. An independent project, not an official view.",

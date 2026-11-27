@@ -1,0 +1,100 @@
+- id: woodland_cover
+  name:
+    en: Land covered by woodland
+    cy: Tir dan goetir
+  cy_review: true
+  unit: percent of land area
+  format: percent
+  higher_is_better: true
+  strand: resilient
+  national_indicator: null
+  source: fc_nfi_gb_2024
+  notes:
+    en: Forestry Commission National Forest Inventory GB 2024 map, woodland category only (includes felled areas and young
+      trees awaiting restocking, as the inventory does). Woodland polygons were clipped exactly to each council's boundary
+      at the high water mark and divided by its area. The map records woods of about half a hectare or more, so small
+      copses, hedgerows and street trees are not counted. Wales value is the summed woodland area over the summed council
+      area, 312,300 ha or 15.0 percent, matching Forestry Statistics 2025 (313,000 ha, 15 percent).
+- id: sssi_land
+  name:
+    en: Land protected as a Site of Special Scientific Interest
+    cy: Tir a warchodir fel Safle o Ddiddordeb Gwyddonol Arbennig
+  cy_review: true
+  unit: percent of land area
+  format: percent
+  higher_is_better: true
+  strand: resilient
+  national_indicator: null
+  source: nrw_sssi
+  notes:
+    en: All 1,088 SSSIs in the NRW layer, merged where they overlap and clipped to each council's land at the high water
+      mark, so the intertidal and estuary parts of coastal sites are left out (226,100 ha of the 267,800 ha designated).
+      A designation, not a measure of the sites' condition. Wales value is the summed protected area over the summed
+      council area.
+- id: protected_landscape
+  name:
+    en: Land in a National Park or National Landscape
+    cy: Tir mewn Parc Cenedlaethol neu Dirwedd Genedlaethol
+  cy_review: true
+  unit: percent of land area
+  format: percent
+  higher_is_better: true
+  strand: resilient
+  national_indicator: null
+  source: nrw_protected_landscapes
+  notes:
+    en: The three National Parks and the five National Landscapes (the new name for Areas of Outstanding Natural Beauty)
+      in Wales, merged and clipped to each council's boundary at the high water mark. The English half of the Wye Valley
+      falls outside Wales and is dropped. National Parks cover 19.5 percent of Wales and National Landscapes 4.8 percent,
+      24.3 percent together. Nine councils have none or almost none, which is true but leaves a flat bottom on the map.
+      A landscape designation, not a measure of nature's health.
+- id: river_good_status
+  name:
+    en: River length in good health
+    cy: Hyd afonydd mewn cyflwr da
+  cy_review: true
+  unit: percent of river length
+  format: percent
+  higher_is_better: true
+  strand: resilient
+  national_indicator: null
+  source: nrw_wfd_rivers_2021
+  notes:
+    en: Share of the length of river water bodies inside each council at good or high overall status under the Water
+      Framework Directive, Cycle 3 baseline classification (assessed 2021, published 2023). Status is judged for a whole
+      water body, which can cross council lines, so this is a length share, not a council assessment. Councils with
+      little river length (Cardiff 45 km, Blaenau Gwent 40 km, Merthyr Tydfil 51 km, Torfaen 53 km, Newport 54 km) all
+      score 0 because each of their rivers is moderate or worse. Wales value is by length (44.7 percent); by count of
+      water bodies it is 43.9 percent (315 of 717). The 2024 interim classification is not used because its layer states
+      no licence.
+- id: listed_buildings
+  name:
+    en: Listed buildings per 1,000 people
+    cy: Adeiladau rhestredig fesul 1,000 o bobl
+  cy_review: true
+  unit: per 1,000 residents
+  format: decimal1
+  higher_is_better: null
+  strand: culture
+  national_indicator: null
+  source: cadw_listed_buildings
+  notes:
+    en: Count of the 30,110 listed buildings on Cadw's live register (fetched 27 November 2026), placed in councils by
+      their map point (76 points on the foreshore below the high water line go to the nearest council; the result matches
+      Cadw's own authority field for all but 2 records), divided by ONS mid-2025 population. Counts designations, not
+      their use or condition. Per head favours rural councils; by area, towns and cities with historic centres rank
+      higher. Context only, no direction.
+- id: listed_buildings_km2
+  name:
+    en: Listed buildings per square kilometre
+    cy: Adeiladau rhestredig fesul cilomedr sgwâr
+  cy_review: true
+  unit: per km2
+  format: decimal2
+  higher_is_better: null
+  strand: culture
+  national_indicator: null
+  source: cadw_listed_buildings
+  notes:
+    en: The same Cadw count as listed_buildings divided by each council's area to the high water mark (DataMapWales
+      boundaries). Density favours towns and cities with historic centres. Context only, no direction.

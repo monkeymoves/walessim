@@ -1,0 +1,63 @@
+- id: ons_hle_local
+  title: 'Healthy life expectancy, UK: between 2011 to 2013 and 2022 to 2024'
+  publisher: Office for National Statistics
+  url: https://www.ons.gov.uk/peoplepopulationandcommunity/healthandsocialcare/healthandlifeexpectancies/datasets/healthstatelifeexpectancyallagesuk
+  api_url: https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/healthandsocialcare/healthandlifeexpectancies/datasets/healthstatelifeexpectancyallagesuk/current/healthylifeexpectancyuk.xlsx
+  licence: Open Government Licence v3.0
+  licence_url: https://www.ons.gov.uk/help/termsandconditions
+  accessed: '2026-11-27'
+  notes: Released 19 February 2026. Sheet 1, period 2022 to 2024, age group under 1, unitary authorities in Wales (area codes W06). The indicator is the simple mean of male and female healthy life expectancy, the same rule as life_exp; the Wales value is the mean of the published male (59.2) and female (58.5) Wales figures. ONS used a modelled method for good health prevalence because the Annual Population Survey sample has shrunk.
+- id: nomis_census_ts037
+  title: Census 2021 TS037 General health via Nomis
+  publisher: Office for National Statistics, via Nomis
+  url: https://www.nomisweb.co.uk/census/2021/ts037
+  api_url: https://www.nomisweb.co.uk/api/v01/dataset/NM_2055_1.data.csv
+  licence: Open Government Licence v3.0 (ONS Crown copyright)
+  licence_url: https://www.nomisweb.co.uk/home/copyright.asp
+  accessed: '2026-11-27'
+  notes: Bad health plus very bad health as a share of all usual residents. Census day 21 March 2021.
+- id: nomis_census_ts038
+  title: Census 2021 TS038 Disability via Nomis
+  publisher: Office for National Statistics, via Nomis
+  url: https://www.nomisweb.co.uk/census/2021/ts038
+  api_url: https://www.nomisweb.co.uk/api/v01/dataset/NM_2056_1.data.csv
+  licence: Open Government Licence v3.0 (ONS Crown copyright)
+  licence_url: https://www.nomisweb.co.uk/home/copyright.asp
+  accessed: '2026-11-27'
+  notes: Disabled under the Equality Act with day-to-day activities limited a lot (code 1), as a share of all usual residents. Census day 21 March 2021.
+- id: nomis_census_ts039
+  title: Census 2021 TS039 Provision of unpaid care via Nomis
+  publisher: Office for National Statistics, via Nomis
+  url: https://www.nomisweb.co.uk/census/2021/ts039
+  api_url: https://www.nomisweb.co.uk/api/v01/dataset/NM_2057_1.data.csv
+  licence: Open Government Licence v3.0 (ONS Crown copyright)
+  licence_url: https://www.nomisweb.co.uk/home/copyright.asp
+  accessed: '2026-11-27'
+  notes: Provides 20 to 49 hours (code 102) plus 50 or more hours (code 6) of unpaid care a week, as a share of usual residents aged 5 and over. Census day 21 March 2021.
+- id: statswales_immunisation
+  title: Children fully immunised by their fourth birthday, by local authority and Flying Start status
+  publisher: Welsh Government via StatsWales, from NHS immunisation records
+  url: https://stats.gov.wales/en-GB/f5060a7c-8b2c-41c4-985f-f0a75a5dac5f
+  api_url: https://api.stats.gov.wales/v2/f5060a7c-8b2c-41c4-985f-f0a75a5dac5f/data?format=csv
+  licence: Open Government Licence v3.0 (Welsh Government, via the gov.wales copyright statement; the StatsWales dataset page states no licence of its own)
+  licence_url: https://www.gov.wales/copyright-statement
+  accessed: '2026-11-27'
+  notes: Rows for the latest year (2025-26), Flying start status "All areas", Immunisation status "Fully immunised by age 4", Data description "Percentage". Wales value as published.
+- id: ons_suicides_la
+  title: Suicides in England and Wales by local authority (2025 registrations)
+  publisher: Office for National Statistics
+  url: https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/suicidesbylocalauthority
+  api_url: https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/suicidesbylocalauthority/current/suicidebylocalauthority2025.xlsx
+  licence: Open Government Licence v3.0
+  licence_url: https://www.ons.gov.uk/help/termsandconditions
+  accessed: '2026-11-27'
+  notes: Table_2, rolling three year aggregate for deaths registered 2023 to 2025, persons, age-standardised rate per 100,000 (2013 European Standard Population). Wales value as published (14.6). All 22 authorities have a rate. Based on date of registration, so inquest delays differ by area.
+- id: ons_drug_deaths_la
+  title: Deaths related to drug poisoning in England and Wales by local authority, 1993 to 2025
+  publisher: Office for National Statistics
+  url: https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/drugmisusedeathsbylocalauthority
+  api_url: https://www.ons.gov.uk/file?uri=/peoplepopulationandcommunity/birthsdeathsandmarriages/deaths/datasets/drugmisusedeathsbylocalauthority/current/2025localauthorities.xlsx
+  licence: Open Government Licence v3.0
+  licence_url: https://www.ons.gov.uk/help/termsandconditions
+  accessed: '2026-11-27'
+  notes: Published 4 November 2026. Table 3, all drug poisoning deaths, persons, deaths registered 2023 to 2025, age-standardised rate per 100,000. Wales value as published (13.7). The drug misuse subset (Table 6) is suppressed for Anglesey, so it is not used.

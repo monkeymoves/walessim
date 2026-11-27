@@ -1,6 +1,7 @@
 {
   "_cy_review": true,
   "home": "Etifeddiaeth, yn ôl i'r dechrau",
+  "home_short": "Cartref",
   "subtitle": "Gêm am Gymru",
   "nav.label": "Ffyrdd o gwmpas",
   "nav.heddiw": "Heddiw",
@@ -33,7 +34,7 @@
   "title.resume": "Parhau â'ch gêm",
   "title.resumeNote": "Mae eich gêm ddiwethaf wedi'i chadw yn y porwr hwn.",
   "title.explore": "Archwilio Cymru heddiw",
-  "title.exploreNote": "22 ardal cyngor a 21 mesur go iawn, pob un â'i ffynhonnell.",
+  "title.exploreNote": "22 ardal cyngor ac 87 mesur go iawn, pob un â'i ffynhonnell.",
   "title.read": "Darllen y llyfr rheolau",
   "title.readNote": "Pob rheol, rhif a ffynhonnell. Gallwch newid rhai o'r rheolau.",
   "title.honest": "Offeryn meddwl, nid rhagolwg. Prosiect annibynnol, nid barn swyddogol.",

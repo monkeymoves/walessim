@@ -1,0 +1,78 @@
+- id: no2_pop
+  name:
+    en: Nitrogen dioxide in the air (traffic fumes)
+    cy: Nitrogen deuocsid yn yr aer (mygdarth traffig)
+  cy_review: true
+  unit: micrograms per cubic metre
+  format: decimal1
+  higher_is_better: false
+  strand: resilient
+  national_indicator: null
+  source: statswales_air_quality
+  notes:
+    en: Yearly average for 2024, modelled on a 1 km grid and averaged across the people who live in each authority. Modelled, not measured at one spot. Defra is the data provider.
+- id: pm25_pop
+  name:
+    en: Tiny dust particles in the air (PM2.5)
+    cy: Gronynnau llwch bach yn yr aer (PM2.5)
+  cy_review: true
+  unit: micrograms per cubic metre
+  format: decimal1
+  higher_is_better: false
+  strand: resilient
+  national_indicator: null
+  source: statswales_air_quality
+  notes:
+    en: Yearly average for 2024, modelled on a 1 km grid and averaged across the people who live in each authority. Modelled, not measured at one spot. Defra is the data provider.
+- id: ndvi_green
+  name:
+    en: Greenness around people's homes (satellite score)
+    cy: Gwyrddni o gwmpas cartrefi pobl (sgôr lloeren)
+  cy_review: true
+  unit: score from 0 to 1
+  format: decimal2
+  higher_is_better: true
+  strand: resilient
+  national_indicator: null
+  source: statswales_wimd2025_lsoa
+  notes:
+    en: WIMD 2025 ambient green space (vegetation index, NDVI) for each small area, averaged for the authority weighted by Census 2021 residents. The Wales figure is the same weighted average over all of Wales. Computed here because StatsWales has no authority value.
+- id: noise_exposed
+  name:
+    en: People living with road, rail or industry noise
+    cy: Pobl sy'n byw gyda sŵn ffyrdd, rheilffyrdd neu ddiwydiant
+  cy_review: true
+  unit: percent of residents
+  format: percent
+  higher_is_better: false
+  strand: resilient
+  national_indicator: null
+  source: statswales_wimd2025_lsoa
+  notes:
+    en: WIMD 2025, from strategic noise mapping that covers main roads, railways and large towns only. Weighted by Census 2021 residents from small areas, so the authority and Wales figures are shares of people. Computed here because StatsWales has no authority value.
+- id: flytipping_rate
+  name:
+    en: Fly-tipping incidents per 1,000 residents
+    cy: Achosion o dipio anghyfreithlon fesul 1,000 o drigolion
+  cy_review: true
+  unit: per 1,000 residents
+  format: decimal1
+  higher_is_better: null
+  strand: resilient
+  national_indicator: null
+  source: statswales_flytipping
+  notes:
+    en: Incidents recorded by councils in 2024-25 divided by ONS mid-2024 population. No direction is set because the rate reflects how hard each council looks for and records tipping as well as how much there is (for example Gwynedd and Ceredigion record very few).
+- id: ancient_woodland
+  name:
+    en: Land covered by ancient woodland
+    cy: Tir dan goetir hynafol
+  cy_review: true
+  unit: percent of land area
+  format: percent
+  higher_is_better: true
+  strand: resilient
+  national_indicator: null
+  source: nrw_ancient_woodland
+  notes:
+    en: Woods that have stood since at least 1600, from the Ancient Woodland Inventory 2021. Computed as the area of inventory polygons inside each authority divided by its land area (local authority boundaries at the high water mark). Counts ancient semi-natural woodland and replanted ancient sites together. Separate from the woodland cover measure.

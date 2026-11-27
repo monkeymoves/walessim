@@ -1,0 +1,63 @@
+- id: sw_gdhi
+  title: Gross disposable household income per head, local authorities (StatsWales)
+  publisher: Office for National Statistics, republished by Welsh Government (StatsWales)
+  url: https://stats.gov.wales/en-GB/90841eef-d28b-4971-9660-472e0bf0940a
+  api_url: https://api.stats.gov.wales/v2/90841eef-d28b-4971-9660-472e0bf0940a/data?format=csv
+  licence: Open Government Licence v3.0 (Welsh Government copyright statement; ONS original Crown copyright)
+  licence_url: https://www.gov.wales/copyright-statement
+  accessed: '2026-11-27'
+  notes: Component "Gross disposable household income", data description "£ per head", 2024 (provisional).
+- id: nomis_claimant
+  title: Claimant count by sex and age via Nomis
+  publisher: Department for Work and Pensions, via Office for National Statistics Nomis
+  url: https://www.nomisweb.co.uk/sources/cc
+  api_url: https://www.nomisweb.co.uk/api/v01/dataset/NM_162_1.data.csv
+  licence: Open Government Licence v3.0 (ONS Crown copyright)
+  licence_url: https://www.nomisweb.co.uk/home/copyright.asp
+  accessed: '2026-11-27'
+  notes: Measure 2, claimants as a proportion of residents aged 16 to 64, all sexes and ages, mean of the 12 months November 2025 to October 2026.
+- id: sw_business_demography
+  title: Business demography, local authorities (StatsWales)
+  publisher: Office for National Statistics, republished by Welsh Government (StatsWales)
+  url: https://stats.gov.wales/en-GB/f2dc5994-cf29-4cb7-b692-360b87a85c71
+  api_url: https://api.stats.gov.wales/v2/f2dc5994-cf29-4cb7-b692-360b87a85c71/data?format=csv
+  licence: Open Government Licence v3.0 (Welsh Government copyright statement; ONS original Crown copyright)
+  licence_url: https://www.gov.wales/copyright-statement
+  accessed: '2026-11-27'
+  notes: 2025. "Active enterprises per 10,000 of the population aged 16 to 64" and "Birth Rate".
+- id: sw_business_survival
+  title: Business survival rates, local authorities (StatsWales)
+  publisher: Office for National Statistics, republished by Welsh Government (StatsWales)
+  url: https://stats.gov.wales/en-GB/1ecdcedf-efe5-412a-bd46-75a3e051ebf3
+  api_url: https://api.stats.gov.wales/v2/1ecdcedf-efe5-412a-bd46-75a3e051ebf3/data?format=csv
+  licence: Open Government Licence v3.0 (Welsh Government copyright statement; ONS original Crown copyright)
+  licence_url: https://www.gov.wales/copyright-statement
+  accessed: '2026-11-27'
+  notes: Businesses born in 2022, "3 year survival", data description "Percent".
+- id: sw_qualifications
+  title: Qualifications of working age adults by local authority (StatsWales)
+  publisher: Office for National Statistics Annual Population Survey, republished by Welsh Government (StatsWales)
+  url: https://stats.gov.wales/en-GB/b021de56-f634-4a90-abb9-622b8ae812bb
+  api_url: https://api.stats.gov.wales/v2/b021de56-f634-4a90-abb9-622b8ae812bb/data?format=csv
+  licence: Open Government Licence v3.0 (Welsh Government copyright statement; ONS original Crown copyright)
+  licence_url: https://www.gov.wales/copyright-statement
+  accessed: '2026-11-27'
+  notes: 2025, "Qualified to level 4 or above", persons, age group 18-64 (working age). Series has a break in 2022.
+- id: nomis_jobs_density
+  title: Jobs density via Nomis
+  publisher: Office for National Statistics, via Nomis
+  url: https://www.nomisweb.co.uk/sources/jd
+  api_url: https://www.nomisweb.co.uk/api/v01/dataset/NM_57_1.data.csv
+  licence: Open Government Licence v3.0 (ONS Crown copyright)
+  licence_url: https://www.nomisweb.co.uk/home/copyright.asp
+  accessed: '2026-11-27'
+  notes: Item 3 (jobs density), 2024. Ratio of workplace jobs to residents aged 16 to 64.
+- id: nomis_ashe_workplace
+  title: Annual Survey of Hours and Earnings, workplace analysis via Nomis
+  publisher: Office for National Statistics, via Nomis
+  url: https://www.nomisweb.co.uk/query/construct/summary.asp?mode=construct&version=0&dataset=99
+  api_url: https://www.nomisweb.co.uk/api/v01/dataset/NM_99_1.data.csv
+  licence: Open Government Licence v3.0 (ONS Crown copyright)
+  licence_url: https://www.nomisweb.co.uk/home/copyright.asp
+  accessed: '2026-11-27'
+  notes: Median weekly gross pay, full-time workers (sex code 8), by place of work, 2026.
