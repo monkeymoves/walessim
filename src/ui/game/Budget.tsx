@@ -29,9 +29,9 @@ export function BudgetRow(): JSX.Element {
     <div class="yf-budget">
       <div class="yf-budget-head">
         <span class="label">{t("game.plan.budget_label")}</span>
-        <span class="data strong" aria-live="polite">{t("game.plan.budget", { left: Math.max(0, b().left), total: b().total })}</span>
+        <span class="data strong" aria-live="polite">{tn("game.plan.budget", b().total, { left: Math.max(0, b().left), total: b().total })}</span>
       </div>
-      <div class="yf-pips well" role="img" aria-label={t("game.plan.budget", { left: Math.max(0, b().left), total: b().total })}>
+      <div class="yf-pips well" role="img" aria-label={tn("game.plan.budget", b().total, { left: Math.max(0, b().left), total: b().total })}>
         <For each={squares()}>{(spent) => <i classList={{ spent }} />}</For>
         <For each={s().debts}>{() => <i class="debt" title={t("game.ledger.debts")} />}</For>
       </div>

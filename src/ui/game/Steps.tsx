@@ -6,8 +6,8 @@ import { StampButton, TabButton, ThreadButton } from "../parts/Buttons";
 import { SevereNotice, WarnStrip, Snip } from "../parts/Notice";
 import { StrandName } from "./StrandName";
 import { cardIcon, Icon } from "../parts/Icon";
-import { iPlace, maePlace, soft, softYn, ynPlace } from "./cymraeg";
-import type { Slip, StrandId, TrustReason } from "../../engine/api";
+import { iPlace, maePlace, midEn, soft, softYn, ynPlace } from "./cymraeg";
+import type { Slip, StrandId, TrustReason, VisitOffer } from "../../engine/api";
 import { STRAND_IDS } from "../../model/schema";
 import { useGame } from "./context";
 import { BudgetRow } from "./Budget";
@@ -147,25 +147,50 @@ export function PlanPanel(): JSX.Element {
 export function VisitOfferPanel(): JSX.Element {
   const { game, ui } = useGame();
   const s = () => game.state()!;
-  const v = () => s().visitOffer!;
-  const place = () => game.names.placeName(v().place);
-  const by = () => game.names.list(v().triggeredBy.filter((c) => c !== "curveball").map((c) => game.names.cardName(c)));
+  const offers = () => [s().visitOffer!, ...(s().visitOffer!.alternatives ?? [])] as VisitOffer[];
+  const go = (o: VisitOffer) => { ui.setVisitPick(o); ui.setInPlace(true); };
   return (
     <div class="yf-panel">
-      <div class="yf-step sheet yf-visit-offer">
-        <h2 class="t-1">{t("game.visit.asking", { place: place(), mae_place: maePlace(place()) })}</h2>
-        <Show when={by()}>
-          <p class="story-small">{t("game.visit.why", { card: by() })}</p>
+      <div class="yf-scroll">
+        <Show when={offers().length > 1}>
+          <p class="story-small yf-choose">{t("game.visit.choose")}</p>
         </Show>
-        <div class="yf-actions">
-          <StampButton class="yf-go" onClick={() => ui.setInPlace(true)}>{t("game.visit.go", { place: place(), i_place: iPlace(place()) })}</StampButton>
-          <TabButton onClick={() => game.act({ type: "visit", choice: null })}>{t("game.visit.stay")}</TabButton>
+        <For each={offers()}>
+          {(o, i) => {
+            const place = () => game.names.placeName(o.place);
+            return (
+              <div class="yf-step sheet yf-visit-offer">
+                <h2 class="t-1">{t("game.visit.asking", { place: place(), mae_place: maePlace(place()) })}</h2>
+                <p class="story-small">{visitWhy(game, o)}</p>
+                <div class="yf-actions">
+                  <Show when={i() === 0} fallback={
+                    <TabButton onClick={() => go(o)}>{t("game.visit.go", { place: midEn(place()), i_place: iPlace(place()) })}</TabButton>
+                  }>
+                    <StampButton class="yf-go" onClick={() => go(o)}>{t("game.visit.go", { place: midEn(place()), i_place: iPlace(place()) })}</StampButton>
+                  </Show>
+                </div>
+              </div>
+            );
+          }}
+        </For>
+        <div class="yf-step sheet">
+          <div class="yf-actions">
+            <TabButton onClick={() => game.act({ type: "visit", choice: null })}>{t("game.visit.stay")}</TabButton>
+          </div>
+          <p class="small">{t("game.visit.stay_note")}</p>
         </div>
-        <p class="small">{t("game.visit.stay_note")}</p>
       </div>
       <Hand interactive={false} />
     </div>
   );
+}
+
+/** Why a place is asking: the cards played there, or (in the guided first game) the trend. */
+export function visitWhy(game: ReturnType<typeof useGame>["game"], o: VisitOffer): string {
+  const cards = o.triggeredBy.filter((c) => c !== "curveball");
+  if (cards.length) return t(cards.length > 1 ? "game.visit.why_many" : "game.visit.why_one", { card: game.names.list(cards.map((c) => game.names.cardName(c))) });
+  const trend = game.state()!.activeTrends[0]?.curveball;
+  return t("game.visit.why_trend", { trend: trend ? game.names.curveballName(trend) : "" });
 }
 
 // ------------------------------------------------------------------ 5. passing (no shock: the term runs)
@@ -232,11 +257,15 @@ export function ShockSlip(): JSX.Element {
 
 export function slipText(game: ReturnType<typeof useGame>["game"], sl: Slip): string {
   const strand = game.names.strandName(sl.strand);
-  const cause = game.names.cause(sl.cause);
+  const named = game.names.cause(sl.cause);
+  // trend and event names are title case in the model; mid-sentence in English they read lower case
+  const mid = lang() === "en" && (sl.cause.kind === "curveball" || sl.cause.kind === "shock" || sl.cause.kind === "event")
+    ? named.charAt(0).toLowerCase() + named.slice(1) : named;
+  const cause = named;
   const up = sl.delta >= 0;
-  if (sl.pipChange === 0 && !sl.shock && !sl.recovery) return t(up ? "game.changed.held_up" : "game.changed.held_down", { strand, cause });
+  if (sl.pipChange === 0 && !sl.shock && !sl.recovery) return t(up ? "game.changed.held_up" : "game.changed.held_down", { strand, cause: mid });
   let sentence: string;
-  if (sl.recovery) sentence = t("game.changed.recovery", { strand, cause });
+  if (sl.recovery) sentence = sl.cause.kind === "card" ? t("game.changed.recovery_card", { strand, cause }) : t("game.changed.recovery", { strand, cause: mid });
   else if (sl.rule === "R25" && sl.cause.kind === "card") sentence = t("game.changed.ripple", { strand, cause: game.names.cardName(sl.cause.id) });
   else if (sl.sideEffect) sentence = t("game.changed.side", { strand, cause, dir: t(up ? "game.dir.up_word" : "game.dir.down_word") });
   else {

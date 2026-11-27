@@ -12,7 +12,7 @@ import type { Card } from "../../model/schema";
 import { useGame } from "./context";
 import { cardRegions } from "./names";
 import { Note } from "./Note";
-import { iPlace } from "./cymraeg";
+import { iPlace, midEn } from "./cymraeg";
 
 /** "First effects in 1 term, the rest in 2", when a card arrives in stages. */
 export function stagedNote(card: Card): string | null {
@@ -95,7 +95,7 @@ export function Hand(props: { interactive: boolean }): JSX.Element {
     if (!props.interactive && list) list.scrollTop = 0;
     measure();
     const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(measure) : null;
-    ro?.observe(list);
+    if (list) ro?.observe(list);
     onCleanup(() => ro?.disconnect());
   });
   // keep the opened ticket in view
@@ -136,6 +136,7 @@ export function Hand(props: { interactive: boolean }): JSX.Element {
   };
 
   return (
+    <Show when={props.interactive || hand().length > 0}>
     <div class="yf-hand-wrap" style={{ "--hand-n": hand().length }}>
       <div class="yf-hand-head">
         <h2 class="yf-hand-title print">{t("game.plan.hand")}</h2>
@@ -177,7 +178,7 @@ export function Hand(props: { interactive: boolean }): JSX.Element {
             const cost = () => game.costOf(pl() ?? { card: id, region: card().regions?.[0] });
             const budgetLabel = () =>
               played() || !props.interactive
-                ? t("game.plan.pips_plain")
+                ? tn("game.plan.pips_word", cost())
                 : t("game.plan.of_left", { n: Math.max(0, game.budget().left) });
             return (
               <div
@@ -197,7 +198,7 @@ export function Hand(props: { interactive: boolean }): JSX.Element {
                 >
                   <Ticket
                     id={`ticket-${id}`}
-                    card={ticketOf(card(), cost())}
+                    card={{ ...ticketOf(card(), cost()), needs_partners: card().needs_partners && !sel() }}
                     budget={game.budget().total || s().budget.available}
                     budgetLabel={budgetLabel()}
                     scope={pl()?.region && card().scope === "national_or_region" ? "region" : undefined}
@@ -226,6 +227,7 @@ export function Hand(props: { interactive: boolean }): JSX.Element {
         </button>
       </Show>
     </div>
+    </Show>
   );
 }
 
@@ -325,7 +327,7 @@ function WherePicker(props: { card: Card; onPlay: (id: string, region?: RegionId
           </For>
         </div>
         <Show when={scope() === "region" && !played()}>
-          <Note id="region" when={true} class="yf-note-region" placement="left">{t("game.onboard.region")}</Note>
+          <Note id="region" when={ui.guide.hasSeen("play")} class="yf-note-region" placement="left">{t("game.onboard.region")}</Note>
         </Show>
       </Show>
       <Show when={scope() === "two_regions"}>
@@ -376,12 +378,12 @@ export function TicketNotes(): JSX.Element {
             <p class="t-3">{pick(c().name)}</p>
               <p class="story-small">{pick(c().description)}</p>
               <Show when={stagedNote(c())}><p class="small strong">{stagedNote(c())}</p></Show>
-              <Show when={c().needs_partners}><p class="small">{t("game.plan.partners_note")}</p></Show>
+              <Show when={c().needs_partners && !/partner/i.test(pick(c().side_note ?? ""))}><p class="small">{t("game.plan.partners_note")}</p></Show>
               <Show when={c().upkeep}>
-                <p class="small">{c().upkeep!.every > 1 ? t("game.plan.upkeep_note", { n: c().upkeep!.pips, every: c().upkeep!.every }) : t("game.plan.upkeep_note_each", { n: c().upkeep!.pips })}</p>
+                <p class="small">{c().upkeep!.every > 1 ? t("game.plan.upkeep_note", { pips: tn("game.pips", c().upkeep!.pips), terms: tn("parts.ticket.terms", c().upkeep!.every) }) : t("game.plan.upkeep_note_each", { pips: tn("game.pips", c().upkeep!.pips) })}</p>
               </Show>
               <Show when={c().side_note}><p class="small">{pick(c().side_note)}</p></Show>
-              <Show when={c().visit}><p class="small">{t("game.plan.visit_card", { place: game.names.placeName(c().visit!), i_place: iPlace(game.names.placeName(c().visit!)) })}</p></Show>
+              <Show when={c().visit}><p class="small">{t("game.plan.visit_card", { place: midEn(game.names.placeName(c().visit!)), i_place: iPlace(game.names.placeName(c().visit!)) })}</p></Show>
               <Show when={s().term + c().delay > 5}><p class="small yf-after2050">{t("game.plan.after_2050")}</p></Show>
             
           </aside>

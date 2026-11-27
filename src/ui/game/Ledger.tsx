@@ -42,7 +42,7 @@ export function LedgerDrawer(): JSX.Element {
                 <div class="yf-standing">
                   <Ticket
                     card={{ id: st.id, name: st.name, cost: 0, delay: 0, scope: "standing", tags: ["borrow"] }}
-                    fare={<span class="small strong">{t("game.ledger.gives", { n: st.budget })}</span>}
+                    fare={<span class="small strong">{tn("game.ledger.gives", st.budget)}</span>}
                     budget={game.budget().total}
                     selected={on()}
                     class="yf-ticket yf-ticket-standing"
@@ -57,7 +57,7 @@ export function LedgerDrawer(): JSX.Element {
                             onClick={() => game.setStanding(st.id)}
                             why={blockedDebt() ? t("game.plan.problem.debt_max") : null}
                           >
-                            {t("game.ledger.use")} ({t("game.ledger.gives", { n: st.budget })})
+                            {t("game.ledger.use")} ({tn("game.ledger.gives", st.budget)})
                           </TabButton>
                         }
                       >
@@ -89,7 +89,7 @@ export function LedgerDrawer(): JSX.Element {
                     onClick={() => game.setRepay(game.draft.repayDebt + 1)}
                     why={game.budget().left < clear() ? t("game.plan.cannot_budget") : null}
                   >
-                    {t("game.ledger.repay", { n: clear() })}
+                    {tn("game.ledger.repay", clear())}
                   </TabButton>
                 </Show>
               </p>
@@ -109,7 +109,7 @@ export function LedgerDrawer(): JSX.Element {
                   when={game.draft.repair}
                   fallback={
                     <TabButton onClick={() => game.setRepair(true)} why={game.budget().left < repairCost() ? t("game.plan.cannot_budget") : null}>
-                      {t("game.ledger.repair", { n: repairCost() })}
+                      {tn("game.ledger.repair", repairCost())}
                     </TabButton>
                   }
                 >
@@ -130,7 +130,7 @@ export function LedgerDrawer(): JSX.Element {
                   const skipped = () => game.draft.skipUpkeep.includes(u.id);
                   return (
                     <li class="yf-upkeep">
-                      <span class="data">{t("game.ledger.upkeep_line", { card: game.names.cardName(u.card), n: u.pips })}</span>
+                      <span class="data">{tn("game.ledger.upkeep_line", u.pips, { card: game.names.cardName(u.card) })}</span>
                       <span class="small">{pick(u.note)}</span>
                       <Show when={planning()}>
                         <TabButton aria-pressed={skipped()} onClick={() => game.toggleUpkeep(u.id)}>

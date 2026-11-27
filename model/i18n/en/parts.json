@@ -21,7 +21,6 @@
  "scope.standing": "Standing",
  "scope.lesson": "Lesson",
  "ticket.cost": "Cost",
- "ticket.ofPips": "of {n} pips",
  "ticket.paysOutIn": "Pays out in",
  "ticket.paysOutNow": "Pays out this term",
  "ticket.termWord.one": "term",
@@ -32,7 +31,6 @@
  "ticket.frays": "frays {strand}",
  "ticket.partners": "Needs partners",
  "ticket.played": "Played {year}",
- "ticket.costAria": "Cost {n} of {of} pips",
  "ticket.paysAria": "Pays out in {when}",
  "ticket.paysNowAria": "Pays out this term",
  "ticket.playedAria": "Played {year}",
@@ -79,5 +77,9 @@
  "confidence.low": "low",
  "ticket.no": "No.",
  "ticket.mixed": "{strand}, mixed",
- "scope.national_or_region": "National or region"
+ "scope.national_or_region": "National or region",
+ "ticket.ofPips.one": "of {n} pip",
+ "ticket.ofPips.other": "of {n} pips",
+ "ticket.costAria.one": "Cost {n} of {of} pip",
+ "ticket.costAria.other": "Cost {n} of {of} pips"
 }

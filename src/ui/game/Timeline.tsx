@@ -23,7 +23,8 @@ export function Timeline(props: { passing?: boolean }): JSX.Element {
   /** Cards in the post, plus the ones being played this term (not yet sealed). */
   const stubs = createMemo(() => {
     const st = s();
-    const items: (PostItem & { draft?: boolean })[] = st.post.map((p) => ({ ...p }));
+    // what has already arrived is told by the arrival strip, not piled on the strip at today's year
+    const items: (PostItem & { draft?: boolean })[] = st.post.filter((p) => p.arrivesTerm > st.term).map((p) => ({ ...p }));
     if (st.step === "plan") {
       for (const c of game.draft.cards) {
         const card = game.names.card(c.card);

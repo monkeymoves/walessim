@@ -88,7 +88,7 @@ export function spreadAnchors(at: Record<string, Pt>, town: Pt, gap = 0.72): Rec
 export function BethesdaBoard(props: { data: PlaceData; api: BoardApi }): JSX.Element {
   const { game, ui } = useGame();
   const board = game.names.place("bethesda")!;
-  const offer = () => game.state()!.visitOffer!;
+  const offer = () => ui.visitPick() ?? game.state()!.visitOffer!;
   const options = board.options ?? [];
   const [sel, setSel] = createSignal<string | null>(null);
   const stitched = (id: string) => props.api.threads().includes(id);

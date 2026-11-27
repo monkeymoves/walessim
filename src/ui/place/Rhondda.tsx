@@ -30,7 +30,7 @@ interface TipRow {
 export function RhonddaBoard(props: { data: PlaceData; api: BoardApi }): JSX.Element {
   const { game, ui } = useGame();
   const board = game.names.place("rhondda")!;
-  const offer = () => game.state()!.visitOffer!;
+  const offer = () => ui.visitPick() ?? game.state()!.visitOffer!;
   const items = placeItems(props.data);
   const rows: TipRow[] = items.map((it) => {
     const f = board.tips?.find((x) => x.id === it.id) ?? null;

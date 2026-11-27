@@ -106,7 +106,7 @@ export function Ticket(props: TicketProps): JSX.Element {
     [
       pick(props.card.name),
       t(`parts.scope.${scope()}`),
-      props.fare ? "" : props.budgetLabel ? `${t("parts.ticket.cost")} ${props.card.cost} ${props.budgetLabel}` : t("parts.ticket.costAria", { n: props.card.cost, of: budget() }),
+      props.fare ? "" : props.budgetLabel ? `${t("parts.ticket.cost")} ${props.card.cost} ${props.budgetLabel}` : tn("parts.ticket.costAria", budget(), { n: props.card.cost, of: budget() }),
       props.card.delay <= 0 ? t("parts.ticket.paysNowAria") : t("parts.ticket.paysAria", { when: payout() }),
       props.played ? t("parts.ticket.playedAria", { year: props.played }) : "",
       props.blocked ? props.blocked.reason : "",
@@ -194,7 +194,7 @@ export function Ticket(props: TicketProps): JSX.Element {
               <div classList={{ blocked: props.blocked?.on === "cost" }}>
                 <span class="furniture">{t("parts.ticket.cost")}</span>
                 <b>{props.card.cost}</b>
-                <small>{props.budgetLabel ?? t("parts.ticket.ofPips", { n: budget() })}</small>
+                <small>{props.budgetLabel ?? tn("parts.ticket.ofPips", budget())}</small>
               </div>
             </Show>
             <div>

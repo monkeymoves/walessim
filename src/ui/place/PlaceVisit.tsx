@@ -9,6 +9,7 @@ import { type VisitChoice, type VisitOutcome } from "../../engine/api";
 import { gradeVisit } from "../game/engine";
 import { StampButton, TabButton } from "../parts/Buttons";
 import { useGame } from "../game/context";
+import { visitWhy } from "../game/Steps";
 import { RhonddaBoard } from "./Rhondda";
 import { BethesdaBoard } from "./Bethesda";
 
@@ -31,7 +32,7 @@ export interface BoardApi {
 
 export function PlaceVisit(): JSX.Element {
   const { game, ui } = useGame();
-  const offer = () => game.state()!.visitOffer!;
+  const offer = () => ui.visitPick() ?? game.state()!.visitOffer!;
   const id = offer().place;
   const board = game.names.place(id);
   const [data] = createResource(() => placeData(id));
@@ -93,6 +94,7 @@ export function PlaceVisit(): JSX.Element {
     const m = ui.map();
     if (m && m.view === "place") await m.exitPlace();
     ui.setInPlace(false);
+    ui.setVisitPick(null);
     game.act({ type: "visit", choice: c });
   }
 
@@ -103,9 +105,7 @@ export function PlaceVisit(): JSX.Element {
       <div class="pl-board sheet" classList={{ "pl-folded": !!result() }}>
         <header class="pl-head">
           <Pair text={board?.name} as="h2" class="t-1" />
-          <Show when={offer().triggeredBy.some((c) => c !== "curveball")}>
-            <p class="small">{t("place.common.trigger", { card: game.names.list(offer().triggeredBy.filter((c) => c !== "curveball").map((c) => game.names.cardName(c))) })}</p>
-          </Show>
+          <p class="small">{visitWhy(game, offer())}</p>
         </header>
         <Show when={data()} fallback={<p class="small">{t("place.common.folding", { place: game.names.placeName(id) })}</p>}>
           <Show when={id === "rhondda"} fallback={<BethesdaBoard data={data()!} api={api} />}>

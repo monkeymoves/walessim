@@ -163,7 +163,7 @@ function Stop(props: { stop: TraceStop; sharp: boolean }): JSX.Element {
             <p class="yf-stop-title"><StrandName strand={s().strand} frays={s().delta < 0} /></p>
             <p class="story-small">
               {s().pipsBefore === s().pipsAfter
-                ? t("game.trace.strand_same", { strand: game.names.strandName(s().strand), to: s().pipsAfter })
+                ? tn("game.trace.strand_same", s().pipsAfter, { strand: game.names.strandName(s().strand), to: s().pipsAfter })
                 : t("game.trace.strand_line", { strand: game.names.strandName(s().strand), from: s().pipsBefore, to: s().pipsAfter })}
             </p>
             <p class="small">{s().sharp ? t("game.trace.sharp") : t("game.trace.fuzzy")}</p>

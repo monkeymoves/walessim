@@ -113,32 +113,46 @@ export function TopBar(props: { ticking?: boolean }): JSX.Element {
       return c ? { ...v, flowPips: c.pipsBefore, stockPips: c.stockPipsBefore } : v;
     });
   });
-  /** Marginal effect per strand in score points (eventual median, with versus without). */
+  /** The previewed card's own marginals (paired with and without it, at its landing), from the engine. */
+  const cardPreview = createMemo(() => {
+    const g = game.ghost();
+    if (!g?.card || !g.preview || game.isPlayed(g.card)) return null;
+    return g.preview.perCard.find((c) => c.card === g.card) ?? null;
+  });
+  /**
+   * Change per strand in score points. For a card: only the strands the engine marks as real, never
+   * the term's drift. For the plan as a whole: what it adds over the no-plays baseline.
+   */
   const ghostDelta = createMemo(() => {
     const g = game.ghost();
-    if (!g?.preview || !g.base) return null;
-    if (game.ledgerOpen()) return null;
+    if (!g?.preview || game.ledgerOpen()) return null;
+    if (g.card && game.isPlayed(g.card)) return null;
     const m: Partial<Record<StrandId, { d: number; sharp: boolean; pips: number; stock: number }>> = {};
+    const cp = cardPreview();
+    if (g.card) {
+      if (!cp) return null;
+      for (const id of cp.real) {
+        const f = cp.strands[id], st = cp.stock[id];
+        m[id] = { d: f?.delta ?? 0, sharp: f?.sharp ?? true, pips: f?.pips ?? 0, stock: st?.delta ?? 0 };
+      }
+      return m;
+    }
     for (const p of g.preview.strands) {
-      const b = g.base.strands.find((x) => x.strand === p.strand);
-      if (!b) continue;
-      m[p.strand] = {
-        d: p.eventual.median - b.eventual.median, sharp: p.eventual.sharp, pips: p.eventual.pips - b.eventual.pips,
-        stock: p.stockEventual.median - b.stockEventual.median,
-      };
+      const d = p.eventual.median - p.baseline.median;
+      if (Math.abs(d) >= 0.05) m[p.strand] = { d, sharp: p.eventual.sharp, pips: Math.round(d), stock: 0 };
     }
     return m;
   });
-  /** The forecast in words inside each strand tile: flow first, else what is handed on. */
+  /** The forecast in words inside each strand tile: flow first, else what is left to 2050. */
   const ghostLabels = createMemo(() => {
     const gd = ghostDelta();
     if (!gd) return undefined;
     const m: Partial<Record<StrandId, { text: string; down: boolean } | null>> = {};
     for (const [id, v] of Object.entries(gd) as [StrandId, { d: number; stock: number }][]) {
-      if (Math.abs(v.d) >= 0.3) {
+      if (Math.abs(v.d) >= 0.15) {
         const n = Math.round(Math.abs(v.d));
         m[id] = { text: n === 0 ? t(v.d > 0 ? "game.plan.ghost_small_up" : "game.plan.ghost_small_down") : tn(v.d > 0 ? "game.plan.ghost_up" : "game.plan.ghost_down", n), down: v.d < 0 };
-      } else if (Math.abs(v.stock) >= 0.3) {
+      } else if (Math.abs(v.stock) >= 0.05) {
         m[id] = { text: t(v.stock > 0 ? "game.plan.ghost_handed_up" : "game.plan.ghost_handed_down"), down: v.stock < 0 };
       } else m[id] = null;
     }
@@ -147,6 +161,9 @@ export function TopBar(props: { ticking?: boolean }): JSX.Element {
   const ghostHeading = () => {
     const g = game.ghost();
     if (!g || !ghostDelta()) return null;
+    const cp = cardPreview();
+    if (cp?.landsAfterGame) return t("game.plan.ghost_after");
+    if (cp?.nothingThisTerm) return t("game.plan.ghost_nothing", { year: cp.landsYear });
     return g.card ? t("game.plan.ghost_if", { card: game.names.cardName(g.card) }) : t("game.plan.ghost_if_plan");
   };
   /** The ghost outline: fractional pips, so a card worth less than a pip still shows. */

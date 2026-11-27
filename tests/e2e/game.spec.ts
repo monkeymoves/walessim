@@ -218,3 +218,72 @@ test("the Cymraeg toggle on the title screen switches the language and carries i
   await page.goto("/#/yfory");
   await expect(page.locator(".yf")).toHaveAttribute("lang", "cy", { timeout: 30_000 });
 });
+
+/** Every guide note on screen can be seen and clicked: the element at its centre is the note. */
+async function notesAreReachable(page: Page, seen: Set<string>): Promise<void> {
+  await page.waitForTimeout(350); // let a note that has just opened settle in place
+  const notes = page.locator(".yf-note");
+  const n = await notes.count();
+  for (let i = 0; i < n; i++) {
+    const note = notes.nth(i);
+    await expect(note).toBeVisible();
+    const id = (await note.getAttribute("data-note")) ?? "";
+    const onTop = await note.evaluate((el) => {
+      const r = el.getBoundingClientRect();
+      const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      return !!hit && el.contains(hit) && r.right <= innerWidth && r.bottom <= innerHeight && r.left >= 0 && r.top >= 0;
+    });
+    expect(onTop, `guide note "${id}" is drawn on top and on screen`).toBe(true);
+    seen.add(id);
+  }
+}
+
+for (const [lang, w, h] of [["en", 1440, 900], ["cy", 1280, 800]] as const) {
+  test(`every guide note is visible and clickable (${lang}, ${w}x${h})`, async ({ page }) => {
+    test.setTimeout(180_000);
+    await page.setViewportSize({ width: w, height: h });
+    const errors = await fresh(page, lang, false);
+    const seen = new Set<string>();
+    // from the keyboard, so the pointer does not land on a ticket (which teaches the hand note at once)
+    await page.locator(".yf-hook .btn-stamp").focus();
+    await page.keyboard.press("Enter");
+    await notesAreReachable(page, seen); // hand
+    await page.locator(".yf-ticket-slot").first().hover();
+    await notesAreReachable(page, seen); // ticket
+    await page.locator('.yf-note[data-note="ticket"] .yf-note-btn').click();
+    // a region card opens the play note and the region note
+    const names = await page.locator(".yf-hand .ticket").evaluateAll((els) => els.map((e) => e.getAttribute("aria-label") ?? ""));
+    const ri = Math.max(0, names.findIndex((x) => /REGION|Region|Rhanbarth/.test(x)));
+    await page.locator(".yf-ticket-slot").nth(ri).locator(".yf-ticket-press").click();
+    await notesAreReachable(page, seen);
+    for (const id of ["play", "region"]) {
+      const b = page.locator(`.yf-note[data-note="${id}"] .yf-note-btn`);
+      if (await b.count()) { await notesAreReachable(page, seen); await b.click(); }
+    }
+    const region = page.locator(".yf-tray .yf-region:not([disabled])").first();
+    if (await region.count()) await region.click();
+    else await page.locator(".yf-tray .btn-stamp").first().click();
+    await notesAreReachable(page, seen); // post
+    const post = page.locator('.yf-note[data-note="post"] .yf-note-btn');
+    if (await post.count()) await post.click();
+    await notesAreReachable(page, seen); // commit
+    await page.locator(".yf-commit").click();
+    // through to what changed
+    for (let g = 0; g < 20; g++) {
+      const s = await step(page);
+      if (s === "changed") break;
+      if (s === "visit") await page.locator(".yf-visit-offer .btn-tab").click();
+      else if (s === "passing") await page.waitForTimeout(400);
+    }
+    await page.waitForTimeout(2600);
+    await notesAreReachable(page, seen); // strands, pull
+    for (const id of ["strands", "pull"]) {
+      const b = page.locator(`.yf-note[data-note="${id}"] .yf-note-btn`);
+      if (await b.count()) { await notesAreReachable(page, seen); await b.click(); await page.waitForTimeout(150); }
+    }
+    await page.locator(".yf-rail .yf-panel-foot .btn-stamp").click();
+    await notesAreReachable(page, seen); // trust
+    for (const id of ["hand", "ticket", "play", "post", "pull", "trust"]) expect(seen.has(id), `saw guide note "${id}"`).toBe(true);
+    expect(errors).toEqual([]);
+  });
+}

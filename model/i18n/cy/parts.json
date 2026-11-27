@@ -22,7 +22,6 @@
  "scope.standing": "Sefydlog",
  "scope.lesson": "Gwers",
  "ticket.cost": "Pris",
- "ticket.ofPips": "o {n} pip",
  "ticket.paysOutIn": "Talu ymhen",
  "ticket.paysOutNow": "Talu’r tymor hwn",
  "ticket.termWord.one": "tymor",
@@ -37,7 +36,6 @@
  "ticket.frays": "yn breuo {strand}",
  "ticket.partners": "Angen partneriaid",
  "ticket.played": "Chwaraewyd {year}",
- "ticket.costAria": "Cost {n} o {of} pip",
  "ticket.paysAria": "Talu ymhen {when}",
  "ticket.paysNowAria": "Talu’r tymor hwn",
  "ticket.playedAria": "Chwaraewyd {year}",
@@ -90,5 +88,15 @@
  "confidence.low": "isel",
  "ticket.no": "Rhif",
  "ticket.mixed": "{strand}, cymysg",
- "scope.national_or_region": "Cenedl neu ranbarth"
+ "scope.national_or_region": "Cenedl neu ranbarth",
+ "ticket.ofPips.one": "o {n} pip",
+ "ticket.ofPips.two": "o {n} bip",
+ "ticket.ofPips.few": "o {n} phip",
+ "ticket.ofPips.many": "o {n} phip",
+ "ticket.ofPips.other": "o {n} pip",
+ "ticket.costAria.one": "Pris {n} o {of} pip",
+ "ticket.costAria.two": "Pris {n} o {of} bip",
+ "ticket.costAria.few": "Pris {n} o {of} phip",
+ "ticket.costAria.many": "Pris {n} o {of} phip",
+ "ticket.costAria.other": "Pris {n} o {of} pip"
 }

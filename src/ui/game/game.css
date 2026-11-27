@@ -468,3 +468,8 @@
 /* the selected ticket's words, on the stage beside the hand */
 .yf-cardnotes { position: absolute; right: 14px; bottom: 14px; width: min(340px, 40%); z-index: 4; padding: 12px 14px 12px; display: grid; gap: 6px; max-height: calc(100% - 90px); overflow-y: auto; }
 .yf-slip-paper.shock .yf-dir, .yf-slip-paper.shock .yf-pipchange { color: var(--on-slate); }
+
+/* guide notes live in a top layer (see Note.tsx): fixed, above every piece of the board */
+.yf-note { z-index: 60; }
+.yf-note-anchor { display: none; }
+.yf-note-region { position: fixed; margin: 0; }

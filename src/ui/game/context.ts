@@ -2,6 +2,7 @@
 // not part of the game (which piece is open, which card is waiting for a region, the guide).
 import { createContext, createSignal, useContext, type Accessor } from "solid-js";
 import type { PaperMap } from "../../map";
+import type { VisitOffer } from "../../engine/api";
 import type { Game } from "./controller";
 import { onboardSeen, saveOnboard } from "./save";
 
@@ -17,6 +18,8 @@ export function createUi() {
   const [regionPick, setRegionPick] = createSignal<string | null>(null);
   /** True while a place visit is open (the map has folded into the place). */
   const [inPlace, setInPlace] = createSignal(false);
+  /** The place offer the player chose to go to (the main one, or an alternative). */
+  const [visitPick, setVisitPick] = createSignal<VisitOffer | null>(null);
   /** An authority picked on the map (opening and plan): the place panel. */
   const [laPanel, setLaPanel] = createSignal<string | null>(null);
   /** Which strands have finished ticking in the "what changed" replay (count, left to right). */
@@ -50,7 +53,7 @@ export function createUi() {
   }
 
   return {
-    map, setMap, mapView, setMapView, regionPick, setRegionPick, inPlace, setInPlace, laPanel, setLaPanel,
+    map, setMap, mapView, setMapView, regionPick, setRegionPick, inPlace, setInPlace, visitPick, setVisitPick, laPanel, setLaPanel,
     ticked, setTicked, announce, setAnnounce,
     guide: { hasSeen, done, skip: skipGuide, noteFor, skipped },
   };

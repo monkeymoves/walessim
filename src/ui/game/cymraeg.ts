@@ -46,3 +46,6 @@ export function ynPlace(name: string): string {
   for (const [re, yn, to] of NASAL) if (re.test(name)) return `${yn} ${name.replace(re, to)}`;
   return `yn ${name}`;
 }
+
+/** English: a place name mid-sentence, "the Rhondda" rather than "The Rhondda". */
+export const midEn = (name: string): string => name.replace(/^The /, "the ");
