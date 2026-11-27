@@ -272,11 +272,16 @@ const playRegionsOf = (p: CardPlay): RegionId[] => [...(p.region ? [p.region] : 
  * terms running): move a chosen regional card there, add one if there is room, or swap the least
  * valuable choice for the cheapest card that can go there.
  */
-export const ROTATE = { move: true, swap: true };
 function rotateRegions(m: CompiledModel, ctx: Ctx, s: GameState, chosen: CardPlay[], cands: { play: CardPlay; v: number; card: Card }[], budget: number): CardPlay[] {
   if (s.term < 1) return chosen;
+  // the engine's own rule: with national_counts_for_neglect, a national play lands in every region
+  const nationalCounts = m.game.trust.national_counts_for_neglect;
   const last: Record<RegionId, number> = { north: -1, mid: -1, southwest: -1, southeast: -1 };
-  for (const h of s.history) for (const c of h.plays.cards) for (const r of playRegionsOf(c)) last[r] = Math.max(last[r], h.term);
+  for (const h of s.history)
+    for (const c of h.plays.cards) {
+      const rs = playRegionsOf(c);
+      for (const r of rs.length ? rs : nationalCounts ? [...REGION_IDS] : []) last[r] = Math.max(last[r], h.term);
+    }
   // neglect is two terms running without a card: a region with none last term needs one now
   const due = [...REGION_IDS].filter((r) => last[r] < s.term - 1).sort((a, b) => last[a] - last[b]);
   let plays = chosen.map((p) => ({ ...p }));
@@ -297,12 +302,12 @@ function rotateRegions(m: CompiledModel, ctx: Ctx, s: GameState, chosen: CardPla
       const from = p.region;
       return !from || !due.includes(from) || counts(from) > 1 || covered().has(from) === false;
     });
-    if (ROTATE.move && movable && movable.region && (!due.includes(movable.region) || counts(movable.region) > 1)) {
+    if (movable && movable.region && (!due.includes(movable.region) || counts(movable.region) > 1)) {
       movable.region = r;
       delete movable.regions;
       continue;
     }
-    if (ROTATE.move && movable && !movable.region && ctx.cards.get(movable.card)!.scope === "national_or_region") {
+    if (movable && !movable.region && ctx.cards.get(movable.card)!.scope === "national_or_region") {
       movable.region = r;
       continue;
     }
@@ -321,7 +326,7 @@ function rotateRegions(m: CompiledModel, ctx: Ctx, s: GameState, chosen: CardPla
       }
       // swap out the least valuable choice that does not itself cover a due region
       const swappable = [...plays].filter((p) => !playRegionsOf(p).some((x) => due.includes(x) && counts(x) === 1)).sort((a, b) => valueOf(a) - valueOf(b))[0];
-      if (ROTATE.swap && swappable) {
+      if (swappable) {
         const trial = [...plays.filter((p) => p !== swappable), opt];
         if (cost(trial) <= budget) {
           plays = trial;
@@ -370,8 +375,6 @@ function thoughtful(o: ThoughtfulOpts): Bot {
 }
 
 export const thoughtfulBot = thoughtful({ id: "thoughtful", flowWeight: 1.6, stockWeight: 0.8 });
-/** Diagnostic: thoughtful play without the region rotation. */
-export const thoughtfulNoRotate = thoughtful({ id: "thoughtful-no-rotate", flowWeight: 1.6, stockWeight: 0.8, rotate: false });
 export const flowBot = thoughtful({ id: "flow-greedy", stockWeight: 0.2, flowWeight: 3 });
 
 /** The single-strategy bots of section 11.1. */
@@ -448,4 +451,4 @@ export function playBot(m: CompiledModel, bot: Bot, seed: number | string, optio
   return s;
 }
 
-export const ALL_BOTS: Bot[] = [caretakerBot, carelessBot, averageBot, thoughtfulBot, ...strategyBots, flowBot, thoughtfulNoRotate];
+export const ALL_BOTS: Bot[] = [caretakerBot, carelessBot, averageBot, thoughtfulBot, ...strategyBots, flowBot];

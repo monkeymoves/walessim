@@ -13,7 +13,7 @@ import { buildSchedule, type TermSchedule } from "./schedule";
 import { deal, initialDeck } from "./deck";
 import { gradeBethesda, gradeRhondda, tipRisk } from "./places";
 import { bandFor, computeTrust } from "./trust";
-import { archetypeOf, level, openingVoice, pickVoice, writeLetter, type NamedThing, type VoiceEventCandidate } from "./voices";
+import { archetypeOf, level, openingVoice, overlookedRegion, pickVoice, writeLetter, type NamedThing, type VoiceEventCandidate } from "./voices";
 import {
   causeKey,
   cloneRun,
@@ -316,10 +316,10 @@ function pledgeStrand(ctx: Ctx, state: A.GameState): StrandId {
   return (withVoice ?? order[0]!).strand;
 }
 
-function mostMovedLa(ctx: Ctx, s: Sim): number {
+function mostMovedLa(ctx: Ctx, s: Sim, among?: number[]): number {
   const r = s.runs[0]!;
-  let best = 0, bestV = -1;
-  for (let i = 0; i < ctx.las.length; i++) {
+  let best = among?.[0] ?? 0, bestV = -1;
+  for (const i of among ?? ctx.las.map((_, k) => k)) {
     let v = 0;
     for (const ids of ctx.strandFlow) for (const c of ids) if (ctx.comps[c]!.aggregate !== "gap") v += r.s[c]![i]! - ctx.base[c]![i]!;
     if (Math.abs(v) > bestV) {
@@ -1334,17 +1334,22 @@ export function preview(model: CompiledModel, state: A.GameState, plays: A.Plays
   const withAll = projectPlays(ctx, state, plays, n, null);
   // marginal effects are compared over the same horizon as the full plan
   const project = (p: A.Plays) => projectPlays(ctx, state, p, n, withAll.horizon);
+  // paired runs: with and without a card, run r uses the same parameters and the same keyed draws,
+  // so the difference is exactly that card's effect in that run (zero where it reaches nothing)
+  const marginal = (d: number[]): A.Projection & { delta: number } => {
+    const clean = d.map((x) => (Math.abs(x) < 1e-9 ? 0 : x));
+    const med = median(clean);
+    // sharp: at least sharp_share of runs agree on the quarter pip
+    const q = Math.round(med * 4);
+    const sharp = clean.filter((x) => Math.round(x * 4) === q).length / clean.length >= ctx.model.game.sharp_share;
+    return { median: med, p10: quantile(clean, 0.1), p90: quantile(clean, 0.9), pips: Math.round(med), sharp, delta: med };
+  };
   const perCard = plays.cards.map((c) => {
     const without = project({ ...plays, cards: plays.cards.filter((x) => x !== c) });
-    const strands = Object.fromEntries(
-      STRAND_IDS.map((id, i) => {
-        const d = withAll.eventualRuns.map((v, r) => v[i]! - without.eventualRuns[r]![i]!);
-        const med = median(d);
-        return [id, { median: median(withAll.eventualRuns.map((v) => v[i]!)), p10: quantile(d, 0.1), p90: quantile(d, 0.9), pips: Math.round(med), sharp: sharpOf(ctx, d.map((x) => x * 4), med * 4), delta: med }];
-      }),
-    ) as Record<StrandId, A.Projection & { delta: number }>;
+    const strands = Object.fromEntries(STRAND_IDS.map((id, i) => [id, marginal(withAll.eventualRuns.map((v, r) => v[i]! - without.eventualRuns[r]![i]!))])) as Record<StrandId, A.Projection & { delta: number }>;
     return { card: c.card, strands };
   });
+  const none = plays.cards.length ? project({ ...plays, cards: [] }) : withAll;
   const proj = (vals: number[]): A.Projection => {
     const m = median(vals);
     return { median: m, p10: quantile(vals, 0.1), p90: quantile(vals, 0.9), pips: Math.round(m), sharp: sharpOf(ctx, vals, m) };
@@ -1363,6 +1368,7 @@ export function preview(model: CompiledModel, state: A.GameState, plays: A.Plays
       now: state.strands[i]!.flow,
       end: proj(withAll.endRuns.map((v) => v[i]!)),
       eventual: proj(withAll.eventualRuns.map((v) => v[i]!)),
+      baseline: proj(none.eventualRuns.map((v) => v[i]!)),
       stockNow: state.strands[i]!.stock,
       stockEventual: proj(withAll.eventualStock.map((v) => v[i]!)),
     })),
@@ -1592,11 +1598,20 @@ function computeResult(ctx: Ctx, state: A.GameState, weights: Record<StrandId, n
 
   // the letter, chosen from the change bands
   const equalIdx = STRAND_IDS.indexOf("equal");
-  const neglectedTerms = state.history.filter((h) => h.events.some((e) => e.kind === "neglect")).length;
-  const uneven = medFlowTerms[medFlowTerms.length - 1]![equalIdx]! < 4 || neglectedTerms >= 2;
+  // decision 15: uneven if a region never got a regional card of its own, or one region took over
+  // two thirds of regional plays (the letter names the overlooked region), or equal is low
+  const regionalPlays = { north: 0, mid: 0, southwest: 0, southeast: 0 } as Record<RegionId, number>;
+  for (const p of s.plays) for (const r of p.regions ?? []) regionalPlays[r]++;
+  const regionPop = Object.fromEntries(REGION_IDS.map((r) => [r, ctx.regionLas[r].reduce((a, i) => a + ctx.pop[i]!, 0)])) as Record<RegionId, number>;
+  const overlooked = overlookedRegion(regionalPlays, regionPop);
+  const uneven = medFlowTerms[medFlowTerms.length - 1]![equalIdx]! < 4 || overlooked !== null;
   const archetype = archetypeOf(level(model, livedV), level(model, leftV), uneven);
-  const named = namedThing(ctx, state, archetype);
-  const la = mostMovedLa(ctx, s);
+  const named: NamedThing =
+    archetype === "uneven" && overlooked
+      ? { kind: "neglect", id: overlooked, year: null, thing: ctx.model.regions.find((r) => r.id === overlooked)!.name }
+      : namedThing(ctx, state, archetype);
+  // the uneven letter is written from the overlooked region
+  const la = archetype === "uneven" && overlooked ? mostMovedLa(ctx, s, ctx.regionLas[overlooked]) : mostMovedLa(ctx, s);
   const letter = writeLetter(ctx, state.seed, archetype, named, la, g.years[worstTerm]!, state.ledger.lostTerms[0] ?? null);
 
   const squares = (vals: number[]) => {

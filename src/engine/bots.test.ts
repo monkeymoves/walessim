@@ -8,11 +8,11 @@ import { averageBot, caretakerBot, carelessBot, playBot, strategyBots, thoughtfu
 import { testModel } from "./test-model";
 
 const m = testModel();
-const SEEDS = 16;
+const SEEDS = 40;
 const med = (xs: number[]) => [...xs].sort((a, b) => a - b)[xs.length >> 1]!;
 const results = new Map<string, number[]>();
 const run = (bot: Bot) => {
-  if (!results.has(bot.id)) results.set(bot.id, Array.from({ length: SEEDS }, (_, i) => playBot(m, bot, i + 1, { runs: 10 }).result!.result.value));
+  if (!results.has(bot.id)) results.set(bot.id, Array.from({ length: SEEDS }, (_, i) => playBot(m, bot, i + 1, { runs: 6 }).result!.result.value));
   return results.get(bot.id)!;
 };
 const byId = (id: string) => strategyBots.find((b) => b.id === id)!;

@@ -45,7 +45,9 @@ trust:
   shock_absorbed: -6
   visit: { well: 6, adequately: 2, poorly: -6 }
   neglect: -4
-  national_counts_for_neglect: false
+  # decision 15: a national card lands in every region, so it counts for every region
+  national_counts_for_neglect: true
+  neglect_note: { en: "A region is overlooked when two terms pass with nothing landing there; a national card lands everywhere.", cy: "Mae rhanbarth yn cael ei anwybyddu pan fo dau dymor yn mynd heibio heb i ddim lanio yno; mae cerdyn cenedlaethol yn glanio ym mhobman.", cy_review: true }
   debt_interest: -2
   nothing_visible: -4
 curveballs:

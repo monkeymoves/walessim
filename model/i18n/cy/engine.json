@@ -1,0 +1,6 @@
+{
+  "_note": "Drafft peiriant. Angen adolygiad gan siaradwr rhugl cyn lansio.",
+  "_cy_review": true,
+  "engine.trust.reason.neglect": "Ni laniodd dim yn {region} am ddau dymor.",
+  "engine.rule.neglect": "Mae rhanbarth yn cael ei anwybyddu pan fo dau dymor yn mynd heibio heb i ddim lanio yno; mae cerdyn cenedlaethol yn glanio ym mhobman."
+}

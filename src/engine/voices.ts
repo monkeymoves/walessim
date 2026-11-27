@@ -3,7 +3,7 @@
  * Templates are written by the content agent in model/voices.yaml and model/letters.yaml.
  * Selection is deterministic for a seed and a term.
  */
-import type { CompiledModel, LetterArchetype, NamedThingKind, StrandId, Text, VoiceTemplate } from "../model/schema";
+import type { CompiledModel, LetterArchetype, NamedThingKind, RegionId, StrandId, Text, VoiceTemplate } from "../model/schema";
 import type { Letter, VoiceLine } from "./api";
 import { uniform } from "./rng";
 import type { Ctx } from "./scores";
@@ -149,4 +149,20 @@ export function writeLetter(
     town,
     named: { kind: named.kind, id: named.id, year: named.year },
   };
+}
+
+/**
+ * The region the uneven-hand letter names (decision 15): one that received no regional card of its
+ * own in the whole game, or, when one region took more than two thirds of all regional plays, the
+ * least served of the others. Ties go to the more populous region. Null when plays were spread.
+ */
+export function overlookedRegion(regionalPlays: Record<RegionId, number>, population: Record<RegionId, number>): RegionId | null {
+  const ids = Object.keys(regionalPlays) as RegionId[];
+  const total = ids.reduce((a, r) => a + regionalPlays[r], 0);
+  if (total === 0) return null;
+  const leastServed = (pool: RegionId[]) => [...pool].sort((a, b) => regionalPlays[a] - regionalPlays[b] || population[b] - population[a])[0] ?? null;
+  const never = ids.filter((r) => regionalPlays[r] === 0);
+  if (never.length) return leastServed(never);
+  const dominant = ids.find((r) => regionalPlays[r] > (2 / 3) * total);
+  return dominant ? leastServed(ids.filter((r) => r !== dominant)) : null;
 }

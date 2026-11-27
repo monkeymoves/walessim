@@ -1,0 +1,4 @@
+{
+  "engine.trust.reason.neglect": "Nothing landed in {region} for two terms.",
+  "engine.rule.neglect": "A region is overlooked when two terms pass with nothing landing there; a national card lands everywhere."
+}

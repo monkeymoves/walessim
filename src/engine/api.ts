@@ -2,6 +2,11 @@
  * The engine's public surface. The UI imports from this file only.
  *
  * CHANGES (newest first; every change is backward compatible in shape):
+ * - v2.1: `Preview.perCard` fields are all marginal changes (before, `median` was the eventual level,
+ *   which read as a fall of about a pip on strands under baseline drift); added `Preview.strands[].baseline`
+ *   (no plays, same horizon). Decision 15: national plays count for every region in the neglect test;
+ *   the uneven-hand letter names a region that got no regional card of its own (or the least served
+ *   when one region took over two thirds); `game.trust.neglect_note` holds the rule sentence.
  * - v2.0 (result v2, balance decision 14): `EndResult.lived`, `left` and `result` now carry the change
  *   since 2026 in net strand pips (bands -4, -1, +1, +4 from `game.judged_change`), Lived counts terms
  *   2 to 6 with the dip rule. Added `livedLevel`, `leftLevel`, `dippedBelowStart`, `vsCaretaker` and
@@ -701,9 +706,17 @@ export interface Preview {
   cost: number;
   available: number;
   contingency: number;
-  /** Per strand: now, at the end of this term, and once every played card has landed. */
-  strands: { strand: StrandId; now: number; end: Projection; eventual: Projection; stockNow: number; stockEventual: Projection }[];
-  /** Marginal eventual effect of each played card (with versus without it), per strand. */
+  /**
+   * Per strand, as levels (0 to 10): now, at the end of this term, once every played card has landed
+   * (`eventual`), and the same horizon with no plays (`baseline`, the drift of trends and baseline
+   * pressures). The plan's own effect is `eventual` minus `baseline`, not minus `now`.
+   */
+  strands: { strand: StrandId; now: number; end: Projection; eventual: Projection; baseline: Projection; stockNow: number; stockEventual: Projection }[];
+  /**
+   * Marginal eventual effect of each played card, per strand: every field is a change in strand
+   * score (with the card minus without it, paired run by run, so exactly 0 where the card reaches
+   * nothing). `median` equals `delta`; `pips` is its rounding; `sharp` means runs agree to a quarter pip.
+   */
   perCard: { card: string; strands: Record<StrandId, Projection & { delta: number }> }[];
   /** Visit that would be offered. */
   visit: "rhondda" | "bethesda" | null;

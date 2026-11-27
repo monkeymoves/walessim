@@ -304,3 +304,36 @@ does not punish it, because under population weighting it is not wrong: it reach
 most of the worst-off authorities. What it costs is said in words: the uneven-hand letter (engine
 spec, point 2) and the map. Trust neglect is now rare for any player who plays national cards, so
 Trust is checked mainly by pips lost, broken pledges, gaps widening and shocks.
+
+## Decision 15 in the engine (results, 200 seeds, 30 runs)
+
+Implemented: `trust.national_counts_for_neglect: true` (15a); the thoughtful bot's rotation uses the
+engine's rule (a national play counts for all four regions), so it no longer pushes out national
+programmes; the `thoughtful-no-rotate` diagnostic is deleted; the uneven-hand letter fires when a
+region got no regional card of its own in the whole game, or one region took more than two thirds of
+regional plays, and names the overlooked region (ties to the more populous); the rule sentence is
+`game.trust.neglect_note` and i18n keys `engine.rule.neglect`, `engine.trust.reason.neglect` in
+`model/i18n/{en,cy}/engine.json`. No YAML tune values changed in this round: every target holds.
+
+| Bot | Median | p10 | p90 | Lived | Left | Lived lower | Lost terms | Neglect region-terms | Target |
+|---|---|---|---|---|---|---|---|---|---|
+| caretaker | -2.8 | -4.5 | -1.5 | -1.8 | -2.3 | 39% | 0.12 | 1.9 | -3.5 to -1.5: ok |
+| careless | -7.0 | -9.4 | -4.4 | -3.4 | -7.0 | 5% | 0.65 | 4.9 | -10 to -4: ok |
+| average | -0.2 | -2.7 | +2.0 | +1.6 | +0.1 | 30% | 0.03 | 0.3 | -1 to +1: ok |
+| thoughtful | +1.8 | -0.4 | +3.4 | +2.2 | +3.2 | 68% | 0.00 | 0.0 | +1.5 to +3.5: ok |
+| growth-only | -6.2 | | | | | | 0.23 | 1.6 | 1.5 below thoughtful: ok |
+| green-only | -4.0 | | | | | | 0.14 | 1.0 | ok |
+| borrower | -0.7 | | | | | | 0.03 | 0.4 | ok (2.5 below) |
+| prevention-only | -0.1 | | | | | | 0.04 | 0.2 | ok (1.9 below) |
+| south-east-only | +2.0 | +0.3 | +3.2 | | | 98% | 0.00 | 0.1 | at most thoughtful +0.3: ok (+0.2) |
+| ignore-places | +1.2 | -0.9 | | | | | 0.01 | 0.0 | ok (costs 0.7 median, 0.5 p10) |
+| no-contingency | +1.8 | -0.8 | | | | | 0.00 | 0.0 | ok (0.0 median, 0.5 p10) |
+| end-game-dumper | +1.5 | -0.7 | | | | | 0.01 | 0.0 | ok (0.3, 0.3) |
+
+- Thoughtful minus caretaker, same seed: median +4.4, p10 +2.3 (target +4 and +2): ok.
+- Lived the lower in 68% of thoughtful games (50 to 80): ok. Left the lower in 71% of average games (at least 60): ok.
+- Ceiling: best of 5,000 random-search games +4.0 (at most +6): ok; A gift reached in 0.0% (under 5): ok.
+- South-east-only now scores level with thoughtful play (+0.2 at the median, worse at p10 by 0.7):
+  concentrating no longer wins, and the uneven letter answers it.
+- `src/engine/bots.test.ts` now plays 40 seeds (6 runs each): at 16 seeds the borrower's gap to
+  thoughtful play (2.5 pips at 200 seeds) read as 0.6.
