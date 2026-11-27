@@ -104,7 +104,6 @@
  "bethesda.facts_title": "O amgylch y bwrdd",
  "bethesda.facts_note": "Mae ffeithiau’n cario “i’w wirio” nes bod ffynhonnell wedi’i chadarnhau.",
  "bethesda.to_check": "i’w wirio",
- "bethesda.trend_note": "Ar waith y tymor hwn: {trend}",
  "rhondda.kind_count": "{kind} ({n})",
  "kind.place_of_worship": "capel neu eglwys",
  "kind.school": "ysgol",
@@ -130,5 +129,6 @@
  "common.earlier_plain": "yn ddiogel",
  "bethesda.about": "Y lle, a’r hyn y bydd yn ei farnu",
  "common.earlier_beth": "yn ei le ers {year}",
- "common.earlier_beth_plain": "yn ei le"
+ "common.earlier_beth_plain": "yn ei le",
+ "common.in_play": "Ar waith y tymor hwn: {trend}"
 }

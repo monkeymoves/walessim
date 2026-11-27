@@ -154,7 +154,7 @@ export function LedgerDrawer(): JSX.Element {
                 {(p) => (
                   <li>{t("game.end.pledge_line", {
                     year: p.year, strand: game.names.strandName(p.strand),
-                    state: p.kept == null ? "" : p.kept ? t("game.end.kept") : t("game.end.broken"),
+                    state: p.kept == null ? t("game.end.open") : p.kept ? t("game.end.kept") : t("game.end.broken"),
                   })}</li>
                 )}
               </For>
@@ -170,7 +170,7 @@ export function LedgerDrawer(): JSX.Element {
                 {(g) => (
                   <li class="yf-grade-line">
                     <span>{t("game.end.grade_line", { place: game.names.placeName(g.place), year: g.year })}</span>
-                    <span class="stampmark yf-grade-stamp">{t(`game.grade.${g.grade}`)}</span>
+                    <span class={`stampmark yf-grade-stamp grade-${g.grade}`}>{t(`game.grade.${g.grade}`)}</span>
                   </li>
                 )}
               </For>

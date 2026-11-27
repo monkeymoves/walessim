@@ -62,7 +62,7 @@ const summarise = (g: GameState): Summary => {
     left: e.left.value,
     which: e.result.which,
     lost: g.ledger.lostTerms.length,
-    wells: g.ledger.grades.filter((x) => x.grade === "well").length,
+    wells: g.ledger.grades.filter((x) => x.grade === "well" || x.grade === "very_well").length,
     neglect: g.history.reduce((a, h) => a + h.events.filter((x) => x.kind === "neglect").length, 0),
     shocks: g.history.filter((h) => h.shock).length,
     prepared: g.history.filter((h) => h.shock?.prepared).length,

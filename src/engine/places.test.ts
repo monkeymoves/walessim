@@ -18,7 +18,8 @@ describe("the Rhondda board", () => {
   it("grades by tests held: a majority well, one adequately, none poorly", () => {
     const byHomes = [...rh.tips!].sort((a, b) => b.buildingsBelow - a.buildingsBelow).slice(0, 3).map((t) => t.id);
     const dry = gradeRhondda(rh, byHomes, false);
-    expect(dry.grade).toBe("well");
+    // in the dry the three biggest tips hold every test with room to spare (playtest 4)
+    expect(dry.grade).toBe("very_well");
     // in the wet decade, sorting by homes leaves top-step tips above the railway
     const wet = gradeRhondda(rh, byHomes, true);
     expect(wet.tests.find((t) => t.id === "lifelines")!.pass).toBe(false);

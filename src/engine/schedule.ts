@@ -54,13 +54,17 @@ export function buildSchedule(ctx: Ctx, seed: number, firstGame: boolean): TermS
     else newTrend = null;
 
     let shock: string | null = null;
-    if (firstGame && term === g.first_game_shock.term) shock = g.first_game_shock.curveball;
-    else if (term > 0 && !(firstGame && term < g.first_game_shock.term && term === 0)) {
+    // the first game's curated shock is kept for its own term: drawn early it landed twice, in
+    // consecutive terms (playtest 4: Recession in 2034 and again in 2038)
+    const curated = firstGame ? g.first_game_shock : null;
+    if (curated && term === curated.term && !fired.has(curated.curveball)) shock = curated.curveball;
+    else if (term > 0) {
       // active trends in order of age: ties go to the trend active longest; each shock lands at most
-      // once a game (playtest 1)
+      // once a game (playtest 1), so never in two terms running
       for (const id of active) {
         const cb = ctx.curveballs.get(id)!;
         if (!cb.shock || fired.has(id)) continue;
+        if (curated && id === curated.curveball && term < curated.term) continue;
         const chance = g.shock_chance + g.ripple_shock_bonus * rippleCount(ctx, active, id);
         if (uniform(seed, "shock", term, id) < chance) {
           shock = id;

@@ -3,7 +3,8 @@
 // do differently, and the ways to play again.
 import { createMemo, createSignal, For, onCleanup, onMount, Show, type JSX } from "solid-js";
 import { lang, pick, t, tn } from "../../i18n";
-import { TERM_YEARS, type EndResult, type StrandId } from "../../engine/api";
+import { tw } from "../game/cymraeg";
+import { isGoodGrade, TERM_YEARS, type EndResult, type StrandId } from "../../engine/api";
 import { recomputeResult } from "../game/engine";
 import { STRAND_IDS, type Text } from "../../model/schema";
 import { StampButton, TabButton, ThreadButton } from "../parts/Buttons";
@@ -326,7 +327,7 @@ function Ledger(props: { result: EndResult }): JSX.Element {
           <dd class="end-grades">
             <For each={l().grades}>
               {(g) => (
-                <p><span>{t("game.end.grade_line", { place: game.names.placeName(g.place), year: g.year })}</span> <span class="stampmark">{t(`game.grade.${g.grade}`)}</span></p>
+                <p><span>{t("game.end.grade_line", { place: game.names.placeName(g.place), year: g.year })}</span> <span class={`stampmark grade-${g.grade}`}>{t(`game.grade.${g.grade}`)}</span></p>
               )}
             </For>
           </dd>
@@ -360,8 +361,8 @@ function Prompts(props: { result: EndResult }): JSX.Element {
     if (r.ledger.lostTerms.length) out.push(t("game.end.prompt.lost_seat", { year: termYear(r.ledger.lostTerms[0]!) }));
     if (r.ledger.debts.length) out.push(t("game.end.prompt.debts"));
     if (!r.ledger.grades.length) out.push(t("game.end.prompt.no_visit"));
-    else if (!r.ledger.grades.some((g) => g.grade === "well")) {
-      out.push(t("game.end.prompt.no_well", { place: game.names.placeName(r.ledger.grades[0]!.place) }));
+    else if (!r.ledger.grades.some((g) => isGoodGrade(g.grade))) {
+      out.push(tw("game.end.prompt.no_well", { place: game.names.placeName(r.ledger.grades[0]!.place) }));
     }
     const absorbed = s().history.some((h) => h.shock && h.shock.response === 0 && !h.shock.prepared);
     if (absorbed) out.push(t("game.end.prompt.contingency"));

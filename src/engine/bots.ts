@@ -4,7 +4,7 @@
  * need and by how long they will count) rather than the full preview, so 200 seeds run quickly.
  */
 import type { Card, CompiledModel, RegionId, StrandId } from "../model/schema";
-import { REGION_IDS, STRAND_IDS } from "../model/schema";
+import { GRADE_ORDER, REGION_IDS, STRAND_IDS } from "../model/schema";
 import * as E from "./api";
 import type { GameState, Plays, VisitChoice, ShockResponse, CardPlay } from "./api";
 import { makeContext, type Ctx } from "./scores";
@@ -132,15 +132,16 @@ function bestVisit(m: CompiledModel, s: GameState): VisitChoice {
   if (!offer) return null;
   const ctx = makeContext(m);
   const board = ctx.places.get(offer.place)!;
-  const order = { well: 2, adequately: 1, poorly: 0 };
+  const order = (gr: E.Grade) => GRADE_ORDER.indexOf(gr);
+  const top = GRADE_ORDER.length - 1;
   const stitched = offer.stitched ?? [];
   const ids = offer.place === "rhondda" ? (board.tips ?? []).map((t) => t.id).filter((id) => !stitched.includes(id)) : (board.options ?? []).map((o) => o.id);
   let best: { threads: string[]; g: number } | null = null;
   for (const k of [offer.threads, offer.threads - 1].filter((x) => x >= 1)) {
     for (const trio of combos(ids, Math.min(k, ids.length))) {
-      const g = order[E.gradeVisit(m, s, { place: offer.place, threads: trio }).grade];
+      const g = order(E.gradeVisit(m, s, { place: offer.place, threads: trio }).grade);
       if (!best || g > best.g) best = { threads: trio, g };
-      if (g === 2) return { place: offer.place, threads: trio };
+      if (g === top) return { place: offer.place, threads: trio };
     }
   }
   return best ? { place: offer.place, threads: best.threads } : null;

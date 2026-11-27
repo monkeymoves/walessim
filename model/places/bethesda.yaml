@@ -11,6 +11,8 @@ applies_to_flag: slate
 trigger_cards: [homes-for-locals, community-owned-energy, tourism-pays-its-way, welsh-medium-childcare]
 threads: 3
 hold_share: 0.6
+# playtest 4: VERY WELL when every test holds with room to spare: in 9 runs in 10, against the 6 needed
+very_well: { share: 0.9 }
 pressure_capacity: 0.3
 # Aros needs homes and work at or above these; Iaith needs iaith at or above its threshold; Pwysau needs
 # pressure at or below capacity and river at or above zero, after trend penalties.

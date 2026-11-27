@@ -162,7 +162,11 @@ export function TopBar(props: { ticking?: boolean }): JSX.Element {
     const g = game.ghost();
     if (!g || !ghostDelta()) return null;
     const cp = cardPreview();
+    // a card that only works through others says so, never a label with nothing after it (playtest 4)
+    if (cp?.needsPartner && !cp.real.length) return t("game.plan.ghost_partner");
     if (cp?.landsAfterGame) return t("game.plan.ghost_after");
+    const shown = Object.values(ghostLabels() ?? {}).some(Boolean);
+    if (!shown) return g.card ? t("game.plan.ghost_none") : null;
     if (cp?.nothingThisTerm) return t("game.plan.ghost_nothing", { year: cp.landsYear });
     return g.card ? t("game.plan.ghost_if", { card: game.names.cardName(g.card) }) : t("game.plan.ghost_if_plan");
   };
@@ -242,7 +246,7 @@ export function TopBar(props: { ticking?: boolean }): JSX.Element {
           </div>
           <Show when={s().step !== "ended"}>
           <div class="yf-trust">
-            <TrustGauge band={s().step === "changed" || s().step === "election" ? s().lastOutcome?.trust.band ?? s().trustBand : s().trustBand} cards={limitNext()} now={!(s().step === "changed" || s().step === "election")} compact />
+            <TrustGauge band={s().step === "changed" || s().step === "election" ? s().lastOutcome?.trust.band ?? s().trustBand : s().trustBand} cards={limitNext()} now={!(s().step === "changed" || s().step === "election")} allowText={s().step === "caretaker" ? t("parts.trust.benches") : undefined} compact />
             <Show when={s().step === "election"}>
               <Note id="trust" when={true} class="yf-note-trust" placement="left">{t("game.onboard.trust")}</Note>
             </Show>

@@ -36,7 +36,8 @@ const matches = (v: VoiceTemplate, e: VoiceEventCandidate) =>
   (v.card === undefined || v.card === e.card) &&
   (v.curveball === undefined || v.curveball === e.curveball) &&
   (v.place === undefined || v.place === e.place) &&
-  (v.grade === undefined || v.grade === e.grade) &&
+  // a very well visit hears the well voices too (playtest 4); a very_well voice only for very well
+  (v.grade === undefined || v.grade === e.grade || (v.grade === "well" && e.grade === "very_well")) &&
   (v.region === undefined || v.region === e.region) &&
   (v.kept === undefined || v.kept === e.kept) &&
   (v.response === undefined || v.response === e.response) &&
@@ -50,7 +51,10 @@ export function pickVoice(ctx: Ctx, seed: number, term: number, candidates: Voic
   // first pass: fresh voices only, across every candidate event; only then reuse (playtest 1)
   for (const allowUsed of [false, true]) {
     for (const cand of candidates) {
-      const pool = voices.filter((v) => matches(v, cand) && (allowUsed || !used.includes(v.id)));
+      const all = voices.filter((v) => matches(v, cand) && (allowUsed || !used.includes(v.id)));
+      // the closest grade first: a voice written for very well beats one written for well
+      const exact = all.filter((v) => v.grade === undefined || v.grade === cand.grade);
+      const pool = cand.grade === "very_well" && exact.some((v) => v.grade === "very_well") ? exact : all;
       if (!pool.length) continue;
       const v = pool[Math.floor(uniform(seed, "voice", term, cand.event) * pool.length)]!;
       return fillVoice(ctx, seed, term, v, cand.la);

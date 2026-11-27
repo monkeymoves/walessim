@@ -25,12 +25,16 @@
   "engine.letter.named.visit": "They still talk about the year you came to {place} and asked where to start.",
   "engine.letter.named.pledge_kept": "You made {count} promises out loud and kept {kept}. People here count.",
   "engine.letter.named.pledge_broken": "You promised us {thing} in {year}. We remember the year better than the promise.",
-  "engine.letter.named.debt": "The loans from {year} are still on the books: {count} of them.",
+  "engine.letter.named.debt": "The loans from {years} are still on the books.",
   "engine.letter.named.repairs": "The repairs put off in {year} were never done. We have been doing them since.",
   "engine.letter.named.neglect": "{thing} waited the whole time for something of its own.",
   "engine.letter.named.card": "What I can still point to is {thing}, from {year}.",
   "engine.letter.named.arrival": "{thing} arrived in {year}, after you had gone. It counts.",
   "engine.letter.named.lost_term": "The term you lost the seat, {year}, is still the first thing people mention.",
   "engine.slip.shock": "{shock} landed.",
-  "engine.visit.stitched_beth": "Already in place from an earlier visit, and counted: {tips}."
+  "engine.visit.stitched_beth": "Already in place from an earlier visit, and counted: {tips}.",
+  "engine.visit.very_well": "Every test held with room to spare.",
+  "engine.visit.room.rhondda": "Every test held. Room to spare would need {needed} in 10 of the homes, {tips} of the poorest neighbourhoods and every lifeline tip covered.",
+  "engine.visit.room.bethesda": "Every test held. Room to spare would need each test to hold in {share} runs in 10.",
+  "engine.letter.named.debt.one": "The loan from {year} is still on the books."
 }

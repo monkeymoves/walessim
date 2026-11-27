@@ -98,5 +98,6 @@
  "ticket.costAria.two": "Pris {n} o {of} bip",
  "ticket.costAria.few": "Pris {n} o {of} phip",
  "ticket.costAria.many": "Pris {n} o {of} phip",
- "ticket.costAria.other": "Pris {n} o {of} pip"
+ "ticket.costAria.other": "Pris {n} o {of} pip",
+ "trust.benches": "Y gofalwr sy’n chwarae"
 }

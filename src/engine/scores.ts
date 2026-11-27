@@ -83,6 +83,9 @@ export function withTuningDefaults(model: CompiledModel): CompiledModel {
       gap_scale: num(g.gap_scale, 2.5),
       hysteresis: num(g.hysteresis, 0.1),
       regional_size_step: num(g.regional_size_step, 1),
+      // playtest 4: an older model has no very_well grade; it then delivers and earns as well does
+      grade_multiplier: { ...g.grade_multiplier, very_well: num(g.grade_multiplier?.very_well, num(g.grade_multiplier?.well, 1.5)) },
+      trust: g.trust ? { ...g.trust, visit: { ...g.trust.visit, very_well: num(g.trust.visit?.very_well, num(g.trust.visit?.well, 6)) } } : g.trust,
       judged_change: g.judged_change ?? {
         lived_first_term: 2,
         dip_weight: 0.25,

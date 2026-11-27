@@ -168,7 +168,7 @@ describe("visits, shocks and preview", () => {
     const tips = m.places.find((p) => p.id === "rhondda")!.tips!;
     const byHomes = [...tips].sort((a, b) => b.buildingsBelow - a.buildingsBelow).slice(0, 3).map((t) => t.id);
     const g = E.gradeVisit(m, s, { place: "rhondda", threads: byHomes });
-    expect(["well", "adequately", "poorly"]).toContain(g.grade);
+    expect(["very_well", "well", "adequately", "poorly"]).toContain(g.grade);
     s = E.dispatch(m, s, { type: "visit", choice: { place: "rhondda", threads: byHomes } });
     expect(s.step).toBe("passing");
     s = E.dispatch(m, s, { type: "respond", response: 0 });

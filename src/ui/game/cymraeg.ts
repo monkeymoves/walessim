@@ -1,6 +1,9 @@
 // Small Welsh grammar helpers for names dropped into sentences (draft rules, for the fluent
 // reviewer): soft and aspirate mutation of an initial consonant, the article before "Mae" and
 // after "i", and "a" or "ac" in lists. English passes names through unchanged.
+import { fillText } from "../../engine/api";
+import { lang, t, tIn } from "../../i18n";
+
 const SOFT: [RegExp, string][] = [
   [/^Ll/, "L"], [/^Rh/, "R"], [/^P/, "B"], [/^T(?!h)/, "D"], [/^C(?!h)/, "G"], [/^B/, "F"], [/^D(?!d)/, "Dd"], [/^G/, ""], [/^M/, "F"],
 ];
@@ -49,3 +52,13 @@ export function ynPlace(name: string): string {
 
 /** English: a place name mid-sentence, "the Rhondda" rather than "The Rhondda". */
 export const midEn = (name: string): string => name.replace(/^The /, "the ");
+
+/**
+ * `t()` with Welsh initial mutation and the article handled by the word before each slot
+ * ("ar Lewyrchus", "i'r Rhondda", "drwy Gaerffili"), through the engine's own `fillText`.
+ * English is filled as it is. Pass plain (unmutated) names; `places` lists the slots that are places.
+ */
+export function tw(key: string, vars: Record<string, string | number>, places: string[] = ["place"]): string {
+  if (lang() !== "cy") return t(key, vars);
+  return fillText({ en: tIn("en", key), cy: tIn("cy", key) }, vars, places).cy;
+}

@@ -12,7 +12,9 @@ hold_over: 1
 sizes: { S: 1.5, M: 2.5, L: 4.0 }
 fcm_sizes: { S: 0.1, M: 0.2, L: 0.3 }
 regional_size_step: 1
-grade_multiplier: { poorly: 0.5, adequately: 1.0, well: 1.5 }
+# playtest 4: very_well (every test held with room to spare, margins in each board's very_well block)
+# delivers a little above well
+grade_multiplier: { poorly: 0.5, adequately: 1.0, well: 1.5, very_well: 1.7 }
 runs: 200
 preview_runs: 50
 sharp_share: 0.8
@@ -43,7 +45,7 @@ trust:
   shock_prepared: 5
   shock_responded: 3
   shock_absorbed: -6
-  visit: { well: 6, adequately: 2, poorly: -6 }
+  visit: { very_well: 8, well: 6, adequately: 2, poorly: -6 }
   neglect: -4
   # decision 15: a national card lands in every region, so it counts for every region
   national_counts_for_neglect: true
@@ -69,7 +71,9 @@ curveballs:
 response_multiplier: { absorb: 1.0, respond1: 0.5, respond2: 0.25, prepared: 0.7 }
 fragile_infrastructure: { below: 4, multiplier: 1.25 }
 debt: { interest: 1, clear_cost: 3, max_tokens: 3, left_penalty: 0.2, left_penalty_cap: 0.6 }
-caretaker: { return_trust: 40, return_budget_penalty: 1, contingency: 2, shadow_pledge_bonus: 5 }
+# playtest 4: after a caretaker term Trust comes back no higher than Thin (Fair starts at 45), so losing
+# the seat keeps its weight even when the shadow pledge is kept
+caretaker: { return_trust: 40, return_budget_penalty: 1, contingency: 2, shadow_pledge_bonus: 5, return_trust_max: 44 }
 # Design decision 14 (docs/design/balance-decision.md): the result is judged as change since 2026, in
 # net strand pips (number of strands x weighted change), the lower of Lived and Left. The engine reads
 # this block (the build copies the bands to result_bands for older readers).

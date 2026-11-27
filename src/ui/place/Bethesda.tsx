@@ -10,6 +10,7 @@ import { ConfidenceMark } from "../parts/ConfidenceMark";
 import type { ThreadOption } from "../../model/schema";
 import { useGame } from "../game/context";
 import type { BoardApi } from "./PlaceVisit";
+import { TermConditions } from "./TermConditions";
 
 const FLAGS = ["homes", "work", "iaith", "visitors", "river"] as const;
 
@@ -120,7 +121,6 @@ export function BethesdaBoard(props: { data: PlaceData; api: BoardApi }): JSX.El
   }
   const selOpt = () => options.find((o) => o.id === sel()) ?? null;
   const tests = () => board.tests.length ? board.tests.map((x) => `${game.names.text(x.name)}: ${game.names.text(x.description)}`) : ["aros", "iaith", "pwysau"].map((k) => t(`place.bethesda.tests.${k}`));
-  const trends = () => offer().activeTrends.filter((c) => board.trend_penalties?.some((p) => p.curveball === c));
 
   return (
     <div class="pl-bethesda">
@@ -160,9 +160,7 @@ export function BethesdaBoard(props: { data: PlaceData; api: BoardApi }): JSX.El
           </tbody>
         </table>
       </div>
-      <Show when={trends().length}>
-        <p class="warnstrip small"><span>{t("place.bethesda.trend_note", { trend: game.names.list(trends().map((c) => game.names.curveballName(c))) })}</span></p>
-      </Show>
+      <TermConditions place="bethesda" activeTrends={offer().activeTrends} conditions={offer().termConditions} />
       <details class="pl-tests-box pl-about">
         <summary class="label">{t("place.bethesda.about")}</summary>
         <p class="small pl-history">{t("place.bethesda.history")}</p>

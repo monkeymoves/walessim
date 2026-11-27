@@ -9,6 +9,13 @@ applies_to_flag: coal_valley
 trigger_cards: [make-coal-tips-safe, slow-the-flow, connect-buses-rail]
 threads: 3
 exposure_share: 0.4
+# playtest 4: VERY WELL when every test holds with room to spare: exposure a fifth above what it needs
+# (six in ten of the risk-weighted homes for three threads), two deprived neighbourhoods, and every
+# top-risk tip above a school or the railway covered
+very_well: { exposure_margin: 0.2, fairness_tips: 2, lifelines_all: true }
+# trends that change the board, shown on it before the player chooses (playtest 4)
+term_notes:
+  - { curveball: wet-decade, note: { en: "The wet decade: every tip stands one risk step higher.", cy: "Y degawd gwlyb: mae pob tomen un cam risg yn uwch.", cy_review: true } }
 deprived_rank: 191
 # Base risk step from open proxies (judgement, low confidence): a tip with a BGS landslide record on it is
 # step 2 if it stands at least steep_drop_m above the lowest ground within 1 km with steep_buildings or more

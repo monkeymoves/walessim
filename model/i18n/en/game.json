@@ -312,7 +312,7 @@
  "error.engine": "The game could not take that step. Try again, or start a new game.",
  "error.retry": "Try again",
  "end.envelope": "The letter from 2050",
- "end.open": "Open the letter",
+ "end.open": "judged this term",
  "end.letter_from": "From {town}, 2050",
  "end.signed": "{town}",
  "end.read_on": "See what you handed on",
@@ -514,5 +514,10 @@
  "visit.or": "Or go to {place} instead",
  "visit.choose": "Two places are asking. You can go to one this term.",
  "plan.ghost_nothing": "Nothing this term. Lands {year}:",
- "changed.recovery_card": "{strand}: the short dip from {cause} has worn off."
+ "changed.recovery_card": "{strand}: the short dip from {cause} has worn off.",
+ "visit.why_short": "Because you played {card}.",
+ "visit.why_trend_short": "{trend} bears down on it this term.",
+ "visit.choose_note": "Wherever you go, your threads decide how well the cards land.",
+ "grade.very_well": "very well",
+ "plan.ghost_partner": "Nothing by itself: it multiplies other cards"
 }

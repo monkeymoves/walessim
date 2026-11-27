@@ -12,6 +12,7 @@ import { WarnStrip } from "../parts/Notice";
 import type { TipFacts } from "../../model/schema";
 import { useGame } from "../game/context";
 import type { BoardApi } from "./PlaceVisit";
+import { TermConditions } from "./TermConditions";
 
 const DROP_M = 10;
 
@@ -135,9 +136,7 @@ export function RhonddaBoard(props: { data: PlaceData; api: BoardApi }): JSX.Ele
           </tbody>
         </table>
       </div>
-      <Show when={wet()}>
-        <WarnStrip class="pl-wet">{t("place.rhondda.risk_raised", { trend: game.names.curveballName("wet-decade") })}</WarnStrip>
-      </Show>
+      <TermConditions place="rhondda" activeTrends={offer().activeTrends} conditions={offer().termConditions} class="pl-wet" />
       <details class="pl-tests-box" open>
         <summary class="label">{t("place.common.tests")}</summary>
         <ul class="pl-tests-list small">

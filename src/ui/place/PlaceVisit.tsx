@@ -4,6 +4,7 @@
 // choice is made.
 import { createResource, createSignal, For, onCleanup, onMount, Show, type JSX } from "solid-js";
 import { Pair, t } from "../../i18n";
+import { tw } from "../game/cymraeg";
 import { loadPlace, type PlaceData } from "../../map";
 import { type VisitChoice, type VisitOutcome } from "../../engine/api";
 import { gradeVisit } from "../game/engine";
@@ -57,7 +58,7 @@ export function PlaceVisit(): JSX.Element {
     const p = await placeData(id);
     if (!m) return;
     m.warmPlace(p);
-    if (m.view === "national") await m.enterPlace(p, { focusLa: board?.la, ariaLabel: t("place.common.folding", { place: game.names.placeName(id) }) });
+    if (m.view === "national") await m.enterPlace(p, { focusLa: board?.la, ariaLabel: tw("place.common.folding", { place: game.names.placeName(id) }) });
   });
   onCleanup(() => {
     const m = ui.map();
@@ -107,7 +108,7 @@ export function PlaceVisit(): JSX.Element {
           <Pair text={board?.name} as="h2" class="t-1" />
           <p class="small">{visitWhy(game, offer())}</p>
         </header>
-        <Show when={data()} fallback={<p class="small">{t("place.common.folding", { place: game.names.placeName(id) })}</p>}>
+        <Show when={data()} fallback={<p class="small">{tw("place.common.folding", { place: game.names.placeName(id) })}</p>}>
           <Show when={id === "rhondda"} fallback={<BethesdaBoard data={data()!} api={api} />}>
             <RhonddaBoard data={data()!} api={api} />
           </Show>
@@ -167,7 +168,7 @@ function GradeSheet(props: { result: VisitOutcome; onDone: () => void; busy: boo
   return (
     <aside class="pl-grade sheet" role="region" aria-labelledby="pl-grade-title">
       <h2 id="pl-grade-title" class="t-2">{t("place.common.result", { place: game.names.placeName(props.result.place), grade: "" })}</h2>
-      <p class="stampmark pl-grade-stamp">{t(`game.grade.${props.result.grade}`)}</p>
+      <p class={`stampmark pl-grade-stamp grade-${props.result.grade}`}>{t(`game.grade.${props.result.grade}`)}</p>
       <div class="pl-grade-body">
       <ul class="pl-tests">
         <For each={props.result.tests}>

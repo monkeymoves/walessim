@@ -432,3 +432,21 @@ running; the last hand always holds a card that lands by 2050. No YAML values ch
 - Ceiling +4.1, A gift 0.1%: ok. Card use in the top decile within 0.2 to 1.6 plays per game: ok.
 - With majority grading the average bot earns about three well grades a game (was 1.4) and sits at +0.8,
   near the top of its band.
+
+## Playtest 4 fixes in the engine (results, 200 seeds)
+
+Engine changes from `docs/design/playtest-4.md`: a very well grade when every test holds with room to
+spare (`grade_multiplier.very_well: 1.7`, `trust.visit.very_well: 8`, margins in `model/places/*.yaml`);
+a caretaker term returns Trust no higher than Thin (`caretaker.return_trust_max: 44`); the scripted
+Recession never also lands the term before, so no shock lands twice in two terms running; the last hand
+always holds a card that lands in full by 2050 and works alone; a preview move under a pip against the
+card's own ticket reads as nothing. No other values changed: every target holds.
+
+- Thoughtful +2.0, caretaker -2.4, careless -7.2. Thoughtful minus caretaker, same seed: median +4.3, p10 +2.5.
+- Lived the lower in 66% of thoughtful games; Left the lower in 64% of average games.
+- No-contingency sits exactly at its +0.3 limit.
+
+Open question: Early years previews a small fall in More equal because Blaenau Gwent and Newport are both
+among the five worst-off places and among the middle authorities the gaps are measured from. Measuring the
+gap from a middle that excludes the worst five fixes the cause, but moves every bot's Lived up by 1 to 2
+pips and breaks two targets, so it waits for a retune.

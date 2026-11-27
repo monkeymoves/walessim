@@ -81,5 +81,6 @@
  "ticket.ofPips.one": "of {n} pip",
  "ticket.ofPips.other": "of {n} pips",
  "ticket.costAria.one": "Cost {n} of {of} pip",
- "ticket.costAria.other": "Cost {n} of {of} pips"
+ "ticket.costAria.other": "Cost {n} of {of} pips",
+ "trust.benches": "The caretaker plays"
 }

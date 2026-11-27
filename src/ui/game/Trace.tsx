@@ -6,6 +6,7 @@ import { Portal } from "solid-js/web";
 import { STRAND_IDS } from "../../model/schema";
 import { serialOf } from "../parts/Ticket";
 import { pick, t, tn } from "../../i18n";
+import { tw } from "./cymraeg";
 import { CloseButton, TabButton } from "../parts/Buttons";
 import { SourceTag } from "../parts/SourceTag";
 import { ConfidenceMark } from "../parts/ConfidenceMark";
@@ -127,7 +128,7 @@ export function TracePanel(): JSX.Element {
           </ol>
         </Show>
         <Show when={strandStop() && th()!.las.length}>
-          <p class="small yf-trace-map">{t("game.trace.on_map", { las: game.names.list(th()!.las.slice(0, 3).map((c) => game.names.laName(c))) })}</p>
+          <p class="small yf-trace-map">{tw("game.trace.on_map", { las: game.names.list(th()!.las.slice(0, 3).map((c) => game.names.laName(c))) })}</p>
         </Show>
       </Show>
       <SharpKey />

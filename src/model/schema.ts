@@ -667,6 +667,19 @@ export interface PlaceBoard {
   thresholds?: { homes: number; work: number; iaith: number };
   /** Trend penalties: when the curveball is active, a measure is reduced. */
   trend_penalties?: { curveball: string; measure: "homes" | "work" | "iaith" | "pressure" | "river"; amount: number; note: Text }[];
+  /**
+   * Other trends that change the board, in words for the board before the player chooses (playtest 4),
+   * e.g. the wet decade raising every Rhondda tip a risk step. Bethesda's come from `trend_penalties`.
+   */
+  term_notes?: { curveball: string; note: Text }[];
+  /**
+   * Room to spare for a VERY WELL grade (playtest 4), on top of what each test needs to hold.
+   * threads_tests: `share`, the share of runs every test must hold in (6 in 10 is enough to hold).
+   * tips_triage: `exposure_margin` added to the exposure share needed (scaled like it for fewer
+   * threads), `fairness_tips` deprived neighbourhoods covered, and `lifelines_all` every top-risk tip
+   * above a school or the railway covered.
+   */
+  very_well?: { share?: number; exposure_margin?: number; fairness_tips?: number; lifelines_all?: boolean };
 }
 
 // ---------------------------------------------------------------------------
@@ -784,7 +797,11 @@ export interface GameTuning {
   /** Shocks hit this much harder while infrastructure_condition is below `fragile_below`. */
   fragile_infrastructure: { below: number; multiplier: number };
   debt: { interest: number; clear_cost: number; max_tokens: number; left_penalty: number; left_penalty_cap: number };
-  caretaker: { return_trust: number; return_budget_penalty: number; contingency: number; shadow_pledge_bonus: number };
+  /**
+   * `return_trust_max` (playtest 4): Trust after a caretaker term is at most this, so a shadow pledge
+   * cannot bring the seat back above Thin.
+   */
+  caretaker: { return_trust: number; return_budget_penalty: number; contingency: number; shadow_pledge_bonus: number; return_trust_max?: number };
   /** Deprecated (level-based Lived, before decision 14); kept optional for older model files. */
   lived?: { mean_weight: number; min_weight: number };
   /** The result bands. Since decision 14 the build copies `judged_change.bands` here (net strand pips). */
@@ -846,8 +863,17 @@ export interface TrustTuning {
   nothing_visible: number;
 }
 
-/** Place delivery grades. */
-export type Grade = "poorly" | "adequately" | "well";
+/**
+ * Place delivery grades. `very_well` (playtest 4): every test held with room to spare (the margins are
+ * the board's `very_well` block); it counts as a good visit wherever `well` does.
+ */
+export type Grade = "poorly" | "adequately" | "well" | "very_well";
+
+/** Grades in order, worst first. */
+export const GRADE_ORDER: readonly Grade[] = ["poorly", "adequately", "well", "very_well"];
+
+/** A good visit: well or very well (runs itself after two, partners count as found). */
+export const isGoodGrade = (g: Grade | null | undefined): boolean => g === "well" || g === "very_well";
 
 /** Trust bands. */
 export type TrustBand = "strong" | "fair" | "thin" | "collapsed";

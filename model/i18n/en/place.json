@@ -103,7 +103,6 @@
  "bethesda.facts_title": "Around the board",
  "bethesda.facts_note": "Facts carry “to check” until a source is confirmed.",
  "bethesda.to_check": "to check",
- "bethesda.trend_note": "In play this term: {trend}",
  "rhondda.kind_count": "{kind} ({n})",
  "kind.place_of_worship": "chapel or church",
  "kind.school": "school",
@@ -127,5 +126,6 @@
  "common.earlier_plain": "made safe",
  "bethesda.about": "The place, and what it will judge",
  "common.earlier_beth": "in place since {year}",
- "common.earlier_beth_plain": "in place"
+ "common.earlier_beth_plain": "in place",
+ "common.in_play": "In play this term: {trend}"
 }

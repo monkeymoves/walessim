@@ -30,6 +30,8 @@ export interface TrustGaugeProps {
   cards: number;
   /** Say "this term" rather than "next term". */
   now?: boolean;
+  /** In place of the card count: a caretaker term, when the player plays no cards (playtest 4). */
+  allowText?: string;
   /** Small form for the top bar: dial and word side by side. */
   compact?: boolean;
   class?: string;
@@ -42,7 +44,7 @@ export function TrustGauge(props: TrustGaugeProps): JSX.Element {
     return ((b.from + b.to) / 2) * 180 - 90; // degrees from upright
   };
   const word = () => t("parts.trust.word", { band: t(`parts.trust.${props.band}`) });
-  const allow = () => tn(props.now ? "parts.trust.cardsNow" : "parts.trust.cardsNext", props.cards);
+  const allow = () => props.allowText ?? tn(props.now ? "parts.trust.cardsNow" : "parts.trust.cardsNext", props.cards);
   const aria = () => t("parts.trust.aria", { band: t(`parts.trust.${props.band}`), pos: t(`parts.trust.pos${ORDINAL[props.band]}`), allow: allow() });
   return (
     <div class={`trust slate on-slate${props.compact ? " compact" : ""}${props.class ? " " + props.class : ""}`} role="img" aria-label={aria()}>

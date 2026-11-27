@@ -6,7 +6,7 @@ import { StampButton, TabButton, ThreadButton } from "../parts/Buttons";
 import { SevereNotice, WarnStrip, Snip } from "../parts/Notice";
 import { StrandName } from "./StrandName";
 import { cardIcon, Icon } from "../parts/Icon";
-import { iPlace, maePlace, midEn, soft, softYn, ynPlace } from "./cymraeg";
+import { iPlace, maePlace, midEn, soft, softYn, tw, ynPlace } from "./cymraeg";
 import type { Slip, StrandId, TrustReason, VisitOffer } from "../../engine/api";
 import { STRAND_IDS } from "../../model/schema";
 import { useGame } from "./context";
@@ -148,20 +148,25 @@ export function VisitOfferPanel(): JSX.Element {
   const { game, ui } = useGame();
   const s = () => game.state()!;
   const offers = () => [s().visitOffer!, ...(s().visitOffer!.alternatives ?? [])] as VisitOffer[];
+  /** Two places asking: each shrinks to a heading, one reason line and its button, all in view (playtest 4). */
+  const many = () => offers().length > 1;
   const go = (o: VisitOffer) => { ui.setVisitPick(o); ui.setInPlace(true); };
   return (
-    <div class="yf-panel">
+    <div class="yf-panel" classList={{ "yf-panel-offers": many() }}>
       <div class="yf-scroll">
-        <Show when={offers().length > 1}>
-          <p class="story-small yf-choose">{t("game.visit.choose")}</p>
+        <Show when={many()}>
+          <div class="yf-choose">
+            <p class="story-small">{t("game.visit.choose")}</p>
+            <p class="small">{t("game.visit.choose_note")}</p>
+          </div>
         </Show>
         <For each={offers()}>
           {(o, i) => {
             const place = () => game.names.placeName(o.place);
             return (
-              <div class="yf-step sheet yf-visit-offer">
-                <h2 class="t-1">{t("game.visit.asking", { place: place(), mae_place: maePlace(place()) })}</h2>
-                <p class="story-small">{visitWhy(game, o)}</p>
+              <div class="yf-step sheet yf-visit-offer" data-place={o.place}>
+                <h2 classList={{ "t-1": !many(), "t-3": many() }}>{t("game.visit.asking", { place: place(), mae_place: maePlace(place()) })}</h2>
+                <p class="story-small">{many() ? visitWhyShort(game, o) : visitWhy(game, o)}</p>
                 <div class="yf-actions">
                   <Show when={i() === 0} fallback={
                     <TabButton onClick={() => go(o)}>{t("game.visit.go", { place: midEn(place()), i_place: iPlace(place()) })}</TabButton>
@@ -173,7 +178,7 @@ export function VisitOfferPanel(): JSX.Element {
             );
           }}
         </For>
-        <div class="yf-step sheet">
+        <div class="yf-step sheet yf-visit-stay">
           <div class="yf-actions">
             <TabButton onClick={() => game.act({ type: "visit", choice: null })}>{t("game.visit.stay")}</TabButton>
           </div>
@@ -183,6 +188,14 @@ export function VisitOfferPanel(): JSX.Element {
       <Hand interactive={false} />
     </div>
   );
+}
+
+/** One short line for why a place asks, when two are asking at once. */
+export function visitWhyShort(game: ReturnType<typeof useGame>["game"], o: VisitOffer): string {
+  const cards = o.triggeredBy.filter((c) => c !== "curveball");
+  if (cards.length) return t("game.visit.why_short", { card: game.names.list(cards.map((c) => game.names.cardName(c))) });
+  const trend = game.state()!.activeTrends[0]?.curveball;
+  return t("game.visit.why_trend_short", { trend: trend ? game.names.curveballName(trend) : "" });
 }
 
 /** Why a place is asking: the cards played there, or (in the guided first game) the trend. */
@@ -296,7 +309,8 @@ export function reasonText(game: ReturnType<typeof useGame>["game"], r: TrustRea
   else if (r.code === "neglect") detail = game.names.regionName(detail as never);
   else if (r.code === "visit") detail = t(`game.grade.${detail}`);
   else if (r.code === "card") detail = game.names.cardName(detail);
-  return t(`game.trust.reason.${r.code}`, { detail });
+  // "ar {detail}": the strand name takes the soft mutation in Welsh ("ar Lewyrchus")
+  return tw(`game.trust.reason.${r.code}`, { detail }, []);
 }
 
 export function ChangedPanel(): JSX.Element {
@@ -337,7 +351,7 @@ export function ChangedPanel(): JSX.Element {
                 <Show when={o().visit && !o().visit!.stayed}>
           <p class="yf-visit-result">
             <span>{t("place.common.result", { place: game.names.placeName(o().visit!.place), grade: "" })}</span>
-            <span class="stampmark">{t(`game.grade.${o().visit!.grade}`)}</span>
+            <span class={`stampmark grade-${o().visit!.grade}`}>{t(`game.grade.${o().visit!.grade}`)}</span>
           </p>
         </Show>
       </div>
@@ -480,7 +494,7 @@ export function ArrivalStrip(): JSX.Element {
                   </Show>
                   <Show when={game.names.card(a.card)?.helps?.length}>
                     <span class="yf-arrival-on small">
-                      {" "}{t("game.opening.lands_on", { strands: game.names.list((game.names.card(a.card)!.helps ?? []).map((x) => game.names.strandName(x))) })}
+                      {" "}{tw("game.opening.lands_on", { strands: game.names.list((game.names.card(a.card)!.helps ?? []).map((x) => game.names.strandName(x))) })}
                     </span>
                   </Show>
                 </span>

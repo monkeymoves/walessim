@@ -16,10 +16,12 @@ export interface BoardResult {
 }
 
 /**
- * Grade by tests held (playtests 1 and 3): a majority (two of three) well; at least one adequately; none poorly.
+ * Grade by tests held (playtests 1, 3 and 4): every test held with room to spare (the board's
+ * `very_well` margins) very well; a majority (two of three) well; at least one adequately; none poorly.
  * A careful visit is never worse than staying away (adequate).
  */
-const gradeOf = (passed: number, total: number): Grade => (passed * 2 > total ? "well" : passed >= 1 ? "adequately" : "poorly");
+const gradeOf = (passed: number, total: number, roomy: boolean): Grade =>
+  passed === total && roomy ? "very_well" : passed * 2 > total ? "well" : passed >= 1 ? "adequately" : "poorly";
 
 type Copy = Record<string, Text> | undefined;
 const say = (copy: Copy, key: string, params: Record<string, SlotValue>, places: string[] = []): Text | undefined => (copy?.[key] ? fill(copy[key]!, params, places) : undefined);
@@ -64,6 +66,11 @@ export function gradeRhondda(board: PlaceBoard, threads: string[], wetDecade: bo
   const lifeCovered = lifelineTips.filter((t) => covered.has(t.id));
   const lifeNeed = Math.ceil(lifelineTips.length / 2);
   const lifelines = lifeCovered.length >= lifeNeed;
+  // room to spare (playtest 4): the margins live in the board's very_well block
+  const vw = board.very_well ?? {};
+  const neededRoomy = needed + (vw.exposure_margin ?? 0) * Math.min(1, allowed / board.threads);
+  const roomy =
+    share >= neededRoomy - 1e-9 && deprivedMine.length >= (vw.fairness_tips ?? 1) && (!vw.lifelines_all || lifeCovered.length === lifelineTips.length);
   const best = (pool: TipFacts[]) => [...pool].filter((t) => !covered.has(t.id)).sort((a, b) => homes(b) - homes(a))[0];
   const name = (t: TipFacts | undefined) => (t ? tipName(copy, t) : say(copy, "engine.visit.nothing", {}) ?? { en: "nothing", cy: "dim byd" });
   const edition = board.wimd?.edition ?? "WIMD";
@@ -100,7 +107,15 @@ export function gradeRhondda(board: PlaceBoard, threads: string[], wetDecade: bo
     const n = say(copy, "engine.visit.stitched", { tips: joinNames(counted.map((t) => tipName(copy, t))) });
     if (n) notes.push(n);
   }
-  return { grade: gradeOf(tests.filter((t) => t.pass).length, 3), tests, notes };
+  const grade = gradeOf(tests.filter((t) => t.pass).length, 3, roomy);
+  const room =
+    grade === "very_well"
+      ? say(copy, "engine.visit.very_well", {})
+      : tests.every((t) => t.pass)
+        ? say(copy, "engine.visit.room.rhondda", { needed: Math.round(neededRoomy * 10), tips: vw.fairness_tips ?? 1 })
+        : undefined;
+  if (room) notes.push(room);
+  return { grade, tests, notes };
 }
 
 export interface BethesdaContext {
@@ -173,5 +188,14 @@ export function gradeBethesda(board: PlaceBoard, newThreads: string[], c: Bethes
     const n = say(copy, "engine.visit.trend", { note: p.note });
     if (n) notes.push(n);
   }
-  return { grade: gradeOf(tests.filter((t) => t.pass).length, 3), tests, notes };
+  const roomShare = board.very_well?.share ?? 1;
+  const grade = gradeOf(tests.filter((t) => t.pass).length, 3, tests.every((t) => t.share >= roomShare - 1e-9));
+  const room =
+    grade === "very_well"
+      ? say(copy, "engine.visit.very_well", {})
+      : tests.every((t) => t.pass)
+        ? say(copy, "engine.visit.room.bethesda", { share: Math.round(roomShare * 10) })
+        : undefined;
+  if (room) notes.push(room);
+  return { grade, tests, notes };
 }

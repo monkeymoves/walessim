@@ -54,6 +54,26 @@
     en: "Forty years I've looked up at that tip. First time I've slept without keeping an eye on the rain."
     cy: "Ers deugain mlynedd dw i wedi edrych i fyny ar y domen yna. Dyma'r tro cyntaf i mi gysgu heb gadw llygad ar y glaw."
     cy_review: true
+- id: visit-tylorstown-rhondda-very-well
+  event: visit
+  place: rhondda
+  grade: very_well
+  towns:
+    - { en: "Tylorstown", cy: "Pendyrus" }
+  text:
+    en: "They did the tips we would have picked ourselves, and then some. Nobody on our street expected that."
+    cy: "Fe wnaethon nhw'r tomenni y bydden ni wedi'u dewis ein hunain, a mwy. Doedd neb ar ein stryd ni'n disgwyl hynny."
+    cy_review: true
+- id: visit-rachub-bethesda-very-well
+  event: visit
+  place: bethesda
+  grade: very_well
+  towns:
+    - { en: "Rachub", cy: "Rachub" }
+  text:
+    en: "Nobody had to choose between the house, the job and the river this time. That has not happened here in my life."
+    cy: "Doedd dim rhaid i neb ddewis rhwng y tŷ, y swydd a'r afon y tro hwn. Dydy hynny ddim wedi digwydd yma yn fy oes i."
+    cy_review: true
 - id: visit-bethesda-bethesda-poorly
   event: visit
   place: bethesda

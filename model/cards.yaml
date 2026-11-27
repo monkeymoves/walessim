@@ -224,7 +224,7 @@ cards:
     sector: construction
     tags: [flood]
     upgraded_by: { en: The sea walls and the tidal harbours, cy: Y morgloddiau a'r harbwrs llanw, cy_review: true }
-    side_note: { en: "Mints a liability: 1 pip of upkeep every second term, or the condition of what is built falls. Presses on rivers and coast.", cy: "Mae'n bathu atebolrwydd: 1 pip o gynnal bob yn ail dymor, neu mae cyflwr yr hyn a adeiladwyd yn gostwng. Mae'n pwyso ar afonydd a'r arfordir.", cy_review: true }
+    side_note: { en: "Mints a liability: 1 pip of upkeep every second term, or the condition of what is built falls. Presses on rivers and coast.", cy: "Mae'n gadael baich i'w gario: 1 pip o waith cynnal bob yn ail dymor, neu mae cyflwr yr hyn a adeiladwyd yn dirywio. Mae'n rhoi pwysau ar afonydd a'r arfordir.", cy_review: true }
     upkeep:
       pips: 1
       every: 2

@@ -4,8 +4,25 @@
  * costing 1, at least one card that is a listed response to an active trend. A failed constraint is
  * repaired by swapping in the first card further down the deck that fixes it.
  */
+import type { Card } from "../model/schema";
 import { shuffle } from "./rng";
 import type { Ctx } from "./scores";
+
+/**
+ * The card delivers nothing by itself and only enables or multiplies other cards (Regional compact):
+ * it has no main effect on a component, only side effects or none at all (playtest 4).
+ */
+export function needsPartner(card: Card): boolean {
+  return !card.effects.some((e) => !e.side && e.target !== "trust" && e.target !== "budget" && e.target !== "card_cost");
+}
+
+/**
+ * Played in term `term`, the card lands in full by the last term and does something by itself
+ * (playtest 4: the last hand must offer a visible win as well as gifts for Left).
+ */
+export function paysInTime(card: Card, term: number, lastTerm: number): boolean {
+  return term + (card.arrival?.full ?? card.delay) <= lastTerm && !needsPartner(card) && (card.helps?.length ?? 0) > 0;
+}
 
 export function initialDeck(ctx: Ctx, seed: number): string[] {
   return shuffle(
@@ -76,14 +93,32 @@ export function deal(ctx: Ctx, deck: string[], held: string | null, size: number
     }
     if (!swapped) break;
   }
-  // a card the hand must hold (the last term: one that lands in time): swap in the first from the deck
+  // a card the hand must hold (the last term: one that pays in time): swap in the first from the deck,
+  // for a card that keeps the deal constraints if one does (never the held card)
   if (mustHave && !hand.some(mustHave)) {
-    const k = rest.findIndex(mustHave);
-    if (k >= 0) {
-      const h = hand.length - 1 >= (held ? 1 : 0) ? hand.length - 1 : 0;
-      const out = hand[h]!;
-      hand[h] = rest[k]!;
-      rest[k] = out;
+    const lo = held ? 1 : 0;
+    const before = handProblems(ctx, hand, active).length;
+    const clashes = (xs: string[]) => recent.filter((r) => xs.filter((c) => r.includes(c)).length >= 4).length;
+    const clashBefore = clashes(hand);
+    let swap: { h: number; k: number } | null = null;
+    // best: keeps the constraints and deals no recent hand again; then: deals no recent hand again
+    for (const strict of [true, false]) {
+      for (let k = 0; k < rest.length && !swap; k++) {
+        if (!mustHave(rest[k]!)) continue;
+        for (let h = hand.length - 1; h >= lo && !swap; h--) {
+          const trial = [...hand];
+          trial[h] = rest[k]!;
+          if (clashes(trial) <= clashBefore && (!strict || handProblems(ctx, trial, active).length <= before)) swap = { h, k };
+        }
+      }
+    }
+    // none keeps every constraint: the guarantee wins, in the last slot
+    const first = rest.findIndex(mustHave);
+    if (!swap && first >= 0 && hand.length > lo) swap = { h: hand.length - 1, k: first };
+    if (swap) {
+      const out = hand[swap.h]!;
+      hand[swap.h] = rest[swap.k]!;
+      rest[swap.k] = out;
     }
   }
   return { hand, deck: rest };

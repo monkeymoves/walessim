@@ -1,7 +1,9 @@
 // Yfory end to end: a full game to 2050 by clicking, in English and in Welsh, with a Rhondda
 // visit, a Bethesda visit, a shock response, a pulled thread and the end screen; no console
 // errors; axe on the game screen, a place visit and the end screen.
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type APIRequestContext, type Page } from "@playwright/test";
+import * as E from "../../src/engine/api";
+import type { CompiledModel } from "../../src/model/schema";
 import AxeBuilder from "@axe-core/playwright";
 
 const SAVE_KEYS = ["etifeddiaeth.v1.save", "etifeddiaeth.v1.yfory.letters", "etifeddiaeth.v1.yfory.onboard", "etifeddiaeth.v1.yfory.daily"];
@@ -110,11 +112,11 @@ async function playToEnd(page: Page, seen: Seen): Promise<void> {
       const want = !seen.places.has("rhondda") ? "rhondda" : !seen.places.has("bethesda") ? "bethesda" : null;
       await plan(page, want);
     } else if (s === "visit") {
-      const name = (await page.locator(".yf-visit-offer h2").textContent()) ?? "";
+      const name = (await page.locator(".yf-visit-offer h2").first().textContent()) ?? "";
       const isBeth = /Bethesda/i.test(name);
       const need = isBeth ? !seen.places.has("bethesda") : !seen.places.has("rhondda");
       if (need) seen.places.add(await visit(page, !seen.axePlace).then((p) => { seen.axePlace = true; return p; }));
-      else await page.locator(".yf-visit-offer .btn-tab").click();
+      else await page.locator(".yf-visit-stay .btn-tab").click();
     } else if (s === "passing") {
       const shock = page.locator(".yf-shock");
       if (await shock.count()) {
@@ -272,7 +274,7 @@ for (const [lang, w, h] of [["en", 1440, 900], ["cy", 1280, 800]] as const) {
     for (let g = 0; g < 20; g++) {
       const s = await step(page);
       if (s === "changed") break;
-      if (s === "visit") await page.locator(".yf-visit-offer .btn-tab").click();
+      if (s === "visit") await page.locator(".yf-visit-stay .btn-tab").click();
       else if (s === "passing") await page.waitForTimeout(400);
     }
     await page.waitForTimeout(2600);
@@ -285,5 +287,64 @@ for (const [lang, w, h] of [["en", 1440, 900], ["cy", 1280, 800]] as const) {
     await notesAreReachable(page, seen); // trust
     for (const id of ["hand", "ticket", "play", "post", "pull", "trust"]) expect(seen.has(id), `saw guide note "${id}"`).toBe(true);
     expect(errors).toEqual([]);
+  });
+}
+
+// Playtest 4: when both places ask in one term, both invitations and "Not this term" are in view with
+// no scroll, in English and Welsh at 1440x900 and 1280x800. The game is found with the engine itself,
+// against the model the page serves, and handed to the page as its save.
+async function twoInvitationsSave(request: APIRequestContext): Promise<string> {
+  const model = (await (await request.get("/model.json")).json()) as CompiledModel;
+  const trig = (id: string) => new Set(model.places.find((p) => p.id === id)!.trigger_cards);
+  const R = trig("rhondda"), B = trig("bethesda");
+  for (let seed = 1; seed < 200; seed++) {
+    let s = E.newGame(model, seed, { runs: 10, previewRuns: 5, firstGame: false, caretakerGhost: false });
+    for (let i = 0; i < 60 && s.step !== "ended"; i++) {
+      if (s.step === "visit" && s.visitOffer?.alternatives?.length) return E.saveGame(s);
+      if (s.step === "plan") {
+        const r = s.hand.find((c) => R.has(c)), b = s.hand.find((c) => B.has(c));
+        const plays: E.Plays = { cards: r && b ? [{ card: r, region: "southeast" }, { card: b, region: "north" }] : [] };
+        s = E.dispatch(model, s, { type: "commit", plays: E.validatePlays(model, s, plays).length ? { cards: [] } : plays });
+      } else if (s.step === "opening") s = E.dispatch(model, s, { type: "open" });
+      else if (s.step === "pledge") s = E.dispatch(model, s, { type: "pledge", strand: null });
+      else if (s.step === "visit") s = E.dispatch(model, s, { type: "visit", choice: null });
+      else if (s.step === "passing") s = E.dispatch(model, s, { type: "respond", response: 0 });
+      else if (s.step === "changed") s = E.dispatch(model, s, { type: "continue" });
+      else if (s.step === "election") s = E.dispatch(model, s, { type: "next" });
+      else s = E.dispatch(model, s, { type: "caretaker", shadowPledge: "culture" });
+    }
+  }
+  throw new Error("no seed gave two invitations");
+}
+
+for (const [lang, w, h] of [["en", 1440, 900], ["cy", 1280, 800], ["en", 1280, 800], ["cy", 1440, 900]] as const) {
+  test(`two invitations fit without scrolling (${lang}, ${w}x${h})`, async ({ page, request }) => {
+    const save = await twoInvitationsSave(request);
+    await page.setViewportSize({ width: w, height: h });
+    await page.goto("/#/yfory");
+    await page.evaluate(({ keys, lang, save }) => {
+      for (const k of keys) localStorage.removeItem(k);
+      localStorage.setItem("etifeddiaeth.v1.lang", lang);
+      localStorage.setItem("etifeddiaeth.v1.yfory.onboard", JSON.stringify(["__skip", "hand", "ticket", "play", "region", "post", "commit", "strands", "pull", "trust"]));
+      localStorage.setItem("etifeddiaeth.v1.yfory.letters", JSON.stringify(["hollow"]));
+      localStorage.setItem("etifeddiaeth.v1.save", save);
+    }, { keys: SAVE_KEYS, lang, save });
+    await page.reload();
+    await expect(page.locator(".yf")).toBeVisible({ timeout: 30_000 });
+    await expect.poll(() => step(page)).toBe("visit");
+    await expect(page.locator(".yf-visit-offer")).toHaveCount(2);
+    const out = await page.evaluate(() => {
+      const scroll = document.querySelector(".yf-rail .yf-scroll") as HTMLElement;
+      const box = scroll.getBoundingClientRect();
+      const buttons = [...document.querySelectorAll<HTMLElement>(".yf-visit-offer button, .yf-visit-stay button")];
+      return {
+        overflow: scroll.scrollHeight - scroll.clientHeight,
+        hidden: buttons.filter((b) => { const r = b.getBoundingClientRect(); return r.bottom > Math.min(box.bottom, innerHeight) + 1 || r.top < box.top - 1; }).map((b) => b.textContent),
+        count: buttons.length,
+      };
+    });
+    expect(out.count).toBe(3);
+    expect(out.hidden).toEqual([]);
+    expect(out.overflow).toBeLessThanOrEqual(1);
   });
 }

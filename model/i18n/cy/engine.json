@@ -27,12 +27,16 @@
   "engine.letter.named.visit": "Maen nhw'n dal i sôn am y flwyddyn y daethoch i {place} a gofyn ble i ddechrau.",
   "engine.letter.named.pledge_kept": "Gwnaethoch {count} addewid ar goedd a chadw {kept}. Mae pobl yma'n cyfrif.",
   "engine.letter.named.pledge_broken": "Addawoch {thing} i ni yn {year}. Rydyn ni'n cofio'r flwyddyn yn well na'r addewid.",
-  "engine.letter.named.debt": "Mae'r benthyciadau o {year} yn dal ar y llyfrau: {count} ohonynt.",
+  "engine.letter.named.debt": "Mae'r benthyciadau o {years} yn dal ar y llyfrau.",
   "engine.letter.named.repairs": "Ni wnaed yr atgyweiriadau a ohiriwyd yn {year} erioed. Rydyn ni wedi bod yn eu gwneud ers hynny.",
   "engine.letter.named.neglect": "Arhosodd {thing} drwy'r amser am rywbeth iddo'i hun.",
   "engine.letter.named.card": "Yr hyn y gallaf bwyntio ato o hyd yw {thing}, o {year}.",
   "engine.letter.named.arrival": "Cyrhaeddodd {thing} yn {year}, ar ôl i chi fynd. Mae'n cyfrif.",
   "engine.letter.named.lost_term": "Y tymor y collwyd y sedd, {year}, yw'r peth cyntaf mae pobl yn sôn amdano o hyd.",
   "engine.slip.shock": "Glaniodd {shock}.",
-  "engine.visit.stitched_beth": "Eisoes yn eu lle o ymweliad cynharach, ac yn cyfrif: {tips}."
+  "engine.visit.stitched_beth": "Eisoes yn eu lle o ymweliad cynharach, ac yn cyfrif: {tips}.",
+  "engine.visit.very_well": "Daliodd pob prawf gyda lle i sbâr.",
+  "engine.visit.room.rhondda": "Daliodd pob prawf. Byddai lle i sbâr yn gofyn am {needed} o bob 10 o'r cartrefi, {tips} o'r cymdogaethau tlotaf a phob tomen achubiaeth wedi'u cwmpasu.",
+  "engine.visit.room.bethesda": "Daliodd pob prawf. Byddai lle i sbâr yn gofyn i bob prawf ddal mewn {share} rhediad o bob 10.",
+  "engine.letter.named.debt.one": "Mae'r benthyciad o {year} yn dal ar y llyfrau."
 }

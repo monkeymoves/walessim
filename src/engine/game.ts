@@ -4,17 +4,17 @@
  * The public surface and its documentation are in ./api.ts.
  */
 import type { Card, CompiledModel, Effect, Grade, LaFlag, RegionId, StrandId, Text, TrustBand } from "../model/schema";
-import { REGION_IDS, STRAND_IDS } from "../model/schema";
+import { GRADE_ORDER, isGoodGrade, REGION_IDS, STRAND_IDS } from "../model/schema";
 import type * as A from "./api";
 import { EngineError } from "./errors";
 import { hashSeed, shuffle, uniform } from "./rng";
 import { bandValue, displayPips, makeContext, walesDelta, walesValue, type Ctx } from "./scores";
 import { buildSchedule, type TermSchedule } from "./schedule";
-import { deal, initialDeck } from "./deck";
+import { deal, initialDeck, needsPartner, paysInTime } from "./deck";
 import { gradeBethesda, gradeRhondda, tipName, tipRisk } from "./places";
 import { bandFor, computeTrust } from "./trust";
 import { archetypeOf, level, openingVoice, overlookedRegion, pickVoice, writeLetter, type NamedLine, type VoiceEventCandidate } from "./voices";
-import { fill, type SlotValue } from "./welsh";
+import { fill, joinNames, type SlotValue } from "./welsh";
 import {
   causeKey,
   cloneRun,
@@ -259,8 +259,10 @@ function openTerm(ctx: Ctx, prev: A.GameState, term: number): A.GameState {
 
   // the hand
   const size = term === 0 ? g.first_hand_size : g.hand_size;
-  // the last hand always holds a card that lands by 2050 (playtest 3)
-  const quick = term === g.years.length - 1 ? (id: string) => (ctx.cards.get(id)?.arrival?.first ?? ctx.cards.get(id)?.delay ?? 0) <= 1 : undefined;
+  // the last hand always holds a card that lands by 2050 and does something by itself (playtests 3 and 4),
+  // so the last term is a choice between a visible win and a gift for Left
+  const lastTerm = g.years.length - 1;
+  const quick = term === lastTerm ? (id: string) => !!ctx.cards.get(id) && paysInTime(ctx.cards.get(id)!, term, lastTerm) : undefined;
   const dealt = deal(ctx, state.deck, s.held, size, activeIds, (s.hands ?? []).slice(-4), quick);
   s.hands = [...(s.hands ?? []), dealt.hand];
   state.hand = dealt.hand;
@@ -690,9 +692,27 @@ function effectDelay(ctx: Ctx, card: Card, e: Effect): number {
   return d;
 }
 
-/** A place graded well twice runs itself: no third visit, its trigger cards deliver well (playtest 2). */
+/** A place graded well (or very well) twice runs itself: no third visit, its trigger cards deliver well (playtests 2 and 4). */
 function masteredPlace(state: A.GameState, place: string): boolean {
-  return state.ledger.grades.filter((g) => g.place === place && g.grade === "well").length >= 2;
+  return state.ledger.grades.filter((g) => g.place === place && isGoodGrade(g.grade)).length >= 2;
+}
+
+/**
+ * The conditions on a place board this term, in words (playtest 4): Bethesda's trend penalties and any
+ * board note (the Rhondda's wet decade) whose trend is active, so the board shows them before choosing.
+ */
+function termConditions(ctx: Ctx, state: A.GameState, place: "rhondda" | "bethesda"): Text[] {
+  const board = ctx.places.get(place);
+  if (!board) return [];
+  const active = state.activeTrends.map((a) => a.curveball);
+  return [...(board.trend_penalties ?? []), ...(board.term_notes ?? [])].filter((p) => active.includes(p.curveball)).map((p) => p.note);
+}
+
+export function placeBoard(model: CompiledModel, state: A.GameState, place: "rhondda" | "bethesda"): A.PlaceBoard {
+  const ctx = makeContext(model);
+  const board = ctx.places.get(place);
+  if (!board) throw new EngineError("wrong_place", `no board for ${place}`);
+  return { ...board, termConditions: termConditions(ctx, state, place) };
 }
 
 function visitOffer(ctx: Ctx, state: A.GameState): A.VisitOffer | null {
@@ -720,6 +740,7 @@ function visitOffer(ctx: Ctx, state: A.GameState): A.VisitOffer | null {
       threads: board.threads - (fewer ? 1 : 0),
       ...(place === "rhondda" ? { tipRisk: tipRisk(board, activeIds.includes("wet-decade"), s.stitched ?? []), stitched: [...(s.stitched ?? [])] } : { stitched: [...(s.bethesdaThreads ?? [])] }),
       activeTrends: activeIds,
+      termConditions: termConditions(ctx, state, place),
     };
   };
   // every place a card played this term asks for you, each naming its own cards (playtest 3);
@@ -910,7 +931,7 @@ function cardDeliveries(ctx: Ctx, state: A.GameState, rec: PlayRec, grade: { pla
   const mult = visitedPlace ? g.grade_multiplier[visitedPlace.grade] : g.grade_multiplier.adequately;
   const flag: LaFlag | undefined = card.visit ? ctx.places.get(card.visit)?.applies_to_flag : undefined;
   const compacts = compactsInForce(state, rec.term);
-  const partnersOk = (rec.regions ?? []).length > 0 && rec.regions!.every((r) => compacts.some((c) => c.regions?.includes(r) && c.id !== rec.id)) || visitedPlace?.grade === "well";
+  const partnersOk = (rec.regions ?? []).length > 0 && rec.regions!.every((r) => compacts.some((c) => c.regions?.includes(r) && c.id !== rec.id)) || isGoodGrade(visitedPlace?.grade);
   const cause: CauseRef = {
     ...causeOf(state, rec.caretaker ? "caretaker" : "card", rec.card, rec.term, rec.regions),
     ...(visitedPlace ? { place: { place: visitedPlace.place as "rhondda" | "bethesda", grade: visitedPlace.grade, threads: visitedPlace.threads } } : {}),
@@ -1213,9 +1234,13 @@ function resolveTerm(ctx: Ctx, prev: A.GameState, response: A.ShockResponse): A.
   const reasons = [...trustOut.reasons];
   if (state.caretaker) {
     const kept = state.shadowPledge ? s.flowPips[STRAND_IDS.indexOf(state.shadowPledge)]! >= flowPipsBefore[STRAND_IDS.indexOf(state.shadowPledge)]! : false;
-    after = g.caretaker.return_trust + (kept ? g.caretaker.shadow_pledge_bonus : 0);
+    // back from the opposition benches no higher than Thin (playtest 4): losing the seat keeps its weight
+    const cap = g.caretaker.return_trust_max ?? 100;
+    const base = Math.min(cap, g.caretaker.return_trust);
+    const bonus = kept ? Math.max(0, Math.min(g.caretaker.shadow_pledge_bonus, cap - base)) : 0;
+    after = base + bonus;
     reasons.push({ code: "return", points: after - trustOut.after });
-    if (kept) reasons.push({ code: "shadow_pledge", points: g.caretaker.shadow_pledge_bonus, detail: state.shadowPledge! });
+    if (kept && bonus) reasons.push({ code: "shadow_pledge", points: bonus, detail: state.shadowPledge! });
   } else if (after < 20 && term >= 1 && !state.returning && term + 1 < g.years.length) {
     lostSeat = true;
     s.caretakerNext = true;
@@ -1330,7 +1355,18 @@ function pickSlips(ctx: Ctx, state: A.GameState, contribs: A.Contribution[], cha
   const term = state.term;
   type Agg = A.Slip & { chained: boolean; recovery: boolean; allSide: boolean };
   const isCard = (c: A.Cause) => c.kind === "card" || c.kind === "caretaker";
+  // a standing ticket or a lapsed upkeep is named only in the direction its printed effects point
+  // (playtest 4: "Put off the repairs lifted More equal" was a chained gap artefact of a cut)
+  const printedWay = (c: A.Cause): { up: boolean; down: boolean } | null => {
+    const effects = c.kind === "standing" ? ctx.standing.get(c.id)?.effects : c.kind === "upkeep" ? ctx.cards.get(c.id)?.upkeep?.lapse : undefined;
+    if (!effects) return null;
+    const real = effects.filter((e) => e.target !== "trust" && e.target !== "budget" && e.target !== "card_cost");
+    const helpsIt = (e: Effect) => (e.target.startsWith("fcm:pressure") || e.target.startsWith("fcm:driver") ? e.sign < 0 : e.sign > 0);
+    return { up: real.some(helpsIt), down: real.some((e) => !helpsIt(e)) };
+  };
   const eligible = (c: A.Contribution, strand: StrandId, delta: number): boolean => {
+    const way = printedWay(c.cause);
+    if (way && !c.recovery) return delta > 0 ? way.up : way.down;
     if (!isCard(c.cause)) return true;
     const card = ctx.cards.get(c.cause.id);
     if (!card) return true;
@@ -1528,31 +1564,51 @@ export function preview(model: CompiledModel, state: A.GameState, plays: A.Plays
   const lastTerm = g.years.length - 1;
   const perCard = plays.cards.map((c) => {
     const card = ctx.cards.get(c.card);
+    // a card that only enables others (Regional compact) is measured where the cards it enables land (playtest 4)
+    const partner = !!card && needsPartner(card);
     const first = card?.arrival?.first ?? card?.delay ?? 0;
     const full = card?.arrival?.full ?? card?.delay ?? 0;
     // measured at this card's own landing (capped three terms on), with and without it, on the same draws
-    const h = Math.max(state.term, Math.min(state.term + 3, state.term + full));
+    const h = partner ? withAll.horizon : Math.max(state.term, Math.min(state.term + 3, state.term + full));
     const others = { ...plays, cards: plays.cards.filter((x) => x !== c) };
     const withAt = h === withAll.horizon ? withAll : projectPlays(ctx, state, plays, n, h);
     const without = projectPlays(ctx, state, others, n, h);
-    const flow = Object.fromEntries(STRAND_IDS.map((id, i) => [id, marginal(withAt.eventualRuns.map((v, r) => v[i]! - without.eventualRuns[r]![i]!))])) as Record<StrandId, A.Projection & { delta: number }>;
-    const stock = Object.fromEntries(STRAND_IDS.map((id, i) => [id, marginal(withAt.eventualStock.map((v, r) => v[i]! - without.eventualStock[r]![i]!))])) as Record<StrandId, A.Projection & { delta: number }>;
-    const thisTerm = Object.fromEntries(STRAND_IDS.map((id, i) => [id, marginal(withAt.endRuns.map((v, r) => v[i]! - without.endRuns[r]![i]!))])) as Record<StrandId, A.Projection & { delta: number }>;
+    // a move under a pip against the card's own ticket (a strand it only helps, or only frays) reads as
+    // nothing, as slips never name a card against its ticket (playtest 4). It is run noise, or a gap
+    // artefact: Early years lifts the five worst-off places, and Blaenau Gwent (earnings) and Newport
+    // (life expectancy) are also the middle authorities their gaps are measured from, so the gap reads
+    // about a sixth of a pip wider while the ticket (and the stock) say More equal goes up
+    const zero: A.Projection & { delta: number } = { median: 0, p10: 0, p90: 0, pips: 0, sharp: true, delta: 0 };
+    const helps = new Set(card?.helps ?? []), frays = new Set(card?.frays ?? []), mixed = new Set(card?.mixed ?? []);
+    const honest = (id: StrandId, p: A.Projection & { delta: number }) => {
+      if (!card || mixed.has(id) || Math.abs(p.delta) >= 0.5) return p;
+      if (p.delta < 0 && helps.has(id) && !frays.has(id)) return zero;
+      if (p.delta > 0 && frays.has(id) && !helps.has(id)) return zero;
+      return p;
+    };
+    const paired = (a: number[][], b: number[][]) => Object.fromEntries(STRAND_IDS.map((id, i) => [id, honest(id, marginal(a.map((v, r) => v[i]! - b[r]![i]!)))])) as Record<StrandId, A.Projection & { delta: number }>;
+    const flow = paired(withAt.eventualRuns, without.eventualRuns);
+    const stock = paired(withAt.eventualStock, without.eventualStock);
+    const thisTerm = paired(withAt.endRuns, without.endRuns);
     const REAL = 0.05;
     const real = STRAND_IDS.filter((id) => Math.abs(flow[id].delta) >= REAL || Math.abs(stock[id].delta) >= REAL);
-    const landsInTerm = state.term + full;
+    const quiet = STRAND_IDS.every((id) => Math.abs(thisTerm[id].delta) < REAL);
+    // an enabler lands with what it enables; alone it lands nowhere and says so (needsPartner, no real strands)
+    const landsInTerm = partner ? (real.length && quiet ? h : state.term) : state.term + full;
+    const alone = partner && !real.length;
     return {
       card: c.card,
       strands: flow,
       stock,
       thisTerm,
       real,
-      nothingThisTerm: STRAND_IDS.every((id) => Math.abs(thisTerm[id].delta) < REAL),
-      firstTerm: state.term + first,
-      firstYear: g.years[0]! + 4 * (state.term + first),
+      nothingThisTerm: !alone && quiet,
+      firstTerm: partner ? landsInTerm : state.term + first,
+      firstYear: g.years[0]! + 4 * (partner ? landsInTerm : state.term + first),
       landsInTerm,
       landsYear: g.years[0]! + 4 * landsInTerm,
-      landsAfterGame: landsInTerm > lastTerm,
+      landsAfterGame: !alone && landsInTerm > lastTerm,
+      ...(partner ? { needsPartner: true } : {}),
     };
   });
   const none = plays.cards.length ? project({ ...plays, cards: [] }) : withAll;
@@ -1924,8 +1980,8 @@ function ledgerLines(ctx: Ctx, state: A.GameState, archetype: string, overlooked
   const rh = ctx.places.get("rhondda");
   const safe = (s.stitched ?? []).map((id) => rh?.tips?.find((t) => t.id === id)).filter((t): t is NonNullable<typeof t> => !!t).sort((a, b) => b.buildingsBelow - a.buildingsBelow)[0];
   const tipSafe: NamedLine | null = safe ? { kind: "tip", ledger: "tip_safe", id: safe.id, year: L.grades.find((g) => g.place === "rhondda")?.year ?? null, thing: tipName(T, safe), line: line("engine.letter.named.tip_safe", { tip: tipName(T, safe) }) } : null;
-  const order = { well: 2, adequately: 1, poorly: 0 } as const;
-  const bestVisit = [...L.grades].sort((a, b) => order[b.grade] - order[a.grade] || b.year - a.year)[0];
+  const order = (gr: Grade) => GRADE_ORDER.indexOf(gr);
+  const bestVisit = [...L.grades].sort((a, b) => order(b.grade) - order(a.grade) || b.year - a.year)[0];
   const visit: NamedLine | null = bestVisit && bestVisit.grade !== "poorly" ? { kind: "none", ledger: "visit", id: bestVisit.place, year: bestVisit.year, thing: ctx.places.get(bestVisit.place)!.name, line: line("engine.letter.named.visit", { place: ctx.places.get(bestVisit.place)!.name, year: bestVisit.year }) } : null;
   // promises
   const made = L.pledges.filter((p) => p.kept !== null);
@@ -1935,6 +1991,7 @@ function ledgerLines(ctx: Ctx, state: A.GameState, archetype: string, overlooked
   const strandName = (id: StrandId) => ctx.strands.find((x) => x.id === id)!.name;
   const pledgeBroken: NamedLine | null = broken ? { kind: "pledge", ledger: "pledge_broken", id: broken.strand, year: broken.year, thing: strandName(broken.strand) } : null;
   // debts, repairs, a lost term
+  const debtYears = [...new Set(state.debts.map((d) => d.year))].sort((a, b) => a - b);
   const debt: NamedLine | null = state.debts.length ? { kind: "debt", ledger: "debt", id: "borrow-to-invest", year: state.debts[0]!.year, thing: ctx.standing.get("borrow-to-invest")!.name } : null;
   const unrepaired = L.deferrals.find((d) => !d.repaired);
   const repairs: NamedLine | null = unrepaired ? { kind: "repairs", ledger: "repairs", id: "defer-maintenance", year: unrepaired.year, thing: ctx.standing.get("defer-maintenance")!.name } : null;
@@ -1970,10 +2027,13 @@ function ledgerLines(ctx: Ctx, state: A.GameState, archetype: string, overlooked
     if (n.line) return n;
     // a template kind the archetype lacks, or the second line: render the ledger line from engine copy
     const tpl = ctx.model.letters.find((l) => l.archetype === archetype);
-    const hasTemplate = k === 0 && n.kind !== "none" && !!tpl?.named[n.kind]?.length;
+    // the archetypes' debt lines speak of one loan: with more than one, name every year (playtest 4)
+    const hasTemplate = k === 0 && n.kind !== "none" && !!tpl?.named[n.kind]?.length && !(n.ledger === "debt" && state.debts.length > 1);
     if (hasTemplate) return n;
-    const params: Record<string, SlotValue> = { thing: n.thing ?? "", year: n.year ?? "", count: n.ledger === "debt" ? state.debts.length : made.length, kept };
-    const l = line(`engine.letter.named.${n.ledger}`, params);
+    const years = joinNames(debtYears.map((y) => ({ en: String(y), cy: String(y) })));
+    const params: Record<string, SlotValue> = { thing: n.thing ?? "", year: n.year ?? "", years, count: n.ledger === "debt" ? state.debts.length : made.length, kept };
+    const key = n.ledger === "debt" && state.debts.length === 1 ? "engine.letter.named.debt.one" : `engine.letter.named.${n.ledger}`;
+    const l = line(key, params);
     return l ? { ...n, line: l } : n;
   });
 }

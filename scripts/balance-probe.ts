@@ -77,7 +77,7 @@ for (const bot of ALL_BOTS.filter((b) => !ONLY || ONLY.split(",").includes(b.id)
     const g = playBot(m, bot, seed, { runs: RUNS, previewRuns: 5 });
     js.push(judge(g));
     lost += g.ledger.lostTerms.length;
-    wells += g.ledger.grades.filter((x) => x.grade === "well").length;
+    wells += g.ledger.grades.filter((x) => x.grade === "well" || x.grade === "very_well").length;
   }
   const res = js.map((j) => j.result);
   const med = q(res, 0.5);

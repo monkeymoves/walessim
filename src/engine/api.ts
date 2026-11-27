@@ -2,6 +2,24 @@
  * The engine's public surface. The UI imports from this file only.
  *
  * CHANGES (newest first; every change is backward compatible in shape):
+ * - v5.1 (playtest 4): `Grade` gains `"very_well"` (above "well"): every test held with room to spare,
+ *   the margins in each board's `very_well` block (Bethesda: every test in 9 runs in 10, against 6
+ *   needed; the Rhondda: exposure a fifth above what it needs, two deprived neighbourhoods, every
+ *   top-risk lifeline tip). It counts as good wherever well does (a place graded well or very well
+ *   twice runs itself), delivers a little above well and earns a little more Trust. `GRADE_ORDER` and
+ *   `isGoodGrade` are exported. `PlaceBoard` (this file) is the model's board plus `termConditions:
+ *   Text[]`, the trends changing that board this term ("Prices pull away: one Homes thread is not
+ *   enough."), empty when none: read it with `placeBoard(model, state, place)` at any step, and the same
+ *   list is on every `VisitOffer.termConditions` (alternatives too). `CardPreview.needsPartner`: the card
+ *   delivers nothing by itself and only enables other cards (Regional compact); when true and `real`
+ *   is empty, `nothingThisTerm` and `landsAfterGame` are false (show "works through other cards", never
+ *   "Lands {year}:" with nothing after it). A preview never shows a move under a pip against the card's
+ *   own ticket (a strand it only helps, or only frays). The term 6 hand always holds a card that lands
+ *   by 2050 and does something by itself. No shock lands twice in a game, including the first game's
+ *   own (it fired early and again in its curated term). After a caretaker term Trust is at most
+ *   `caretaker.return_trust_max` (Thin). Slips never credit a standing ticket or a lapsed upkeep with
+ *   moving a strand against what it does (no "Put off the repairs lifted More equal"). The letter names
+ *   every year of the loans left ("The loans from 2026 and 2034 are still on the books.").
  * - v5.0 (playtest 3): `Preview.perCard` entries are `CardPreview`: paired marginals at the card's own
  *   landing for flow (`strands`, as before) and stock (`stock`), this term (`thisTerm`), `real` strands,
  *   `nothingThisTerm`, `firstTerm/firstYear`, `landsInTerm/landsYear`, `landsAfterGame`. Visits:
@@ -117,10 +135,21 @@ import type {
   LetterSlot,
   Confidence,
   EvidenceGrade,
+  PlaceBoard as SchemaPlaceBoard,
 } from "../model/schema";
 import * as impl from "./game";
 
 export type { CompiledModel, Grade, RegionId, StrandId, Text, TrustBand };
+export { GRADE_ORDER, isGoodGrade } from "../model/schema";
+
+/**
+ * A place board as it stands this term (playtest 4): the model's board plus the conditions that apply
+ * to it this term, in words, so the board can show them before the player chooses.
+ */
+export interface PlaceBoard extends SchemaPlaceBoard {
+  /** Trends changing this board this term, e.g. "Prices pull away: one Homes thread is not enough." Empty when none. */
+  termConditions: Text[];
+}
 
 /** localStorage key prefix for this app (its own origin, ADR 0003). */
 export const SAVE_PREFIX = "etifeddiaeth.v1.";
@@ -342,6 +371,8 @@ export interface VisitOffer {
   stitched?: string[];
   /** Trends active that change the Bethesda sums. */
   activeTrends: string[];
+  /** The conditions on this board this term, in words (same as `placeBoard(...).termConditions`). */
+  termConditions: Text[];
   /**
    * When cards this term ask for both places: the other place, as a choice (playtest 3). The player
    * may go to `place` or to an alternative (send its `place` in the visit choice), or stay.
@@ -638,7 +669,7 @@ export interface VisitOutcome {
   threads: string[];
   /** True if the player stayed (adequate by default). */
   stayed: boolean;
-  /** The place was graded well twice before: it runs itself, no visit is offered, and delivery is well. */
+  /** The place was graded well (or very well) twice before: it runs itself, no visit is offered, and delivery is well. */
   mastered?: boolean;
   /**
    * Each test with a player-facing explanation in terms of the player's threads (bilingual, filled,
@@ -823,6 +854,12 @@ export interface CardPreview {
   landsYear: number;
   /** Lands after 2050: "Lands after 2050: counts in Left". */
   landsAfterGame: boolean;
+  /**
+   * The card delivers nothing by itself and only enables or multiplies other cards (Regional compact).
+   * When `real` is empty say so ("works through other cards"); `nothingThisTerm` and `landsAfterGame`
+   * are then false. When cards it enables are in the plan, `real` holds what it adds to them.
+   */
+  needsPartner?: boolean;
 }
 
 /** What `preview` returns: the ghost on the strand row. */
@@ -887,6 +924,11 @@ export function cardCost(model: CompiledModel, state: GameState, play: CardPlay)
 /** Ghost preview of a plan (pure; uses `previewRuns` runs). */
 export function preview(model: CompiledModel, state: GameState, plays: Plays): Preview {
   return impl.preview(model, state, plays);
+}
+
+/** A place board as it stands this term, with `termConditions` (trends changing it now). */
+export function placeBoard(model: CompiledModel, state: GameState, place: "rhondda" | "bethesda"): PlaceBoard {
+  return impl.placeBoard(model, state, place);
 }
 
 /** Grade a visit choice without committing (judged across runs). */

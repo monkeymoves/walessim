@@ -244,3 +244,5 @@
 .ripple { display: flex; align-items: center; gap: 10px; margin-top: 13px; padding-top: 10px; border-top: 1px solid var(--slate-2); font-weight: 540; }
 .ripple b { background: var(--warn-paper); color: var(--ink); font-size: var(--size-label); font-stretch: var(--wdth-label); font-weight: var(--wght-grot-strong); padding: 2px 8px 2px 22px; position: relative; }
 .ripple b::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 15px; background: var(--warn-hatch); }
+/* the top grade: the same ink stamp with a double rule, so VERY WELL never reads as WELL (playtest 4) */
+.stampmark.grade-very_well { border: 5px double var(--ink); padding: 3px 8px 2px; }

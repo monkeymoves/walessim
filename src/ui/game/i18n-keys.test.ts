@@ -3,6 +3,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { GRADE_ORDER } from "../../engine/api";
 
 const root = join(__dirname, "..", "..", "..");
 const load = (lang: string, ns: string) => JSON.parse(readFileSync(join(root, "model", "i18n", lang, `${ns}.json`), "utf8")) as Record<string, unknown>;
@@ -28,7 +29,7 @@ describe("copy keys for Yfory", () => {
   const used = new Map<string, "t" | "tn">();
   for (const f of sources()) {
     const src = readFileSync(f, "utf8");
-    for (const m of src.matchAll(/\b(tn?)\(\s*"((?:game|place|parts)\.[\w.]+)"/g)) used.set(m[2]!, m[1] as "t" | "tn");
+    for (const m of src.matchAll(/\b(tn?|tw)\(\s*"((?:game|place|parts)\.[\w.]+)"/g)) used.set(m[2]!, m[1] === "tn" ? "tn" : "t");
   }
 
   it("finds the keys in the source", () => {
@@ -41,6 +42,10 @@ describe("copy keys for Yfory", () => {
       expect(missing.map(([k]) => k)).toEqual([]);
     });
   }
+
+  it("has a word for every grade in both languages, very well included", () => {
+    for (const g of GRADE_ORDER) for (const d of [en, cy]) expect(d.has(`game.grade.${g}`), g).toBe(true);
+  });
 
   it("never uses an em or en dash in game or place copy", () => {
     for (const lang of ["en", "cy"]) for (const ns of ["game", "place"]) {

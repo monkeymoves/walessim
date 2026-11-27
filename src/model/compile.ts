@@ -35,7 +35,7 @@ import type {
   TipFacts,
   VoiceTemplate,
 } from "./schema";
-import { STRAND_IDS, REGION_IDS } from "./schema";
+import { STRAND_IDS, REGION_IDS, GRADE_ORDER } from "./schema";
 
 /** The raw parsed files. Optional ones may be undefined. */
 export interface RawModelFiles {
@@ -155,6 +155,11 @@ export function compileModel(raw: RawModelFiles, opts: CompileOptions = {}): Com
     }
     for (const k of ["regional_size_step", "hysteresis", "contingency_carry", "peek_cost", "post_counts_until"] as const) num("game.yaml", k, k, (game as any)[k]);
     if (!Array.isArray(game.years) || game.years.length !== 6) err("game.yaml", "years", "six term years required");
+    for (const gr of GRADE_ORDER) {
+      num("game.yaml", `grade_multiplier.${gr}`, gr, game.grade_multiplier?.[gr]);
+      num("game.yaml", `trust.visit.${gr}`, gr, game.trust?.visit?.[gr]);
+    }
+    if (game.caretaker?.return_trust_max !== undefined) num("game.yaml", "caretaker.return_trust_max", "return_trust_max", game.caretaker.return_trust_max);
     const jc = game.judged_change;
     if (!isObj(jc)) err("game.yaml", "judged_change", "missing (balance decision 14)");
     else {
@@ -569,6 +574,12 @@ export function compileModel(raw: RawModelFiles, opts: CompileOptions = {}): Com
       tests: (p.tests ?? []).map((t: any) => ({ ...t, name: text(f, `${p.id}.${t.id}`, "name", t.name), description: text(f, `${p.id}.${t.id}`, "description", t.description) })),
 
     } as PlaceBoard;
+    board.term_notes = (p.term_notes ?? []).map((t: any) => {
+      if (!cbIds.has(t.curveball)) err(f, p.id, `term note names unknown curveball ${t.curveball}`);
+      return { curveball: t.curveball, note: text(f, `${p.id}.${t.curveball}`, "note", t.note) };
+    });
+    if (!isObj(p.very_well)) err(f, p.id, "very_well margins missing (playtest 4)");
+    else for (const [k, v] of Object.entries<any>(p.very_well)) if (typeof v !== "boolean") num(f, `${p.id}.very_well`, k, v);
     if (p.kind === "threads_tests") {
       const opts = (p.options ?? []) as any[];
       if (opts.length !== 10) err(f, p.id, `expected ten options, found ${opts.length}`);
@@ -612,7 +623,7 @@ export function compileModel(raw: RawModelFiles, opts: CompileOptions = {}): Com
       if (v.strand && !STRAND_IDS.includes(v.strand)) err(f, v.id, `unknown strand ${v.strand}`);
       if (v.region && !REGION_IDS.includes(v.region)) err(f, v.id, `unknown region ${v.region}`);
       if (v.place && v.place !== "rhondda" && v.place !== "bethesda") err(f, v.id, `unknown place ${v.place}`);
-      if (v.grade && !["poorly", "adequately", "well"].includes(v.grade)) err(f, v.id, `unknown grade ${v.grade}`);
+      if (v.grade && !(GRADE_ORDER as readonly string[]).includes(v.grade)) err(f, v.id, `unknown grade ${v.grade}`);
       if (v.response && !["ready", "responded", "absorbed"].includes(v.response)) err(f, v.id, `unknown response ${v.response}`);
       if (v.direction && v.direction !== "up" && v.direction !== "down") err(f, v.id, `unknown direction ${v.direction}`);
       if (v.requires_card && !allCardIds.has(v.requires_card)) err(f, v.id, `requires unknown card ${v.requires_card}`);

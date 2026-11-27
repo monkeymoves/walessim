@@ -82,7 +82,7 @@ describe("grades, promises, slips and the last hand", () => {
         if (!h.visit || h.visit.stayed) continue;
         const held = h.visit.tests.filter((t) => t.pass).length;
         if (held >= 2) {
-          expect(h.visit.grade).toBe("well");
+          expect(["well", "very_well"]).toContain(h.visit.grade);
           expect(h.trust.reasons.filter((r) => r.code === "visit").every((r) => r.points >= 0)).toBe(true);
         }
       }
@@ -111,9 +111,10 @@ describe("grades, promises, slips and the last hand", () => {
         }
   });
   it("deals a last hand with at least one card that lands by 2050", () => {
+    // tightened in playtest 4: lands in full by 2050 (see playtest4.test.ts)
     for (const g of games) {
       const last = (g.sim as { hands: string[][] }).hands[5]!;
-      expect(last.some((id) => (m.cards.find((c) => c.id === id)!.arrival!.first ?? 0) <= 1), last.join(",")).toBe(true);
+      expect(last.some((id) => (m.cards.find((c) => c.id === id)!.arrival!.full ?? 0) === 0), last.join(",")).toBe(true);
     }
   });
 });

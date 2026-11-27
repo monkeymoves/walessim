@@ -313,7 +313,7 @@
  "error.engine": "Ni allai’r gêm gymryd y cam hwnnw. Rhowch gynnig arall arni, neu dechreuwch gêm newydd.",
  "error.retry": "Rhoi cynnig arall arni",
  "end.envelope": "Y llythyr o 2050",
- "end.open": "Agor y llythyr",
+ "end.open": "i’w barnu y tymor hwn",
  "end.letter_from": "O {town}, 2050",
  "end.signed": "{town}",
  "end.read_on": "Gweld yr hyn a drosglwyddwyd gennych",
@@ -542,5 +542,10 @@
  "visit.or": "Neu ewch {i_place} yn lle hynny",
  "visit.choose": "Mae dau le yn gofyn. Gallwch fynd i un y tymor hwn.",
  "plan.ghost_nothing": "Dim y tymor hwn. Yn glanio {year}:",
- "changed.recovery_card": "{strand}: mae’r pant byr ar ôl {cause} wedi mynd heibio."
+ "changed.recovery_card": "{strand}: mae’r pant byr ar ôl {cause} wedi mynd heibio.",
+ "visit.why_short": "Am i chi chwarae {card}.",
+ "visit.why_trend_short": "Mae {trend} yn pwyso arno y tymor hwn.",
+ "visit.choose_note": "Lle bynnag yr ewch, eich edafedd sy’n penderfynu pa mor dda y mae’r cardiau’n glanio.",
+ "grade.very_well": "yn dda iawn",
+ "plan.ghost_partner": "Dim ar ei ben ei hun: mae’n lluosi cardiau eraill"
 }

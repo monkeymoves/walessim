@@ -1,7 +1,7 @@
 // Names of things in the active language, looked up from the compiled model. One place, so
 // components never reach into model arrays themselves.
 import { hasKey, pick, t, lang } from "../../i18n";
-import { andCy } from "./cymraeg";
+import { andCy, tw } from "./cymraeg";
 import type { Cause, GameState, RegionId, StrandId } from "../../engine/api";
 import type { Card, CompiledModel, Curveball, Text } from "../../model/schema";
 
@@ -70,7 +70,7 @@ export function makeNames(model: CompiledModel) {
         case "curveball": return t("game.cause.curveball", { name: text(curveballs.get(c.id)?.name ?? c.id), year: c.year });
         case "shock": return t("game.cause.shock", { name: text(curveballs.get(c.id)?.shock?.name ?? curveballs.get(c.id)?.name ?? c.id), year: c.year });
         case "baseline": return rules.has(c.id) ? text(rules.get(c.id)!.name) : t("game.cause.baseline");
-        case "upkeep": return t("game.cause.upkeep", { name: text(cards.get(c.id)?.name ?? c.id) });
+        case "upkeep": return tw("game.cause.upkeep", { name: text(cards.get(c.id)?.name ?? c.id) });
         case "event": {
           const key = `game.event.${c.id}`;
           const s = t(key);
