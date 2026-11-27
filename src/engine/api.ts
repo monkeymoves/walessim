@@ -2,6 +2,12 @@
  * The engine's public surface. The UI imports from this file only.
  *
  * CHANGES (newest first; every change is backward compatible in shape):
+ * - v5.0 (playtest 3): `Preview.perCard` entries are `CardPreview`: paired marginals at the card's own
+ *   landing for flow (`strands`, as before) and stock (`stock`), this term (`thisTerm`), `real` strands,
+ *   `nothingThisTerm`, `firstTerm/firstYear`, `landsInTerm/landsYear`, `landsAfterGame`. Visits:
+ *   `VisitOffer.alternatives` when two places are triggered (choose either; the offer names its card);
+ *   two tests of three held grades well. The promise result is always the first Trust reason. One
+ *   shock response record (from the term it landed). The term 6 hand always holds a card that lands by 2050.
  * - v4.0 (playtest 2): slips agree with tickets. A card is never named before its first effects land
  *   or for a strand its ticket does not show; `Card.helps` now includes every strand a card moves
  *   (one chained rule on, the jobs ripple's Prosperous) and `Card.mixed` lists strands it can move
@@ -336,6 +342,11 @@ export interface VisitOffer {
   stitched?: string[];
   /** Trends active that change the Bethesda sums. */
   activeTrends: string[];
+  /**
+   * When cards this term ask for both places: the other place, as a choice (playtest 3). The player
+   * may go to `place` or to an alternative (send its `place` in the visit choice), or stay.
+   */
+  alternatives?: Omit<VisitOffer, "alternatives">[];
 }
 
 /** What the opening step shows. */
@@ -632,7 +643,7 @@ export interface VisitOutcome {
   /**
    * Each test with a player-facing explanation in terms of the player's threads (bilingual, filled,
    * from model/i18n/{en,cy}/engine.json `engine.visit.*`). `share` is the share of runs it held in.
-   * Grades: every test held is well, at least one adequately, none poorly.
+   * Grades: a majority of tests held (two of three) is well, at least one adequately, none poorly.
    */
   tests: { id: string; pass: boolean; share: number; explanation?: Text }[];
   /** Notes for the whole visit: tips counted from earlier visits, trends that changed the sums. */
@@ -788,6 +799,32 @@ export interface Problem {
   detail?: string;
 }
 
+/**
+ * One card's own effect in a preview (playtest 3). Every number is a paired marginal: the same runs and
+ * draws with the card and without it, so the term's drift is never attributed to a card. Never compute
+ * a card's effect as `strands[].eventual - now`: that is the whole plan plus the drift.
+ */
+export interface CardPreview {
+  card: string;
+  /** Flow change (what people live) by strand, measured when this card's effects have landed. */
+  strands: Record<StrandId, Projection & { delta: number }>;
+  /** Stock change (what is handed on) by strand at the same point. */
+  stock: Record<StrandId, Projection & { delta: number }>;
+  /** Flow change by the end of this term only. */
+  thisTerm: Record<StrandId, Projection & { delta: number }>;
+  /** Strands where the card really moves flow or stock (a twentieth of a point or more); show only these. */
+  real: StrandId[];
+  /** Nothing visible this term: say "Nothing this term. Lands {landsYear}: ...". */
+  nothingThisTerm: boolean;
+  /** When the first effects land, and when it has landed in full (`Card.arrival`). */
+  firstTerm: number;
+  firstYear: number;
+  landsInTerm: number;
+  landsYear: number;
+  /** Lands after 2050: "Lands after 2050: counts in Left". */
+  landsAfterGame: boolean;
+}
+
 /** What `preview` returns: the ghost on the strand row. */
 export interface Preview {
   valid: boolean;
@@ -806,7 +843,7 @@ export interface Preview {
    * score (with the card minus without it, paired run by run, so exactly 0 where the card reaches
    * nothing). `median` equals `delta`; `pips` is its rounding; `sharp` means runs agree to a quarter pip.
    */
-  perCard: { card: string; strands: Record<StrandId, Projection & { delta: number }> }[];
+  perCard: CardPreview[];
   /** Visit that would be offered. */
   visit: "rhondda" | "bethesda" | null;
   runs: number;

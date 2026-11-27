@@ -72,6 +72,9 @@ export function computeTrust(g: GameTuning, f: TrustFacts): { after: number; rea
   const net = Math.max(-T.clamp, Math.min(T.clamp, sum + drift));
   let after = Math.max(0, Math.min(100, f.before + net));
   if (f.returning) after = Math.max(20, after);
-  const top = reasons.filter((r) => r.code !== "drift").sort((a, b) => Math.abs(b.points) - Math.abs(a.points)).slice(0, 2);
+  // the promise result is always the first reason shown (playtest 3), then the largest other
+  const promise = reasons.find((r) => r.code === "pledge_kept" || r.code === "pledge_broken");
+  const others = reasons.filter((r) => r.code !== "drift" && r !== promise).sort((a, b) => Math.abs(b.points) - Math.abs(a.points));
+  const top = [...(promise ? [promise] : []), ...others].slice(0, 2);
   return { after, reasons, top };
 }

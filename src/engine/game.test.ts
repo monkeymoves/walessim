@@ -189,7 +189,11 @@ describe("visits, shocks and preview", () => {
     const s = playThrough(1, { firstGame: true });
     expect(s.history[0]!.newTrend).toBe("wet-decade");
     expect(s.history[3]!.shock?.curveball).toBe("downturn");
-    expect(s.history[1]!.visit?.place).toBe("rhondda");
+    // term 2 asks for the Rhondda unless a card the player played asked for a place itself (playtest 3)
+    const t2 = s.history[1]!;
+    const asked = t2.plays.cards.map((c) => m.cards.find((x) => x.id === c.card)!.visit).filter(Boolean);
+    expect(t2.visit?.place).toBe(asked.length ? t2.visit?.place : "rhondda");
+    expect(t2.visit).toBeTruthy();
   });
 });
 

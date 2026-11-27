@@ -28,7 +28,7 @@ export function handProblems(ctx: Ctx, hand: string[], active: string[]): string
  * Deal a hand. `recent` are the hands of recent terms: a hand that would share four or more cards with
  * one of them swaps cards for others further down the deck (playtest 2: term 6 dealt term 2's hand).
  */
-export function deal(ctx: Ctx, deck: string[], held: string | null, size: number, active: string[], recent: string[][] = []): { hand: string[]; deck: string[] } {
+export function deal(ctx: Ctx, deck: string[], held: string | null, size: number, active: string[], recent: string[][] = [], mustHave?: (id: string) => boolean): { hand: string[]; deck: string[] } {
   const rest = [...deck];
   const hand: string[] = held ? [held] : [];
   while (hand.length < size && rest.length) hand.push(rest.shift()!);
@@ -75,6 +75,16 @@ export function deal(ctx: Ctx, deck: string[], held: string | null, size: number
       }
     }
     if (!swapped) break;
+  }
+  // a card the hand must hold (the last term: one that lands in time): swap in the first from the deck
+  if (mustHave && !hand.some(mustHave)) {
+    const k = rest.findIndex(mustHave);
+    if (k >= 0) {
+      const h = hand.length - 1 >= (held ? 1 : 0) ? hand.length - 1 : 0;
+      const out = hand[h]!;
+      hand[h] = rest[k]!;
+      rest[k] = out;
+    }
   }
   return { hand, deck: rest };
 }

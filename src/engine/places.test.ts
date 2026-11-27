@@ -15,14 +15,14 @@ describe("the Rhondda board", () => {
     const r0 = tipRisk(rh, false), r1 = tipRisk(rh, true);
     for (const t of rh.tips!) expect(r1[t.id]).toBe(Math.min(3, r0[t.id]! + 1));
   });
-  it("grades by tests passed: three well, two adequately, fewer poorly", () => {
+  it("grades by tests held: a majority well, one adequately, none poorly", () => {
     const byHomes = [...rh.tips!].sort((a, b) => b.buildingsBelow - a.buildingsBelow).slice(0, 3).map((t) => t.id);
     const dry = gradeRhondda(rh, byHomes, false);
     expect(dry.grade).toBe("well");
     // in the wet decade, sorting by homes leaves top-step tips above the railway
     const wet = gradeRhondda(rh, byHomes, true);
     expect(wet.tests.find((t) => t.id === "lifelines")!.pass).toBe(false);
-    expect(wet.grade).toBe("adequately");
+    expect(wet.grade).toBe("well");
     expect(gradeRhondda(rh, [tip(2), tip(13), tip(16)], true).grade).toBe("well");
     expect(gradeRhondda(rh, [tip(1), tip(3), tip(12)], true).grade).toBe("poorly");
   });
@@ -37,10 +37,12 @@ describe("the Bethesda board", () => {
   it("is judged across runs and deterministic", () => {
     expect(gradeBethesda(be, trios[5]!, ctx0)).toEqual(gradeBethesda(be, trios[5]!, ctx0));
   });
-  it("lets several different trios pass well, and not most of them", () => {
-    const well = trios.filter((t) => gradeBethesda(be, t, ctx0).grade === "well");
-    expect(well.length).toBeGreaterThanOrEqual(3);
-    expect(well.length).toBeLessThan(trios.length / 4);
+  it("lets several different trios hold every test, few of them, and fewer than half hold a majority", () => {
+    const res = trios.map((t) => gradeBethesda(be, t, ctx0));
+    const all3 = res.filter((r) => r.tests.every((x) => x.pass));
+    expect(all3.length).toBeGreaterThanOrEqual(3);
+    expect(all3.length).toBeLessThan(trios.length / 4);
+    expect(res.filter((r) => r.grade === "well").length).toBeLessThan(trios.length / 2);
   });
   it("makes each of the strongest options fail a test in the trio that leans on it hardest", () => {
     // quarry-edge homes (strongest Homes) and rework tips (strongest Work) each break Pwysau alone

@@ -16,10 +16,10 @@ export interface BoardResult {
 }
 
 /**
- * Grade by tests held (playtest 1): all of them well; at least one adequately; none poorly.
+ * Grade by tests held (playtests 1 and 3): a majority (two of three) well; at least one adequately; none poorly.
  * A careful visit is never worse than staying away (adequate).
  */
-const gradeOf = (passed: number, total: number): Grade => (passed >= total ? "well" : passed >= 1 ? "adequately" : "poorly");
+const gradeOf = (passed: number, total: number): Grade => (passed * 2 > total ? "well" : passed >= 1 ? "adequately" : "poorly");
 
 type Copy = Record<string, Text> | undefined;
 const say = (copy: Copy, key: string, params: Record<string, SlotValue>, places: string[] = []): Text | undefined => (copy?.[key] ? fill(copy[key]!, params, places) : undefined);

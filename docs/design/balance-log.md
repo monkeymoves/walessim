@@ -407,3 +407,28 @@ one was kept; `EndResult.worstFell`.
 - Thoughtful minus caretaker, same seed: median +4.3, p10 +2.5: ok.
 - Lived the lower in 73% of thoughtful games; Left the lower in 63% of average games: ok.
 - Ceiling +4.1, A gift 0.1%: ok. Card use in the top decile within 0.2 to 1.6 plays per game: ok.
+
+## Playtest 3 fixes in the engine (results, 200 seeds, 30 runs)
+
+Engine changes from `docs/design/playtest-3.md`: per-card previews are paired marginals at the card's
+own landing (flow and stock), with this term's change, landing term and year, and an after-2050 flag;
+an invitation comes from the card that triggered it and names it, with the other place as a choice
+when both are asked for, and the first game's script never overrides a card; two tests of three held
+grade well; the promise result is always the first Trust reason; a shock's response is reported from
+the term it landed; no held or unexpected slip for a strand that moved, nor the same one two terms
+running; the last hand always holds a card that lands by 2050. No YAML values changed: every target holds.
+
+| Bot | Median | p10 | p90 | Lived | Left | Lived lower | Target |
+|---|---|---|---|---|---|---|---|
+| caretaker | -2.4 | -3.8 | -1.1 | -1.2 | -2.2 | 36% | -3.5 to -1.5: ok |
+| careless | -7.2 | -10.1 | -4.4 | -2.3 | -7.2 | 1% | -10 to -4: ok |
+| average | +0.8 | -1.7 | +2.7 | +2.0 | +1.1 | 40% | -1 to +1: ok |
+| thoughtful | +2.1 | +0.2 | +3.5 | +2.5 | +3.8 | 73% | +1.5 to +3.5: ok |
+| growth-only, green-only, borrower, prevention-only | -5.7, -3.9, -0.6, +0.0 | | | | | | at least 1.5 below thoughtful: ok |
+| south-east-only, ignore-places, no-contingency, end-game-dumper | +2.0, +1.7, +2.1, +1.8 | | | | | | at most thoughtful +0.3: ok |
+
+- Thoughtful minus caretaker, same seed: median +4.3, p10 +2.5: ok.
+- Lived the lower in 73% of thoughtful games; Left the lower in 61% of average games: ok.
+- Ceiling +4.1, A gift 0.1%: ok. Card use in the top decile within 0.2 to 1.6 plays per game: ok.
+- With majority grading the average bot earns about three well grades a game (was 1.4) and sits at +0.8,
+  near the top of its band.

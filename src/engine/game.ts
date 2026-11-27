@@ -259,7 +259,9 @@ function openTerm(ctx: Ctx, prev: A.GameState, term: number): A.GameState {
 
   // the hand
   const size = term === 0 ? g.first_hand_size : g.hand_size;
-  const dealt = deal(ctx, state.deck, s.held, size, activeIds, (s.hands ?? []).slice(-4));
+  // the last hand always holds a card that lands by 2050 (playtest 3)
+  const quick = term === g.years.length - 1 ? (id: string) => (ctx.cards.get(id)?.arrival?.first ?? ctx.cards.get(id)?.delay ?? 0) <= 1 : undefined;
+  const dealt = deal(ctx, state.deck, s.held, size, activeIds, (s.hands ?? []).slice(-4), quick);
   s.hands = [...(s.hands ?? []), dealt.hand];
   state.hand = dealt.hand;
   state.deck = dealt.deck;
@@ -708,30 +710,36 @@ function visitOffer(ctx: Ctx, state: A.GameState): A.VisitOffer | null {
     })
     .map((p) => ctx.cards.get(p.card)!);
   const triggers = played.sort((a, b) => b.cost - a.cost);
-  let place: "rhondda" | "bethesda" | null = triggers[0]?.visit ?? null;
-  if (state.options.firstGame && !(place && masteredPlace(state, place))) {
-    // the curated first game: the Rhondda asks in term 2, Bethesda by term 4
+  const activeIds = state.activeTrends.map((a) => a.curveball);
+  const offerFor = (place: "rhondda" | "bethesda", triggeredBy: string[]): A.VisitOffer => {
+    const board = ctx.places.get(place)!;
+    const fewer = triggeredBy.length > 0 && triggeredBy.every((id) => id !== "curveball" && ctx.cards.get(id)!.visit_thread_fewer);
+    return {
+      place,
+      triggeredBy,
+      threads: board.threads - (fewer ? 1 : 0),
+      ...(place === "rhondda" ? { tipRisk: tipRisk(board, activeIds.includes("wet-decade"), s.stitched ?? []), stitched: [...(s.stitched ?? [])] } : { stitched: [...(s.bethesdaThreads ?? [])] }),
+      activeTrends: activeIds,
+    };
+  };
+  // every place a card played this term asks for you, each naming its own cards (playtest 3);
+  // the main offer is the place of the most expensive trigger, the other is a choice
+  const places = [...new Set(triggers.map((c) => c.visit!))];
+  if (places.length) {
+    const [main, ...rest] = places.map((p) => offerFor(p, triggers.filter((c) => c.visit === p).map((c) => c.id)));
+    return rest.length ? { ...main!, alternatives: rest } : main!;
+  }
+  // the curated first game asks only when no card has: the Rhondda in term 2, Bethesda by term 4
+  if (state.options.firstGame) {
     const curated: "rhondda" | "bethesda" | null =
-      state.term === 1 && !s.firstVisits.includes("rhondda")
+      state.term === 1 && !s.firstVisits.includes("rhondda") && !masteredPlace(state, "rhondda")
         ? "rhondda"
-        : state.term === 3 && !state.ledger.grades.some((g) => g.place === "bethesda")
+        : state.term === 3 && !state.ledger.grades.some((g) => g.place === "bethesda") && !masteredPlace(state, "bethesda")
           ? "bethesda"
           : null;
-    if (curated) place = curated;
+    if (curated) return offerFor(curated, ["curveball"]);
   }
-  let triggeredBy = triggers.filter((c) => c.visit === place).map((c) => c.id);
-  if (place && !triggeredBy.length) triggeredBy = ["curveball"];
-  if (!place) return null;
-  const board = ctx.places.get(place)!;
-  const fewer = triggeredBy.length > 0 && triggeredBy.every((id) => id !== "curveball" && ctx.cards.get(id)!.visit_thread_fewer);
-  const activeIds = state.activeTrends.map((a) => a.curveball);
-  return {
-    place,
-    triggeredBy,
-    threads: board.threads - (fewer ? 1 : 0),
-    ...(place === "rhondda" ? { tipRisk: tipRisk(board, activeIds.includes("wet-decade"), s.stitched ?? []), stitched: [...(s.stitched ?? [])] } : { stitched: [...(s.bethesdaThreads ?? [])] }),
-    activeTrends: activeIds,
-  };
+  return null;
 }
 
 export function gradeVisit(model: CompiledModel, state: A.GameState, choice: A.VisitChoice): A.VisitOutcome {
@@ -739,8 +747,9 @@ export function gradeVisit(model: CompiledModel, state: A.GameState, choice: A.V
   const offer = state.visitOffer;
   const place = choice?.place ?? offer?.place ?? "rhondda";
   if (!choice || !offer) return { place, grade: "adequately", threads: [], stayed: true, tests: [], notes: [] };
-  if (choice.place !== offer.place) throw new EngineError("wrong_place", `the visit on offer is ${offer.place}`);
-  if (choice.threads.length > offer.threads || new Set(choice.threads).size !== choice.threads.length) throw new EngineError("bad_threads", `place at most ${offer.threads} different threads`);
+  const chosen = choice.place === offer.place ? offer : (offer.alternatives ?? []).find((a) => a.place === choice.place);
+  if (!chosen) throw new EngineError("wrong_place", `the visit on offer is ${offer.place}`);
+  if (choice.threads.length > chosen.threads || new Set(choice.threads).size !== choice.threads.length) throw new EngineError("bad_threads", `place at most ${chosen.threads} different threads`);
   const board = ctx.places.get(place)!;
   const known = place === "rhondda" ? (board.tips ?? []).map((t) => t.id) : (board.options ?? []).map((o) => o.id);
   for (const t of choice.threads) if (!known.includes(t)) throw new EngineError("bad_threads", `unknown item ${t}`);
@@ -748,7 +757,7 @@ export function gradeVisit(model: CompiledModel, state: A.GameState, choice: A.V
   const s = sim(state);
   const res =
     place === "rhondda"
-      ? gradeRhondda(board, choice.threads, active.includes("wet-decade"), { stitched: s.stitched ?? [], text: ctx.model.engine_text, threadsAllowed: offer.threads })
+      ? gradeRhondda(board, choice.threads, active.includes("wet-decade"), { stitched: s.stitched ?? [], text: ctx.model.engine_text, threadsAllowed: chosen.threads })
       : gradeBethesda(board, choice.threads, {
           text: ctx.model.engine_text,
           stitched: s.bethesdaThreads ?? [],
@@ -1398,12 +1407,31 @@ function pickSlips(ctx: Ctx, state: A.GameState, contribs: A.Contribution[], cha
       out.push(sh);
     }
   }
-  for (const x of out) if (x.cause.kind === "shock" && !x.recovery && shock) x.response = { pips: shock.response, hit: shock.hit, prepared: shock.prepared };
-  // 3. one unexpected slip: a threshold event or a chained effect of a trend (never a card or shock)
-  const unexpected = all.find((x) => x.chained && !isCard(x.cause) && x.cause.kind !== "shock" && x.cause.kind !== "baseline" && !x.recovery && !out.some((y) => same(y, x)));
+  // one record of a shock's response: the term it landed (playtest 3)
+  for (const x of out) {
+    if (x.cause.kind !== "shock" || x.recovery) continue;
+    const landed = x.cause.term === term ? shock : (state.history[x.cause.term]?.shock ?? null);
+    if (landed && landed.curveball === x.cause.id) x.response = { pips: landed.response, hit: landed.hit, prepared: landed.prepared };
+  }
+  // 3. one unexpected slip: a threshold event or a chained effect of a trend (never a card or shock),
+  //    never for a strand that moved this term, and never the same one two terms running (playtest 3)
+  const movedStrands = new Set(out.filter((x) => x.pipChange).map((x) => x.strand));
+  const lastSlips = state.lastOutcome?.term === term - 1 ? state.lastOutcome.slips : [];
+  const unexpected = all.find(
+    (x) =>
+      x.chained &&
+      !isCard(x.cause) &&
+      x.cause.kind !== "shock" &&
+      x.cause.kind !== "baseline" &&
+      !x.recovery &&
+      !movedStrands.has(x.strand) &&
+      !out.some((y) => same(y, x)) &&
+      !lastSlips.some((y) => y.strand === x.strand && y.cause.id === x.cause.id),
+  );
   if (unexpected && out.length < 4) out.push({ ...unexpected, unexpected: true });
-  // 4. nothing moved: one quiet slip
-  if (!out.length && all[0]) out.push({ ...all[0], pipChange: 0 });
+  // 4. nothing moved: one quiet slip, unless it repeats last term's
+  const quiet = all.find((x) => !lastSlips.some((y) => y.strand === x.strand && y.cause.id === x.cause.id));
+  if (!out.length && quiet) out.push({ ...quiet, pipChange: 0 });
   return out.slice(0, 4).map(({ chained: _c, recovery, allSide, ...x }) => ({
     ...x,
     ...(recovery ? { recovery: true } : {}),
@@ -1469,7 +1497,10 @@ function playCaretaker(ctx: Ctx, prev: A.GameState, shadowPledge: StrandId): A.G
 
 export function resolve(model: CompiledModel, state: A.GameState, plays: A.Plays, visit: A.VisitChoice, response: A.ShockResponse): A.GameState {
   let st = dispatch(model, state, { type: "commit", plays });
-  if (st.step === "visit") st = dispatch(model, st, { type: "visit", choice: visit && st.visitOffer && visit.place === st.visitOffer.place ? visit : null });
+  if (st.step === "visit") {
+    const ok = visit && st.visitOffer && (visit.place === st.visitOffer.place || (st.visitOffer.alternatives ?? []).some((a) => a.place === visit.place));
+    st = dispatch(model, st, { type: "visit", choice: ok ? visit : null });
+  }
   return dispatch(model, st, { type: "respond", response });
 }
 
@@ -1493,10 +1524,36 @@ export function preview(model: CompiledModel, state: A.GameState, plays: A.Plays
     const sharp = clean.filter((x) => Math.round(x * 4) === q).length / clean.length >= ctx.model.game.sharp_share;
     return { median: med, p10: quantile(clean, 0.1), p90: quantile(clean, 0.9), pips: Math.round(med), sharp, delta: med };
   };
+  const g = ctx.model.game;
+  const lastTerm = g.years.length - 1;
   const perCard = plays.cards.map((c) => {
-    const without = project({ ...plays, cards: plays.cards.filter((x) => x !== c) });
-    const strands = Object.fromEntries(STRAND_IDS.map((id, i) => [id, marginal(withAll.eventualRuns.map((v, r) => v[i]! - without.eventualRuns[r]![i]!))])) as Record<StrandId, A.Projection & { delta: number }>;
-    return { card: c.card, strands };
+    const card = ctx.cards.get(c.card);
+    const first = card?.arrival?.first ?? card?.delay ?? 0;
+    const full = card?.arrival?.full ?? card?.delay ?? 0;
+    // measured at this card's own landing (capped three terms on), with and without it, on the same draws
+    const h = Math.max(state.term, Math.min(state.term + 3, state.term + full));
+    const others = { ...plays, cards: plays.cards.filter((x) => x !== c) };
+    const withAt = h === withAll.horizon ? withAll : projectPlays(ctx, state, plays, n, h);
+    const without = projectPlays(ctx, state, others, n, h);
+    const flow = Object.fromEntries(STRAND_IDS.map((id, i) => [id, marginal(withAt.eventualRuns.map((v, r) => v[i]! - without.eventualRuns[r]![i]!))])) as Record<StrandId, A.Projection & { delta: number }>;
+    const stock = Object.fromEntries(STRAND_IDS.map((id, i) => [id, marginal(withAt.eventualStock.map((v, r) => v[i]! - without.eventualStock[r]![i]!))])) as Record<StrandId, A.Projection & { delta: number }>;
+    const thisTerm = Object.fromEntries(STRAND_IDS.map((id, i) => [id, marginal(withAt.endRuns.map((v, r) => v[i]! - without.endRuns[r]![i]!))])) as Record<StrandId, A.Projection & { delta: number }>;
+    const REAL = 0.05;
+    const real = STRAND_IDS.filter((id) => Math.abs(flow[id].delta) >= REAL || Math.abs(stock[id].delta) >= REAL);
+    const landsInTerm = state.term + full;
+    return {
+      card: c.card,
+      strands: flow,
+      stock,
+      thisTerm,
+      real,
+      nothingThisTerm: STRAND_IDS.every((id) => Math.abs(thisTerm[id].delta) < REAL),
+      firstTerm: state.term + first,
+      firstYear: g.years[0]! + 4 * (state.term + first),
+      landsInTerm,
+      landsYear: g.years[0]! + 4 * landsInTerm,
+      landsAfterGame: landsInTerm > lastTerm,
+    };
   });
   const none = plays.cards.length ? project({ ...plays, cards: [] }) : withAll;
   const proj = (vals: number[]): A.Projection => {
