@@ -53,7 +53,8 @@ describe("Trust", () => {
     expect(pts(facts({ visit: "well" }), "visit")).toBe(6);
     expect(pts(facts({ visit: "poorly" }), "visit")).toBe(-6);
     expect(pts(facts({ neglected: ["north", "mid"] }), "neglect")).toBe(-8);
-    expect(pts(facts({ debtTokens: 2 }), "debt_interest")).toBe(-4);
+    expect(pts(facts({ debtTokens: 2 }), "debt_interest")).toBe(2 * g.trust.debt_interest);
+    expect(pts(facts({ repairsOverdue: 2 }), "repairs_overdue")).toBe(2 * (g.trust.repairs_overdue ?? 0));
   });
   it("drifts a tenth of the way back to 50 and clamps the net change to 25", () => {
     expect(computeTrust(g, facts({ before: 70, arrivals: 1 })).after).toBeCloseTo(70 + 3 - 2);

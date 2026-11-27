@@ -358,6 +358,7 @@ standing:
     budget: 2
     effects:
       - { target: infrastructure_condition, size: M, sign: -1, rule: R10 }
+      - { target: access, size: S, sign: -1, rule: R10, side: true, note: { en: "Potholes, closed lanes and late trains until it is repaired", cy: "Tyllau yn y ffordd, lonydd ar gau a threnau hwyr nes ei atgyweirio", cy_review: true } }
     clear_cost: 3
     rule: R10
     side_note: { en: "Roads, pipes and defences decline. While they are poor, every shock hits a quarter harder. Repair costs 3 pips.", cy: "Mae ffyrdd, pibellau ac amddiffynfeydd yn dirywio. Tra bônt yn wael, mae pob sioc yn taro chwarter yn galetach. Mae atgyweirio'n costio 3 phip.", cy_review: true }

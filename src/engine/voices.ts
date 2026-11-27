@@ -3,8 +3,9 @@
  * Templates are written by the content agent in model/voices.yaml and model/letters.yaml.
  * Selection is deterministic for a seed and a term.
  */
-import type { CompiledModel, LetterArchetype, NamedThingKind, RegionId, StrandId, Text, VoiceTemplate } from "../model/schema";
+import type { CompiledModel, LetterArchetype, LetterSlot, NamedThingKind, RegionId, StrandId, Text, VoiceTemplate } from "../model/schema";
 import type { Letter, VoiceLine } from "./api";
+import { fill } from "./welsh";
 import { uniform } from "./rng";
 import type { Ctx } from "./scores";
 
@@ -39,13 +40,14 @@ const matches = (v: VoiceTemplate, e: VoiceEventCandidate) =>
 /** Pick the voice for the first candidate with a matching template, avoiding voices already used. */
 export function pickVoice(ctx: Ctx, seed: number, term: number, candidates: VoiceEventCandidate[], used: string[]): VoiceLine | null {
   const voices = ctx.model.voices;
-  for (const cand of candidates) {
-    let pool = voices.filter((v) => matches(v, cand));
-    if (!pool.length) continue;
-    const fresh = pool.filter((v) => !used.includes(v.id));
-    if (fresh.length) pool = fresh;
-    const v = pool[Math.floor(uniform(seed, "voice", term, cand.event) * pool.length)]!;
-    return fillVoice(ctx, seed, term, v, cand.la);
+  // first pass: fresh voices only, across every candidate event; only then reuse (playtest 1)
+  for (const allowUsed of [false, true]) {
+    for (const cand of candidates) {
+      const pool = voices.filter((v) => matches(v, cand) && (allowUsed || !used.includes(v.id)));
+      if (!pool.length) continue;
+      const v = pool[Math.floor(uniform(seed, "voice", term, cand.event) * pool.length)]!;
+      return fillVoice(ctx, seed, term, v, cand.la);
+    }
   }
   return null;
 }
@@ -63,11 +65,9 @@ export function fillVoice(ctx: Ctx, seed: number, term: number, v: VoiceTemplate
   const year = String(ctx.model.game.years[term] ?? ctx.model.game.end_year);
   const who = ctx.model.voice_who.length ? ctx.model.voice_who[Math.floor(uniform(seed, "who", term) * ctx.model.voice_who.length)]! : { en: "", cy: "" };
   const season = ctx.model.voice_seasons.length ? ctx.model.voice_seasons[Math.floor(uniform(seed, "season", term) * ctx.model.voice_seasons.length)]! : { en: "", cy: "" };
-  const fill = (s: string, lang: "en" | "cy") =>
-    s.replaceAll("{place}", town[lang] || town.en).replaceAll("{year}", year).replaceAll("{who}", who[lang]).replaceAll("{season}", season[lang]);
   return {
     template: v.id,
-    text: { en: fill(v.text.en, "en"), cy: fill(v.text.cy, "cy"), ...(v.text.cy_review ? { cy_review: true } : {}) },
+    text: fill(v.text, { place: town, year, who, season }),
     la: ctx.las[laIdx]!.code,
     town,
     event: v.event,
@@ -75,8 +75,8 @@ export function fillVoice(ctx: Ctx, seed: number, term: number, v: VoiceTemplate
 }
 
 /** The opening voice that asks for a pledge on a strand, if a template exists. */
-export function openingVoice(ctx: Ctx, seed: number, term: number, strand: StrandId, la: number): VoiceLine | null {
-  return pickVoice(ctx, seed, term, [{ event: "opening", strand, la }], []);
+export function openingVoice(ctx: Ctx, seed: number, term: number, strand: StrandId, la: number, used: string[] = []): VoiceLine | null {
+  return pickVoice(ctx, seed, term, [{ event: "opening", strand, la }], used);
 }
 
 // ---------------------------------------------------------------------------
@@ -109,11 +109,23 @@ export interface NamedThing {
   thing: Text | null;
 }
 
+/** One specific thing the letter names: from an archetype template (`line` absent) or a filled ledger line. */
+export interface NamedLine extends NamedThing {
+  /** The ledger kind (tip_safe, visit, pledge_kept, card, debt...). */
+  ledger: string;
+  /** A ready, filled line (engine copy); otherwise the archetype's named template of `kind` is used. */
+  line?: Text;
+}
+
+/**
+ * Write the letter: salutation, lived, left, two named lines (at least two specific things the
+ * player did, from the ledger), sign-off. Slots are filled with Welsh mutation (welsh.ts).
+ */
 export function writeLetter(
   ctx: Ctx,
   seed: number,
   archetype: LetterArchetype,
-  named: NamedThing,
+  named: NamedLine[],
   la: number,
   worstYear: number,
   lostYear: number | null,
@@ -121,33 +133,39 @@ export function writeLetter(
   const tpl = ctx.model.letters.find((l) => l.archetype === archetype) ?? ctx.model.letters[0];
   const town = ctx.las[la]!.towns[0] ?? ctx.las[la]!.name;
   const pick = (xs: Text[] | undefined, slot: string): Text => (xs && xs.length ? xs[Math.floor(uniform(seed, "letter", slot) * xs.length)]! : { en: "", cy: "" });
-  const fill = (t: Text): Text => {
-    const f = (s: string, lang: "en" | "cy") =>
-      s
-        .replaceAll("{place}", town[lang] || town.en)
-        .replaceAll("{year}", String(named.year ?? ctx.model.game.end_year))
-        .replaceAll("{thing}", named.thing ? named.thing[lang] || named.thing.en : "")
-        .replaceAll("{worst_year}", String(worstYear))
-        .replaceAll("{lost_year}", String(lostYear ?? ""));
-    return { en: f(t.en, "en"), cy: f(t.cy, "cy"), ...(t.cy_review ? { cy_review: true } : {}) };
-  };
+  const fillWith = (t: Text, n?: NamedThing): Text =>
+    fill(t, {
+      place: town,
+      year: n?.year ?? ctx.model.game.end_year,
+      thing: n?.thing ?? "",
+      worst_year: worstYear,
+      lost_year: lostYear ?? "",
+    });
+  const first = named[0] ?? { kind: "none" as NamedThingKind, id: null, year: null, thing: null, ledger: "none" };
   if (!tpl) {
-    return { archetype, title: { en: archetype, cy: archetype }, lines: [], la: ctx.las[la]!.code, town, named: { kind: named.kind, id: named.id, year: named.year } };
+    return { archetype, title: { en: archetype, cy: archetype }, lines: [], la: ctx.las[la]!.code, town, named: { kind: first.kind, id: first.id, year: first.year }, namedAll: named.map((n) => ({ kind: n.ledger, id: n.id, year: n.year })) };
   }
-  const namedList = tpl.named[named.kind]?.length ? tpl.named[named.kind] : tpl.named.none;
+  const namedLine = (n: NamedLine, k: number): Text => {
+    if (n.line) return n.line;
+    const list = tpl.named[n.kind]?.length ? tpl.named[n.kind] : tpl.named.none;
+    return fillWith(pick(list, `named${k}`), n);
+  };
+  const lines: Letter["lines"] = [
+    { slot: "salutation", text: fillWith(pick(tpl.salutation, "salutation")) },
+    { slot: "lived", text: fillWith(pick(tpl.lived, "lived")) },
+    { slot: "left", text: fillWith(pick(tpl.left, "left")) },
+    ...named.slice(0, 2).map((n, k) => ({ slot: "named" as LetterSlot, text: namedLine(n, k) })),
+    ...(named.length ? [] : [{ slot: "named" as LetterSlot, text: fillWith(pick(tpl.named.none, "named0")) }]),
+    { slot: "signoff", text: fillWith(pick(tpl.signoff, "signoff")) },
+  ];
   return {
     archetype,
     title: tpl.title,
-    lines: [
-      { slot: "salutation", text: fill(pick(tpl.salutation, "salutation")) },
-      { slot: "lived", text: fill(pick(tpl.lived, "lived")) },
-      { slot: "left", text: fill(pick(tpl.left, "left")) },
-      { slot: "named", text: fill(pick(namedList, "named")) },
-      { slot: "signoff", text: fill(pick(tpl.signoff, "signoff")) },
-    ],
+    lines,
     la: ctx.las[la]!.code,
     town,
-    named: { kind: named.kind, id: named.id, year: named.year },
+    named: { kind: first.kind, id: first.id, year: first.year },
+    namedAll: named.slice(0, 2).map((n) => ({ kind: n.ledger, id: n.id, year: n.year })),
   };
 }
 

@@ -41,6 +41,7 @@ function drawTrend(ctx: Ctx, seed: number, term: number, active: string[]): stri
 export function buildSchedule(ctx: Ctx, seed: number, firstGame: boolean): TermSchedule[] {
   const g = ctx.model.game.curveballs;
   const active: string[] = [];
+  const fired = new Set<string>();
   const out: TermSchedule[] = [];
   const terms = ctx.model.game.years.length;
   for (let term = 0; term < terms; term++) {
@@ -55,10 +56,11 @@ export function buildSchedule(ctx: Ctx, seed: number, firstGame: boolean): TermS
     let shock: string | null = null;
     if (firstGame && term === g.first_game_shock.term) shock = g.first_game_shock.curveball;
     else if (term > 0 && !(firstGame && term < g.first_game_shock.term && term === 0)) {
-      // active trends in order of age: ties go to the trend active longest
+      // active trends in order of age: ties go to the trend active longest; each shock lands at most
+      // once a game (playtest 1)
       for (const id of active) {
         const cb = ctx.curveballs.get(id)!;
-        if (!cb.shock) continue;
+        if (!cb.shock || fired.has(id)) continue;
         const chance = g.shock_chance + g.ripple_shock_bonus * rippleCount(ctx, active, id);
         if (uniform(seed, "shock", term, id) < chance) {
           shock = id;
@@ -66,6 +68,7 @@ export function buildSchedule(ctx: Ctx, seed: number, firstGame: boolean): TermS
         }
       }
     }
+    if (shock) fired.add(shock);
     out.push({ newTrend, shock });
   }
   return out;

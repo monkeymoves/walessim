@@ -491,17 +491,30 @@ function thresholdEvent(t: TermCtx, ev: EventCheck) {
       t.events.push({ kind: "employer_left", id: "R28", play: e.play, la: e.las[0] });
     }
   } else if (ev.kind === "heartland_drop") {
-    // the language shock: the heartland authority closest to the level drops
+    // the language shock presses on the heartland authority closest to the level; it only counts as
+    // falling below half if the modelled share really does (R20 then fires in the check that follows)
     const i = closestHeartland(t);
-    if (i !== null) heartlandEvent(t, i, ev.cause, ev.hit);
+    if (i !== null) {
+      const h = ctx.comp.get("heartland")!;
+      const w = ctx.comp.get("welsh_speakers")!;
+      const c: CauseRef = { ...ev.cause };
+      apply(t, h, ctx.las.map((_, j) => (j === i ? -ctx.model.game.sizes.M * ev.hit : 0)), c, null, false, null);
+      apply(t, w, ctx.las.map((_, j) => (j === i ? -ctx.model.game.sizes.S * ev.hit : 0)), c, null, false, null);
+    }
   }
 }
 
+/**
+ * The modelled share able to speak Welsh in an authority: its 2021 value moved by the change in its
+ * score since then. Not read back through the band: the band's goal is the national milestone (33 per
+ * cent), so heartland scores sit at the clamp of 10 and would read as 33 per cent (playtest 1).
+ */
 function welshShare(t: TermCtx, i: number): number | null {
   const band = t.ctx.bands.get("welsh_speakers");
   const c = t.ctx.comp.get("welsh_speakers");
-  if (!band || c === undefined) return null;
-  return band.floor + (t.run.s[c]![i]! / 10) * (band.goal - band.floor);
+  const start = t.ctx.model.la_data["welsh_speakers"]?.values?.[t.ctx.las[i]!.code];
+  if (!band || c === undefined || start === undefined) return null;
+  return start + ((t.run.s[c]![i]! - t.ctx.base[c]![i]!) / 10) * (band.goal - band.floor);
 }
 
 function closestHeartland(t: TermCtx): number | null {

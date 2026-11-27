@@ -55,6 +55,8 @@ export interface RawModelFiles {
   voices?: unknown;
   letters?: unknown;
   voiceSlots?: unknown;
+  /** model/i18n/en/engine.json and cy/engine.json. */
+  engineText?: { en?: Record<string, unknown>; cy?: Record<string, unknown> };
   game: unknown;
   laIndicators?: unknown;
   fcm?: unknown;
@@ -153,8 +155,25 @@ export function compileModel(raw: RawModelFiles, opts: CompileOptions = {}): Com
     }
     for (const k of ["regional_size_step", "hysteresis", "contingency_carry", "peek_cost", "post_counts_until"] as const) num("game.yaml", k, k, (game as any)[k]);
     if (!Array.isArray(game.years) || game.years.length !== 6) err("game.yaml", "years", "six term years required");
-    for (const b of game.result_bands ?? []) text("game.yaml", "result_bands", "name", b.name);
+    const jc = game.judged_change;
+    if (!isObj(jc)) err("game.yaml", "judged_change", "missing (balance decision 14)");
+    else {
+      num("game.yaml", "judged_change.lived_first_term", "lived_first_term", jc.lived_first_term);
+      num("game.yaml", "judged_change.dip_weight", "dip_weight", jc.dip_weight);
+      if (!Array.isArray(jc.bands) || jc.bands.length < 2) err("game.yaml", "judged_change.bands", "at least two bands required");
+      else {
+        jc.bands.forEach((b, i) => {
+          num("game.yaml", `judged_change.bands[${i}]`, "min", b.min);
+          text("game.yaml", `judged_change.bands[${i}]`, "name", b.name);
+          if (i > 0 && b.min <= jc.bands[i - 1]!.min) err("game.yaml", "judged_change.bands", "band minimums must rise");
+        });
+      }
+      if (!isObj(jc.letter_bands) || typeof jc.letter_bands.low !== "number" || typeof jc.letter_bands.high !== "number") err("game.yaml", "judged_change.letter_bands", "low and high required");
+    }
+    // older readers of result_bands get the change bands (the result is judged as change since 2026)
+    if (isObj(jc) && Array.isArray(jc.bands)) game.result_bands = jc.bands;
     for (const b of game.trust?.bands ?? []) text("game.yaml", `trust.${b.id}`, "label", b.label);
+    if (game.trust?.neglect_note) game.trust.neglect_note = text("game.yaml", "trust.neglect_note", "neglect_note", game.trust.neglect_note);
   }
 
   // ---- sources
@@ -634,6 +653,22 @@ export function compileModel(raw: RawModelFiles, opts: CompileOptions = {}): Com
     }
   }
 
+  // ---- engine copy (bilingual, keyed)
+  const engine_text: Record<string, Text> = {};
+  const et = raw.engineText;
+  if (et?.en) {
+    const cyAll = et.cy ?? {};
+    const review = cyAll["_cy_review"] === true;
+    for (const [k, v] of Object.entries(et.en)) {
+      if (k.startsWith("_") || typeof v !== "string") continue;
+      const cy = cyAll[k];
+      if (typeof cy !== "string" || !cy.trim()) err("i18n/cy/engine.json", k, "missing Welsh");
+      if (/[\u2013\u2014]/.test(v + (cy ?? ""))) err("i18n/engine.json", k, "contains an em or en dash");
+      engine_text[k] = { en: v, cy: typeof cy === "string" ? cy : "", ...(review ? { cy_review: true } : {}) };
+      if (review) cyReview.push(`i18n/cy/engine.json:${k}`);
+    }
+  }
+
   if (errors.length) return { model: null, errors, warnings };
 
   const model: CompiledModel = {
@@ -658,6 +693,7 @@ export function compileModel(raw: RawModelFiles, opts: CompileOptions = {}): Com
     fcm: fcm!,
     io,
     game,
+    engine_text,
   };
   model.meta.hash = hashString(JSON.stringify([model.rules, model.cards, model.standing, model.curveballs, model.game, model.components, model.places.map((p) => [p.options, p.tips])]));
   return { model, errors, warnings };

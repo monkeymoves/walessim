@@ -2,6 +2,20 @@
  * The engine's public surface. The UI imports from this file only.
  *
  * CHANGES (newest first; every change is backward compatible in shape):
+ * - v3.0 (playtest 1): `VisitOutcome.tests[].explanation` (filled bilingual text naming the player's
+ *   threads) and `VisitOutcome.notes`; grades are by tests held (all: well, any: adequately, none:
+ *   poorly); `VisitOffer.stitched` (Rhondda tips made safe on earlier visits, they count as covered and
+ *   drop a risk step); a trigger card offers a visit only if it landed in the place's authority.
+ *   `Letter.lines` now has two named lines and `Letter.namedAll` lists them with ledger kinds; the
+ *   archetype follows the result band. `Slip.rule`, `Slip.shock`, `Slip.pipChange`: slips cover the
+ *   strands whose pips moved and every landed shock (up to four slips). New Trust reason code
+ *   `repairs_overdue`. `PlaceBoard.wimd` and `TipFacts.wimdEdition/wimdAreas` label WIMD 2019 ranks.
+ *   Copy for these lives in model/i18n/{en,cy}/engine.json (`engine.*`), compiled into `model.engine_text`.
+ *   `fillText` (Welsh mutation-aware slot filling), `joinNames` and `softMutate` are exported for UI copy.
+ *   Trust in the guided first term is floored at Fair (`trust.first_term_floor`); each shock lands at
+ *   most once a game; the pledge never repeats the strand of either of the last two terms; no voice
+ *   repeats while fresh ones remain; R20 reads Welsh speakers by change from 2021, so the heartland
+ *   cannot read "below half" from a clamped score.
  * - v2.1: `Preview.perCard` fields are all marginal changes (before, `median` was the eventual level,
  *   which read as a fall of about a pip on strands under baseline drift); added `Preview.strands[].baseline`
  *   (no plays, same horizon). Decision 15: national plays count for every region in the neglect test;
@@ -91,6 +105,13 @@ export type { CompiledModel, Grade, RegionId, StrandId, Text, TrustBand };
 
 /** localStorage key prefix for this app (its own origin, ADR 0003). */
 export const SAVE_PREFIX = "etifeddiaeth.v1.";
+
+/**
+ * Fill {slots} in a bilingual string with Welsh mutation and article handling by the word before the
+ * slot ("i'r Rhondda", "Mae'r Rhondda", "i Ddiwylliant", "yn Nhreorci", "a Chaerffili"). Use it for any
+ * template that puts a name after a preposition. `places` lists the params that are places (for "yn").
+ */
+export { fill as fillText, joinNames, softMutate } from "./welsh";
 
 /** Strand ids in display order (same as the model's strands). */
 export { STRAND_IDS as STRAND_ORDER } from "../model/schema";
@@ -293,8 +314,10 @@ export interface VisitOffer {
   triggeredBy: string[];
   /** Threads the player may place (3, or 2 for a `visit_thread_fewer` card alone). */
   threads: number;
-  /** For the Rhondda: current movement risk step per tip id (wet-decade raises them). */
+  /** For the Rhondda: current movement risk step per tip id (wet-decade raises them; made-safe tips drop one). */
   tipRisk?: Record<string, 1 | 2 | 3>;
+  /** For the Rhondda: tips made safe on earlier visits. Draw them stitched; they count as covered. */
+  stitched?: string[];
   /** Trends active that change the Bethesda sums. */
   activeTrends: string[];
 }
@@ -474,14 +497,24 @@ export interface StrandChange {
   stockSharp: boolean;
 }
 
-/** A "what changed" slip. Three per term: the biggest two plus one marked unexpected. */
+/**
+ * A "what changed" slip. Up to four per term: one for each strand whose pips moved (its biggest
+ * cause), one for a shock that landed, then the largest others, and at most one marked unexpected.
+ */
 export interface Slip {
   strand: StrandId;
   part: "flow" | "stock";
   cause: Cause;
   /** Change of the strand score carried by this cause (points). Show as direction, not a number. */
   delta: number;
+  /** Only for effects no played ticket prints: a chained rule or a threshold event. */
   unexpected: boolean;
+  /** The rule that carried it (R25 is the jobs ripple: "spending on X made work for a while"). */
+  rule?: string | null;
+  /** This slip is the shock that landed (every landed shock gets one). */
+  shock?: boolean;
+  /** Set when this slip explains a strand whose shown pips changed: the pip change. */
+  pipChange?: number;
 }
 
 /** One reason Trust moved. */
@@ -500,6 +533,7 @@ export interface TrustReason {
     | "visit"
     | "neglect"
     | "debt_interest"
+    | "repairs_overdue"
     | "nothing_visible"
     | "drift"
     | "curveball"
@@ -562,7 +596,14 @@ export interface VisitOutcome {
   threads: string[];
   /** True if the player stayed (adequate by default). */
   stayed: boolean;
-  tests: { id: string; pass: boolean; share: number }[];
+  /**
+   * Each test with a player-facing explanation in terms of the player's threads (bilingual, filled,
+   * from model/i18n/{en,cy}/engine.json `engine.visit.*`). `share` is the share of runs it held in.
+   * Grades: every test held is well, at least one adequately, none poorly.
+   */
+  tests: { id: string; pass: boolean; share: number; explanation?: Text }[];
+  /** Notes for the whole visit: tips counted from earlier visits, trends that changed the sums. */
+  notes?: Text[];
 }
 
 /** Everything that happened in one term. */
@@ -611,12 +652,22 @@ export interface Score {
 export interface Letter {
   archetype: LetterArchetype;
   title: Text;
-  /** The five slots in order, filled. */
+  /**
+   * The slots in order, filled: salutation, lived, left, then two named lines (each a specific thing
+   * the player did, from the ledger), then the sign-off. Older letters had one named line.
+   */
   lines: { slot: LetterSlot; text: Text }[];
   /** Authority the writer lives in. */
   la: string;
   town: Text;
+  /** The first named thing (kind in the archetype templates' vocabulary). */
   named: { kind: NamedThingKind; id: string | null; year: number | null };
+  /**
+   * Every named thing in order, with its ledger kind: tip_safe (id: tip), visit (id: place),
+   * pledge_kept, pledge_broken (id: strand), debt, repairs, neglect (id: region), card (id: card),
+   * arrival (id: card), lost_term, tip (a tip never made safe). Draw a thread from each line to it.
+   */
+  namedAll?: { kind: string; id: string | null; year: number | null }[];
 }
 
 /**

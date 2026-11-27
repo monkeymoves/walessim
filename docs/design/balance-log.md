@@ -337,3 +337,44 @@ regional plays, and names the overlooked region (ties to the more populous); the
   concentrating no longer wins, and the uneven letter answers it.
 - `src/engine/bots.test.ts` now plays 40 seeds (6 runs each): at 16 seeds the borrower's gap to
   thoughtful play (2.5 pips at 200 seeds) read as 0.6.
+
+## Playtest 1 fixes in the engine (results, 200 seeds, 30 runs)
+
+Engine and model changes from `docs/design/playtest-1.md` (items 1 to 7 for the engine): visits graded
+by tests held (all well, any adequately, none poorly) with an explanation per test; Rhondda exposure
+needed scales with the threads the money covers and lifelines needs half of the top-risk lifeline tips
+covered; tips made safe stay stitched and drop a risk step; a trigger card offers a visit only where it
+landed; the letter's archetype follows the result band and names two ledger things; slips cover the
+strands whose pips moved and every landed shock; each shock at most once a game; the pledge rotates;
+voices do not repeat while fresh ones remain; R20 reads the Welsh-speaker share by change from 2021
+(the band's goal is 33 per cent, so heartland scores sat at the clamp and read as below half in 2030).
+
+YAML tune values changed, and why:
+
+| # | Change | From | To | Why |
+|---|---|---|---|---|
+| P1a | `trust.debt_interest` | -2 | -4 per token per term | Three debts held Trust at Fair all game in the careless playtest. |
+| P1b | `trust.repairs_overdue` (new) | none | -5 per overdue deferral per term | Repairs put off never showed during play. |
+| P1c | `trust.first_term_floor` (new) | none | 45 | The guided first term dropped Trust to Thin in two of three playtest games. |
+| P1d | `defer-maintenance` effects: `access` -S until repaired (a repair reverses every effect of the ticket) | none | -S | A strand cost the player sees on the row as soon as repairs are put off. |
+
+| Bot | Median | p10 | p90 | Lived | Left | Lived lower | Target |
+|---|---|---|---|---|---|---|---|
+| caretaker | -2.3 | -4.4 | -1.0 | -0.9 | -2.1 | 28% | -3.5 to -1.5: ok |
+| careless | -6.6 | -9.5 | -3.8 | -2.1 | -6.6 | 3% | -10 to -4: ok |
+| average | +1.0 | -1.7 | +3.1 | +2.7 | +1.2 | 24% | -1 to +1: ok (at the edge) |
+| thoughtful | +2.4 | +0.4 | +4.0 | +2.9 | +3.7 | 65% | +1.5 to +3.5: ok |
+| growth-only | -5.8 | | | | | | 1.5 below thoughtful: ok |
+| green-only | -3.9 | | | | | | ok |
+| borrower | -0.1 | | | | | | ok (2.5 below) |
+| prevention-only | +0.7 | | | | | | ok (1.7 below) |
+| south-east-only | +2.7 | +0.9 | +3.7 | | | 95% | at most thoughtful +0.3: ok (+0.3) |
+| ignore-places | +2.2 | +0.2 | | | | | ok (costs 0.2) |
+| no-contingency | +2.7 | +0.8 | | | | | ok (+0.3) |
+| end-game-dumper | +2.2 | +0.1 | | | | | ok (costs 0.2) |
+
+- Thoughtful minus caretaker, same seed: median +4.7, p10 +2.9: ok.
+- Lived the lower in 65% of thoughtful games; Left the lower in 76% of average games: ok.
+- Ceiling +3.9, A gift 0.0%: ok. Card use 0.71 to 1.51 plays per game in the top decile: ok.
+- Watch: average sits at the top edge of its band (+1.0), and south-east-only and no-contingency at
+  the +0.3 allowance. Fairer visit grades lifted every visiting bot; the caretaker never visits.

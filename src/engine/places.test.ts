@@ -58,3 +58,36 @@ describe("the Bethesda board", () => {
     expect(gradeBethesda(be, t, { ...ctx0, active: ["wet-decade"] }).tests.find((x) => x.id === "pwysau")!.pass).toBe(false);
   });
 });
+
+describe("place visits after playtest 1", () => {
+  const copy = m.engine_text;
+  it("lets a sensible two-thread Rhondda visit reach well in the wet decade", () => {
+    const r = gradeRhondda(rh, [tip(2), tip(13)], true, { threadsAllowed: 2, text: copy });
+    expect(r.grade).toBe("well");
+  });
+  it("grades a careful visit that holds any test at least adequately", () => {
+    const r = gradeRhondda(rh, [tip(13), tip(16)], true, { threadsAllowed: 2, text: copy });
+    expect(r.tests.find((t) => t.id === "lifelines")!.pass).toBe(true);
+    expect(r.grade).not.toBe("poorly");
+  });
+  it("explains every test in terms of the player's own threads, in both languages", () => {
+    const r = gradeRhondda(rh, [tip(1), tip(3), tip(12)], true, { text: copy });
+    for (const t of r.tests) {
+      expect(t.explanation, t.id).toBeTruthy();
+      expect(t.explanation!.en).not.toMatch(/\{[a-z_]+\}/);
+      expect(t.explanation!.cy).not.toMatch(/\{[a-z_]+\}/);
+    }
+    expect(r.tests.find((t) => t.id === "exposure")!.explanation!.en).toMatch(/Maerdy Spoil Tips/);
+    expect(r.tests.find((t) => t.id === "fairness")!.explanation!.en).toMatch(/WIMD 2019/);
+    const b = gradeBethesda(be, ["chapel-homes", "quarry-workshops", "welsh-youth-centre"], { active: ["price-of-a-home"], inPlay: [], everPlayed: [], seed: 3, runs: 50, text: copy });
+    expect(b.tests.find((t) => t.id === "aros")!.explanation!.en).toMatch(/Empty chapel/);
+    expect(b.notes.length).toBe(1);
+  });
+  it("remembers tips made safe: they count as covered and drop a risk step", () => {
+    const risk = tipRisk(rh, true, [tip(13)]);
+    expect(risk[tip(13)]).toBe(2);
+    const r = gradeRhondda(rh, [tip(2), tip(16)], true, { stitched: [tip(13)], threadsAllowed: 2, text: copy });
+    expect(r.tests.find((t) => t.id === "lifelines")!.pass).toBe(true);
+    expect(r.notes[0]!.en).toMatch(/Lewis Merthyr Spoil Tip 1/);
+  });
+});

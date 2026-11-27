@@ -44,6 +44,7 @@ export function readModelFiles(): RawModelFiles {
     voices: optYaml("voices.yaml"),
     letters: optYaml("letters.yaml"),
     voiceSlots: optYaml("voice-slots.yaml"),
+    engineText: { en: optJson("i18n/en/engine.json"), cy: optJson("i18n/cy/engine.json") },
     game: readYaml(M("game.yaml")),
     laIndicators: optJson("data/la-indicators.json"),
     fcm: optJson("data/sonarr-dpsir.json"),
@@ -87,6 +88,8 @@ export function tipFactsFromDisk(board: PlaceBoard): TipFacts[] | null {
       floodZone: b.floodZone,
       deprived: b.wimdRank !== null && b.wimdRank <= deprived,
       wimdRank: b.wimdRank,
+      wimdEdition: board.wimd?.edition,
+      wimdAreas: board.wimd?.areas,
       risk: risk as 1 | 2,
     };
   });

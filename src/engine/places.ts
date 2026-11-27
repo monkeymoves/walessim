@@ -3,40 +3,104 @@
  * never on one roll: the Rhondda tests are deterministic sums over the tips; the Bethesda tests
  * must each hold in at least `hold_share` of sampled runs.
  */
-import type { Grade, PlaceBoard } from "../model/schema";
+import type { Grade, PlaceBoard, Text, TipFacts } from "../model/schema";
+import { fill, joinNames, type SlotValue } from "./welsh";
 import { uniform } from "./rng";
 
 export interface BoardResult {
   grade: Grade;
-  tests: { id: string; pass: boolean; share: number }[];
+  /** Each test, with a player-facing explanation in terms of the player's threads (when copy is given). */
+  tests: { id: string; pass: boolean; share: number; explanation?: Text }[];
+  /** Notes for the whole visit: tips counted from earlier visits, trends that changed the sums. */
+  notes: Text[];
 }
 
-const gradeOf = (passed: number, total: number): Grade => (passed >= total ? "well" : passed >= total - 1 ? "adequately" : "poorly");
+/**
+ * Grade by tests held (playtest 1): all of them well; at least one adequately; none poorly.
+ * A careful visit is never worse than staying away (adequate).
+ */
+const gradeOf = (passed: number, total: number): Grade => (passed >= total ? "well" : passed >= 1 ? "adequately" : "poorly");
 
-/** Current risk step per tip: the base step, raised one by the wet decade, capped at 3. */
-export function tipRisk(board: PlaceBoard, wetDecade: boolean): Record<string, 1 | 2 | 3> {
+type Copy = Record<string, Text> | undefined;
+const say = (copy: Copy, key: string, params: Record<string, SlotValue>, places: string[] = []): Text | undefined => (copy?.[key] ? fill(copy[key]!, params, places) : undefined);
+
+/** A tip's name in both languages ("Tip 4" when the source gives none). */
+export function tipName(copy: Copy, t: TipFacts): Text {
+  if (t.name) return { en: t.name, cy: t.name };
+  return copy?.["engine.tip"] ? fill(copy["engine.tip"], { n: t.n }) : { en: `Tip ${t.n}`, cy: `Tomen ${t.n}` };
+}
+
+/**
+ * Current risk step per tip: the base step, raised one by the wet decade, capped at 3; a tip made
+ * safe on an earlier visit drops one step (never below 1).
+ */
+export function tipRisk(board: PlaceBoard, wetDecade: boolean, stitched: string[] = []): Record<string, 1 | 2 | 3> {
   const out: Record<string, 1 | 2 | 3> = {};
-  for (const t of board.tips ?? []) out[t.id] = Math.min(3, t.risk + (wetDecade ? 1 : 0)) as 1 | 2 | 3;
+  for (const t of board.tips ?? []) out[t.id] = Math.max(1, Math.min(3, t.risk + (wetDecade ? 1 : 0)) - (stitched.includes(t.id) ? 1 : 0)) as 1 | 2 | 3;
   return out;
 }
 
-/** The Rhondda: exposure, fairness, lifelines. */
-export function gradeRhondda(board: PlaceBoard, threads: string[], wetDecade: boolean): BoardResult {
+/**
+ * The Rhondda: exposure, fairness, lifelines. Tips made safe on earlier visits count as covered.
+ * Exposure needs `exposure_share` of the risk-weighted homes for three threads, scaled down for
+ * fewer; lifelines needs at least half (rounded up) of the top-risk tips above a school or the
+ * railway covered.
+ */
+export function gradeRhondda(board: PlaceBoard, threads: string[], wetDecade: boolean, opts: { stitched?: string[]; text?: Copy; threadsAllowed?: number } = {}): BoardResult {
+  const copy = opts.text;
+  const stitched = opts.stitched ?? [];
   const tips = board.tips ?? [];
-  const risk = tipRisk(board, wetDecade);
-  const chosen = new Set(threads);
-  const weighted = (ids: Iterable<string>) => [...ids].reduce((a, id) => a + (risk[id] ?? 1) * (tips.find((t) => t.id === id)?.buildingsBelow ?? 0), 0);
-  const total = weighted(tips.map((t) => t.id));
-  const share = total > 0 ? weighted(chosen) / total : 1;
-  const exposure = share >= (board.exposure_share ?? 0.4);
-  const fairness = tips.some((t) => chosen.has(t.id) && t.deprived);
-  const lifelines = !tips.some((t) => !chosen.has(t.id) && risk[t.id] === 3 && (t.school || t.rail));
+  const risk = tipRisk(board, wetDecade, stitched);
+  const covered = new Set([...threads, ...stitched]);
+  const homes = (t: TipFacts) => (risk[t.id] ?? 1) * t.buildingsBelow;
+  const total = tips.reduce((a, t) => a + homes(t), 0);
+  const share = total > 0 ? tips.filter((t) => covered.has(t.id)).reduce((a, t) => a + homes(t), 0) / total : 1;
+  const allowed = Math.max(1, opts.threadsAllowed ?? board.threads);
+  const needed = (board.exposure_share ?? 0.4) * Math.min(1, allowed / board.threads);
+  const exposure = share >= needed - 1e-9;
+  const deprivedMine = tips.filter((t) => covered.has(t.id) && t.deprived);
+  const fairness = deprivedMine.length > 0;
+  const lifelineTips = tips.filter((t) => (risk[t.id] === 3 || (stitched.includes(t.id) && t.risk + (wetDecade ? 1 : 0) >= 3)) && (t.school || t.rail));
+  const lifeCovered = lifelineTips.filter((t) => covered.has(t.id));
+  const lifeNeed = Math.ceil(lifelineTips.length / 2);
+  const lifelines = lifeCovered.length >= lifeNeed;
+  const best = (pool: TipFacts[]) => [...pool].filter((t) => !covered.has(t.id)).sort((a, b) => homes(b) - homes(a))[0];
+  const name = (t: TipFacts | undefined) => (t ? tipName(copy, t) : say(copy, "engine.visit.nothing", {}) ?? { en: "nothing", cy: "dim byd" });
+  const edition = board.wimd?.edition ?? "WIMD";
   const tests = [
-    { id: "exposure", pass: exposure, share: exposure ? 1 : 0 },
-    { id: "fairness", pass: fairness, share: fairness ? 1 : 0 },
-    { id: "lifelines", pass: lifelines, share: lifelines ? 1 : 0 },
+    {
+      id: "exposure",
+      pass: exposure,
+      share: exposure ? 1 : 0,
+      explanation: say(copy, exposure ? "engine.visit.exposure.pass" : "engine.visit.exposure.fail", { got: Math.round(share * 10), needed: Math.round(needed * 10), best: name(best(tips)) }),
+    },
+    {
+      id: "fairness",
+      pass: fairness,
+      share: fairness ? 1 : 0,
+      explanation: say(copy, fairness ? "engine.visit.fairness.pass" : "engine.visit.fairness.fail", { tip: name(deprivedMine[0]), best: name(best(tips.filter((t) => t.deprived))), edition }),
+    },
+    {
+      id: "lifelines",
+      pass: lifelines,
+      share: lifelines ? 1 : 0,
+      explanation: !lifelineTips.length
+        ? say(copy, "engine.visit.lifelines.none", {})
+        : say(copy, lifelines ? "engine.visit.lifelines.pass" : "engine.visit.lifelines.fail", {
+            covered: lifeCovered.length,
+            total: lifelineTips.length,
+            need: lifeNeed,
+            missing: joinNames(lifelineTips.filter((t) => !covered.has(t.id)).map((t) => tipName(copy, t))),
+          }),
+    },
   ];
-  return { grade: gradeOf(tests.filter((t) => t.pass).length, 3), tests };
+  const notes: Text[] = [];
+  const counted = tips.filter((t) => stitched.includes(t.id));
+  if (counted.length) {
+    const n = say(copy, "engine.visit.stitched", { tips: joinNames(counted.map((t) => tipName(copy, t))) });
+    if (n) notes.push(n);
+  }
+  return { grade: gradeOf(tests.filter((t) => t.pass).length, 3), tests, notes };
 }
 
 export interface BethesdaContext {
@@ -48,6 +112,8 @@ export interface BethesdaContext {
   everPlayed: string[];
   seed: number;
   runs: number;
+  /** Engine copy for explanations (model.engine_text). */
+  text?: Record<string, Text>;
 }
 
 /** Bethesda: Aros, Iaith, Pwysau, each held in at least hold_share of runs. */
@@ -79,10 +145,24 @@ export function gradeBethesda(board: PlaceBoard, threads: string[], c: BethesdaC
     if (sum.pressure <= cap && sum.river >= 0) pwysau++;
   }
   const hold = board.hold_share ?? 0.6;
-  const tests = [
-    { id: "aros", share: aros / runs },
-    { id: "iaith", share: iaith / runs },
-    { id: "pwysau", share: pwysau / runs },
-  ].map((t) => ({ ...t, pass: t.share >= hold }));
-  return { grade: gradeOf(tests.filter((t) => t.pass).length, 3), tests };
+  const copy = c.text;
+  const by = (measure: "homes" | "work" | "iaith" | "pressure", sign: 1 | -1 = 1) => {
+    const names = opts.filter((o) => sign * o[measure] > 0 && !(o.requires_card && !c.inPlay.includes(o.requires_card))).map((o) => o.name);
+    return names.length ? joinNames(names) : say(copy, "engine.none", {}) ?? { en: "none of your threads", cy: "dim un o'ch edafedd" };
+  };
+  const riverNeed = penalty("river") > 0 ? say(copy, "engine.visit.room_for_river", {}) ?? { en: "a thread for the river", cy: "edau i'r afon" } : say(copy, "engine.visit.nothing", {}) ?? { en: "nothing", cy: "dim byd" };
+  const shares = { aros: aros / runs, iaith: iaith / runs, pwysau: pwysau / runs };
+  const tests = (["aros", "iaith", "pwysau"] as const).map((id) => {
+    const share = shares[id];
+    const pass = share >= hold;
+    const params: Record<string, SlotValue> = { runs: Math.round(share * 10), homes: by("homes"), work: by("work"), iaith: by("iaith"), pressure: by("pressure"), river: riverNeed };
+    return { id, share, pass, explanation: say(copy, `engine.visit.${id}.${pass ? "pass" : "fail"}`, params) };
+  });
+  const notes: Text[] = [];
+  for (const p of board.trend_penalties ?? []) {
+    if (!c.active.includes(p.curveball)) continue;
+    const n = say(copy, "engine.visit.trend", { note: p.note });
+    if (n) notes.push(n);
+  }
+  return { grade: gradeOf(tests.filter((t) => t.pass).length, 3), tests, notes };
 }

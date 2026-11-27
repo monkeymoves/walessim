@@ -60,7 +60,8 @@ describe("the judged result", () => {
     expect(level(m, -2)).toBe("low");
     expect(level(m, 0)).toBe("middle");
     expect(level(m, 2)).toBe("high");
-    expect(r.letter.lines.length).toBe(5);
+    expect(r.letter.lines.length).toBe(6);
+    expect(r.letter.namedAll?.length).toBe(2);
   });
   it("a game with no cards is judged below a thoughtful game", () => {
     let s = E.newGame(m, 4, { runs: 20, caretakerGhost: false });
@@ -76,5 +77,29 @@ describe("the judged result", () => {
         : E.dispatch(m, s, { type: "caretaker", shadowPledge: "culture" });
     }
     expect(s.result!.result.value).toBeLessThan(r.result.value);
+  });
+});
+
+describe("the letter after playtest 1", () => {
+  it("picks the archetype from the result band, so beating the caretaker is never hollow", async () => {
+    const { archetypeFromBand } = await import("./game");
+    expect(archetypeFromBand(2, -2, -2, true, false)).toBe("steady");
+    expect(archetypeFromBand(2, -2, -2, false, false)).toBe("hollow");
+    expect(archetypeFromBand(2, 2, -3, true, false)).toBe("feast");
+    expect(archetypeFromBand(3, 0, 3.5, true, false)).toBe("long_winter");
+    expect(archetypeFromBand(4, 2, 2, true, false)).toBe("gift");
+    expect(archetypeFromBand(1, -6, -6, false, false)).toBe("hollow");
+  });
+  it("names at least two specific things the player did, with no unfilled slots, in both languages", () => {
+    for (let seed = 1; seed <= 6; seed++) {
+      const r = playBot(m, thoughtfulBot, seed, { runs: 10 }).result!;
+      const named = r.letter.lines.filter((l) => l.slot === "named");
+      expect(named.length, `seed ${seed}`).toBe(2);
+      expect(new Set(r.letter.namedAll!.map((n) => n.kind)).size, `seed ${seed}`).toBe(2);
+      for (const l of r.letter.lines) {
+        expect(l.text.en).not.toMatch(/\{[a-z_]+\}/);
+        expect(l.text.cy).not.toMatch(/\{[a-z_]+\}/);
+      }
+    }
   });
 });

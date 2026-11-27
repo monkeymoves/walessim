@@ -556,6 +556,9 @@ export interface TipFacts {
   /** Most deprived tenth below (WIMD rank in the lowest tenth). */
   deprived: boolean;
   wimdRank: number | null;
+  /** Edition and size of the index behind `wimdRank` (copied from the board). */
+  wimdEdition?: string;
+  wimdAreas?: number;
   /** Base movement risk step, 1 to 3 (raised one step by wet-decade, capped at 3). */
   risk: 1 | 2 | 3;
 }
@@ -631,6 +634,11 @@ export interface PlaceBoard {
   exposure_share?: number;
   /** WIMD rank at or below which a neighbourhood is in the most deprived tenth. */
   deprived_rank?: number;
+  /**
+   * The deprivation index edition behind the place data's ranks (the atlas uses a later edition):
+   * label every rank with it, e.g. "rank 120 of 1,909 (WIMD 2019)".
+   */
+  wimd?: { edition: string; areas: number };
   /**
    * How the build sets each tip's base risk step from open proxies: a tip with a landslide record on it
    * is step 2 if it stands `steep_drop_m` above the lowest ground within 1 km with `steep_buildings`
@@ -757,9 +765,29 @@ export interface GameTuning {
   fragile_infrastructure: { below: number; multiplier: number };
   debt: { interest: number; clear_cost: number; max_tokens: number; left_penalty: number; left_penalty_cap: number };
   caretaker: { return_trust: number; return_budget_penalty: number; contingency: number; shadow_pledge_bonus: number };
-  lived: { mean_weight: number; min_weight: number };
+  /** Deprecated (level-based Lived, before decision 14); kept optional for older model files. */
+  lived?: { mean_weight: number; min_weight: number };
+  /** The result bands. Since decision 14 the build copies `judged_change.bands` here (net strand pips). */
   result_bands: { min: number; name: Text }[];
-  /** Letter band edges: below `low` is low, at or above `high` is high. */
+  /** Deprecated (level-based letter bands); use `judged_change.letter_bands`. */
+  letter_bands?: { low: number; high: number };
+  /**
+   * How the result is judged (balance decision 14): the change since 2026 in net strand pips
+   * (seven times the weighted change), Lived over terms `lived_first_term` to 6 less `dip_weight`
+   * times any fall below the 2026 start, Left as the change in stock level.
+   */
+  judged_change: JudgedChange;
+}
+
+/** The judged-change settings (model/game.yaml `judged_change`). */
+export interface JudgedChange {
+  /** First term counted in Lived, 1-based (2: the first term is inherited). */
+  lived_first_term: number;
+  /** Share of the deepest fall of a counted term below the 2026 start taken off Lived. */
+  dip_weight: number;
+  /** Result bands by net strand pips; the last entry whose `min` is at or below the value. */
+  bands: { min: number; name: Text }[];
+  /** Letter levels: below `low` is low, at or above `high` is high (net strand pips). */
   letter_bands: { low: number; high: number };
 }
 
@@ -788,7 +816,13 @@ export interface TrustTuning {
   neglect: number;
   /** National cards count as reaching every region for the neglect test. */
   national_counts_for_neglect: boolean;
+  /** The neglect rule in words, for the model book (decision 15). */
+  neglect_note?: Text;
   debt_interest: number;
+  /** Per deferred repair from an earlier term still not done, each term (playtest 1). */
+  repairs_overdue?: number;
+  /** End of the first term: Trust is not taken below this (the guided term cannot cost a card slot). */
+  first_term_floor?: number;
   nothing_visible: number;
 }
 
@@ -880,4 +914,10 @@ export interface CompiledModel {
   fcm: FcmGraph;
   io: IoSectorBand[];
   game: GameTuning;
+  /**
+   * Engine-rendered copy (model/i18n/{en,cy}/engine.json): visit explanations, letter ledger lines,
+   * rule sentences. Keys `engine.*`; values may hold {slots} that the engine fills (with Welsh
+   * mutation after the word before the slot).
+   */
+  engine_text?: Record<string, Text>;
 }

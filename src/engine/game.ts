@@ -11,9 +11,10 @@ import { hashSeed, uniform } from "./rng";
 import { bandValue, displayPips, makeContext, walesDelta, walesValue, type Ctx } from "./scores";
 import { buildSchedule, type TermSchedule } from "./schedule";
 import { deal, initialDeck } from "./deck";
-import { gradeBethesda, gradeRhondda, tipRisk } from "./places";
+import { gradeBethesda, gradeRhondda, tipName, tipRisk } from "./places";
 import { bandFor, computeTrust } from "./trust";
-import { archetypeOf, level, openingVoice, overlookedRegion, pickVoice, writeLetter, type NamedThing, type VoiceEventCandidate } from "./voices";
+import { archetypeOf, level, openingVoice, overlookedRegion, pickVoice, writeLetter, type NamedLine, type VoiceEventCandidate } from "./voices";
+import { fill, type SlotValue } from "./welsh";
 import {
   causeKey,
   cloneRun,
@@ -82,6 +83,10 @@ interface Sim {
   caretakerNext: boolean;
   /** Visits offered by the first game's curated script, already used. */
   firstVisits: string[];
+  /** Strands asked for at each opening, oldest first (the pledge rotates). */
+  pledgeOffers?: StrandId[];
+  /** Rhondda tips made safe on earlier visits (they stay stitched and drop a risk step). */
+  stitched?: string[];
   /** Grades per place this term. */
   termGrade: { place: "rhondda" | "bethesda"; grade: Grade; threads: string[]; stayed: boolean } | null;
   /** Trust reasons collected during the term (card side effects). */
@@ -277,7 +282,10 @@ function openTerm(ctx: Ctx, prev: A.GameState, term: number): A.GameState {
   // pledge offer and the opening voice
   const lastVoice = state.lastOutcome?.voice ?? null;
   state.pledgeOffer = term >= 1 && !state.caretaker ? pledgeStrand(ctx, state) : null;
-  const ov = state.pledgeOffer ? openingVoice(ctx, state.seed, term, state.pledgeOffer, mostMovedLa(ctx, s)) : null;
+  if (state.pledgeOffer) s.pledgeOffers = [...(s.pledgeOffers ?? []), state.pledgeOffer];
+  // no voice twice in a game unless the pool runs out (playtest 1)
+  const ov = state.pledgeOffer ? openingVoice(ctx, state.seed, term, state.pledgeOffer, mostMovedLa(ctx, s), s.usedVoices) : null;
+  if (ov) s.usedVoices = [...s.usedVoices, ov.template];
   state.opening = {
     year: state.year,
     arrivals: state.post.filter((p) => p.arrivesTerm === term),
@@ -305,15 +313,23 @@ function curveballBudget(ctx: Ctx, state: A.GameState, active: string[]): number
 }
 
 /** The strand the opening voice asks for: the lowest flow pip, ties to the one that fell most. */
+/**
+ * The strand the opening voice asks you to promise (playtest 1): the one that fell furthest last term,
+ * else the weakest, never a strand asked in either of the last two terms, preferring strands with an
+ * opening voice template.
+ */
 function pledgeStrand(ctx: Ctx, state: A.GameState): StrandId {
   const last = state.lastOutcome?.strands ?? [];
-  const order = [...state.strands].sort((a, b) => {
-    const da = (last.find((x) => x.strand === a.strand)?.pipsAfter ?? 0) - (last.find((x) => x.strand === a.strand)?.pipsBefore ?? 0);
-    const db = (last.find((x) => x.strand === b.strand)?.pipsAfter ?? 0) - (last.find((x) => x.strand === b.strand)?.pipsBefore ?? 0);
-    return a.flowPips - b.flowPips || da - db || a.flow - b.flow;
-  });
-  const withVoice = order.find((s) => ctx.model.voices.some((v) => v.event === "opening" && v.strand === s.strand));
-  return (withVoice ?? order[0]!).strand;
+  const recent = (sim(state).pledgeOffers ?? []).slice(-2);
+  const fall = (id: StrandId) => {
+    const c = last.find((x) => x.strand === id);
+    return c ? c.flowAfter - c.flowBefore : 0;
+  };
+  const order = [...state.strands].sort((a, b) => fall(a.strand) - fall(b.strand) || a.flowPips - b.flowPips || a.flow - b.flow);
+  const fresh = order.filter((x) => !recent.includes(x.strand));
+  const pool = fresh.length ? fresh : order;
+  const withVoice = pool.find((x) => ctx.model.voices.some((v) => v.event === "opening" && v.strand === x.strand));
+  return (withVoice ?? pool[0]!).strand;
 }
 
 function mostMovedLa(ctx: Ctx, s: Sim, among?: number[]): number {
@@ -662,8 +678,19 @@ function effectDelay(ctx: Ctx, card: Card, e: Effect): number {
 
 function visitOffer(ctx: Ctx, state: A.GameState): A.VisitOffer | null {
   const s = sim(state);
-  const played = s.plays.filter((p) => p.term === state.term).flatMap((p) => (ctx.cards.has(p.card) ? [ctx.cards.get(p.card)!] : []));
-  const triggers = played.filter((c) => c.visit).sort((a, b) => b.cost - a.cost);
+  // a trigger card offers the visit only if it landed in the place's own authority (playtest 1)
+  const landsIn = (p: PlayRec, place: string) => {
+    const la = ctx.laIndex.get(ctx.places.get(place)?.la ?? "");
+    return la !== undefined && p.las.includes(la);
+  };
+  const played = s.plays
+    .filter((p) => p.term === state.term && ctx.cards.has(p.card))
+    .filter((p) => {
+      const v = ctx.cards.get(p.card)!.visit;
+      return !!v && landsIn(p, v);
+    })
+    .map((p) => ctx.cards.get(p.card)!);
+  const triggers = played.sort((a, b) => b.cost - a.cost);
   let place: "rhondda" | "bethesda" | null = triggers[0]?.visit ?? null;
   if (state.options.firstGame) {
     // the curated first game: the Rhondda asks in term 2, Bethesda by term 4
@@ -685,7 +712,7 @@ function visitOffer(ctx: Ctx, state: A.GameState): A.VisitOffer | null {
     place,
     triggeredBy,
     threads: board.threads - (fewer ? 1 : 0),
-    ...(place === "rhondda" ? { tipRisk: tipRisk(board, activeIds.includes("wet-decade")) } : {}),
+    ...(place === "rhondda" ? { tipRisk: tipRisk(board, activeIds.includes("wet-decade"), s.stitched ?? []), stitched: [...(s.stitched ?? [])] } : {}),
     activeTrends: activeIds,
   };
 }
@@ -694,7 +721,7 @@ export function gradeVisit(model: CompiledModel, state: A.GameState, choice: A.V
   const ctx = makeContext(model);
   const offer = state.visitOffer;
   const place = choice?.place ?? offer?.place ?? "rhondda";
-  if (!choice || !offer) return { place, grade: "adequately", threads: [], stayed: true, tests: [] };
+  if (!choice || !offer) return { place, grade: "adequately", threads: [], stayed: true, tests: [], notes: [] };
   if (choice.place !== offer.place) throw new EngineError("wrong_place", `the visit on offer is ${offer.place}`);
   if (choice.threads.length > offer.threads || new Set(choice.threads).size !== choice.threads.length) throw new EngineError("bad_threads", `place at most ${offer.threads} different threads`);
   const board = ctx.places.get(place)!;
@@ -704,15 +731,16 @@ export function gradeVisit(model: CompiledModel, state: A.GameState, choice: A.V
   const s = sim(state);
   const res =
     place === "rhondda"
-      ? gradeRhondda(board, choice.threads, active.includes("wet-decade"))
+      ? gradeRhondda(board, choice.threads, active.includes("wet-decade"), { stitched: s.stitched ?? [], text: ctx.model.engine_text, threadsAllowed: offer.threads })
       : gradeBethesda(board, choice.threads, {
+          text: ctx.model.engine_text,
           active,
           inPlay: s.plays.filter((p) => p.term === state.term).map((p) => p.card),
           everPlayed: s.plays.map((p) => p.card),
           seed: uniformSeed(state.seed, state.term),
           runs: Math.max(50, state.options.runs),
         });
-  return { place, grade: res.grade, threads: choice.threads, stayed: false, tests: res.tests };
+  return { place, grade: res.grade, threads: choice.threads, stayed: false, tests: res.tests, notes: res.notes };
 }
 
 const uniformSeed = (seed: number, term: number) => hashSeed(`${seed}:${term}:bethesda`);
@@ -724,6 +752,8 @@ function chooseVisit(ctx: Ctx, prev: A.GameState, choice: A.VisitChoice): A.Game
   s.termGrade = { place: outcome.place, grade: outcome.grade, threads: outcome.threads, stayed: outcome.stayed };
   if (!outcome.stayed) {
     s.firstVisits = [...s.firstVisits, outcome.place];
+    // tips covered in the Rhondda stay made safe for later visits
+    if (outcome.place === "rhondda") s.stitched = [...new Set([...(s.stitched ?? []), ...outcome.threads])];
     state.ledger = { ...state.ledger, grades: [...state.ledger.grades, { place: outcome.place, year: state.year, grade: outcome.grade }] };
   }
   return toPassing(ctx, state);
@@ -925,7 +955,8 @@ function buildTermInput(ctx: Ctx, state: A.GameState, response: A.ShockResponse 
     duration: null,
   });
   if (plays?.standing) for (const [k, e] of (ctx.standing.get(plays.standing)?.effects ?? []).entries()) deliveries.push(standingDelivery(plays.standing, e, `${plays.standing}:${k}`));
-  if (plays?.repair) deliveries.push(standingDelivery("defer-maintenance", { target: "infrastructure_condition", size: "M", sign: 1, rule: "R10", note: { en: "Repairs made", cy: "Atgyweiriadau wedi'u gwneud", cy_review: true } }, "repair"));
+  // a repair undoes what one deferral did (every effect of the ticket, reversed)
+  if (plays?.repair) (ctx.standing.get("defer-maintenance")?.effects ?? []).forEach((e, k) => deliveries.push(standingDelivery("defer-maintenance", { ...e, sign: (-e.sign) as 1 | -1, side: false }, `repair:${k}`)));
 
   // upkeep lapses this term
   const reversePlays: TermInput["reversePlays"] = [];
@@ -1132,12 +1163,15 @@ function resolveTerm(ctx: Ctx, prev: A.GameState, response: A.ShockResponse): A.
     visit: visit && !visit.stayed ? visit.grade : null,
     neglected,
     debtTokens: state.debts.filter((d) => d.takenTerm < term).length,
+    repairsOverdue: state.ledger.deferrals.filter((d) => !d.repaired && d.year < state.year).length,
     extra: [...extraTrust, ...eventTrust],
     returning: state.returning,
   });
 
   // the caretaker and the election
   let after = trustOut.after;
+  // the guided first term cannot cost a card slot (playtest 1)
+  if (term === 0 && g.trust.first_term_floor !== undefined && after < g.trust.first_term_floor) after = Math.max(after, Math.min(state.trust, g.trust.first_term_floor));
   let lostSeat = false;
   const reasons = [...trustOut.reasons];
   if (state.caretaker) {
@@ -1167,7 +1201,7 @@ function resolveTerm(ctx: Ctx, prev: A.GameState, response: A.ShockResponse): A.
     sharp: e[i]!.flowSharp,
     stockSharp: e[i]!.stockSharp,
   }));
-  const slips = pickSlips(ctx, contribs);
+  const slips = pickSlips(ctx, contribs, changes, state.shock?.curveball ?? null);
   const gameEvents: A.GameEvent[] = [
     ...events.map((ev) => ({ kind: ev.kind as A.GameEvent["kind"], id: ev.id, ...(ev.la !== undefined ? { la: ctx.las[ev.la]!.code, region: ctx.laRegion[ev.la]! } : {}), ...(ev.play ? { detail: ev.play } : {}) })),
     ...neglected.map((r) => ({ kind: "neglect" as const, id: r, region: r })),
@@ -1242,29 +1276,49 @@ function strandShares(ctx: Ctx, c: A.Contribution): { strand: number; part: "flo
   return out;
 }
 
-function pickSlips(ctx: Ctx, contribs: A.Contribution[]): A.Slip[] {
-  const agg = new Map<string, A.Slip & { side: boolean }>();
+/**
+ * The "what changed" slips (playtest 1): first, for every strand whose shown pips changed, its
+ * biggest cause in the direction it moved (largest pip changes first); a shock that landed always
+ * gets a slip; then the largest other causes; one "unexpected" slip only for effects no played ticket
+ * prints (chained rules and threshold events). Up to four slips.
+ */
+function pickSlips(ctx: Ctx, contribs: A.Contribution[], changes: A.StrandChange[], shockId: string | null): A.Slip[] {
+  type Agg = A.Slip & { chained: boolean };
+  const agg = new Map<string, Agg>();
   for (const c of contribs) {
     for (const sh of strandShares(ctx, c)) {
       if (sh.part !== "flow") continue;
-      const k = `${sh.strand}|${causeKey(c.cause)}|${c.side || !!c.via}`;
+      const chained = !!c.via || c.cause.kind === "event";
+      const k = `${sh.strand}|${causeKey(c.cause)}|${chained}`;
       const prev = agg.get(k);
       if (prev) prev.delta += sh.delta;
-      else agg.set(k, { strand: STRAND_IDS[sh.strand]!, part: "flow", cause: c.cause, delta: sh.delta, unexpected: false, side: c.side || !!c.via });
+      else agg.set(k, { strand: STRAND_IDS[sh.strand]!, part: "flow", cause: c.cause, delta: sh.delta, unexpected: false, chained, rule: c.rule, shock: c.cause.kind === "shock" });
     }
   }
   const all = [...agg.values()].filter((x) => Math.abs(x.delta) > 1e-4).sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
-  const top = all.slice(0, 2);
-  const unexpected = all.find((x) => x.side && !top.includes(x) && x.cause.kind !== "baseline");
-  const out = top.map(({ side: _s, ...x }) => x);
-  if (unexpected) {
-    const { side: _s, ...x } = unexpected;
-    out.push({ ...x, unexpected: true });
-  } else if (all[2]) {
-    const { side: _s, ...x } = all[2];
-    out.push(x);
+  const out: Agg[] = [];
+  const has = (x: Agg) => out.includes(x);
+  // 1. every strand whose pips moved, its biggest cause in that direction
+  const moved = changes.filter((c) => c.pipsAfter !== c.pipsBefore).sort((a, b) => Math.abs(b.pipsAfter - b.pipsBefore) - Math.abs(a.pipsAfter - a.pipsBefore));
+  for (const c of moved) {
+    const dir = Math.sign(c.pipsAfter - c.pipsBefore);
+    const top = all.find((x) => x.strand === c.strand && Math.sign(x.delta) === dir && !has(x));
+    if (top && out.length < 3) out.push({ ...top, pipChange: c.pipsAfter - c.pipsBefore } as Agg);
   }
-  return out;
+  // 2. a shock that landed always gets a slip
+  if (shockId && !out.some((x) => x.cause.kind === "shock")) {
+    const sh = all.find((x) => x.cause.kind === "shock" && x.cause.id === shockId);
+    if (sh) out.push(sh);
+  }
+  // 3. fill to three with the largest other causes
+  for (const x of all) {
+    if (out.length >= 3) break;
+    if (!out.some((y) => y.strand === x.strand && causeKey(y.cause) === causeKey(x.cause))) out.push(x);
+  }
+  // 4. one unexpected slip: an effect no played ticket prints (a chained rule or a threshold event)
+  const unexpected = all.find((x) => x.chained && x.cause.kind !== "baseline" && !out.some((y) => y.strand === x.strand && causeKey(y.cause) === causeKey(x.cause)));
+  if (unexpected && out.length < 4) out.push({ ...unexpected, unexpected: true });
+  return out.map(({ chained: _c, ...x }) => x);
 }
 
 function voiceCandidates(
@@ -1605,14 +1659,16 @@ function computeResult(ctx: Ctx, state: A.GameState, weights: Record<StrandId, n
   const regionPop = Object.fromEntries(REGION_IDS.map((r) => [r, ctx.regionLas[r].reduce((a, i) => a + ctx.pop[i]!, 0)])) as Record<RegionId, number>;
   const overlooked = overlookedRegion(regionalPlays, regionPop);
   const uneven = medFlowTerms[medFlowTerms.length - 1]![equalIdx]! < 4 || overlooked !== null;
-  const archetype = archetypeOf(level(model, livedV), level(model, leftV), uneven);
-  const named: NamedThing =
-    archetype === "uneven" && overlooked
-      ? { kind: "neglect", id: overlooked, year: null, thing: ctx.model.regions.find((r) => r.id === overlooked)!.name }
-      : namedThing(ctx, state, archetype);
+  // the archetype follows the result band first (playtest 1): a game that beat the caretaker is not hollow
+  const resultBandNo = resultBand(model, Math.min(livedV, leftV)).band;
+  const beatCaretaker = (s.ghost ? Math.min(livedV, leftV) - s.ghost.result : Math.min(livedV, leftV) + 2.8) > 0;
+  const archetype = archetypeFromBand(resultBandNo, livedV, leftV, beatCaretaker, uneven && (overlooked !== null || livedV >= 1 || leftV >= 1));
+  const named = ledgerLines(ctx, state, archetype, archetype === "uneven" ? overlooked : null);
   // the uneven letter is written from the overlooked region
   const la = archetype === "uneven" && overlooked ? mostMovedLa(ctx, s, ctx.regionLas[overlooked]) : mostMovedLa(ctx, s);
   const letter = writeLetter(ctx, state.seed, archetype, named, la, g.years[worstTerm]!, state.ledger.lostTerms[0] ?? null);
+  void level;
+  void archetypeOf;
 
   const squares = (vals: number[]) => {
     // ten squares per band from the real levels, shared out by weighted strand share (no numbers)
@@ -1666,25 +1722,93 @@ function postItemsLeft(ctx: Ctx, state: A.GameState): A.PostItem[] {
   return out;
 }
 
-function namedThing(ctx: Ctx, state: A.GameState, archetype: string): NamedThing {
+/**
+ * The letter's archetype from the result band (playtest 1). Band 1: the hollow years (or the feast
+ * if people lived well). Band 2: the feast or the long winter when Lived and Left part by three pips
+ * or more, otherwise held steady if the player beat the caretaker, else hollow. Band 3: the long
+ * winter when Left beats Lived by three, else steady. Bands 4 and 5: the gift. The uneven hand
+ * replaces any but the bottom band when a region was overlooked.
+ */
+export function archetypeFromBand(band: number, lived: number, left: number, beatCaretaker: boolean, uneven: boolean): A.Letter["archetype"] {
+  if (uneven && band >= 2) return "uneven";
+  if (band <= 1) return lived >= 1 ? "feast" : "hollow";
+  if (band === 2) {
+    if (lived - left >= 3) return "feast";
+    if (left - lived >= 3) return "long_winter";
+    return beatCaretaker ? "steady" : "hollow";
+  }
+  if (band === 3) return left - lived >= 3 ? "long_winter" : "steady";
+  return "gift";
+}
+
+/**
+ * Specific things for the letter, from the ledger, in the archetype's order of tone. At least two
+ * are always found when the player played any card: a tip made safe, a place visited, promises
+ * kept or broken, debts left, repairs not done, an overlooked region, the card that did most, a card
+ * landing after 2050, a lost term.
+ */
+function ledgerLines(ctx: Ctx, state: A.GameState, archetype: string, overlooked: RegionId | null): NamedLine[] {
   const L = state.ledger;
+  const s = sim(state);
+  const T = ctx.model.engine_text ?? {};
+  const line = (key: string, params: Record<string, SlotValue>): Text | undefined => (T[key] ? fill(T[key]!, params, ["place"]) : undefined);
+  const out: (NamedLine | null)[] = [];
   const positive = archetype === "gift" || archetype === "long_winter" || archetype === "steady";
-  const late = postItemsLeft(ctx, state)[0] ?? state.history.flatMap((h) => h.arrivals).filter((a) => a.arrivesTerm >= 4).slice(-1)[0];
-  const candidates: (NamedThing | null)[] = [];
-  const arrival = late ? { kind: "arrival" as const, id: late.card, year: late.arrivesYear, thing: ctx.cards.get(late.card)!.name } : null;
-  const lost = L.lostTerms.length ? { kind: "lost_term" as const, id: null, year: L.lostTerms[0]!, thing: null } : null;
-  const debt = state.debts.length ? { kind: "debt" as const, id: "borrow-to-invest", year: state.debts[0]!.year, thing: ctx.standing.get("borrow-to-invest")!.name } : null;
-  const repairs = L.deferrals.find((d) => !d.repaired);
-  const rep = repairs ? { kind: "repairs" as const, id: "defer-maintenance", year: repairs.year, thing: ctx.standing.get("defer-maintenance")!.name } : null;
-  const tipMoved = state.history.find((h) => h.events.some((e) => e.kind === "tip_moved"));
-  const tip = tipMoved || !sim(state).plays.some((p) => p.card === "make-coal-tips-safe") ? { kind: "tip" as const, id: "make-coal-tips-safe", year: tipMoved?.year ?? null, thing: ctx.cards.get("make-coal-tips-safe")!.name } : null;
+
+  // a tip made safe (the best of them by homes below), and the best place visit
+  const rh = ctx.places.get("rhondda");
+  const safe = (s.stitched ?? []).map((id) => rh?.tips?.find((t) => t.id === id)).filter((t): t is NonNullable<typeof t> => !!t).sort((a, b) => b.buildingsBelow - a.buildingsBelow)[0];
+  const tipSafe: NamedLine | null = safe ? { kind: "tip", ledger: "tip_safe", id: safe.id, year: L.grades.find((g) => g.place === "rhondda")?.year ?? null, thing: tipName(T, safe), line: line("engine.letter.named.tip_safe", { tip: tipName(T, safe) }) } : null;
+  const order = { well: 2, adequately: 1, poorly: 0 } as const;
+  const bestVisit = [...L.grades].sort((a, b) => order[b.grade] - order[a.grade] || b.year - a.year)[0];
+  const visit: NamedLine | null = bestVisit && bestVisit.grade !== "poorly" ? { kind: "none", ledger: "visit", id: bestVisit.place, year: bestVisit.year, thing: ctx.places.get(bestVisit.place)!.name, line: line("engine.letter.named.visit", { place: ctx.places.get(bestVisit.place)!.name, year: bestVisit.year }) } : null;
+  // promises
+  const made = L.pledges.filter((p) => p.kept !== null);
+  const kept = made.filter((p) => p.kept).length;
+  const pledgeKept: NamedLine | null = made.length >= 2 && kept > made.length / 2 ? { kind: "none", ledger: "pledge_kept", id: null, year: null, thing: null, line: line("engine.letter.named.pledge_kept", { count: made.length, kept }) } : null;
   const broken = L.pledges.find((p) => p.kept === false);
-  const pledge = broken ? { kind: "pledge" as const, id: broken.strand, year: broken.year, thing: ctx.strands.find((s) => s.id === broken.strand)!.name } : null;
-  const neg = state.history.flatMap((h) => h.events.filter((e) => e.kind === "neglect").map((e) => ({ e, year: h.year })))[0];
-  const neglect = neg ? { kind: "neglect" as const, id: neg.e.id, year: neg.year, thing: ctx.model.regions.find((r) => r.id === neg.e.id)!.name as Text } : null;
-  if (positive) candidates.push(arrival, lost, debt, rep, pledge, neglect, tip);
-  else candidates.push(lost, debt, rep, tip, pledge, neglect, arrival);
-  return candidates.find((c) => c !== null) ?? { kind: "none", id: null, year: null, thing: null };
+  const strandName = (id: StrandId) => ctx.strands.find((x) => x.id === id)!.name;
+  const pledgeBroken: NamedLine | null = broken ? { kind: "pledge", ledger: "pledge_broken", id: broken.strand, year: broken.year, thing: strandName(broken.strand) } : null;
+  // debts, repairs, a lost term
+  const debt: NamedLine | null = state.debts.length ? { kind: "debt", ledger: "debt", id: "borrow-to-invest", year: state.debts[0]!.year, thing: ctx.standing.get("borrow-to-invest")!.name } : null;
+  const unrepaired = L.deferrals.find((d) => !d.repaired);
+  const repairs: NamedLine | null = unrepaired ? { kind: "repairs", ledger: "repairs", id: "defer-maintenance", year: unrepaired.year, thing: ctx.standing.get("defer-maintenance")!.name } : null;
+  const lost: NamedLine | null = L.lostTerms.length ? { kind: "lost_term", ledger: "lost_term", id: null, year: L.lostTerms[0]!, thing: null } : null;
+  // an overlooked region
+  const neglectRegion = overlooked ?? (state.history.flatMap((h) => h.events.filter((e) => e.kind === "neglect").map((e) => e.id as RegionId))[0] ?? null);
+  const neglect: NamedLine | null = neglectRegion ? { kind: "neglect", ledger: "neglect", id: neglectRegion, year: null, thing: ctx.model.regions.find((r) => r.id === neglectRegion)!.name } : null;
+  // the card that did most for the strands, and a card landing after 2050
+  const byCard = new Map<string, number>();
+  for (const h of state.history) for (const c of h.contributions) if (c.cause.kind === "card" && c.wales > 0) byCard.set(c.cause.id, (byCard.get(c.cause.id) ?? 0) + c.wales);
+  const topCard = [...byCard.entries()].sort((a, b) => b[1] - a[1])[0]?.[0];
+  const topYear = topCard ? (s.plays.find((p) => p.card === topCard)?.term ?? 0) * 4 + ctx.model.game.years[0]! : null;
+  const card: NamedLine | null = topCard ? { kind: "none", ledger: "card", id: topCard, year: topYear, thing: ctx.cards.get(topCard)!.name, line: line("engine.letter.named.card", { thing: ctx.cards.get(topCard)!.name, year: topYear ?? "" }) } : null;
+  const late = postItemsLeft(ctx, state)[0];
+  const arrival: NamedLine | null = late ? { kind: "arrival", ledger: "arrival", id: late.card, year: late.arrivesYear, thing: ctx.cards.get(late.card)!.name } : null;
+  // a tip never made safe, for the bleaker letters
+  const tipMoved = state.history.find((h) => h.events.some((e) => e.kind === "tip_moved"));
+  const tipUnmade: NamedLine | null = !safe && (tipMoved || !s.plays.some((p) => p.card === "make-coal-tips-safe")) ? { kind: "tip", ledger: "tip", id: "make-coal-tips-safe", year: tipMoved?.year ?? null, thing: ctx.cards.get("make-coal-tips-safe")!.name } : null;
+
+  if (archetype === "uneven") out.push(neglect, tipSafe, visit, debt, repairs, card);
+  else if (positive) out.push(tipSafe, visit, pledgeKept, arrival, card, debt, repairs, pledgeBroken, neglect, lost);
+  else out.push(lost, debt, repairs, pledgeBroken, neglect, tipUnmade, tipSafe, visit, card, arrival);
+  // two different things; the second always as a ledger line (engine copy) so it is never the archetype's stock phrase
+  const picked: NamedLine[] = [];
+  for (const n of out) {
+    if (!n || picked.some((p) => p.ledger === n.ledger)) continue;
+    picked.push(n);
+    if (picked.length === 2) break;
+  }
+  return picked.map((n, k) => {
+    if (n.line) return n;
+    // a template kind the archetype lacks, or the second line: render the ledger line from engine copy
+    const tpl = ctx.model.letters.find((l) => l.archetype === archetype);
+    const hasTemplate = k === 0 && n.kind !== "none" && !!tpl?.named[n.kind]?.length;
+    if (hasTemplate) return n;
+    const params: Record<string, SlotValue> = { thing: n.thing ?? "", year: n.year ?? "", count: n.ledger === "debt" ? state.debts.length : made.length, kept };
+    const l = line(`engine.letter.named.${n.ledger}`, params);
+    return l ? { ...n, line: l } : n;
+  });
 }
 
 // ---------------------------------------------------------------------------

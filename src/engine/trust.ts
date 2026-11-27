@@ -21,6 +21,8 @@ export interface TrustFacts {
   neglected: RegionId[];
   /** Debt tokens charged interest this term. */
   debtTokens: number;
+  /** Deferred repairs from earlier terms still not done. */
+  repairsOverdue?: number;
   /** Other reasons (curveballs, card side effects, tips moving). */
   extra: TrustReason[];
   returning: boolean;
@@ -61,6 +63,7 @@ export function computeTrust(g: GameTuning, f: TrustFacts): { after: number; rea
   if (f.visit) add("visit", T.visit[f.visit], f.visit);
   for (const r of f.neglected) add("neglect", T.neglect, r);
   add("debt_interest", T.debt_interest * f.debtTokens);
+  add("repairs_overdue", (T.repairs_overdue ?? 0) * (f.repairsOverdue ?? 0));
   if (!anyUp && f.arrivals === 0) add("nothing_visible", T.nothing_visible);
   for (const x of f.extra) add(x.code, x.points, x.detail);
   const sum = reasons.reduce((a, r) => a + r.points, 0);

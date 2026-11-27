@@ -48,7 +48,11 @@ trust:
   # decision 15: a national card lands in every region, so it counts for every region
   national_counts_for_neglect: true
   neglect_note: { en: "A region is overlooked when two terms pass with nothing landing there; a national card lands everywhere.", cy: "Mae rhanbarth yn cael ei anwybyddu pan fo dau dymor yn mynd heibio heb i ddim lanio yno; mae cerdyn cenedlaethol yn glanio ym mhobman.", cy_review: true }
-  debt_interest: -2
+  debt_interest: -4
+  # playtest 1: deferred repairs still not done cost Trust every term
+  repairs_overdue: -5
+  # playtest 1: the guided first term cannot drop Trust below Fair
+  first_term_floor: 45
   nothing_visible: -4
 curveballs:
   new_trend_chance: 0.6

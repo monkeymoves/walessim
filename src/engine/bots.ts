@@ -133,22 +133,14 @@ function bestVisit(m: CompiledModel, s: GameState): VisitChoice {
   const ctx = makeContext(m);
   const board = ctx.places.get(offer.place)!;
   const order = { well: 2, adequately: 1, poorly: 0 };
+  const stitched = offer.stitched ?? [];
+  const ids = offer.place === "rhondda" ? (board.tips ?? []).map((t) => t.id).filter((id) => !stitched.includes(id)) : (board.options ?? []).map((o) => o.id);
   let best: { threads: string[]; g: number } | null = null;
-  if (offer.place === "rhondda") {
-    const ids = (board.tips ?? []).map((t) => t.id);
-    const wet = offer.activeTrends.includes("wet-decade");
-    for (const trio of combos(ids, offer.threads)) {
-      const g = order[gradeRhondda(board, trio, wet).grade];
+  for (const k of [offer.threads, offer.threads - 1].filter((x) => x >= 1)) {
+    for (const trio of combos(ids, Math.min(k, ids.length))) {
+      const g = order[E.gradeVisit(m, s, { place: offer.place, threads: trio }).grade];
       if (!best || g > best.g) best = { threads: trio, g };
-      if (g === 2) break;
-    }
-  } else {
-    const ids = (board.options ?? []).map((o) => o.id);
-    const played = s.history.flatMap((h) => h.plays.cards.map((c) => c.card)).concat(s.plays?.cards.map((c) => c.card) ?? []);
-    for (const trio of combos(ids, offer.threads)) {
-      const g = order[gradeBethesda(board, trio, { active: offer.activeTrends, inPlay: s.plays?.cards.map((c) => c.card) ?? [], everPlayed: played, seed: s.seed, runs: 40 }).grade];
-      if (!best || g > best.g) best = { threads: trio, g };
-      if (g === 2) break;
+      if (g === 2) return { place: offer.place, threads: trio };
     }
   }
   return best ? { place: offer.place, threads: best.threads } : null;

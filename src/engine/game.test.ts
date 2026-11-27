@@ -76,7 +76,8 @@ describe("a whole game", () => {
     const r = s.result!;
     expect(r.result.value).toBe(Math.min(r.lived.value, r.left.value));
     expect(r.wellbeingByTerm.length).toBe(6);
-    expect(r.letter.lines.length).toBe(5);
+    expect(r.letter.lines.length).toBe(6);
+    expect(r.letter.namedAll?.length).toBe(2);
     for (const l of r.letter.lines) expect(l.text.en).not.toMatch(/\{[a-z_]+\}/);
   });
   it("is deterministic for a seed and choices", () => {

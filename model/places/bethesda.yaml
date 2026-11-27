@@ -19,13 +19,13 @@ prompt: { en: "Three threads to tie the quarry to the valley.", cy: "Tair edau i
 why_hard: { en: "Ten options, three threads, three tests, and the strongest options each fail a test. Several trios pass; which is safest depends on the weather and the housing market.", cy: "Deg dewis, tair edau, tri phrawf, ac mae'r dewisiadau cryfaf i gyd yn methu prawf. Mae sawl triawd yn pasio; mae'r mwyaf diogel yn dibynnu ar y tywydd a'r farchnad dai.", cy_review: true }
 tests:
   - id: aros
-    name: { en: Aros (staying), cy: Aros, cy_review: true }
+    name: { en: Young people can stay, cy: Gall pobl ifanc aros, cy_review: true }
     description: { en: "Young adults can stay: it needs at least one Homes thread and one Work thread to pay off.", cy: "Gall oedolion ifanc aros: mae angen o leiaf un edau Cartrefi ac un edau Gwaith i dalu.", cy_review: true }
   - id: iaith
-    name: { en: Iaith (language), cy: Iaith, cy_review: true }
+    name: { en: Welsh as the street language, cy: Y Gymraeg yn iaith y stryd, cy_review: true }
     description: { en: "Welsh remains the street language: the modelled share of speakers does not fall.", cy: "Mae'r Gymraeg yn parhau'n iaith y stryd: nid yw cyfran fodeledig y siaradwyr yn gostwng.", cy_review: true }
   - id: pwysau
-    name: { en: Pwysau (pressure), cy: Pwysau, cy_review: true }
+    name: { en: What the valley can carry, cy: Yr hyn y gall y dyffryn ei gario, cy_review: true }
     description: { en: "Visitor traffic and the river stay within what the valley can carry.", cy: "Mae traffig ymwelwyr a'r afon yn aros o fewn yr hyn y gall y dyffryn ei gario.", cy_review: true }
 trend_penalties:
   - { curveball: price-of-a-home, measure: homes, amount: 0.9, note: { en: "Prices pull away: one Homes thread is not enough.", cy: "Mae prisiau'n tynnu i ffwrdd: nid yw un edau Cartrefi yn ddigon.", cy_review: true } }
@@ -158,5 +158,7 @@ options:
     spread: 0.2
 data_note: { en: "Census 2021 Welsh language by small area, second homes and holiday lets (Gwynedd council tax, the finest open grain), ONS affordability, NRW flood zones, the World Heritage boundary, OpenStreetMap. Facts on the board carry 'to check' until sourced. Option strengths are illustrative.", cy: "Cyfrifiad 2021 y Gymraeg fesul ardal fach, ail gartrefi a llety gwyliau (treth gyngor Gwynedd, y graen agored manylaf), fforddiadwyedd ONS, parthau llifogydd CNC, ffin Treftadaeth y Byd, OpenStreetMap. Mae ffeithiau ar y bwrdd yn cario 'i'w wirio' nes cael ffynhonnell. Mae cryfderau'r dewisiadau yn enghreifftiol.", cy_review: true }
 data_file: places/bethesda.json
+# the place data's small-area ranks are WIMD 2019 (1,909 areas); the atlas uses WIMD 2025 (1,917)
+wimd: { edition: WIMD 2019, areas: 1909 }
 confidence: low
 sources: [census-2021-welsh, language-housing]
