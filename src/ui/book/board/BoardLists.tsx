@@ -1,11 +1,25 @@
 // The board's lists in the rule book: links and their sources, projects by branch and tier with
 // what opens each tier, events and what triggers them, endings and chapters with their tests.
-import { For, Show, type JSX } from "solid-js";
+import { For, onMount, Show, type JSX } from "solid-js";
 import { formatNum, pick, t } from "../../../i18n";
 import { BookPage } from "../BookPage";
 import { describe, nameOf, ruleHref, sourceTitle, type BCond, type BModel } from "./data";
 
 type Nav = { folio: number; prev: { href: string; label: string } | null; next: { href: string; label: string } | null };
+
+/** The row id of one project or event, so a Why? link opens the page at it (#/llyfr/bwrdd/projects/<id>). */
+export const itemAnchor = (id: string): string => `bwb-item-${id}`;
+
+/** Scroll the page to the item a link named, and mark it. */
+function focusItem(id: string | undefined): void {
+  if (!id) return;
+  onMount(() => {
+    const row = document.getElementById(itemAnchor(id));
+    if (!row) return;
+    row.classList.add("bwb-focus");
+    row.scrollIntoView({ block: "center" });
+  });
+}
 
 function Conds(props: { m: BModel; when: BCond[] }): JSX.Element {
   return (
@@ -48,7 +62,9 @@ export function LinksPage(props: { m: BModel } & Nav): JSX.Element {
   );
 }
 
-export function ProjectsPage(props: { m: BModel } & Nav): JSX.Element {
+export function ProjectsPage(props: { m: BModel; item?: string } & Nav): JSX.Element {
+  focusItem(props.item);
+  const gate = (id: string | undefined) => (id ? props.m.rules.find((r) => r.id === id) : undefined);
   return (
     <BookPage title={t("boardend.book.projects.title")} folio={props.folio} prev={props.prev} next={props.next} testid="board-projects" wide>
       <p class="story">{t("boardend.book.projects.intro")}</p>
@@ -62,14 +78,18 @@ export function ProjectsPage(props: { m: BModel } & Nav): JSX.Element {
                 <>
                   <h3 class="label">{t("boardend.book.projects.tier", { n: tier.tier })}</h3>
                   <Show when={tier.opens.length}>
-                    <p class="small">{t("boardend.book.projects.opens")} <Show when={tier.rule}><a class="rulelink" href={ruleHref(tier.rule!)}>{tier.rule}</a></Show></p>
-                    <Conds m={props.m} when={tier.opens} />
+                    <Show
+                      when={gate(tier.rule)}
+                      fallback={<><p class="small">{t("boardend.book.projects.opens")}</p><Conds m={props.m} when={tier.opens} /></>}
+                    >
+                      {(r) => <p class="small">{t("boardend.book.projects.opens")} <a class="rulelink" href={ruleHref(r().id)}>{pick(r().note)}</a></p>}
+                    </Show>
                   </Show>
                   <table class="ledger ruleledger">
                     <tbody>
                       <For each={props.m.projects.filter((p) => p.branch === b.id && p.tier === tier.tier)}>
                         {(p) => (
-                          <tr>
+                          <tr id={itemAnchor(p.id)}>
                             <th scope="row">{pick(p.name)}<span class="small"> {pick(p.what)}</span></th>
                             <td class="data">{t("boardend.book.projects.cost", { n: p.cost })}</td>
                             <td class="data">{t("boardend.book.projects.years", { n: formatNum(p.build_years, { maximumFractionDigits: 2 }) })}</td>
@@ -89,7 +109,8 @@ export function ProjectsPage(props: { m: BModel } & Nav): JSX.Element {
   );
 }
 
-export function EventsPage(props: { m: BModel } & Nav): JSX.Element {
+export function EventsPage(props: { m: BModel; item?: string } & Nav): JSX.Element {
+  focusItem(props.item);
   return (
     <BookPage title={t("boardend.book.events.title")} folio={props.folio} prev={props.prev} next={props.next} testid="board-events" wide>
       <p class="story">{t("boardend.book.events.intro")}</p>
@@ -98,7 +119,7 @@ export function EventsPage(props: { m: BModel } & Nav): JSX.Element {
         <tbody>
           <For each={props.m.events}>
             {(e) => (
-              <tr>
+              <tr id={itemAnchor(e.id)}>
                 <th scope="row">{pick(e.name)}<span class="small"> {t(e.origin === "outside" ? "boardend.book.events.outside" : e.good ? "boardend.book.events.good" : "boardend.book.events.grown")}</span></th>
                 <td><Conds m={props.m} when={e.trigger} /></td>
               </tr>

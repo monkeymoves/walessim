@@ -2,6 +2,8 @@
 // visits, reading every screen for an English string where a Welsh one exists, a council or town
 // left unmutated after its preposition, an article not joined ("o yr haf"), a capital article mid
 // sentence, a raw key or empty slot, and a thousands comma. The check is design/scripts/board-cy-lib.mjs.
+// Playtest 9 (must-fix 10) adds the English price label "COST", the keystone as "carreg glo", a
+// signed zero ("Tua -0 y flwyddyn"), and a page wider than the screen.
 import { expect, test, type Page } from "@playwright/test";
 import { englishOnly, welshFaults } from "../../design/scripts/board-cy-lib.mjs";
 
@@ -9,6 +11,13 @@ const KEY = "etifeddiaeth.board.v2.";
 const eng = englishOnly(process.cwd());
 
 async function scan(page: Page, where: string, found: Map<string, string>): Promise<void> {
+  // playtest 9, must-fix 10: at 2050 the Welsh page grew wider than the screen and hid the language switch
+  const wide = await page.evaluate(() => {
+    const sw = document.documentElement.scrollWidth, w = window.innerWidth;
+    const lang = document.querySelector(".langtoggle")?.getBoundingClientRect();
+    return sw > w + 1 ? `page ${sw} px wide on a ${w} px screen` : lang && lang.right > w + 1 ? "language switch off the screen" : "";
+  }).catch(() => "");
+  if (wide && !found.has(wide)) found.set(wide, where);
   const text = await page.locator("body").innerText().catch(() => "");
   for (const line of text.split("\n")) for (const f of welshFaults(line, eng)) {
     const k = `${f}: ${line.trim().slice(0, 160)}`;

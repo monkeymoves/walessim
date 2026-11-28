@@ -5,8 +5,8 @@
  */
 import { siteCouncils } from "./conditions";
 import type { StepCtx } from "./ctx";
-import { shiftMoods } from "./people-moods";
 import { buildDiscounts, buildSteps, costOf, projectDef, projectStateId, reachedBy, readyStepOf, siteOf } from "./projects";
+import { settleStanding } from "./standing";
 import type { Action, Grade, PlaceDef, ProjectState } from "./types";
 import { RULE_IDS } from "./types";
 
@@ -58,19 +58,15 @@ export function applyUpgrade(ctx: StepCtx, a: Upgrade): void {
   p.level = Math.min(3, p.level + 1) as ProjectState["level"];
 }
 
-/** Pass or repeal a law: one law change used, and its backing cost (never coins) where it falls. */
+/**
+ * Pass or repeal a law: one law change used. Its backing cost (never coins) falls at once in the
+ * councils its card names and stands as long as the law does; a repeal gives it back (standing.ts).
+ */
 export function applyLaw(ctx: StepCtx, a: Law): void {
-  const { model, state } = ctx;
-  const law = model.laws.find((l) => l.id === a.law)!;
+  const { state } = ctx;
   state.laws = a.pass ? [...state.laws, a.law] : state.laws.filter((l) => l !== a.law);
   state.lawChangesLeft = Math.max(0, state.lawChangesLeft - 1);
-  if (!a.pass) return;
-  for (const b of law.backing) {
-    for (const code of model.game.councils) {
-      if (b.flag && !model.councils.find((c) => c.code === code)?.flags.includes(b.flag)) continue;
-      shiftMoods(ctx, code, b.points, b.group, law.rule ?? RULE_IDS.moods, { kind: "law", law: law.id });
-    }
-  }
+  settleStanding(ctx, state.step);
 }
 
 /** The project a place visit scales: the place's `scales` project standing in or touching its council. */

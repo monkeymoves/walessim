@@ -12,14 +12,14 @@ rules:
     kind: linear
     name: { en: Coins each year, cy: Darnau arian bob blwyddyn, cy_review: true }
     note:
-      en: Coins come in all through the year, and more as Work and pay grows. Your purse holds 16 coins at most.
-      cy: Mae darnau arian yn dod i mewn drwy'r flwyddyn, a mwy wrth i Waith a chyflog dyfu. Mae eich pwrs yn dal 16 darn arian ar y mwyaf.
+      en: Coins come in all through the year, and more as Work and pay grows. Your purse holds 20 coins at most.
+      cy: Mae darnau arian yn dod i mewn drwy'r flwyddyn, a mwy wrth i Waith a chyflog dyfu. Mae eich pwrs yn dal 20 darn arian ar y mwyaf.
       cy_review: true
     params:
       base_per_year: { default: 4, min: 2, max: 4, unit: { en: coins a year, cy: darnau arian y flwyddyn, cy_review: true }, adjustable: true, tune: true }
-      growth_per_year: { default: 0.5, min: 0.25, max: 1, unit: { en: more coins a year for each step of Work and pay gained, cy: mwy o ddarnau arian y flwyddyn am bob cam o Waith a chyflog a enillwyd, cy_review: true }, adjustable: true, tune: true }
+      growth_per_year: { default: 0.35, min: 0.25, max: 1, unit: { en: more coins a year for each step of Work and pay gained, cy: mwy o ddarnau arian y flwyddyn am bob cam o Waith a chyflog a enillwyd, cy_review: true }, adjustable: true, tune: true }
       per_work_points: { default: 4, min: 2, max: 8, unit: { en: points of Work and pay gained for each step of growth, cy: pwyntiau Gwaith a chyflog a enillwyd am bob cam o dwf, cy_review: true }, adjustable: true, tune: true }
-      purse_max: { default: 16, min: 8, max: 16, unit: { en: coins you can hold at most, cy: darnau arian y gallwch eu dal ar y mwyaf, cy_review: true }, adjustable: true, tune: true }
+      purse_max: { default: 20, min: 8, max: 24, unit: { en: coins you can hold at most, cy: darnau arian y gallwch eu dal ar y mwyaf, cy_review: true }, adjustable: true, tune: true }
       running_share: { default: 0.5, min: 0.25, max: 0.75, unit: { en: share of running costs paid once homes pay their own bills, cy: cyfran o gostau rhedeg a delir unwaith mae cartrefi'n talu eu biliau eu hunain, cy_review: true }, adjustable: true, tune: true }
       opening: { default: 8, min: 4, max: 8, unit: { en: coins in May 2026, cy: darnau arian ym mis Mai 2026, cy_review: true }, adjustable: true, tune: true }
     sources: []

@@ -1,7 +1,7 @@
 /**
  * Measures of docs/design/v2-board.md section 16.6 that need games of their own, beside the bot
- * runs: nothing slides by itself, early choices compound, and the clock is exact. Each plays
- * through the real engine and returns plain numbers for bots-marks.ts.
+ * runs: nothing slides by itself, early choices compound, laws cost, and the clock is exact. Each
+ * plays through the real engine and returns plain numbers for bots-marks.ts.
  */
 import { advance, newBoard, replay, tick } from "./clock";
 import { answerAll } from "./bots-common";
@@ -130,6 +130,30 @@ export function compoundRatio(model: BoardModel, game: number): number | null {
     return late > 1e-6 ? early / late : null;
   }
   return null;
+}
+
+/** Years after a law is passed at which its cost is read (playtest 9 must-fix 2: a cost that fades is no choice). */
+export const LAW_COST_YEARS = 4;
+
+/**
+ * Laws cost (playtest 9 must-fix 2): Skilled's board in May 2027, each law passed or not, then the
+ * clock run on `LAW_COST_YEARS` with nothing else done. For each law, the largest change it made to
+ * any council's Backing. Returns the largest and the smallest of those over the laws.
+ */
+export function lawCost(model: BoardModel, game: number): { most: number; least: number } {
+  const start = startFor(model, game);
+  const played = playGame(model, skilled(), game, start);
+  const at = stepOfYear(model, model.game.first_year + 1);
+  const base = runTo(model, replay(model, game, start, played.log.filter((e) => e.at < at)), at);
+  const later = (s: BoardState) => runTo(model, s, Math.min(model.game.steps, at + LAW_COST_YEARS * Math.round(1 / model.game.years_per_step)));
+  const without = later(base);
+  const costs = model.laws.map((law) => {
+    const passed = tryAct(model, base, { kind: "law", law: law.id, pass: true });
+    if (passed === base) return 0;
+    const withLaw = later(passed);
+    return Math.max(0, ...model.game.councils.map((c) => Math.abs((withLaw.councils[c]?.backing ?? 0) - (without.councils[c]?.backing ?? 0))));
+  });
+  return { most: Math.max(0, ...costs), least: costs.length ? Math.min(...costs) : 0 };
 }
 
 /** The clock is exact (16.6): a bot's log replays byte equal, and ticking every step equals advancing. */

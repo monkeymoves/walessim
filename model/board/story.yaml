@@ -10,7 +10,11 @@
 # Chapters are the game's own telling of a run, from what happened on the board. Not a forecast.
 # Slots the engine fills: {river}, {council}, {town}, {project}. A chapter about an event names the
 # council it landed on; one that names a {river} counts river floods only. A chapter about a keystone
-# names the keystone's own council. A chapter whose words need a slot the term cannot fill does not fit.
+# names the keystone's own council; one about a council tipping names that council. {town} is always
+# a town with its council ("Treorchy, in Rhondda Cynon Taf"), of the same council as {council}
+# (playtest 9: towns the board never shows). A chapter whose words need a slot the term cannot fill
+# does not fit. The gap chapters tell one term ("In these four years"); the end leaves out a gap
+# line that says the opposite of one of them.
 # Truth rules, checked by src/board/engine/endings-truth.test.ts on many bot games: a chapter never
 # says the opposite of what its term did, and no chapter name is told twice in one game (the
 # chapters with no conditions at the end are the fallbacks that make that possible).
@@ -71,8 +75,8 @@ chapters:
 
   - id: town-turns
     priority: 7
-    name: { en: "{town} turns a corner", cy: "{town} yn troi cornel", cy_review: true }
-    line: { en: "Life in {town} kept getting better, and it began to pull people in.", cy: "Roedd bywyd yn {town} yn dal i wella, a dechreuodd dynnu pobl i mewn.", cy_review: true }
+    name: { en: "{council} turns a corner", cy: "{council} yn troi cornel", cy_review: true }
+    line: { en: "Life kept getting better in {town}, and it began to pull people in.", cy: "Roedd bywyd yn dal i wella yn {town}, a dechreuodd dynnu pobl i mewn.", cy_review: true }
     when:
       - { kind: tipped, to: rising, at_least: 1 }
 
@@ -132,14 +136,14 @@ chapters:
   - id: closing-gap
     priority: 6
     name: { en: "Closing the gap", cy: "Cau'r bwlch", cy_review: true }
-    line: { en: "The places furthest behind began to catch up.", cy: "Dechreuodd y llefydd pellaf ar ôl ddal i fyny.", cy_review: true }
+    line: { en: "In these four years the gap between places grew smaller.", cy: "Yn y pedair blynedd hyn aeth y bwlch rhwng llefydd yn llai.", cy_review: true }
     when:
       - { kind: gap, change: closed, by: 0.3 }
 
   - id: two-speeds
     priority: 15
     name: { en: "Two speeds", cy: "Dau gyflymder", cy_review: true }
-    line: { en: "Some places pulled ahead while others fell further behind.", cy: "Aeth rhai llefydd ar y blaen tra syrthiodd eraill ymhellach ar ôl.", cy_review: true }
+    line: { en: "In these four years some places pulled ahead while others fell behind.", cy: "Yn y pedair blynedd hyn aeth rhai llefydd ar y blaen tra syrthiodd eraill ar ôl.", cy_review: true }
     when:
       - { kind: gap, change: wider, by: 0.3 }
 

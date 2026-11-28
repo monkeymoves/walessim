@@ -3,6 +3,11 @@ import { BoardActionError } from "./errors";
 import { boardFixture, FIXTURE_COUNCILS } from "./fixture";
 import { blockers, options, preview } from "./projects";
 import { act, advance, newBoard, tick } from "./clock";
+import { keystoneLastStep, stepsOf } from "./time";
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+
+const REAL = join(__dirname, "..", "..", "..", "public", "board-model.json");
 import type { BoardModel, BoardState, ProjectState } from "./types";
 
 const { merthyr, rct, cardiff } = FIXTURE_COUNCILS;
@@ -51,8 +56,11 @@ describe("what can be built", () => {
     const s = fresh(model);
     s.coins = 20;
     const hub = { kind: "build" as const, project: "health-hub", site: { council: merthyr } };
-    expect(blockers(model, s, hub)).toEqual([{ kind: "needs", condition: { kind: "project", branch: "homes", tier: 1, where: "anywhere", at_least: 3 }, rule: "need:homes:2" }]);
-    s.projects.push(working("warm-terraces", merthyr), working("social-homes", rct), working("welsh-school", cardiff));
+    expect(blockers(model, s, hub)).toEqual([{ kind: "needs", condition: { kind: "project", branch: "homes", tier: 1, where: "anywhere", at_least: 3 }, rule: "need:homes:2", have: 0 }]);
+    s.projects.push(working("warm-terraces", merthyr), working("social-homes", rct));
+    // The blocker counts what stands, so the screen can say "2 of 3".
+    expect(blockers(model, s, hub)).toEqual([{ kind: "needs", condition: { kind: "project", branch: "homes", tier: 1, where: "anywhere", at_least: 3 }, rule: "need:homes:2", have: 2 }]);
+    s.projects.push(working("welsh-school", cardiff));
     expect(blockers(model, s, hub)).toEqual([]);
   });
 
@@ -69,13 +77,21 @@ describe("what can be built", () => {
     expect(after.coins).toBe(17);
   });
 
-  it("will not start a keystone after 2042", () => {
+  it("will not start a keystone after the first step of 2042", () => {
     const s = fresh(model);
     s.coins = 20;
-    s.year = 2044;
-    s.step = 72;
+    s.year = 2042;
+    s.step = keystoneLastStep(model) + 1;
     const b = blockers(model, s, { kind: "build", project: "rivers-room", site: { council: merthyr } });
-    expect(b).toContainEqual({ kind: "too_late", lastYear: 2042 });
+    expect(b).toContainEqual({ kind: "too_late", lastStep: keystoneLastStep(model) });
+  });
+
+  it("lets every keystone started on its last step open by the last step, at its full build time", () => {
+    for (const m of [model, ...(existsSync(REAL) ? [JSON.parse(readFileSync(REAL, "utf8")) as BoardModel] : [])]) {
+      for (const k of m.projects.filter((p) => p.keystone)) {
+        expect(keystoneLastStep(m) + stepsOf(m, k.build_years) - 1, k.id).toBeLessThan(m.game.steps);
+      }
+    }
   });
 
   it("allows one law change a term", () => {

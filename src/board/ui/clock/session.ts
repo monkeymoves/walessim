@@ -6,18 +6,25 @@
  *
  * The clock holds itself while a stop is on screen, while an event waits for an answer, while the
  * page is hidden, and (if the player keeps that setting) while they read a sheet. Only something
- * drawn on screen can hold it (./hold.ts). Closing a sheet carries on at the speed the player had;
- * after an answer the clock stays paused until the player presses Play (playtest 8, should fix 7):
- * it only runs again on its own after "Carry on", which is the player choosing it.
+ * drawn on screen can hold it (./hold.ts).
+ *
+ * One rule for what time does after a card (cold playtest 9, should fix 4): it does what it was
+ * doing before the card. Time that was running runs again once the card is gone (Carry on, an
+ * answer, the term report closed); time the player had paused stays paused. Only the player
+ * changes that: Pause, or "Look", which pauses so the player can look without the clock running.
+ * The clock's status line and every card say which it will be. A stop whose fact is no longer true
+ * is dropped from the queue before it is read (./stops.ts `stillTrue`). A new game starts at the
+ * default speed; the speed picked in one game does not carry over to the next.
  */
-import { batch, createEffect, createSignal, on, onCleanup } from "solid-js";
+import { batch, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 import type { Accessor } from "solid-js";
-import type { BoardModel, BoardState, CouncilCode, StepReport, TermReport } from "../../engine/api";
+import type { BoardModel, BoardState, CoinsReport, CouncilCode, StepReport, TermReport } from "../../engine/api";
 import { advance, closesYear, tick } from "../../engine/api";
 import { holdOf, overlays, type HoldReason, type Overlay, type Screenful } from "./hold";
 import { msPerStep, readPrefs, stopOnList, type Prefs } from "./prefs";
+import { ruleParamOf } from "../rules";
 import { ClockRunner } from "./runner";
-import { keepHard, stopsToShow, tickerLines, type QueuedStop, type TickerLine } from "./stops";
+import { keepHard, liveQueue, stopsToShow, tickerLines, type QueuedStop, type TickerLine } from "./stops";
 
 const TICKER_KEEP = 40;
 
@@ -39,16 +46,21 @@ export function createClock(model: BoardModel, deps: ClockDeps) {
   const reduced = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
   const [prefs, setPrefsSignal] = createSignal<Prefs>(readPrefs(model, deps.store.get(prefsKey), reduced));
   const [playing, setPlaying] = createSignal(false);
+  /** The speed in this game. It starts at the saved starting speed (game.yaml's default) and is never saved: it does not carry over. */
+  const [speed, setSpeedSignal] = createSignal(prefs().speed);
   const [hidden, setHidden] = createSignal(false);
-  const [queue, setQueue] = createSignal<QueuedStop[]>([]);
+  /** Stops raised, in order; `queue` is those still true now, which is what the screen shows. */
+  const [raised, setQueue] = createSignal<QueuedStop[]>([]);
+  const purse = ruleParamOf(model, "B1", "purse_max", 0);
+  const queue = createMemo(() => liveQueue(raised(), deps.state(), purse));
   const [ticker, setTicker] = createSignal<TickerLine[]>([]);
   const [terms, setTerms] = createSignal<Record<number, TermReport>>({});
   const [last, setLast] = createSignal<StepReport | null>(null);
+  /** Each step's coins, by step, so the income line can compare a year with the year before. */
+  const [coinLog, setCoinLog] = createSignal<Record<number, CoinsReport>>({});
   const [progress, setProgress] = createSignal(0);
   /** Time has been started in this game (the first press of Start time). */
   const [started, setStarted] = createSignal(false);
-  /** Why the clock is paused when the clock paused itself, so the screen can say so. */
-  const [pausedFor, setPausedFor] = createSignal<"answered" | null>(null);
   /** The first-run lesson on pause and speed has been seen through (kept in this browser). */
   const taughtKey = `${model.game.save_key}clocktaught`;
   const [taught, setTaught] = createSignal(deps.store.get(taughtKey) === "done");
@@ -73,15 +85,10 @@ export function createClock(model: BoardModel, deps: ClockDeps) {
   const running = () => playing() && !prefs().stepByStep && heldBy() === null;
 
   const runner = new ClockRunner(() => step());
-  runner.setSpeed(msPerStep(model, prefs().speed));
+  runner.setSpeed(msPerStep(model, speed()));
   onCleanup(runner.onProgress(setProgress));
   createEffect(() => (running() ? runner.start() : runner.stop()));
   onCleanup(() => runner.stop());
-
-  // an answered event leaves the clock paused: the player presses Play when ready
-  createEffect(on(() => deps.state()?.phase, (phase, prev) => {
-    if (prev === "respond" && phase === "play" && playing()) batch(() => { setPlaying(false); setPausedFor("answered"); });
-  }));
 
   if (typeof document !== "undefined") {
     const vis = () => { setHidden(document.hidden); if (document.hidden) setPlaying(false); };
@@ -91,7 +98,6 @@ export function createClock(model: BoardModel, deps: ClockDeps) {
 
   function setPrefs(next: Prefs): void {
     setPrefsSignal(next);
-    runner.setSpeed(msPerStep(model, next.speed));
     if (next.stepByStep) setPlaying(false);
     deps.store.set(prefsKey, JSON.stringify(next));
   }
@@ -105,9 +111,10 @@ export function createClock(model: BoardModel, deps: ClockDeps) {
       if (lines.length) setTicker((t) => [...t, ...lines].slice(-TICKER_KEEP));
       if (newTerms.length) setTerms((t) => ({ ...t, ...Object.fromEntries(newTerms.map((x) => [x.term, x])) }));
       setLast(reports[reports.length - 1]!);
+      setCoinLog((old) => ({ ...old, ...Object.fromEntries(reports.map((r) => [r.step, r.coins])) }));
       if (show) {
         const q = stopsToShow(model, prefs(), reports);
-        if (q.length) setQueue((old) => [...old, ...q]);
+        if (q.length) setQueue((old) => [...liveQueue(old, deps.state(), purse), ...q]);
       }
     });
   }
@@ -153,19 +160,38 @@ export function createClock(model: BoardModel, deps: ClockDeps) {
   function play(): void {
     if (prefs().stepByStep) return;
     runner.reset();
-    batch(() => { setPlaying(true); setStarted(true); setPausedFor(null); });
+    batch(() => { setPlaying(true); setStarted(true); });
   }
   /** The player pauses. Pausing once is what the first-run lesson asks for. */
   function pause(): void { if (playing() && started()) markTaught(); setPlaying(false); }
   function toggle(): void { if (playing()) pause(); else play(); }
-  function setSpeed(id: string): void { if (started()) markTaught(); setPrefs({ ...prefs(), speed: id }); }
+  function setSpeed(id: string): void {
+    if (!model.game.speeds.some((x) => x.id === id)) return;
+    if (started()) markTaught();
+    setSpeedSignal(id);
+    runner.setSpeed(msPerStep(model, id));
+  }
 
-  /** The stop on screen is read: show the next, or carry on at the speed the player had. */
+  /** The stop on screen is read: show the next, or time does what it did before the card. */
   function carryOn(): void {
     const [head, ...rest] = queue();
     if (!head) return;
     setQueue(rest);
     if (head.stop.kind === "ended") deps.onEnded();
+  }
+
+  /** Past every soft stop waiting (they are all in the ticker); hard ones still wait. */
+  function carryOnAll(): void {
+    const [head, ...rest] = queue();
+    if (!head) return;
+    if (head.stop.hard) { carryOn(); return; }
+    setQueue(keepHard(rest));
+  }
+
+  /** A new game: nothing waiting, and the starting speed again (a speed is picked for one game, not kept for the next). */
+  function freshGame(): void {
+    batch(() => { setSpeedSignal(prefs().speed); restore([]); });
+    runner.setSpeed(msPerStep(model, prefs().speed));
   }
 
   /** "Look": stay paused with the stop's council selected. Soft stops still waiting are dropped (they are in the ticker). */
@@ -186,17 +212,17 @@ export function createClock(model: BoardModel, deps: ClockDeps) {
       setTicker([]);
       setTerms({});
       setLast(null);
+      setCoinLog({});
       setPlaying(false);
-      setPausedFor(null);
       setStarted(reports.length > 0);
       absorb(reports, false);
     });
   }
 
   return {
-    prefs, setPrefs, playing, running, heldBy, phaseHolds, progress, queue, ticker, terms, last,
-    started, pausedFor, taught, markTaught, shown,
-    play, pause, toggle, setSpeed, step, runToNext, carryOn, look, restore,
+    prefs, setPrefs, speed, playing, running, heldBy, phaseHolds, progress, queue, ticker, terms, last, coinLog,
+    started, taught, markTaught, shown,
+    play, pause, toggle, setSpeed, step, runToNext, carryOn, carryOnAll, look, restore, freshGame,
   };
 }
 

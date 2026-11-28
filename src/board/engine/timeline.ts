@@ -10,7 +10,7 @@
 import { eventNoun } from "./events";
 import { countBacking } from "./people";
 import { optParam } from "./rules";
-import { seasonOf, stepOfYear, yearOfStep } from "./time";
+import { keystoneLastStep, seasonOf, stepOfYear, yearOfStep } from "./time";
 import type { BoardModel, BoardState, CouncilCode, Text, TimelineMark, TimelineView } from "./types";
 import { RULE_IDS } from "./types";
 
@@ -40,7 +40,7 @@ export function timeline(model: BoardModel, state: BoardState): TimelineView {
     const vars = { council: nameOf(model, d.council), measure: model.measures.find((m) => m.id === d.measure)?.name ?? d.measure, year: yearOfStep(model, d.dueStep) };
     ahead.push({ kind: "deal", step: d.dueStep, council: d.council, say: { key: "board.timeline.deal", vars } });
   }
-  const lastKeystone = stepOfYear(model, model.game.keystone_last_start_year + 1) - 1;
+  const lastKeystone = keystoneLastStep(model);
   if (lastKeystone >= now) ahead.push({ kind: "keystone_last_start", step: lastKeystone, say: { key: "board.timeline.keystone_last_start", vars: { year: model.game.keystone_last_start_year } } });
   const careFrom = optParam(model, RULE_IDS.careBill, "from_year");
   if (careFrom !== undefined && stepOfYear(model, careFrom) > now) ahead.push({ kind: "care_bill", step: stepOfYear(model, careFrom), say: { key: "board.timeline.care_bill", vars: { year: careFrom } } });

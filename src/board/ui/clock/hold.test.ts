@@ -65,4 +65,20 @@ describe("the clock's hold", () => {
     expect(overlays(s)).toEqual(["answer"]);
     expect(holdOf(s)).toBe("answer");
   });
+
+  it("holds while anything the player opened, or any card, is on screen (cold playtest 9: 6 of 8 felt rushed)", () => {
+    for (const s of every()) {
+      if (s.phase !== "play" && s.phase !== "respond") continue;
+      if (!s.holdWhileReading) continue;
+      if (overlays(s).length) expect(holdOf(s), JSON.stringify(s)).not.toBeNull();
+    }
+  });
+
+  it("holds for a card whatever the setting: a stop or an answer always holds", () => {
+    for (const s of every()) {
+      if (s.phase === "ended") continue;
+      const shown = overlays(s);
+      if (shown.includes("stop") || shown.includes("answer")) expect(holdOf(s), JSON.stringify(s)).not.toBeNull();
+    }
+  });
 });

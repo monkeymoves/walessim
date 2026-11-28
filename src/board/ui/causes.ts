@@ -9,6 +9,7 @@ import { t } from "./lang";
 import { eventNoun, type BoardModel, type BoardState, type Cause, type CouncilCode, type Why } from "../engine/api";
 import { councilView } from "./engine";
 import { councilName, num, projectName, say, tx, whenWords } from "./words";
+import { ruleParamOf } from "./rules";
 
 /** What a cause can look up: the state it happened in and the council the Why? is about. */
 export interface CauseCtx {
@@ -73,7 +74,11 @@ export function causeWords(model: BoardModel, c: Cause, step: number, ctx?: Caus
         ? t(`boardui.cause.momentumNow.${mo}`, { council: councilName(model, code) })
         : t("boardui.cause.momentum");
     }
-    case "deal": return t("boardui.cause.deal", { council: councilName(model, c.council) });
+    case "deal": {
+      const broken = ctx?.state.deals.some((d) => d.council === c.council && d.kept === false);
+      const vars = { council: councilName(model, c.council), fade: num(ruleParamOf(model, "P6", "broken_years", 4)) };
+      return t(broken ? "boardui.cause.dealBroken" : "boardui.cause.deal", vars);
+    }
     default: return t("boardui.cause.drift");
   }
 }

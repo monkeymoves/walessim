@@ -25,7 +25,7 @@ const list = <T>(file: string, key: string) => parsed[file]![key] as T[];
 export function contentModel(): BoardModel {
   const m = boardFixture();
   m.branches = list("tree.yaml", "branches");
-  m.rules = [...m.rules.filter((r) => !r.id.startsWith("need:")), ...gateRules(m.branches)];
+  m.rules = [...m.rules.filter((r) => !r.id.startsWith("need:")), ...gateRules(m.branches, (parsed["tree.yaml"] as { gate_notes?: Record<string, Text> }).gate_notes)];
   m.projects = list("projects.yaml", "projects");
   m.pairs = list("pairs.yaml", "pairs");
   m.laws = list("laws.yaml", "laws");

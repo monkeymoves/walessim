@@ -3,7 +3,7 @@
  * stops pause the clock and in what order, and which lines go to the ticker. Pure functions of the
  * model, the prefs and the reports, tested in stops.test.ts.
  */
-import type { BoardModel, CouncilCode, ReportLine, Say, Stop, StepReport, TermReport } from "../../engine/api";
+import type { BoardModel, BoardState, CouncilCode, ReportLine, Say, Stop, StepReport, TermReport } from "../../engine/api";
 import { pausesOn, type Prefs } from "./prefs";
 
 /** One stop waiting on screen. An election and the end carry the term report. */
@@ -57,3 +57,31 @@ export function tickerLines(reports: readonly StepReport[]): TickerLine[] {
 
 /** After "Look": keep only the hard stops still waiting, so the player can look at the map. */
 export const keepHard = (queue: readonly QueuedStop[]): QueuedStop[] => queue.filter((q) => q.stop.hard);
+
+/**
+ * Is what the stop says still true (cold playtest 9, must fix 8)? A stop waits on screen while the
+ * player builds, answers or reads, so its fact can stop being true before it is read: "Your purse
+ * is full" after the coins were spent, a warning whose event has landed, a visit already made, a
+ * deal already judged, a council that has turned back. Such a stop is dropped from the queue (it
+ * stays in the ticker, dated), so a card never says what is no longer so. Facts that stay true
+ * once they happen (a keystone, a tier opened, a build finished, an election) always are.
+ */
+export function stillTrue(q: QueuedStop, state: BoardState, purse: number): boolean {
+  const s = q.stop;
+  switch (s.kind) {
+    case "purse_full": return purse > 0 && state.coins >= purse - 1e-6;
+    case "warning": return state.forecast.some((f) => f.event === s.ref);
+    case "visit": return state.pending.some((p) => p.kind === "visit" && p.place === s.ref);
+    case "deal_due": return state.deals.some((d) => d.council === s.council && d.kept === null);
+    case "tipping": {
+      if (!s.council) return true;
+      const to = s.say.key.split(".").pop();
+      return to !== "rising" && to !== "slipping" ? true : state.councils[s.council]?.momentum === to;
+    }
+    default: return true;
+  }
+}
+
+/** The stops waiting that are still true now, in order. */
+export const liveQueue = (queue: readonly QueuedStop[], state: BoardState | null, purse: number): QueuedStop[] =>
+  state ? queue.filter((q) => stillTrue(q, state, purse)) : [...queue];

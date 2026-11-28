@@ -55,8 +55,16 @@ async function startAndBuild(page: Page, council: RegExp, project: string): Prom
 }
 
 /** Settle a place visit: pick (T3 one option, T1 the first three tips), choose, see the grade, go back. */
-async function doVisit(page: Page, checkAxe: boolean): Promise<string> {
+async function doVisit(page: Page, checkAxe: boolean): Promise<string | null> {
   await expect(page.getByTestId("bp-visit")).toBeVisible({ timeout: 10_000 });
+  // the sheet's body renders a moment after its frame: wait for one kind or the other before telling them apart.
+  // On a busy machine a closing sheet can still match "visible" for a frame; if it goes, report no visit and let the loop carry on.
+  const body = page.getByTestId("bp-rhondda").or(page.locator("[data-testid^=bp-opt-]")).first();
+  const shown = await body.waitFor({ state: "visible", timeout: 10_000 }).then(() => true, () => false);
+  if (!shown) {
+    if (!(await page.getByTestId("bp-visit").count())) return null;
+    await expect(body).toBeVisible();
+  }
   const kind = (await page.getByTestId("bp-rhondda").count()) ? "rhondda" : "light";
   if (kind === "rhondda") {
     const tips = page.getByTestId("bp-tip");
@@ -182,7 +190,7 @@ for (const lang of ["en", "cy"] as const) {
 }
 
 test("a board game on the clock at fast speed, with pause, resume and a hard stop", async ({ page }) => {
-  test.setTimeout(300_000);
+  test.setTimeout(480_000);
   const errors = await fresh(page, { lang: "en", stepByStep: false, speed: "fast" });
   await page.getByTestId("bw-go").click();
   await expect(page.getByTestId("bw-play")).toBeVisible({ timeout: 20_000 });

@@ -75,6 +75,8 @@ export interface Deal {
   dueStep: number;
   /** null until judged. */
   kept: boolean | null;
+  /** The step a broken deal was judged broken (its cost fades from here, rule P6 `broken_years`). */
+  brokenStep?: number;
 }
 
 export type MomentKind = "tier_open" | "keystone" | "tipped" | "region_turn" | "election" | "event" | "promise" | "deal" | "people";

@@ -279,3 +279,49 @@
 .bw-term-foot .bw-deals { margin-bottom: 4px; }
 .bw-marks { transition: opacity var(--dur-lift, 160ms) ease-out; }
 .bw-marks.moving { opacity: 0; transition: none; }
+
+/* package C, playtest 9 fixes: tickets, upgrades apart, the keystone in view, laws, deals, the wide term report */
+.bw-ticket-face { grid-template-columns: 62px 1fr auto; }
+.bw-ticket-stub .furniture { font-size: 10px; letter-spacing: 0.04em; max-width: 58px; overflow-wrap: anywhere; text-align: center; }
+.bw-ticket.upgrade { background-image: none; background-color: var(--paper-2); box-shadow: var(--shadow-flat); outline: 1.5px dashed var(--ink-2); outline-offset: -4px; }
+.bw-ticket-up { color: var(--ink-2); }
+.bw-fare-full { font-size: 13px; font-weight: 400; color: var(--ink-2); }
+.bw-ticket-act { display: grid; gap: 4px; justify-items: start; scroll-margin: 12px; }
+.bw-ticket-act .btn-stamp { width: 100%; }
+.bw-build-group { margin: 10px 0 4px; }
+.bw-build-groupnote { margin: 0 0 6px; color: var(--ink-2); }
+.bw-tree-after { border-top: 2px dashed var(--ink-2); }
+.bw-law-cost { display: grid; gap: 2px; padding: 6px 8px; background: var(--paper-2); box-shadow: inset 3px 0 0 var(--ink); width: 100%; }
+.bw-law-cost p { margin: 0; }
+.bw-law-fall { color: var(--warn); font-weight: var(--wght-grot-strong); }
+.bw-deal-ask { margin: 2px 0 6px; color: var(--ink); }
+.bw-term.bw-term-wide { width: min(880px, calc(100% - 28px)); }
+.bw-term-scroll.bw-term-cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 18px; align-items: start; }
+.bw-term-col { display: grid; gap: 10px; align-content: start; min-width: 0; }
+.bw-term-col .bw-deals { padding: 10px 12px; background: var(--warn-paper); box-shadow: var(--shadow-flat); }
+.bw-term-deals { display: grid; gap: 6px; margin: 0; padding: 0; }
+.bw-term-deal { list-style: none; padding: 8px 10px; background: var(--paper-2); box-shadow: inset 3px 0 0 var(--ink); }
+.bw-term-deal.broken { box-shadow: inset 3px 0 0 var(--warn); }
+.bw-term-deal p { margin: 0; }
+@media (max-width: 1360px) {
+  .bw-term.bw-term-wide { width: min(800px, calc(100% - 28px)); }
+}
+/* the wide term report fits the election whole at 1280 x 800: a tighter head and count */
+.bw-term-wide .bw-term-head { padding: 10px 44px 8px 18px; gap: 2px; }
+.bw-term-wide .bw-term-head .story-small { max-width: none; }
+.bw-term-wide .bw-term-name { font-size: 24px; }
+.bw-term-wide .bw-term-scroll { padding-top: 8px; }
+.bw-term-more {
+  position: relative; margin: -30px 0 0; padding: 14px 18px 4px; border: 0; text-align: center; cursor: pointer;
+  font: inherit; color: var(--ink); background: linear-gradient(to bottom, transparent, var(--paper) 55%);
+}
+.bw-term-more::after { content: " \2193"; }
+.bw-term-more:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+.bw-term-wide .bw-election { gap: 4px; padding-top: 6px; }
+.bw-term-wide .bw-election-means li { padding: 1px 6px; }
+.bw-term-wide .bw-election-list li { padding: 1px 0; }
+@media (max-width: 1360px) {
+  .bw-term-wide .bw-term-name { font-size: 21px; }
+  .bw-term-wide .bw-term-head .bw-honest { display: none; }
+}
+.bw-why-sources-label { align-self: center; color: var(--ink-2); }

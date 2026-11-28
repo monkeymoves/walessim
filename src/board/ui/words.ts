@@ -3,10 +3,10 @@
  * plain forms of points, coins and years (docs/design/plain-wales.md). No player text is written
  * here: every string comes from model/i18n through t(), or from a `{en, cy}` field in the model.
  */
-import { formatNum, hasKey, lang, pick, t } from "./lang";
+import { fillEn, formatNum, hasKey, lang, pick, t, tn } from "./lang";
 import { fillCy, listCy } from "./cymraeg";
 import type { BoardModel, ChapterRecord, CouncilCode, MeasureId, NodeId, Say, SayVar, Text, WhyQuantity } from "../engine/api";
-import { seasonOf, yearOfStep } from "../engine/api";
+import { seasonOf, stepsOf, yearOfStep } from "../engine/api";
 
 const isText = (v: unknown): v is Text => !!v && typeof v === "object" && "en" in (v as object);
 
@@ -44,7 +44,7 @@ export function say(s: Say | null | undefined): string {
   // its slots filled from the other values, when there is no wrapping key for it yet
   // a value may itself be a model sentence with slots (an event warning in `line`): fill those from the same values
   const first = key ? t(key, vars) : vars["line"] ?? "";
-  const out = lang() === "cy" ? fillCy(first, vars) : first.replace(/\{(\w+)\}/g, (all, k: string) => vars[k] ?? all);
+  const out = lang() === "cy" ? fillCy(first, vars) : fillEn(first, vars);
   if (!out) return "";
   if (/\{\w+\}/.test(out)) { console.warn(`board: ${key} has a slot the engine did not fill`, s.vars); return ""; }
   return out;
@@ -72,10 +72,7 @@ export function fill(model: BoardModel, text: string, councils: CouncilCode[], r
   if (lang() === "cy") {
     return fillCy(text, { council: councilName(model, councils[0]), councils: listCy(councils.map((c) => councilName(model, c))), river: river ? tx(river) : "" });
   }
-  return text
-    .replace(/\{council\}/g, councilName(model, councils[0]))
-    .replace(/\{councils\}/g, councils.map((c) => councilName(model, c)).join(t("boardui.list.and")))
-    .replace(/\{river\}/g, river ? tx(river) : "");
+  return fillEn(text, { council: councilName(model, councils[0]), councils: councils.map((c) => councilName(model, c)).join(t("boardui.list.and")), river: river ? tx(river) : "" });
 }
 
 export function councilName(model: BoardModel, code: NodeId | null | undefined): string {
@@ -134,12 +131,31 @@ export function whenWords(model: BoardModel, step: number, lead = false): string
   return lead ? capFirst(out) : out;
 }
 
+/**
+ * How long a build takes, in words that cannot clash with its opening date (playtest 9, must-fix
+ * 11: "Takes 1 years", "Takes 0 years to build" beside "works within a year"). Under a year it
+ * "works within a year"; otherwise "Takes 1 year" or "Takes 3 years".
+ */
+export function takesWords(years: number): string {
+  if (years < 1) return t("boardui.build.takesQuick");
+  return tn("boardui.build.takes", Math.round(years * 10) / 10, { n: num(years) });
+}
+
+/**
+ * The season a previewed change is first felt, as a step: the season the build starts working,
+ * plus the whole years it beds in (the preview's `year` counts from the opening year). So a card
+ * that opens "Summer 2028" never previews a change "from 2027", and Spring is never a year early.
+ */
+export function feltStep(model: BoardModel, readyStep: number, readyYear: number, changeYear: number): number {
+  return readyStep + 1 + stepsOf(model, Math.max(0, changeYear - readyYear));
+}
+
 function fillChapter(model: BoardModel, rec: ChapterRecord, field: "name" | "line"): string | null {
   const def = model.chapters?.find((c) => c.id === rec.chapter);
   if (!def) return null;
   const vars = Object.fromEntries(Object.entries(rec.slots ?? {}).map(([k, v]) => [k, varText(v)]));
   const s = tx(def[field]);
-  return lang() === "cy" ? fillCy(s, vars) : s.replace(/\{(\w+)\}/g, (all, k: string) => vars[k] ?? all);
+  return lang() === "cy" ? fillCy(s, vars) : fillEn(s, vars);
 }
 
 /** A chapter's name with its slots filled, or the fallback name while the chapters are not written. */
@@ -150,3 +166,10 @@ export const chapterLine = (model: BoardModel, rec: ChapterRecord): string => fi
 
 /** Councils in play, in display order. */
 export const inPlay = (model: BoardModel): CouncilCode[] => model.game.councils;
+
+/** A coin rate to tenths, signed, with no sign at zero (never "-0" or "+0"). */
+export function incomeWords(perYear: number): string {
+  const v = Math.round(perYear * 10) / 10;
+  if (v === 0) return formatNum(0);
+  return (v > 0 ? "+" : "") + formatNum(v, { maximumFractionDigits: 1 });
+}

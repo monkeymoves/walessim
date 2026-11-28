@@ -9,7 +9,7 @@
  * names the hung term), the one that closes it belongs to the next.
  *
  * What each condition means:
- * - `event_landed`: an event landed (good or bad) with that track, a landed severity of at least
+ * - `event_landed`: an event landed (good or bad) with that track (`trackOf`), a landed severity of at least
  *   `severity_at_least`, and prepared or not as asked (outside events only carry `prepared`); with
  *   `at_most`, no more than that many such events landed.
  * - `election`: an election held in the term had that result.
@@ -28,7 +28,9 @@
  *
  * Slots: a chapter about an event takes {council}, {town} and {river} from that event; a chapter
  * whose words name a {river} only counts river floods (an event whose trigger needs a river). A
- * chapter about a keystone takes {project}, {council} and {town} from that keystone's own site.
+ * chapter about a keystone takes {project}, {council} and {town} from that keystone's own site; one
+ * about a council tipping takes {council} and {town} from the first council that tipped. {town} is
+ * always "a town, in its council" (`townOf`), of the same council as {council}.
  */
 import { openedNow } from "./clock-stops";
 import { riverAt } from "./events";
@@ -111,13 +113,29 @@ const youngMean = (board: Record<CouncilCode, { young: number }> | undefined, co
 export const isRiverEvent = (model: BoardModel, id: string): boolean =>
   !!model.events.find((d) => d.id === id)?.trigger.some((c) => c.kind === "feature" && c.feature === "river");
 
-/** Events that landed in the term and match an `event_landed` condition, heaviest first. `rivers`: river floods only. */
+/**
+ * An event's track: its own (outside trouble), or for trouble your builds grow, the track its
+ * trigger waits for (the big employer leaves when the economy track is high), so "When the work
+ * went" can tell the big employer leaving, as The gamble does.
+ */
+export function trackOf(def: BoardModel["events"][number]): string | undefined {
+  if (def.track || def.good) return def.track;
+  const c = def.trigger.find((x) => x.kind === "track");
+  return c?.kind === "track" ? c.track : undefined;
+}
+
+/**
+ * Events that landed in the term and match an `event_landed` condition: first the ones your own
+ * builds set off (a grown event, such as the big employer leaving, which is the story of your run
+ * and the place The gamble names), then the heaviest. `rivers`: river floods only.
+ */
 function landedMatching(t: Term, c: Extract<TermCondition, { kind: "event_landed" }>, rivers = false): EventRecord[] {
+  const grown = (e: EventRecord) => Number(t.model.events.find((d) => d.id === e.event)?.origin === "grown");
   return t.events.filter((e) => {
     const def = t.model.events.find((d) => d.id === e.event);
-    return !!def && (!c.track || def.track === c.track) && e.severity >= (c.severity_at_least ?? 0)
+    return !!def && (!c.track || trackOf(def) === c.track) && e.severity >= (c.severity_at_least ?? 0)
       && (c.prepared === undefined || !!e.prepared === c.prepared) && (!rivers || isRiverEvent(t.model, e.event));
-  }).sort((a, b) => b.severity - a.severity || a.step - b.step);
+  }).sort((a, b) => grown(b) - grown(a) || b.severity - a.severity || a.step - b.step);
 }
 
 /** Does one term condition hold? */
@@ -164,7 +182,36 @@ export function termHolds(t: Term, c: TermCondition): boolean {
 }
 
 const councilName = (model: BoardModel, code: CouncilCode): Text => model.councils.find((c) => c.code === code)?.name ?? { en: code, cy: code };
-export const townOf = (model: BoardModel, code: CouncilCode): Text => model.councils.find((c) => c.code === code)?.towns[0] ?? councilName(model, code);
+
+/**
+ * A town the board never shows, always with its council (playtest 9, should-fix 2: "Treorchy"
+ * while the letter came from Rhondda Cynon Taf): "Treorchy, in Rhondda Cynon Taf". The council's
+ * first town that is not named like the council itself, so Merthyr Tydfil gives "Dowlais, in Merthyr
+ * Tydfil", never "Merthyr Tydfil, in Merthyr Tydfil"; with no such town, the council's own name.
+ * The ", in" joins two names as the v1 engine's `joinNames` joins a list with "and": grammar, not
+ * copy. The Welsh takes the nasal mutation after "yn" ("Bargod, yng Nghaerffili", "Dowlais, ym
+ * Merthyr Tudful") and is a draft for the fluent reviewer.
+ */
+export function townOf(model: BoardModel, code: CouncilCode): Text {
+  const council = councilName(model, code);
+  const town = model.councils.find((c) => c.code === code)?.towns.find((t) => t.en !== council.en);
+  if (!town) return council;
+  return { en: `${town.en}, in ${council.en}`, cy: `${town.cy || town.en}, ${ynPlace(council.cy || council.en)}`, cy_review: true };
+}
+
+/**
+ * "yn" before a place, with the nasal mutation: "yng Nghaerffili", "ym Mhen-y-bont ar Ogwr", "yn
+ * Nhor-faen", "ym Merthyr Tudful", "yn Rhondda Cynon Taf". The same rule as src/board/ui/cymraeg.ts
+ * `ynPlace`, kept here because the engine imports no screen code.
+ */
+export function ynPlace(w: string): string {
+  const l = w.toLowerCase();
+  if (/^(ch|ph|th|dd|ll|rh|ng)/.test(l)) return `yn ${w}`;
+  const rules: Record<string, [string, string]> = { c: ["yng", "Ngh"], p: ["ym", "Mh"], t: ["yn", "Nh"], g: ["yng", "Ng"], b: ["ym", "M"], d: ["yn", "N"] };
+  const r = rules[l[0] ?? ""];
+  if (r) return `${r[0]} ${r[1]}${w.slice(1)}`;
+  return l[0] === "m" ? `ym ${w}` : `yn ${w}`;
+}
 
 /** The council whose mean moved most in the term (up when `up`, else either way), or undefined. */
 function mostMoved(t: Term, up: boolean): CouncilCode | undefined {
@@ -181,10 +228,12 @@ export function termSlots(t: Term): Record<string, SayVar> {
   const storm = [...bad].filter((e) => isRiverEvent(model, e.event)).sort((a, b) => b.severity - a.severity || a.step - b.step)[0];
   const river = storm ? riverAt(model, storm.councils[0]!, storm.councils[1]) : undefined;
   if (river) slots.river = river;
+  // {town} is always a town of {council}, so a chapter never names two places that disagree
   const council = dealsJudged(t, true)[0] ?? dealsJudged(t, false)[0] ?? mostMoved(t, false);
-  if (council) slots.council = councilName(model, council);
-  const town = firstTips(t, "rising")[0] ?? mostMoved(t, true);
-  if (town) slots.town = townOf(model, town);
+  if (council) {
+    slots.council = councilName(model, council);
+    slots.town = townOf(model, council);
+  }
   const keystones = state.projects.filter((p) => isKeystone(model, p.project));
   const k = keystones.find((p) => p.status !== "building" && inTerm(t, p.readyStep)) ?? keystones.find((p) => inTerm(t, p.startedStep));
   const def = k ? model.projects.find((d) => d.id === k.project) : undefined;
@@ -214,6 +263,12 @@ function slotsFor(t: Term, def: ChapterDef, slots: Record<string, SayVar>): Reco
     if (!k || !at || !name) return slots;
     return { ...slots, project: name, council: councilName(model, at), town: townOf(model, at) };
   }
+  const tip = def.when.find((x): x is Extract<TermCondition, { kind: "tipped" }> => x.kind === "tipped");
+  if (tip) {
+    // "{council} turns a corner" names the council that turned, not the one that moved most
+    const at = firstTips(t, tip.to)[0];
+    return at ? { ...slots, council: councilName(model, at), town: townOf(model, at) } : slots;
+  }
   const c = def.when.find((x): x is Extract<TermCondition, { kind: "event_landed" }> => x.kind === "event_landed" && x.at_most === undefined);
   if (!c) return slots;
   const rivers = slotsUsed(def).has("river");
@@ -235,7 +290,8 @@ const slotsFilled = (def: ChapterDef, slots: Record<string, SayVar>): boolean =>
 
 /**
  * Name an election term as it closes: the first chapter by `priority` (1 first, as endings) whose
- * conditions all hold and whose name is not used yet in this game. Chapters with no conditions are
+ * conditions all hold and that has not been told yet in this game; else the first whose name is not
+ * used yet (a second "{council} turns a corner" for another council). Chapters with no conditions are
  * the fallbacks, so a model with enough of them never tells the same chapter twice; only when every
  * fitting name is used is the first that fits told again. With no chapters in the model, the
  * fallback id.
@@ -252,6 +308,9 @@ export function pickChapter(ctx: StepCtx, term: number, fromYear: number, toYear
   const fits = sorted.filter((d) => d.when.every((c) => termHolds(t, c)))
     .map((d) => ({ d, s: slotsFor(t, d, slots) }))
     .filter(({ d, s }) => slotsFilled(d, s));
-  const pick = fits.find(({ d, s }) => !used.has(nameKey(d, s))) ?? fits[0];
+  // a chapter not told yet first (so four terms are not all "... turns a corner"), then a name not
+  // told yet; the fallbacks only when nothing that happened fits
+  const told = new Set(state.story.chapters.map((r) => r.chapter));
+  const pick = fits.find(({ d }) => d.when.length > 0 && !told.has(d.id)) ?? fits.find(({ d, s }) => !used.has(nameKey(d, s))) ?? fits[0];
   return { term, fromYear, toYear, chapter: pick?.d.id ?? FALLBACK_CHAPTER, slots: pick?.s ?? slots };
 }

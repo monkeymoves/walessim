@@ -5,9 +5,13 @@
  *
  * After playtest 8: the game opens with time stopped and one big "Start time" button. The first
  * time time runs, a note pinned to the clock teaches pause and speed, and stays until the player
- * pauses, changes the speed or says Got it. When something holds the clock the button says
- * "Held", and the line under it says what holds it and how to let it go. The line always says
- * what time is doing: stopped, paused, held or running.
+ * pauses, changes the speed or says Got it. When something holds the clock the button says so,
+ * and the line under it says what holds it and how to let it go. The line always says what time
+ * is doing: stopped, paused, held or running.
+ *
+ * After cold playtest 9 (should fix 9): held and paused read apart. Held is "Waiting" (time would
+ * run, and waits for what is open: a card, a sheet); paused is "Paused by you" (only Play starts
+ * it). With a card on screen the line says what time will do after it (should fix 4).
  */
 import { For, Match, Show, Switch, type JSX } from "solid-js";
 import { formatNum, t } from "../lang";
@@ -32,7 +36,9 @@ export function Clock(): JSX.Element {
     if (c.playing()) return held() ? "held" : "pause";
     return fresh() ? "start" : "play";
   };
-  const secondsAYear = () => formatNum((msPerStep(model, c.prefs().speed) * Math.round(1 / model.game.years_per_step)) / 1000, { maximumFractionDigits: 0 });
+  const secondsAYear = () => formatNum((msPerStep(model, c.speed()) * Math.round(1 / model.game.years_per_step)) / 1000, { maximumFractionDigits: 0 });
+  /** A card waits on screen: a stop, or an event to answer. */
+  const card = () => c.queue().length > 0 || game.state()?.phase === "respond";
   const status = (): string => {
     if (ended()) return t("boardclock.why.ended");
     if (c.prefs().stepByStep) return fresh() ? t("boardclock.status.stepFresh") : "";
@@ -40,7 +46,7 @@ export function Clock(): JSX.Element {
       case "held": return t(`boardclock.why.${held()}`);
       case "pause": return t("boardclock.status.running", { n: secondsAYear() });
       case "start": return t("boardclock.status.notStarted");
-      default: return c.pausedFor() === "answered" ? t("boardclock.status.answered") : t("boardclock.status.paused");
+      default: return card() ? t("boardclock.status.pausedCard") : t("boardclock.status.paused");
     }
   };
   // the lesson on pause and speed: the first time time runs, until the player has used them
@@ -85,7 +91,7 @@ export function Clock(): JSX.Element {
                 <button
                   type="button"
                   role="radio"
-                  aria-checked={c.prefs().speed === sp.id}
+                  aria-checked={c.speed() === sp.id}
                   class="bw-clock-speed"
                   title={t("boardui.clock.speedTip", { key: KEY_OF[sp.id] ?? "", name: t(`boardui.clock.speed.${sp.id}`) })}
                   onClick={() => c.setSpeed(sp.id)}

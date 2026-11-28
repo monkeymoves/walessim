@@ -52,5 +52,10 @@ export function welshFaults(line, eng) {
   if (/\{\w+\}|undefined|NaN|\bboard(ui|end|clock)?\.[a-z]/.test(s)) out.push("raw key or empty slot");
   if (/\d,\d{3}/.test(s)) out.push("thousands comma");
   if (/\byn yn\b/.test(s)) out.push("yn twice");
+  // playtest 9, must-fix 10: the English price label, the keystone as "carreg glo" (a lump of coal),
+  // and a figure that rounds to zero but keeps its sign ("Tua -0 y flwyddyn")
+  if (/^(COSTS?|Costs?)$/.test(s) || /\bCOSTS?\b/.test(s)) out.push("English price label");
+  if (/\b(c|g|ch|ngh)arreg glo\b/i.test(s) || /onglf(aen|eini)/i.test(s)) out.push("keystone is maen clo");
+  if (/(^|[\s(])[-\u2212+]0(?![.,\d])/.test(s)) out.push("signed zero");
   return out;
 }

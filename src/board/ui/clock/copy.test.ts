@@ -13,7 +13,12 @@ function used(): Set<string> {
   const files = (readdirSync(dir, { recursive: true }) as string[]).filter((f) => /\.tsx?$/.test(f) && !/\.test\.ts$/.test(f)).map((f) => join(dir, f));
   files.push(join(root, "src", "ui", "shell", "TitleScreen.tsx"));
   const out = new Set<string>();
-  for (const f of files) for (const m of readFileSync(f, "utf8").matchAll(/\btn?\(\s*"boardclock\.([\w.]+)"/g)) out.add(m[1]!);
+  for (const f of files) {
+    const src = readFileSync(f, "utf8");
+    for (const m of src.matchAll(/\bt\(\s*"boardclock\.([\w.]+)"/g)) out.add(m[1]!);
+    // a counted key: its plural forms, "one" and the "other" every language falls back to
+    for (const m of src.matchAll(/\btn\(\s*"boardclock\.([\w.]+)"/g)) { out.add(`${m[1]}.one`); out.add(`${m[1]}.other`); }
+  }
   return out;
 }
 
@@ -21,6 +26,9 @@ const families: Record<string, readonly string[]> = {
   why: ["stop", "answer", "hidden", "ended", "build", "tree", "laws", "settings", "why", "visit", "warning", "term"],
   head: ["up", "down", "same"],
   guide: GUIDE_NOTES,
+  "income.why": ["budget", "rising", "earns", "running", "care", "weak"].flatMap((k) => [`${k}.up`, `${k}.down`]),
+  "income.part": ["budget", "earns", "rising", "care", "weak"],
+  card: ["runs", "runsLook", "paused", "step", "count", "all"],
 };
 
 describe("board clock copy", () => {

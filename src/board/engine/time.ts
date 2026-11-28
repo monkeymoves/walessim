@@ -25,6 +25,14 @@ export const yearOfStep = (model: BoardModel, step: number): number =>
 /** The first step of a calendar year (the step that reaches May of that year). */
 export const stepOfYear = (model: BoardModel, year: number): number => Math.ceil((year - model.game.first_year) / model.game.years_per_step - 1e-9);
 
+/**
+ * The last step a keystone can be started: the first step of `keystone_last_start_year` (May 2044).
+ * One answer for the build blocker, the time line mark, the tier card and the build menu (fix round
+ * 2: the blocker allowed Spring 2045 while game.yaml said May 2044). projects.test.ts checks that a
+ * keystone started here at its full build time opens by the last step.
+ */
+export const keystoneLastStep = (model: BoardModel): number => stepOfYear(model, model.game.keystone_last_start_year);
+
 /** True when arriving at `step` closes at least one year (every fourth step at a quarter year). */
 export const closesYear = (model: BoardModel, step: number): boolean => step > 0 && yearsClosed(model, step) > 0;
 

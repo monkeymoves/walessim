@@ -120,6 +120,9 @@ export function freshStartHere(model: BoardModel, state: BoardState, council: Co
   return lowestCouncils(model, state.councils, r3(model, "lowest_count", 3)).includes(council);
 }
 
+/** The highest tier a fresh start takes coins off (R3 `max_tier`; every tier when the card lacks it). */
+export const freshStartMaxTier = (model: BoardModel): number => r3(model, "max_tier", 3);
+
 /** Coins off a build at this site from a fresh start (R3): `discount`, never below `min_cost`. 0 when none. */
 export function freshStartDiscount(model: BoardModel, state: BoardState, cost: number, site: Site): number {
   if (!freshStartOn(model) || cost <= 0) return 0;

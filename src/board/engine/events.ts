@@ -61,6 +61,21 @@ function lastGrownWarned(model: BoardModel, draft: BoardState): number | null {
   return steps.length ? Math.max(...steps) : null;
 }
 
+/**
+ * Is a grown event due to be warned now? The first comes in a seeded whole year from 0 to E1
+ * `grown_first_years`, and each next one `grown_gap_years` after the last plus a seeded 0 to
+ * `grown_jitter_years` whole years. So two game numbers on the same board meet different trouble
+ * at different times (playtest 9 should-fix 12: game 2 met the same events in the same order).
+ * Both params are 0 when the card lacks them: the first at once, then every `grown_gap_years`.
+ */
+export function grownDue(model: BoardModel, draft: BoardState, last: number | null): boolean {
+  const year = Math.max(1, stepsOf(model, 1));
+  const whole = (span: number, ...keys: (string | number)[]) => Math.floor(uniform(draft.seed, ...keys) * (Math.max(0, Math.round(span)) + 1)) * year;
+  if (last === null) return draft.step >= whole(optParam(model, RULE_IDS.severity, "grown_first_years") ?? 0, "grown-first");
+  const gap = Math.max(1, stepsOf(model, ruleParam(model, RULE_IDS.severity, "grown_gap_years")));
+  return draft.step - last >= gap + whole(optParam(model, RULE_IDS.severity, "grown_jitter_years") ?? 0, "grown-gap", last);
+}
+
 /** Warn what is coming: scheduled outside events within their lead, and, when a year closes, grown ones. */
 export function forecastNext(ctx: StepCtx): void {
   const { model, state: draft } = ctx;
@@ -77,11 +92,10 @@ export function forecastNext(ctx: StepCtx): void {
     if (f) fresh.push(f);
   }
   draft.forecast = [...kept, ...fresh];
-  const gap = Math.max(1, stepsOf(model, ruleParam(model, RULE_IDS.severity, "grown_gap_years")));
   const last = lastGrownWarned(model, draft);
   const judged = now === 0 || closesSpan(model, now, 1);
   const landing = now + lead(model, "grown_warn_years") - 1;
-  if (judged && (last === null || now - last >= gap) && landing <= lastLandingStep(model)) {
+  if (judged && grownDue(model, draft, last) && landing <= lastLandingStep(model)) {
     const grown = grownChoices(model, draft, landing)
       .sort((a, b) => uniform(draft.seed, "grown", now, b.event) - uniform(draft.seed, "grown", now, a.event))
       .slice(0, ruleParam(model, RULE_IDS.severity, "grown_at_once"));

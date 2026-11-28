@@ -52,14 +52,15 @@ rules:
     kind: threshold
     name: { en: A fresh start, cy: Dechrau newydd, cy_review: true }
     note:
-      en: People rally round the first new thing. It costs less and counts as having company for twelve years.
-      cy: Mae pobl yn cefnogi'r peth newydd cyntaf. Mae'n costio llai ac yn cyfrif fel bod ganddo gwmni am ddeuddeng mlynedd.
+      en: People rally round the first new thing. It costs less, but not a keystone. It counts as having company for eight years.
+      cy: Mae pobl yn cefnogi'r peth newydd cyntaf. Mae'n costio llai, ond nid maen clo. Mae'n cyfrif fel bod ganddo gwmni am wyth mlynedd.
       cy_review: true
     params:
-      discount: { default: 3, min: 0, max: 3, unit: { en: coins off the first project, cy: darnau arian oddi ar y prosiect cyntaf, cy_review: true }, adjustable: true, tune: true }
+      discount: { default: 2, min: 0, max: 3, unit: { en: coins off the first project, cy: darnau arian oddi ar y prosiect cyntaf, cy_review: true }, adjustable: true, tune: true }
       min_cost: { default: 1, min: 0, max: 2, unit: { en: coins it costs at least, cy: darnau arian y mae'n eu costio o leiaf, cy_review: true }, adjustable: false }
-      joined_years: { default: 12, min: 0, max: 12, unit: { en: years it counts as having company, cy: blynyddoedd y mae'n cyfrif fel bod ganddo gwmni, cy_review: true }, adjustable: true, tune: true }
+      joined_years: { default: 8, min: 0, max: 12, unit: { en: years it counts as having company, cy: blynyddoedd y mae'n cyfrif fel bod ganddo gwmni, cy_review: true }, adjustable: true, tune: true }
       lowest_count: { default: 3, min: 1, max: 5, unit: { en: lowest councils that also get a fresh start, cy: cynghorau isaf sydd hefyd yn cael dechrau newydd, cy_review: true }, adjustable: true, tune: true }
+      max_tier: { default: 2, min: 1, max: 3, unit: { en: "highest tier it takes coins off (2: never a keystone)", cy: "yr haen uchaf y mae'n tynnu darnau arian oddi arni (2: byth maen clo)", cy_review: true }, adjustable: false }
     sources: []
     confidence: low
     evidence: placeholder

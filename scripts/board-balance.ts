@@ -1,5 +1,6 @@
 /**
- * The bot gate (docs/design/v2-board.md sections 13.2 and 16.6): plays the thirteen strategy bots
+ * The bot gate (docs/design/v2-board.md sections 13.2 and 16.6, and the four marks playtest 9 added:
+ * careless loses, skill still wins, coins have a use, laws cost): plays the thirteen strategy bots
  * over many game numbers, across every start and future, plus the measures that need games of
  * their own, and prints the 16.6 table. Writes it to docs/design/board-balance-log.md unless
  * --no-write. Games run in parallel child processes (one per core less one, at most 11).
@@ -21,9 +22,10 @@ import { hashSeed } from "../src/engine/rng";
 import { acceptBoardModel } from "../src/board/model/load";
 import { boardFixture } from "../src/board/engine/fixture";
 import { allBots, playGame, random, realEngine, skilled, startFor } from "../src/board/engine/bots";
-import { botSummary, earlyWatch, median, runResult, type RunResult } from "../src/board/engine/bots-balance";
+import { spreader } from "../src/board/engine/bots-strategies";
+import { botSummary, coinWatch, earlyWatch, median, runResult, type RunResult } from "../src/board/engine/bots-balance";
 import { balanceTable, tableMarkdown } from "../src/board/engine/bots-marks";
-import { clockExact, compoundRatio, idleDrift } from "../src/board/engine/bots-probes";
+import { clockExact, compoundRatio, idleDrift, lawCost } from "../src/board/engine/bots-probes";
 import { keystonesStanding } from "../src/board/engine/end-conditions";
 import { drawFuture, scheduledSeverity } from "../src/board/engine/events";
 import { param } from "../src/board/engine/rules";
@@ -58,13 +60,15 @@ function loadModel(): { model: BoardModel; label: string } {
 type Job =
   | { kind: "bots"; game: number }
   | { kind: "shuffled"; game: number }
+  | { kind: "spreader"; game: number }
   | { kind: "search"; from: number; to: number }
   | { kind: "probe"; game: number };
 type Out =
   | { kind: "bots"; runs: RunResult[] }
   | { kind: "shuffled"; result: number }
+  | { kind: "spreader"; result: number }
   | { kind: "search"; runs: number; four: number; three: number }
-  | { kind: "probe"; drift: number; ratio: number | null };
+  | { kind: "probe"; drift: number; ratio: number | null; law: { most: number; least: number } };
 
 /** One job, in whichever process runs it. */
 function runJob(model: BoardModel, job: Job): Out {
@@ -72,12 +76,17 @@ function runJob(model: BoardModel, job: Job): Out {
     const start = startFor(model, job.game);
     return { kind: "bots", runs: allBots(model).map((bot) => {
       const watch = earlyWatch(model);
-      return runResult(model, bot.id, job.game, playGame(model, bot, job.game, start, realEngine, watch.observe), watch.early());
+      const coins = coinWatch();
+      const state = playGame(model, bot, job.game, start, realEngine, watch.observe, coins.observe);
+      return runResult(model, bot.id, job.game, state, watch.early(), coins.coins());
     }) };
   }
   if (job.kind === "shuffled") {
     const start = startFor(model, job.game);
     return { kind: "shuffled", result: runResult(model, "skilled-shuffled", job.game, playGame(model, skilled({ shuffleSites: true }), job.game, start)).result };
+  }
+  if (job.kind === "spreader") {
+    return { kind: "spreader", result: runResult(model, "spreader", job.game, playGame(model, spreader(), job.game, startFor(model, job.game))).result };
   }
   if (job.kind === "search") {
     const out = { kind: "search" as const, runs: 0, four: 0, three: 0 };
@@ -89,7 +98,7 @@ function runJob(model: BoardModel, job: Job): Out {
     }
     return out;
   }
-  return { kind: "probe", drift: idleDrift(model, job.game), ratio: compoundRatio(model, job.game) };
+  return { kind: "probe", drift: idleDrift(model, job.game), ratio: compoundRatio(model, job.game), law: lawCost(model, job.game) };
 }
 
 function jobs(): Job[] {
@@ -97,6 +106,7 @@ function jobs(): Job[] {
   for (let g = 1; g <= PROBE_GAMES; g++) out.push({ kind: "probe", game: g });
   for (let g = 1; g <= GAMES; g++) out.push({ kind: "bots", game: g });
   for (let g = 1; g <= SHUFFLE_GAMES; g++) out.push({ kind: "shuffled", game: g });
+  for (let g = 1; g <= SHUFFLE_GAMES; g++) out.push({ kind: "spreader", game: g });
   for (let g = 1; g <= SEARCH; g += SEARCH_CHUNK) out.push({ kind: "search", from: g, to: Math.min(SEARCH + 1, g + SEARCH_CHUNK) });
   return out;
 }
@@ -144,6 +154,7 @@ async function main(): Promise<void> {
   const outs = await runAll(model, jobs());
   const runs = outs.flatMap((o) => (o.kind === "bots" ? o.runs : []));
   const shuffled = outs.flatMap((o) => (o.kind === "shuffled" ? [o.result] : []));
+  const spread = outs.flatMap((o) => (o.kind === "spreader" ? [o.result] : []));
   const search = { runs: 0, four: 0, three: 0 };
   for (const o of outs) if (o.kind === "search") { search.runs += o.runs; search.four += o.four; search.three += o.three; }
   const probes = outs.flatMap((o) => (o.kind === "probe" ? [o] : []));
@@ -154,7 +165,9 @@ async function main(): Promise<void> {
   const rows = balanceTable(runs, {
     idleDrift: Math.max(...probes.map((p) => Math.abs(p.drift))),
     shuffledMedian: median(shuffled),
+    spreaderMedian: median(spread),
     compoundRatio: ratios.length ? median(ratios) : NaN,
+    lawCost: probes.length ? { most: median(probes.map((p) => p.law.most)), least: median(probes.map((p) => p.law.least)) } : undefined,
     searchKeystones: search,
     severity: { min: Math.min(...sev), max: Math.max(...sev), lo: param(model, RULE_IDS.severity, "min"), hi: param(model, RULE_IDS.severity, "max") },
     endingsTotal: model.endings.length,
@@ -167,7 +180,7 @@ async function main(): Promise<void> {
   const text = [
     `# Board balance log`,
     ``,
-    `Model: ${label} (hash ${model.meta.hash}${model.meta.fixture ? ", fixture: illustrative numbers" : ""}). ${GAMES} game numbers, every start in turn, futures drawn from the game number. ${SEARCH} random search runs, ${PROBE_GAMES} games for the idle and compounding measures, ${SHUFFLE_GAMES} for Skilled at random sites. Took ${seconds.toFixed(0)} seconds.`,
+    `Model: ${label} (hash ${model.meta.hash}${model.meta.fixture ? ", fixture: illustrative numbers" : ""}). ${GAMES} game numbers, every start in turn, futures drawn from the game number. ${SEARCH} random search runs, ${PROBE_GAMES} games for the idle, compounding and law measures, ${SHUFFLE_GAMES} each for Skilled at random sites and for Spreader. Took ${seconds.toFixed(0)} seconds.`,
     ``,
     `Every size in the game is a game rule; these are measures of the bots, not of Wales.`,
     ``,

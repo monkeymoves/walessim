@@ -3,32 +3,26 @@
  * branch and tier, locked ones shown with what they need. Hover or focus previews on the map (the
  * links its effect travels light up) and on the council's bars. Each project is a ticket on the
  * stock of its branch, so a glance says which branch it feeds.
+ *
+ * Playtest 9: each branch lists its own builds by step, then "After the keystone" (the legacy
+ * project, which needs the keystone, so it never reads as one of the projects that open it), then
+ * "Already here" (upgrades, apart from new builds). The road at the head of each branch names the
+ * next gate exactly and says whether its keystone can be built in this council, and if not, why.
  */
 import { createMemo, createSignal, For, Show, type JSX } from "solid-js";
 import { lang, Pair, t, tn } from "./lang";
-import { CloseButton, Icon, StampButton } from "../../ui/parts";
-import type { Action, ActionOption, BoardModel, ProjectDef } from "../engine/api";
+import { CloseButton } from "../../ui/parts";
+import { keystoneLastStep, type Action, type ActionOption, type ProjectDef } from "../engine/api";
 import { blockerWords } from "./blockers";
 import { BranchRoad } from "./BranchRoad";
 import { branchPath } from "./branchPath";
+import { BuildTicket } from "./BuildTicket";
 import { councilView, options } from "./engine";
 import { useGame } from "./game";
-import { iconFor } from "./icons";
-import { PreviewLines } from "./PreviewLines";
-import { councilName, measureName, num, tx, wholeCoins, whenWords } from "./words";
+import { councilName, tx, wholeCoins, whenWords } from "./words";
 
 const key = (a: Action) => JSON.stringify(a);
 const BRANCH_STOCK = ["buff", "green", "pink", "blue"];
-
-/** Where a project would stand, in words: the council, or the rail link and the other end. */
-function siteWords(model: BoardModel, o: ActionOption, here: string): string {
-  const a = o.action;
-  if ((a.kind === "build" || a.kind === "upgrade") && a.site.link) {
-    const l = model.links.find((x) => x.id === a.site.link);
-    if (l) return t("boardui.build.onLink", { line: tx(l.name ?? ""), other: councilName(model, l.from === here ? l.to : l.from) });
-  }
-  return "";
-}
 
 export function BuildMenu(props: { code: string }): JSX.Element {
   const game = useGame();
@@ -39,34 +33,36 @@ export function BuildMenu(props: { code: string }): JSX.Element {
     if (!s) return [];
     try { return options(model, s, props.code).filter((o) => o.action.kind === "build" || o.action.kind === "upgrade"); } catch (e) { console.warn(e); return []; }
   });
-  const byBranch = (branch: string, tier: number) => opts().filter((o) => o.branch === branch && o.tier === tier);
   const def = (o: ActionOption): ProjectDef | undefined => model.projects.find((p) => p.id === o.project);
-  const free = (o: ActionOption) => o.action.kind === "build" && game.state()?.freeProject === o.project;
+  const builds = (branch: string, tier: number) => opts().filter((o) => o.action.kind === "build" && o.branch === branch && o.tier === tier && !def(o)?.legacy_of);
+  const legacy = (branch: string) => opts().filter((o) => o.action.kind === "build" && o.branch === branch && !!def(o)?.legacy_of);
+  const upgrades = (branch: string) => opts().filter((o) => o.action.kind === "upgrade" && o.branch === branch && !o.blockers.some((b) => b.kind === "max_level"));
   const view = createMemo(() => {
     const s = game.state();
     try { return s ? councilView(model, s, props.code) : null; } catch { return null; }
   });
-  /**
-   * Why a build costs less than its list price, named on the card (playtest 8, should-fix 3: prices
-   * changed with no word). A fresh start (rule R3) and an open deal here (rule P6) are the two discounts.
-   */
-  const discountWords = (o: ActionOption): string => {
-    const d = def(o);
-    if (!d || o.action.kind !== "build" || free(o) || o.cost >= d.cost) return "";
-    const v = view(), why: string[] = [];
-    if (v?.freshStart) why.push(t("boardui.build.offFresh"));
-    if (v?.deal && v.deal.kept === null) why.push(t("boardui.build.offDeal", { measure: measureName(model, v.deal.measure) }));
-    return t("boardui.build.off", { n: num(d.cost - o.cost), full: num(d.cost) }) + (why.length ? " " + why.join(" ") : "");
+  /** Whether this branch's keystone can be built in this council, once its step is open. */
+  const keystoneHere = (branch: string): string | undefined => {
+    const o = builds(branch, 3).find((x) => def(x)?.keystone);
+    if (!o) return undefined;
+    const name = councilName(model, props.code);
+    if (o.allowed) return t("boardui.path.here.ready", { council: name, when: whenWords(model, keystoneLastStep(model)), years: def(o)!.build_years });
+    return t("boardui.path.here.not", { council: name, why: o.blockers.map((b) => blockerWords(model, b, game.state() ?? undefined)).join(" ") });
   };
-  const upgradeLevel = (o: ActionOption): number => {
-    const a = o.action;
-    if (a.kind !== "upgrade") return 0;
-    return (game.state()?.projects.find((p) => p.project === a.project && p.site.council === a.site.council && p.site.link === a.site.link)?.level ?? 1) + 1;
-  };
-
   const build = (o: ActionOption) => {
     if (game.act(o.action)) { setOpen(null); game.setHover(null); }
   };
+  const Tickets = (p: { list: ActionOption[]; label: string }) => (
+    <ol class="bw-tickets" aria-label={p.label} onPointerLeave={() => !open() && game.setHover(null)}>
+      <For each={p.list}>
+        {(o) => {
+          const id = key(o.action);
+          const toggle = () => { const next = open() === id ? null : id; setOpen(next); game.setHover(next ? o.action : null); };
+          return <BuildTicket o={o} def={def(o)} here={props.code} open={open() === id} onToggle={toggle} onBuild={() => build(o)} />;
+        }}
+      </For>
+    </ol>
+  );
 
   return (
     <aside class="bw-build sheet-held" aria-labelledby="bw-build-title" data-testid="bw-build" onPointerLeave={() => !open() && game.setHover(null)}>
@@ -75,75 +71,26 @@ export function BuildMenu(props: { code: string }): JSX.Element {
         <CloseButton label={t("boardui.close")} onClick={() => { game.setSheet(null); game.setHover(null); }} />
       </header>
       <p class="small bw-build-coins">{tn("boardui.build.coins", wholeCoins(game.state()?.coins ?? 0))} {t("boardui.build.anyTime")}</p>
-      <Show when={view()?.freshStart}><p class="small bw-fresh">{t("boardui.council.freshStart")}</p></Show>
+      <Show when={view()?.freshStart}><p class="small bw-fresh">{t("boardui.build.freshHead")}</p></Show>
       <div class="bw-build-scroll">
         <For each={model.branches}>
           {(b, bi) => (
             <section class="bw-branch" style={{ "--stock": `var(--ticket-${BRANCH_STOCK[bi() % 4]})` }}>
               <Pair single={lang() === "cy"} text={b.name} as="h3" class="t-3 bw-branch-name" />
               <p class="small bw-branch-note">{tx(b.note)}</p>
-              <Show when={game.state()}>{(st) => <BranchRoad path={branchPath(model, st(), b)} year={st().year} />}</Show>
+              <Show when={game.state()}>{(st) => <BranchRoad model={model} path={branchPath(model, st(), b)} state={st()} here={keystoneHere(b.id)} />}</Show>
               <For each={[1, 2, 3]}>
-                {(tier) => (
-                  <Show when={byBranch(b.id, tier).length}>
-                    <ol class="bw-tickets" aria-label={t(`boardui.tierHead.${tier}`)} onPointerLeave={() => !open() && game.setHover(null)}>
-                      <For each={byBranch(b.id, tier)}>
-                        {(o) => {
-                          const d = def(o);
-                          const id = key(o.action);
-                          return (
-                            <li class="bw-ticket" classList={{ locked: !o.allowed, open: open() === id, keystone: !!d?.keystone }}>
-                              <button
-                                type="button"
-                                class="bw-ticket-face"
-                                aria-expanded={open() === id}
-                                onPointerEnter={() => !open() && game.setHover(o.action)}
-                                onFocus={() => !open() && game.setHover(o.action)}
-                                onClick={() => { const next = open() === id ? null : id; setOpen(next); game.setHover(next ? o.action : null); }}
-                                data-testid={`bw-opt-${o.project}`}
-                              >
-                                <span class="bw-ticket-stub"><Icon name={iconFor(model, o.project ?? "")} size={26} /><span class="furniture">{t(`boardui.tierShort.${tier}`)}</span></span>
-                                <span class="bw-ticket-body">
-                                  <span class="bw-ticket-name">
-                                    {o.action.kind === "upgrade" ? t("boardui.build.upgrade", { name: tx(d?.name), level: upgradeLevel(o) }) : tx(d?.name)}
-                                    <Show when={d?.keystone}><span class="small bw-keystone">{t("boardui.build.keystone")}</span></Show>
-                                    <Show when={d?.quick}><span class="small bw-keystone">{t("boardui.build.quick")}</span></Show>
-                                  </span>
-                                  <span class="small bw-ticket-site">{siteWords(model, o, props.code)}</span>
-                                  <Show when={discountWords(o)}><span class="small bw-ticket-off">{discountWords(o)}</span></Show>
-                                  <Show when={!o.allowed}>
-                                    <span class="small bw-ticket-why">{o.blockers.map((x) => blockerWords(model, x)).join(" ")}</span>
-                                  </Show>
-                                </span>
-                                <span class="bw-ticket-fare">
-                                  <span class="furniture">{t("boardui.build.cost")}</span>
-                                  <span class="bw-fare-n" classList={{ short: o.blockers.some((x) => x.kind === "coins") }}>{free(o) ? t("boardui.build.free") : num(o.cost)}</span>
-                                  <Show when={o.readyStep !== undefined}><span class="small">{t("boardui.build.works", { when: whenWords(model, o.readyStep! + 1) })}</span></Show>
-                                </span>
-                              </button>
-                              <Show when={open() === id}>
-                                <div class="bw-ticket-more">
-                                  <p class="story-small">{tx(d?.what)}</p>
-                                  <p class="small"><i>{t("boardui.build.example", { text: tx(d?.example) })}</i></p>
-                                  <Show when={d?.catch}><p class="small bw-catch">{t("boardui.build.catch", { text: tx(d?.catch) })}</p></Show>
-                                  <Show when={o.buildYears !== undefined}><p class="small">{t("boardui.build.takes", { n: num(o.buildYears!) })}</p></Show>
-                                  <Show when={d?.running}><p class="small">{t("boardui.build.running", { n: num(d!.running!.coins_per_year) })}</p></Show>
-                                  <PreviewLines />
-                                  <Show when={o.allowed} fallback={<p class="small bw-ticket-why">{o.blockers.map((x) => blockerWords(model, x)).join(" ")}</p>}>
-                                    <StampButton onClick={() => build(o)} data-testid="bw-build-it">
-                                      {free(o) ? t("boardui.build.goFree") : tn("boardui.build.go", o.cost)}
-                                    </StampButton>
-                                  </Show>
-                                </div>
-                              </Show>
-                            </li>
-                          );
-                        }}
-                      </For>
-                    </ol>
-                  </Show>
-                )}
+                {(tier) => <Show when={builds(b.id, tier).length}><Tickets list={builds(b.id, tier)} label={t(`boardui.tierHead.${tier}`)} /></Show>}
               </For>
+              <Show when={legacy(b.id).length}>
+                <h4 class="label bw-build-group">{t("boardui.build.afterKeystone")}</h4>
+                <Tickets list={legacy(b.id)} label={t("boardui.build.afterKeystone")} />
+              </Show>
+              <Show when={upgrades(b.id).length}>
+                <h4 class="label bw-build-group">{t("boardui.build.alreadyHere")}</h4>
+                <p class="small bw-build-groupnote">{t("boardui.build.alreadyHereNote")}</p>
+                <Tickets list={upgrades(b.id)} label={t("boardui.build.alreadyHere")} />
+              </Show>
             </section>
           )}
         </For>

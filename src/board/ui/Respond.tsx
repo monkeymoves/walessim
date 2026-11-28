@@ -37,7 +37,8 @@ export function Respond(props: { event: string; councils: string[] }): JSX.Eleme
             return (
               <li>
                 <TabButton onClick={() => game.act(o.action)} why={o.allowed ? null : o.blockers.map((b) => blockerWords(model, b)).join(" ")} data-testid="bw-respond-pick">
-                  {tx(r?.name)}: {r?.cost ? tn("boardui.respond.cost", r.cost) : t("boardui.respond.free")}
+                  {/* the engine's price (a storm answer is free where farms hold water), as the coins it takes */}
+                  {tx(r?.name)}: {o.cost ? tn("boardui.respond.cost", o.cost) : t("boardui.respond.free")}
                 </TabButton>
                 <span class="small">{tx(r?.what)}</span>
               </li>

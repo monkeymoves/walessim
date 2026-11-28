@@ -16,8 +16,11 @@ import type { Deal, Momentum, Story } from "./types-clock";
 /** Why an action cannot be taken now. */
 export type Blocker =
   | { kind: "coins"; need: number; have: number }
-  /** A condition that does not hold, and the `requires` (or other) rule card that sets it. */
-  | { kind: "needs"; condition: Condition; rule: RuleId }
+  /**
+   * A condition that does not hold, and the `requires` (or other) rule card that sets it. For a
+   * `project` condition with `at_least`, `have` is how many match now (a gate's "1 of 2").
+   */
+  | { kind: "needs"; condition: Condition; rule: RuleId; have?: number }
   | { kind: "already_here" }
   /** One of each keystone a game (sections 5.3 and 16.3.5): this one stands or is being built somewhere. */
   | { kind: "one_keystone" }
@@ -25,7 +28,7 @@ export type Blocker =
   /** A project still being built cannot be made bigger until it works (from the step after `readyStep`). */
   | { kind: "still_building"; readyStep: number }
   /** A keystone started now would not be finished by 2050. */
-  | { kind: "too_late"; lastYear: number }
+  | { kind: "too_late"; lastStep: number }
   | { kind: "law_changes_used" }
   | { kind: "phase"; phase: string }
   | { kind: "not_offered" };

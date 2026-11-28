@@ -10,6 +10,7 @@ import type {
 } from "../../engine/api";
 import { MEASURE_IDS } from "../../engine/api";
 import { fillCy } from "../cymraeg";
+import { fillEn } from "../lang";
 
 /** What a small map or the time-lapse is coloured by: one measure, all six together, or young adults. */
 export type EndLens = MeasureId | "all" | "young";
@@ -110,7 +111,7 @@ export function fillText(text: Text | undefined, slots: Record<string, SayVar>, 
     const vals = Object.fromEntries(Object.entries(slots).map(([k, v]) => [k, slotText(v, lang)]));
     return fillCy(s, vals);
   }
-  return s.replace(/\{(\w+)\}/g, (all, k: string) => (k in slots ? slotText(slots[k], lang) : all));
+  return fillEn(s, Object.fromEntries(Object.entries(slots).map(([k, v]) => [k, slotText(v, lang)])));
 }
 
 /** True when a filled sentence still has an empty slot, so it should not be shown. */

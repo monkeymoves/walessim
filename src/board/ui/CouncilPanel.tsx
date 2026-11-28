@@ -14,10 +14,14 @@ import * as eng from "./engine";
 import { useGame } from "./game";
 import { CouncilLinks } from "./CouncilLinks";
 import { visitBlockWords } from "./blockers";
+import { boardSource } from "./whyWords";
+import { dealWords } from "./dealWords";
 import { backsAtOf } from "./mapLinks";
+import { ruleParamOf } from "./rules";
 import { backingShown, councilName, measureName, num, outOf10, projectName, say, signed, tx, whenWords } from "./words";
 
-export const sourceOf = (model: BoardModel, id: string): Source | null => (model.sources.find((s) => s.id === id) as unknown as Source) ?? null;
+/** A source as the board shows it, with no raw data ids in its notes (whyWords.ts). */
+export const sourceOf = (model: BoardModel, id: string): Source | null => boardSource(model, id);
 
 export function CouncilPanel(props: { code: string }): JSX.Element {
   const game = useGame();
@@ -64,6 +68,12 @@ export function CouncilPanel(props: { code: string }): JSX.Element {
     if (working) out.push(t(working === 1 ? "boardui.council.mapStitch.one" : "boardui.council.mapStitch.other", { n: working }));
     return out;
   };
+  /** What on the rise or slipping does, from rule R2's own sizes (playtest 9, should-fix 7). */
+  const momentumWhy = (m: "rising" | "slipping"): string => t(`boardui.council.momentumWhy.${m}`, {
+    at: num(Math.abs(ruleParamOf(model, "R2", m === "rising" ? "rise_at" : "slip_at", 0.6))),
+    years: num(ruleParamOf(model, "R2", "over_years", 4)),
+    coins: num(ruleParamOf(model, "R2", "coins_per_year", 0.5)),
+  });
   const real = () => (view()?.real ?? []).filter((r) => (shownMeasure() ? r.measure === shownMeasure() : r.measure === view()?.asking[0]));
 
   return (
@@ -77,13 +87,17 @@ export function CouncilPanel(props: { code: string }): JSX.Element {
           <p class="bw-backs" classList={{ yes: v().backs }}>
             <b>{v().backs ? t("boardui.council.backs") : t("boardui.council.backsNot")}</b>{" "}
             <span class="data">{t("boardui.council.backing", { n: num(backingShown(v().backing)), at: num(backsAtOf(model)) })}</span>
-            <span class="small bw-honest">{t("boardui.honesty.game_estimate")}</span>
+            <span class="small bw-honest">{t("boardui.honesty.game_estimate")}</span>{" "}
+            {/* backing's own Why?: a law, a deal, a slip or a broken promise is named (playtest 9, must-fix 2) */}
+            <ThreadButton class="bw-why" onClick={() => game.setWhyAt({ council: props.code, measure: "backing", fromStep: Math.max(0, step() - stepsOf(model, 1)), toStep: step() })} data-testid="bw-backing-why">
+              {t("boardui.why.button")}
+            </ThreadButton>
           </p>
           <Show when={v().momentum !== "steady"}>
-            <p class={`bw-momentum small ${v().momentum}`}><i aria-hidden="true" /><span><b>{t(`boardui.council.momentum.${v().momentum}`)}</b> {t("boardui.council.momentumNote")}</span></p>
+            <p class={`bw-momentum small ${v().momentum}`}><i aria-hidden="true" /><span><b>{t(`boardui.council.momentum.${v().momentum}`)}</b> {momentumWhy(v().momentum as "rising" | "slipping")}</span></p>
           </Show>
           <Show when={v().deal && v().deal!.kept === null}>
-            <p class="warnstrip small"><span>{t("boardui.council.deal", { measure: measureName(model, v().deal!.measure), when: whenWords(model, v().deal!.dueStep) })}</span></p>
+            <p class="warnstrip small" data-testid="bw-council-deal"><span>{dealWords(model, game.state()!, v().deal!).what}</span></p>
           </Show>
           <Show when={v().freshStart}>
             <p class="bw-fresh small">{t("boardui.council.freshStart")}</p>

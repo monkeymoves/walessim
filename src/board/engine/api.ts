@@ -50,9 +50,13 @@ export type { AdvanceOptions } from "./clock";
 export { BoardActionError, BoardModelError, BoardRunError } from "./errors";
 export { boardFixture, FIXTURE_COUNCILS } from "./fixture";
 /** Calendar helpers for the screens: the year and season of a step, and steps in a span of years. */
-export { blockOf, closesYear, isElectionStep, perStep, seasonOf, stepOfYear, stepsOf, yearOfStep } from "./time";
+export { blockOf, closesYear, isElectionStep, keystoneLastStep, perStep, seasonOf, stepOfYear, stepsOf, yearOfStep } from "./time";
 /** An event's noun key for the middle of a sentence (board.json `event.<id>`), and the river it names in a council. */
 export { eventNoun, riverAt } from "./events";
+/** Playtest 9 must-fix 2 and 9: a law's lasting backing per council, the standing parts now, a broken deal's fade. */
+export { brokenShare, lawBacking, standingParts } from "./standing";
+/** Playtest 9 should-fix 1: points better than four years ago that people expect now (rule P1). */
+export { expectedGain } from "./people-moods";
 export type { Headway } from "./score";
 export type { OnTheWay } from "./on-the-way";
 

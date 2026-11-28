@@ -303,7 +303,7 @@ export const RULE_IDS = {
   need: "R4",
   /** Phase 2 (16.4), package 9: after an event of severity 2 or more, builds there take half the time for `years`. */
   rebuild: "E2",
-  /** Phase 2 (16.4), package 9: a lost election is a deal (deal_years, deal_discount, kept_here, kept_near, broken). Replaces B3. */
+  /** Phase 2 (16.4), package 9: a lost election is a deal (deal_years, deal_discount, kept_here, kept_near, broken_here, broken_years). Replaces B3. */
   hungTerm: "P6",
 } as const;
 

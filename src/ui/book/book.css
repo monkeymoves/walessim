@@ -142,3 +142,6 @@
 }
 
 .slip-where { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--slate-2); color: var(--on-slate-2); font-size: var(--size-ui); }
+
+/* A project or event a Why? link opened the board's list at (#/llyfr/bwrdd/projects/<id>). */
+.bwb-focus > th, .bwb-focus > td { background: var(--paper-2); box-shadow: inset 3px 0 0 var(--ink); }

@@ -420,3 +420,128 @@ Stub meanwhile: English citation titles.
 File: src/board/ (the join may edit any board file)
 Need: none. Every open entry above is closed or decided. New at the join: `visitBlockWords` (blockers.ts), the `still_building` blocker, `board.stop.finished_link`, `shownGap` (end/record.ts), `underNow` (Timeline.tsx), `up` slips (markLayout.ts), the strip's "on the way" from the engine's `headway`, and `on-the-way.ts` dating a build's opening from the step after `readyStep`. Removed: `visit_used`, `riverOf` (end/view.ts), story-terms.ts `riverAt`, `readyYearOf`, `branchIcon`, `hitCouncils`, `boardui.title.try*`. Scripts: design/scripts/board-fix1-join.mjs, board-fix1-join-visit.mjs. The marks are in docs/design/playtest-8-board-cold.md "After fix round 1".
 Stub meanwhile: n/a.
+
+## [D2] Laws: what the screen must say  (done: C's LawsSheet shows each council's lasting cost; the join said in `laws.note` that it lasts as long as the law stands)
+File: src/board/ui/LawsSheet.tsx, src/board/ui/lawCost.ts, model/i18n/{en,cy}/boardui.json `laws.note` (owner: package C)
+Need: a law's backing cost is now LASTING (playtest 9 must-fix 2). It falls at once and stands, unchanged, for as long as the law does; repealing gives it back; nothing fades. The old cost went into moods and held.ts took it back the next step while the moods kept it, which is why backing crashed and then "recovered with no explanation". Engine: `lawBacking(model, lawId)` in api.ts gives each council's points (the same `lawCost.ts` gets by `act`, which is now exact). Numbers now: local homes rule Cardiff -0.6, Newport -0.6, every other council +0.1 (young people and Welsh speakers like it); no homes on flood plains -0.4 in Bridgend, Rhondda Cynon Taf, Caerphilly, Blaenau Gwent, Torfaen and Merthyr Tydfil, +0.2 in the Vale, Cardiff and Newport; visitor charge -0.5 in the Vale, Cardiff, Monmouthshire and Newport (and now half a coin a year). Words, please: `laws.note` "A law costs no coins. It costs backing in the councils below, at once, for as long as it stands. Repeal it and the backing comes back." Each law lists its councils and points before Pass, and the count after ("9 of 10 back you now, 7 if you pass it"). Why? on backing names the law (cause `law`, rule P1).
+Stub meanwhile: none needed; the engine is exact.
+
+## [D2] Deals: what the screen must say  (done at the join: dealWords.ts and Election.tsx read `broken_here` and `broken_years`; `deal.note`, `deal.brokenBacking`, `election.means.lost` say that council only and the fade; `cause.dealBroken` names the fading anger; src/board/ui/rules.test.ts fails any screen that reads a rule param the model lacks)
+File: src/board/ui/dealWords.ts, src/board/ui/Election.tsx, model/i18n/{en,cy}/boardui.json `deal.note`, `election.means.lost` (owner: package C)
+Need: P6 `broken` (0.5 everywhere) is gone (playtest 9 must-fix 9: 8 councils to 1). It is now `broken_here` 1.5 (backing lost in that council only) and `broken_years` 4 (the loss fades evenly to nothing, a quarter each year as a year closes). `ruleParamOf(model, "P6", "broken", 0.5)` in dealWords.ts and Election.tsx now falls back to 0.5 and is wrong: read `broken_here` and `broken_years`. Words, please: `deal.note` "Kept, they back you more. Broken, {council} backs you {broken} less, and that fades over {years} years. A game rule." `election.means.lost` "... Kept, backing there rises by {kept}. Broken, it falls by {broken} there, fading over {years} years." In the term report and Why?, the fade is its own record: rule P6, cause `deal` (positive delta, deal `kept: false`); say "The anger at your broken deal with {council} is fading." Engine: `brokenShare(model, deal, step)` and `standingParts(model, state, code)` in api.ts. A broken deal has a new `brokenStep`.
+Stub meanwhile: the screens say 0.5 everywhere, which is now untrue.
+
+## [D2] The keystone gate: what the screen must say  (done by C: blockers.ts `gateWords` with Now n of 2, legacy under After the keystone)
+File: src/board/ui/blockers.ts, BuildMenu.tsx, TreeSheet.tsx, BranchRoad.tsx, boardui.json (owner: package C)
+Need: decided and stated (playtest 9 must-fix 1): the keystone opens when the branch's one bigger project is working in TWO councils. The tier 3 gate in tree.yaml now names it (`project: station-quarter`, `community-energy`, `valleys-park`, `health-hub`, with `branch`, `tier: 2`, `at_least: 2`). A legacy project never counts for a gate (conditions.ts), even when it stands. Every `needs` blocker on a `project` condition now carries `have` (how many match now). Words, please: for a gate with `project` and `at_least` over 1, "{project} working in {n} councils: {have} of {n}" (not "2 bigger projects"); for the tier 2 gate, "{n} starter projects of {branch} working anywhere: {have} of {n}. The same one in two councils counts twice." Show the legacy project apart, as "After the keystone". The keystone card always names its blocker from `blockers` (coins, the gate with its count, `too_late` 2044, `one_keystone`). The `need:<branch>:3` rule card note now says the same. The fresh start no longer takes coins off a keystone (R3 `max_tier` 2), so "3 off the full price of 8" cannot show.
+Stub meanwhile: the old words show "2 bigger projects", which is still true but does not say the same one twice.
+
+## [D2] People expect more each term  (a notice for packages B, C and A)
+File: model/board/rules/people.yaml (owner: package D)
+Need: none required. Playtest 9 should-fix 1: careless games won every election. Rule P1 now has `expect_points` (0) and `expect_rise` (0.12): each group judges what it cares about against that much better than four years ago, 0.12 more for every election held. So careless play loses elections (Random loses one in 91 of 100 runs of the full balance run) and skilled play still wins (4 of 5 or more in 98 of 100). A mood reason can now be `board.mood.measure.slow` ("Health has got better, but not by as much as people expect after four years"), in board.json both languages. `expectedGain(model, state)` in api.ts gives the bar now if the election card or rule book wants to say it ("People now expect each score 0.36 better than four years ago"). The purse is now 20 (B1 `purse_max`), and Work and pay adds 0.35 coins a year a step (was 0.5). In the quick runs more lost elections made The comeback end more games (up to 0.37 of branch and Skilled runs, the cap is 0.40); in the full run the largest is The green valleys at 0.33, but package A may want to watch The comeback.
+Stub meanwhile: n/a.
+
+## [D2] Local truth: the Ebbw Valley Line is not "to Caerphilly"  (done at the join for the words: `link.rail` "{line}: trains run on into the {other} council area"; real line ends per link stay a data task)
+File: model/i18n/{en,cy}/boardui.json `link.rail` (owner: package C); scripts/board/rail-links.ts (owner: data)
+Need: playtest 9 should-fix 11. The rail link `rail:blaenau-gwent-caerphilly` is the Ebbw Valley Line, which runs from Ebbw Vale through Newbridge and Risca (Caerphilly county borough, not Caerphilly town, which is on the Rhymney Line) to Newport and Cardiff. `link.rail` "{line} to {other}" reads "Ebbw Valley Line to Caerphilly". Words, please: "{line}: trains run on into {other} council. Trains: {quality}." Better still, the data owner could give each rail link the line's real ends (Ebbw Valley Line: Ebbw Vale Town to Newport and Cardiff Central), shown as "{line}, Ebbw Vale to Newport and Cardiff". Links are derived, not authored, so links.yaml cannot carry it. The other two local truth items are fixed in events.yaml: a flood raises flood risk a step where it lands (so a flooded council never reads "low"), and a surgery closing takes 0.15 off Health, not 0.3.
+Stub meanwhile: the panel says "to Caerphilly".
+
+## [D2] Tests outside package D that moved with the numbers  (a notice for packages C and A)
+File: src/board/ui/panels9.test.ts (owner: package C); src/board/boundaries.test.ts (story-terms.ts, owner: package A)
+Need: panels9 "charges an event answer the price its button shows" finds no state with an answer to give: grown events now come at seeded times (E1 `grown_first_years` 2), so the sampled states (testStates, `careless` 2029) hold none. Sample a state with a pending `respond` (for example run each careless game until one is waiting). boundaries.test fails on story-terms.ts importing ../../engine/welsh, not a package D file.
+Stub meanwhile: n/a.
+
+## [B fix 2] Slow the Fast speed so cards cannot pile up  (done at the join: game.yaml brisk 2500, fast 1500; board.spec.ts fast game timeout 480 s)
+File: model/board/game.yaml `speeds` (owner: package D)
+Need: cold playtest 9 should-fix 4: Fast is 750 ms a step (3 seconds a year) and civ and cymraeg met card after card (`g1-19`, `g1-20`). Package B now shows waiting cards one at a time with "Card 1 of 3" and "Carry on past all 3 cards", drops cards that are no longer true, and never runs time while a card is up, but the speed itself is data. Suggested: brisk 2500 (10 s a year), fast 1500 (6 s a year); steady stays 4000 (16 s a year). The clock line reads the seconds from the model, so nothing else changes.
+Stub meanwhile: the speeds as they are.
+
+## [B fix 2] Notice: event cards, stop cards and warnings sit in the lane between the columns  (a notice for the owners of Respond.tsx and board.css)
+File: src/board/ui/clock.css `.bw-lane` (owner: package B)
+Need: none, unless you move the columns. Cold playtest 9 must-fix 4: `.bw-stop`, the warning slip and `.bw-respond` (the event card) now sit between the build menu and the council panel, centred, scrolling inside themselves, never over the build menu or Build it. clock.css repeats the column widths as `--bw-left-col` (14 + 432, 14 + 392 at 1280) and `--bw-right-col` (14 + 372, 14 + 336); if `.bw-build` or `.bw-right` change width in board.css, change these too. tests/e2e/board-lane.spec.ts measures the real boxes at 1280 x 800 and 1440 x 900 and fails on any overlap or clip. With the build menu open the ticker also moves into the lane.
+Stub meanwhile: n/a.
+
+## [B fix 2] The term report scrolls with no sign there is more  (done at the join: TermReport.tsx shows a "More below" button at the foot until the end is reached, `boardui.term.more`)
+File: src/board/ui/Election.tsx, TermReport.tsx (owner: package C)
+Need: cold playtest 9 must-fix 4, casual `g1-17.png`: the election card's last slip ("Why?") is cut at the foot of `.bw-term-scroll`, which reads as clipped. A fade or "more below" at the foot of the scroll, or a shorter report, would close it. Package B did not change it.
+Stub meanwhile: the report scrolls.
+
+## [B fix 2] Notice: the clock's rules after cold playtest 9  (a notice for the coordinator)
+File: src/board/ui/clock/ (owner: package B)
+Need: none. After any card time does what it did before the card (Carry on, an answer, the term report closed); Look and Go and visit pause. "Paused after your answer" is gone (`boardclock.status.answered` removed). Held reads "Waiting"; paused reads "Paused by you". Space works the clock on any focused control except a form field, and on a card's own buttons it is that button once (keys.ts `keyMove`, keys.test.ts). The speed picked in a game is no longer saved: a new game starts at the starting speed in prefs (game.yaml's default unless a test writes another), so tests/e2e/board.spec.ts's fast game still runs fast. A stop whose fact has passed is dropped before it is read (stops.ts `stillTrue`). design/scripts/pw-dev-b.config.ts runs one e2e spec against a running dev server without a build.
+Stub meanwhile: n/a.
+
+## [B fix 2] A keystone started in the last allowed season cannot work by 2050  (done at the join: engine time.ts `keystoneLastStep` = the first step of 2044, used by the blocker, the time line, the tier card, the road and the build menu; the `too_late` blocker carries `lastStep`; projects.test.ts checks every keystone started then opens by the last step)
+File: src/board/engine/projects.ts (`too_late`), timeline.ts (`keystone_last_start`), model/board/game.yaml (owner: package D)
+Need: game.yaml says a six-year keystone "started by May 2044 opens in the last step". But `too_late` only blocks once `state.year > 2044`, so a keystone can still be started up to Spring 2045 (step 75), which opens after step 96, and the time line marks Spring 2045 as "the last season to start a keystone". The build menu says "by 2044" (BuildMenu.tsx). Pick one: the last start step should be 96 minus the keystone's build steps (May 2044), used by the blocker, the time line mark and the build menu alike. Package B's tier card and time line tip read the time line's step, so they follow whatever the engine decides.
+Stub meanwhile: B's words name the season the time line marks and do not claim it works by 2050.
+
+## [C fix2] Rule book: tier gates printed as raw ids, and no way to open one project  (done at the join: BoardLists.tsx prints the gate rule's note as the link; projects and events rows carry ids and BoardBook passes `parts[1]`, so a Why? link scrolls to and marks the row)
+File: src/ui/book/board/BoardLists.tsx, BoardBook.tsx (owner: the rule book / coordinator)
+Need: the projects page prints each tier gate as its rule id ("Opens when: need:valleys:2", playtest 9 must-fix 12, policy `g1-23-rulebook.png`); print the gate in words instead (src/board/ui/blockers.ts `gateWords` says it, e.g. "Opens when Station quarter is working in 2 different councils"). Also: a Why? now links to `#/llyfr/bwrdd/projects/<project id>` and `#/llyfr/bwrdd/events/<event id>` (whyWords.ts `ruleHref`); BoardBook reads only `parts[0]`, so it opens the right page but at its top. Give each project and event an id on its list page and scroll to `parts[1]`.
+Stub meanwhile: the links carry the item; the page opens at the top as before.
+
+## [C fix2] Source notes carry raw data ids  (closed at the join: the screen shows every note through `boardSource`, and panels9.test.ts fails a raw id on screen; model/sources.yaml is shared with v1 and the pipeline, so its notes stay as maintainers' notes)
+File: model/sources.yaml and the board model's source `note` fields (owner: data / coordinator)
+Need: notes such as "low_pay_hourly is the 20th percentile" (nomis_ashe), "the goal of the welsh_speakers band", "Same NRW attribution statement as nrw_sssi", "(self_employed)", "home_transport_emissions uses" are shown in the source card. Write them in words.
+Stub meanwhile: the board shows every source through whyWords.ts `boardSource`, which replaces a snake_case id with its measure name from facts.json or atlas.json, or with spaces. panels9.test.ts scans every board source note, so a new raw id fails the test.
+
+## [C fix2] Welsh: "carreg glo" left in board.json and boardend.json  (done by the Welsh pass; cymraeg.test.ts guards it)
+File: model/i18n/cy/board.json, model/i18n/cy/boardend.json (owners: package 10 / A, the Welsh pass)
+Need: the keystone is "maen clo" (masculine: "y maen clo", "Dechreuwch ef") in boardui.json now; board.json and boardend.json still say "carreg glo" (playtest 9 must-fix 10).
+Stub meanwhile: none.
+
+## [C fix2] Notice: the term report is wide, and other screen changes  (a notice for package B and the coordinator)
+File: src/board/ui/TermReport.tsx, board.css (owner: package C)
+Need: nothing. The term report carries `bw-term-wide` (board.css: up to 880 px, the election left, the term right, a tighter head), overriding clock.css `.bw-term` width; the deal to pick and what happened to each deal of the term sit at the top of the right column. Also: `roadWords(model, path, state, here?)` and `blockerWords(model, b, state?)` changed signature (the state adds "Now 1 of 2"); `boardui.build.takes` is now plural (`build.takes.one/.other`, `build.takesQuick`); `council.deal`, `council.momentumNote`, `tree.costNow`, `tree.shut`, `build.upgrade` are gone; `stop.tipping.rising/.slipping` now say backing moves each year (read by StopCard). If the engine's law cost now fades (M2 engine side), add how fast to `laws.note` in both languages; the laws sheet works out each council's cost by applying the law to a copy of the board (lawCost.ts), so its figures follow whatever the engine does.
+Stub meanwhile: none.
+
+## [A fix 2] A keystone's "From" date on the build card disagrees with the year it opens  (done by C: BuildTicket reads the option's `readyStep`, built from `buildYears` with every discount)
+File: src/board/ui/BuildMenu.tsx, src/board/engine/preview.ts or words.ts (owner: the package with playtest 9 must-fix 11)
+Need: designer `g2-09.png`: Rivers given room built in Spring 2042 showed "From Spring 2046" and "Takes 4 years to build", while the same card's preview said "+3.6 from 2045" and the game opened it in 2045 (faster builds when won well). The end now dates every keystone by the step after `readyStep` (`yearOfStep(readyStep + 1)`, as on-the-way.ts does): the letter, the evidence, the keystone moment and its chapter, checked over many bot games by endings-truth.test.ts. The card's "From" and "Takes N years" should read the same `readyStepOf` with the build's real discounts.
+Stub meanwhile: none; the end is right, the card is not.
+
+## [A fix 2] Council names that need "the" in a sentence  (done at the join: src/board/ui/english.ts, called by lang.ts `t` in English, puts "the" or "The" before a name listed in `boardui.grammar.withThe`; a fragment keeps the bare name; english.test.ts)
+File: model/authorities.yaml or model/i18n (owner: data)
+Need: "Heat and homes for all opened in Barry, in Vale of Glamorgan", "Health in Vale of Glamorgan". Every sentence slot that takes a council name reads without the article. A sentence form of the name ("the Vale of Glamorgan") would close it everywhere.
+Stub meanwhile: none.
+
+## [A fix 2] Notice: ending priorities, the Wales you did not build, towns and the verdict  (a notice for the coordinator and package D)
+File: model/board/endings.yaml, story.yaml, letters.yaml, src/board/engine/endings.ts, story-terms.ts, story.ts, src/board/ui/end/ (owner: package A)
+Need: none. Priorities now: Two countries 1, The long game 2, The joined-up valleys 3, The green valleys 4, The workshop 5, The warm country 6, The gamble 7, The comeback 8, then as before. A quick bot run (`scripts/board-balance.ts --quick --no-write`): largest share among branch bots and Skilled 0.34 (green valleys; was 0.39 warm country), Skilled now The green valleys or The workshop, 10 endings real. The balance log was not rewritten. `nearestNotBuilt` never offers an ending you built or whose keystone stands, and prefers a keystone route. {town} is now "Treorchy, in Rhondda Cynon Taf" everywhere (`townOf`), always of the same council as {council}; "{town} turns a corner" is now "{council} turns a corner". A chapter not told yet comes before a second telling of one. Grown trouble counts on the track its trigger waits for (`trackOf`), so "When the work went" can tell the big employer leaving. The verdict leads with Left for 2050 to a tenth, as the top strip shows it; `shownGap` works in tenths. Screenshots: design/shots-build/board-fix2/a/ (design/scripts/board-fix2-a-saves.ts, board-fix2-a.mjs).
+Stub meanwhile: n/a.
+
+## [Cy fix2] The top strip lets no line wrap, so a long word pushes the page off the screen  (done at the join: clock.css lets the purse and score boxes shrink, each line ends in an ellipsis)
+File: src/board/ui/clock.css (`.bw-head-note`, `.bw-coins-line`, `.bw-coins-note`, `.bw-coins-why`: `white-space: nowrap`), board.css `.bw-strip` (owner: package B)
+Need: playtest 9 must-fix 10 (cymraeg `g1-44.png`, `g1-45.png`). The cause is the strip: `.bw-strip` is a flex row whose items cannot shrink below their nowrap lines, so in the last year (purse full, "still on the way" line, income reason) the Welsh strip measured 1451 px on a 1440 px screen and pushed the language switch off the right edge. The Welsh pass shortened every strip line (cymraeg.test.ts "the top strip in Welsh" holds each within a quarter of the English), and the late-game shots at 1440 and 1280 now fit. The layout itself should still give: let `.bw-score-word` and `.bw-coins-word` shrink (`min-width: 0`) and let the notes wrap to two lines or ellipsis, so a long project name in "+0.4 y flwyddyn: elw {project}" cannot do it again. tests/e2e/board-cy.spec.ts now fails a Welsh screen wider than the window or with the language switch off it.
+Stub meanwhile: shorter Welsh words.
+
+## [Cy fix2] "-0" in the coin line  (done at the join: words.ts `incomeWords`, incomeWords.test.ts)
+File: src/board/ui/TopStrip.tsx line ~172 (owner: package B)
+Need: playtest 9 must-fix 10 ("Tua -0 y flwyddyn", cymraeg `g1-41`). `strip.income` is filled with `(perYear >= 0 ? "+" : "") + formatNum(perYear, { maximumFractionDigits: 1 })`, so an income of -0.03 a year shows "-0" (and 0.02 shows "+0"). Round to tenths first and drop the sign at zero, as `signed()` at the foot of the same file does, or say "Tua 0 y flwyddyn" / "About 0 a year". tests/e2e/board-cy.spec.ts (design/scripts/board-cy-lib.mjs) now fails any screen line with a signed zero.
+Stub meanwhile: none.
+
+## [Cy fix2] Source titles in Why? read all English in Welsh  (done at the join: `boardui.why.sources`, "Ffynonellau (yn Saesneg):" before the dockets)
+File: src/board/ui/whyWords.ts `sourceLabels` and WhyPanel.tsx `.bw-why-sources` (owner: package C); model/i18n/{en,cy}/boardui.json
+Need: playtest 9 must-fix 10 (cymraeg `g1-16-why.png`: "Transport access and labour market participation studies"). Keep the citation in its own language, but give the line a Welsh label. Suggested: a key `boardui.why.sources`, en "Sources:", cy "Ffynonellau (yn Saesneg):", shown before the dockets in `.bw-why-sources` when the language is Welsh (or always: en "Sources:"). A source whose `short` is a publisher name ("ONS", "SYG") needs no change.
+Stub meanwhile: none. The Welsh pass did not touch the code.
+
+## [Cy fix2] Welsh tier gate notes written in engine code  (done at the join: tree.yaml `gate_notes`, read by `gateRules`; the fixture keeps its own)
+File: src/board/engine/fixture.ts `gateRules` (owner: package D)
+Need: the gate rule cards carry Welsh written in the code, and it reads stiffly. Replace the tier 2 Welsh with "Mae prosiectau mwy yn agor pan fydd tri phrosiect cychwynnol o'r gangen hon yn gweithio, unrhyw le. Mae'r un prosiect mewn dau gyngor yn cyfrif ddwywaith." Better still, move both notes to model/board/tree.yaml as {en, cy} so they are data and the Welsh pass owns them.
+Stub meanwhile: the old Welsh shows on the rule book's gate cards.
+
+## [Cy fix2] English sentences over 18 words in boardui.json  (done at the join)
+File: model/i18n/en/boardui.json `council.momentumWhy.rising`, `council.momentumWhy.slipping` (owner: package C)
+Need: copy-rules.test.ts fails on them (29 and 20 words). The Welsh is now split into short sentences; the English can follow: "Young adults and work come in, and its projects grow faster. It backs you a little more each year. It adds about {coins} coin a year to your purse."
+Stub meanwhile: none.
+
+## [Cy fix2] Notice: Welsh words changed by the Welsh pass  (a notice for the coordinator and every package)
+File: model/i18n/cy/board*.json, model/board/**/*.yaml cy fields (owner: the Welsh pass)
+Need: nothing. The keystone is "maen clo" everywhere (plural "meini clo"; "conglfaen" and "carreg glo" are gone). A deal is "bargen", a law is "cyfraith" (never "deddf"). The Made here branch is "Diwydiant lleol" in Welsh (it read badly after "gyda", "â" and "y gangen"). Left for 2050 is "Gwaddol 2050"; Life in your years is "Bywyd yn eich cyfnod". The price label is "Pris" and the catch is "Yr anfantais" (it was "Y pris", which now clashed). cymraeg.test.ts fails any Welsh string that uses a replaced word, and any top strip line much longer than its English. The Welsh `deal.note` still says a broken deal costs backing "ym mhob cyngor", as the English does; if package D's rule P6 now costs that council only, change both.
+Stub meanwhile: n/a.
+
+## [JOIN 2] Fix round 2 joined  (done, a notice for the coordinator)
+File: src/board/ (the join may edit any board file)
+Need: none. Every entry above is closed or decided. New at the join: engine time.ts `keystoneLastStep` (the `too_late` blocker now carries `lastStep`), ui/english.ts and lang.ts `fillEn` (the article before "Vale of Glamorgan" in English sentences, names in `boardui.grammar.withThe`), words.ts `incomeWords`, TermReport "More below" (`boardui.term.more`), `boardui.why.sources`, `boardui.cause.dealBroken`, `boardclock.card.ended`, `boardclock.head.buildingAfter`, tree.yaml `gate_notes`, rule book item anchors (BoardLists.tsx `itemAnchor`). Tests: ui/rules.test.ts (every `ruleParamOf` names a real param), english.test.ts, incomeWords.test.ts, a keystone last-start check in projects.test.ts. Rules: game.yaml speeds brisk 2500, fast 1500; G1 `band_little` 1.5. Removed: unused keys `strip.from`, `strip.leftTip`, `strip.purseFull`, `path.gate.*`, `path.more`, `lapse.scrub`, `lapse.terms`. Script: design/scripts/board-fix2-join.mjs. The marks are in docs/design/playtest-9-board-cold.md "After fix round 2".
+Stub meanwhile: n/a.

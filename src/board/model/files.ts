@@ -5,6 +5,7 @@
  * at the top of any list file.
  */
 import { check, obj, arr, rec, str, type Issue, type Shape } from "./shape";
+import { text } from "./shapes";
 import { shapes } from "./shapes";
 
 const list = (key: string, item: Shape): Shape => obj({ [key]: arr(item) }, { note: str, generated: str });
@@ -22,7 +23,8 @@ export const BOARD_FILES: Record<string, Shape> = {
   /** Phase 2 growth cards R1 to R4 (package 8). Optional until written. */
   "rules/growth.yaml": list("rules", shapes.rule),
   "projects.yaml": list("projects", shapes.project),
-  "tree.yaml": list("branches", shapes.branch),
+  /** `gate_notes`: the note on each tier gate's rule card, by tier, written as data (fix round 2). */
+  "tree.yaml": obj({ branches: arr(shapes.branch) }, { note: str, generated: str, gate_notes: rec(text) }),
   "pairs.yaml": list("pairs", shapes.pair),
   "laws.yaml": list("laws", shapes.law),
   "groups.yaml": list("groups", shapes.group),

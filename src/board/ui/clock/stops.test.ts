@@ -1,9 +1,9 @@
 // Which stops pause the clock, in what order, and what the ticker is told.
 import { describe, expect, it } from "vitest";
 import type { Stop, StepReport, StopKind } from "../../engine/api";
-import { boardFixture } from "../../engine/api";
+import { act, boardFixture, newBoard, options, STOP_KINDS, tick } from "../../engine/api";
 import { defaultPrefs, pausesOn, readPrefs, stopOnList } from "./prefs";
-import { keepHard, stopsToShow, tickerLines } from "./stops";
+import { keepHard, liveQueue, stopsToShow, tickerLines, type QueuedStop } from "./stops";
 
 const model = boardFixture();
 const stop = (kind: StopKind, hard = false): Stop => ({ kind, hard, say: { key: `board.stop.${kind}` } });
@@ -64,5 +64,51 @@ describe("tickerLines", () => {
     const line = { council: null, quantity: "coins" as const, delta: 1, say: { key: "x" }, why: {} as never };
     const out = tickerLines([report(3, [stop("finished"), stop("election", true)], { yearLines: [line] })]);
     expect(out.map((x) => x.kind)).toEqual(["news", "year"]);
+  });
+});
+
+describe("a card says only what is still true (cold playtest 9, must fix 8)", () => {
+  const all = { ...defaultPrefs(model, false), stops: Object.fromEntries(STOP_KINDS.map((k) => [k, true])) };
+  const purse = model.rules.find((r) => r.id === "B1")?.params["purse_max"]?.default ?? 0;
+
+  it("drops a full purse once coins are spent", () => {
+    const s = newBoard(model, 3, model.starts[0]!.id);
+    const q: QueuedStop = { id: "x", step: 0, stop: { kind: "purse_full", hard: false, say: { key: "board.stop.purse_full" } } };
+    expect(liveQueue([q], { ...s, coins: purse }, purse)).toHaveLength(purse > 0 ? 1 : 0);
+    expect(liveQueue([q], { ...s, coins: Math.max(0, purse - 3) }, purse)).toEqual([]);
+  });
+
+  it("over whole games, saving then spending, no card waiting says what the board does not", () => {
+    let dropped = 0;
+    for (const game of [1, 2, 3, 4]) {
+      let s = newBoard(model, game, model.starts[game % model.starts.length]!.id);
+      let queue: QueuedStop[] = [];
+      for (let guard = 0; guard < model.game.steps * 3 && s.phase !== "ended"; guard++) {
+        // a player who builds while cards wait: the queue is read against the board after each spend
+        for (const kind of ["respond", "visit", "deal"] as const) {
+          const o = options(model, s).find((x) => x.allowed && x.action.kind === kind);
+          if (o) s = act(model, s, o.action);
+        }
+        // saves for a while (the purse fills), then spends on the dearest build
+        const b = options(model, s).filter((x) => x.allowed && x.action.kind === "build").sort((x, y) => y.cost - x.cost)[0];
+        if (b && guard % 24 > 12) s = act(model, s, b.action);
+        const before = queue.length;
+        queue = liveQueue(queue, s, purse);
+        dropped += before - queue.length;
+        for (const q of queue) {
+          if (q.stop.kind === "purse_full") expect(s.coins).toBeGreaterThanOrEqual(purse - 1e-6);
+          if (q.stop.kind === "warning") expect(s.forecast.some((f) => f.event === q.stop.ref)).toBe(true);
+          if (q.stop.kind === "visit") expect(s.pending.some((p) => p.kind === "visit" && p.place === q.stop.ref)).toBe(true);
+        }
+        // a card is read now and then, so some wait a while
+        if (guard % 3 === 0) queue = queue.slice(1);
+        if (s.phase !== "play") continue;
+        const r = tick(model, s);
+        s = r.state;
+        queue = [...queue, ...stopsToShow(model, all, [r.report])];
+      }
+    }
+    // the games did meet cards that stopped being true
+    expect(dropped).toBeGreaterThan(0);
   });
 });

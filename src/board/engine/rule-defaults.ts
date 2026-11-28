@@ -15,7 +15,7 @@ export const RULE_DEFAULTS: Record<RuleId, Record<string, number>> = {
   /** Moods: what a kept or broken promise, a crisis handled or not, and services close by count for, in points. */
   P1: { promise_points: 1, crisis_points: 0.5, presence_points: 0.5 },
   /** Score: band edges (change from 2026 out of 100) and what a risk left at step 3 takes in 2050. */
-  G1: { band_little: 3, band_much: 10, risk_left_points: 0.3 },
+  G1: { band_little: 1.5, band_much: 10, risk_left_points: 0.3 },
   /** Events: the first year outside trouble can land, how far ahead outside and grown events are warned, grown events at once and the years between them, how often one event comes back, preparation, room for rivers and a cluster with roots. */
   E1: {
     first_year: 2030, warn_years: 1.5, grown_warn_years: 1, grown_at_once: 1, grown_gap_years: 2,

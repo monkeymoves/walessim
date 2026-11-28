@@ -3,12 +3,12 @@
  * `blockers` is the single judge of whether an action may be taken now: `options` lists it for
  * the UI and bots, `act` refuses with the same list. Preview is in preview.ts.
  */
-import { holds, neighbours, siteCouncils } from "./conditions";
+import { countProjects, holds, neighbours, siteCouncils } from "./conditions";
 import { dealBlockers, dealDiscount } from "./deals";
 import { rebuildShare, respondBlockers, responseCost } from "./events";
 import { fasterBuild } from "./people";
-import { freshStartDiscount } from "./roots";
-import { stepsOf, yearOfStep } from "./time";
+import { freshStartDiscount, freshStartMaxTier } from "./roots";
+import { keystoneLastStep, stepsOf, yearOfStep } from "./time";
 import type {
   Action, ActionOption, Blocker, BoardModel, BoardState, Condition, CouncilCode, LinkDef, ProjectDef, ProjectState, RuleId,
   Site, Tier,
@@ -40,7 +40,10 @@ function gateBlockers(model: BoardModel, state: BoardState, branch: string, tier
   if (tier === 1) return [];
   const t = model.branches.find((b) => b.id === branch)?.tiers[tier - 1];
   const rule = tierRule(model, branch, tier);
-  return (t?.opens ?? []).filter((c) => !holds(model, state, code, c)).map((condition) => ({ kind: "needs", condition, rule }));
+  return (t?.opens ?? []).filter((c) => !holds(model, state, code, c)).map((condition) => ({
+    kind: "needs", condition, rule,
+    ...(condition.kind === "project" && !condition.not ? { have: countProjects(model, state, code, condition) } : {}),
+  }));
 }
 
 /** A project's own needs that fail at any of its site's councils. */
@@ -75,7 +78,8 @@ export const yearAfter = (model: BoardModel, step: number): number => yearOfStep
  */
 export function buildDiscounts(model: BoardModel, state: BoardState, def: ProjectDef, site: Site): { fresh: number; deal: number } {
   if (state.freeProject === def.id) return { fresh: 0, deal: 0 };
-  const fresh = freshStartDiscount(model, state, def.cost, site);
+  // R3 `max_tier`: a fresh start takes nothing off a keystone (playtest 9 should-fix 10: "3 off the full price of 8").
+  const fresh = def.tier <= freshStartMaxTier(model) ? freshStartDiscount(model, state, def.cost, site) : 0;
   const deal = Math.max(0, Math.min(dealDiscount(model, state, siteOf(model, site), def.id), def.cost - fresh - 1));
   return { fresh, deal };
 }
@@ -112,8 +116,8 @@ function buildBlockers(model: BoardModel, state: BoardState, def: ProjectDef, si
   out.push(...gateBlockers(model, state, def.branch, def.tier, councils[0]!));
   out.push(...needBlockers(model, state, def, councils));
   const bs = buildSteps(model, state, def, site);
-  if (def.keystone && state.year > model.game.keystone_last_start_year) out.push({ kind: "too_late", lastYear: model.game.keystone_last_start_year });
-  else if (readyStepOf(state, bs) >= model.game.steps) out.push({ kind: "too_late", lastYear: yearOfStep(model, model.game.steps - Math.max(1, bs)) });
+  if (def.keystone && state.step > keystoneLastStep(model)) out.push({ kind: "too_late", lastStep: keystoneLastStep(model) });
+  else if (readyStepOf(state, bs) >= model.game.steps) out.push({ kind: "too_late", lastStep: model.game.steps - Math.max(1, bs) });
   return out;
 }
 

@@ -104,7 +104,8 @@ export function createGame(model: BoardModel) {
 
   function start(gameNumber: number | string, startId: StartId): void {
     const s = eng.newBoard(model, gameNumber, startId);
-    batch(() => { setState(s); clock.restore([]); setScreen("board"); setSelected(null); closeAll(); });
+    // a new game starts at the default speed (cold playtest 9: Fast carried over from the last game)
+    batch(() => { setState(s); clock.freshGame(); setScreen("board"); setSelected(null); closeAll(); });
     save(s);
     setSaveVersion((n) => n + 1);
   }

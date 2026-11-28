@@ -43,8 +43,8 @@ export function BoardBook(props: { parts: string[] }): JSX.Element {
               <Match when={page() === ""}><Contents m={m()} {...nav("")} /></Match>
               <Match when={rule()}>{(r) => <BoardRulePage m={m()} rule={r()} {...nav(r().id)} />}</Match>
               <Match when={page() === "links"}><LinksPage m={m()} {...nav("links")} /></Match>
-              <Match when={page() === "projects"}><ProjectsPage m={m()} {...nav("projects")} /></Match>
-              <Match when={page() === "events"}><EventsPage m={m()} {...nav("events")} /></Match>
+              <Match when={page() === "projects"}><ProjectsPage m={m()} item={props.parts[1]} {...nav("projects")} /></Match>
+              <Match when={page() === "events"}><EventsPage m={m()} item={props.parts[1]} {...nav("events")} /></Match>
               <Match when={page() === "endings"}><EndingsPage m={m()} {...nav("endings")} /></Match>
               <Match when={page() === "chapters"}><ChaptersPage m={m()} {...nav("chapters")} /></Match>
             </Switch>

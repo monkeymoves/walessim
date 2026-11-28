@@ -1,6 +1,8 @@
 /**
- * The Wales you did not build (16.5.3 item 6): one line, and the board of the nearest ending your
- * branches could have reached, drawn as a ghost beside your own 2050. The play again hook.
+ * The Wales you did not build (16.5.3 item 6): the nearest ending you did not build, its name as a
+ * heading and one line on what its route takes (playtest 9: "you might have had: Two countries"
+ * read broken with the name inside the sentence), and its board drawn as a ghost beside your own
+ * 2050. The play again hook.
  */
 import { createMemo, Show, type JSX } from "solid-js";
 import { t } from "../lang";
@@ -17,6 +19,8 @@ export function NotBuilt(props: { model: BoardModel; ending: Ending; last: Frame
   return (
     <section class="be-notbuilt" aria-labelledby="be-notbuilt-title" data-testid="be-notbuilt">
       <h2 class="t-2" id="be-notbuilt-title">{t("boardend.notBuilt.title")}</h2>
+      <p class="label">{t("boardend.notBuilt.nearest")}</p>
+      <p class="t-3 be-notbuilt-name" data-testid="be-notbuilt-name">{tx(nb().name)}</p>
       <p class="story">{line()}</p>
       <Show when={ghost()}>
         <div class="be-pair">

@@ -1,7 +1,11 @@
 /**
  * The result, first thing on the end screen (playtest 8, must-fix 1 and should-fix 13): the plain
- * verdict, both comparisons in big figures (against 2026, and against doing nothing: the same game
- * on autopilot), how the years felt, then your record: the promise and whether you kept it, the
+ * verdict, then the score that decides it, Left for 2050, first and largest, with 2026 beside it;
+ * then, smaller and marked as not deciding, the same Wales on autopilot ("doing nothing") and how
+ * the years felt (playtest 9, should-fix 3: the headline led with "better than doing nothing").
+ * Every figure is rounded as the top strip rounds it in play (Left for 2050 to a tenth, Life in your
+ * years to a whole number), and every gap is worked from the figures shown, so "45.0" and "57.6"
+ * never sit beside "about 13 points". Then your record: the promise and whether you kept it, the
  * place furthest behind in 2026 and in 2050, the elections and the deals. In a hard game it ends
  * on the turns you could have taken, so a loss reads as a story with a fork in it, not a grade.
  */
@@ -12,10 +16,13 @@ import type { BoardModel, BoardState, Ending, Frame } from "../../engine/api";
 import { councilName, fill, listOf, outOf10, projectName, tx } from "../words";
 import { dealsOf, electionsOf, shownGap, hardGame, littleOf, lowestIn, promiseOf, turnsNotTaken, verdictOf, type Turn } from "./record";
 import { bandKey } from "./view";
+import { tenths } from "../clock/headway";
 
 const whole = (n: number) => formatNum(Math.round(n));
-/** "+6", "−3" or "0": whole points, with a true minus sign. */
-const signedWhole = (n: number) => { const r = Math.round(n); return r > 0 ? `+${formatNum(r)}` : r < 0 ? `−${formatNum(-r)}` : "0"; };
+/** Left for 2050 and its gaps, to a tenth, as the top strip shows them. */
+const tenth = (n: number) => formatNum(tenths(n), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+/** "+6.2", "−3.0" or "0.0": tenths, with a true minus sign. */
+const signedTenth = (n: number) => { const r = tenths(n); return r > 0 ? `+${tenth(r)}` : r < 0 ? `\u2212${tenth(-r)}` : tenth(0); };
 
 /** The share of people an election needs (rule P4), from the model. */
 const winShareOf = (model: BoardModel): number => model.rules.find((r) => r.id === "P4")?.params["win_share"]?.default ?? 0.5;
@@ -33,26 +40,25 @@ export function Verdict(props: { model: BoardModel; state: BoardState; ending: E
     try { return Object.fromEntries(api.election(model, props.state).councils.map((c) => [c.code, c.peopleShare])); } catch { return {}; }
   })();
   const turns = hard ? turnsNotTaken(model, props.state, shares, winShareOf(model)) : [];
-  // the big "+5" and the words beside it come from the same whole numbers the screen shows
+  // every gap in words comes from the figures the screen shows, to a tenth
+  const gapStart = shownGap(v.start, v.left, v.vsStart);
   const gapNothing = shownGap(v.autopilot, v.left, v.vsNothing);
-  const dNothing = v.vsNothing === "behind" ? -gapNothing : v.vsNothing === "ahead" ? gapNothing : Math.round(v.left) - Math.round(v.autopilot);
+  const dNothing = v.vsNothing === "behind" ? -gapNothing : v.vsNothing === "ahead" ? gapNothing : tenths(v.left) - tenths(v.autopilot);
   return (
     <section class="be-verdict" aria-labelledby="be-verdict-title" data-testid="be-verdict">
       <p class="label" id="be-verdict-title">{t("boardend.verdict.label", { year: model.game.end_year })}</p>
       <p class="be-verdict-line" data-testid="be-band">{t(bandKey(props.ending.scores.band))}</p>
-      <p class="story">{t(`boardend.verdict.nothing.${v.vsNothing}`, { d: formatNum(gapNothing) })}</p>
+      <p class="story">{t("boardend.verdict.decides")}</p>
       <div class="be-scores">
-        <div class="be-score" data-testid="be-vs-start">
-          <p class="label">{t("boardend.verdict.vsStart")}</p>
-          <p class="be-score-big" aria-label={t("boardend.verdict.vsStartAria", { start: whole(v.start), left: whole(v.left) })}>
-            <span>{whole(v.start)}</span><span class="be-score-to" aria-hidden="true">{" → "}</span><span>{whole(v.left)}</span>
-          </p>
-          <p class="small">{t(`boardend.verdict.start.${v.vsStart}`, { d: formatNum(shownGap(v.start, v.left, v.vsStart)) })}</p>
+        <div class="be-score be-score-main" data-testid="be-vs-start">
+          <p class="label">{t("boardend.verdict.left")}</p>
+          <p class="be-score-big" data-testid="be-left" aria-label={t("boardend.verdict.vsStartAria", { start: tenth(v.start), left: tenth(v.left) })}>{tenth(v.left)}</p>
+          <p class="small">{t(`boardend.verdict.start.${v.vsStart}`, { start: tenth(v.start), d: tenth(gapStart) })}</p>
         </div>
-        <div class="be-score" data-testid="be-vs-nothing">
+        <div class="be-score be-score-side" data-testid="be-vs-nothing">
           <p class="label">{t("boardend.verdict.vsNothing")}</p>
-          <p class="be-score-big" aria-label={t("boardend.verdict.vsNothingAria", { d: signedWhole(dNothing) })}>{signedWhole(dNothing)}</p>
-          <p class="small">{t("boardend.verdict.nothingNote", { n: whole(v.autopilot) })}</p>
+          <p class="be-score-mid" aria-label={t("boardend.verdict.vsNothingAria", { d: signedTenth(dNothing) })}>{signedTenth(dNothing)}</p>
+          <p class="small">{t(`boardend.verdict.nothing.${v.vsNothing}`, { d: tenth(gapNothing) })} {t("boardend.verdict.nothingNote", { n: tenth(v.autopilot) })}</p>
         </div>
       </div>
       <p class="small">{t("boardend.verdict.life", { life: whole(v.life) })}</p>

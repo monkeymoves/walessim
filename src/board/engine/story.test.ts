@@ -4,6 +4,7 @@ import { boardFixture, FIXTURE_COUNCILS } from "./fixture";
 import { ctxOf, handState, nextYears, standing } from "./hand-state";
 import { seedPeople } from "./people";
 import { nameChapter, noteStep, story } from "./story";
+import { townOf, ynPlace } from "./story-terms";
 import { timeline } from "./timeline";
 import type { BoardModel, BoardState, ChapterDef, Contribution, TermCondition } from "./types";
 
@@ -105,5 +106,25 @@ describe("the time line", () => {
     for (const m of v.ahead) if (m.kind !== "election") expect(m.say?.key, m.kind).toMatch(/^board\.timeline\./);
     expect(v.ahead.map(at)).toEqual([...v.ahead.map(at)].sort((a, b) => a - b));
     expect(v.ahead.some((m) => m.kind === "deal" && m.council === merthyr)).toBe(true);
+  });
+});
+
+describe("a town is always named with its council (playtest 9, should-fix 2)", () => {
+  it("names the council's first town not named like the council, with the council, in both languages", () => {
+    for (const c of plain.councils.filter((x) => plain.game.councils.includes(x.code))) {
+      const said = townOf(plain, c.code);
+      const town = c.towns.find((t) => t.en !== c.name.en);
+      if (!town) expect(said.en).toBe(c.name.en);
+      else {
+        expect(said.en).toBe(`${town.en}, in ${c.name.en}`);
+        expect(said.cy.startsWith(`${town.cy || town.en}, y`)).toBe(true);
+      }
+    }
+  });
+
+  it("takes the nasal mutation after yn, as the screens do", () => {
+    expect(["Caerffili", "Pen-y-bont ar Ogwr", "Tor-faen", "Blaenau Gwent", "Merthyr Tudful", "Rhondda Cynon Taf", "Casnewydd", "Sir Fynwy"].map(ynPlace)).toEqual([
+      "yng Nghaerffili", "ym Mhen-y-bont ar Ogwr", "yn Nhor-faen", "ym Mlaenau Gwent", "ym Merthyr Tudful", "yn Rhondda Cynon Taf", "yng Nghasnewydd", "yn Sir Fynwy",
+    ]);
   });
 });

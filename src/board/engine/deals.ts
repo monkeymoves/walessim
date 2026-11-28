@@ -7,14 +7,17 @@
  * measure. Taking one makes it due `deal_years` later. It is kept when a project that lifts that
  * measure, started after the deal, is working in that council (judged each time a year closes):
  * Backing rises `kept_here` there and `kept_near` one link away. If the due date passes first, it
- * is broken: Backing falls `broken` everywhere. The project that keeps it costs `deal_discount`
- * less (`dealDiscount`, for the cost in projects.ts).
+ * is broken: Backing falls `broken_here` in that council only, and that anger fades evenly to
+ * nothing over `broken_years` (standing.ts; playtest 9 must-fix 9: it was 0.5 everywhere at once,
+ * then crept back with no cause). The project that keeps it costs `deal_discount` less
+ * (`dealDiscount`, for the cost in projects.ts).
  *
  * Without a P6 card nothing here happens, and the board behaves as in phase 1.
  */
 import { neighbours, siteCouncils } from "./conditions";
 import type { StepCtx } from "./ctx";
 import { shiftMoods } from "./people-moods";
+import { settleStanding } from "./standing";
 import { optParam } from "./rules";
 import { stepAfter } from "./time";
 import type { Action, Blocker, BoardModel, BoardState, CouncilCode, Deal, ElectionRecord, MeasureId, ProjectId } from "./types";
@@ -72,7 +75,7 @@ export function dealKeptBy(model: BoardModel, state: BoardState, d: Deal): strin
   return p?.id ?? null;
 }
 
-/** Each time a year closes: judge open deals (kept as soon as a project keeps them, broken once due) and move Backing. */
+/** Each time a year closes: judge open deals (kept as soon as a project keeps them, broken once due), move Backing, and settle standing parts. */
 export function judgeDeals(ctx: StepCtx): void {
   const { model, state } = ctx;
   if (!hasDeals(model)) return;
@@ -88,9 +91,11 @@ export function judgeDeals(ctx: StepCtx): void {
       }
     } else if (arriving >= d.dueStep) {
       d.kept = false;
-      for (const code of model.game.councils) shiftMoods(ctx, code, -(p6(model, "broken") ?? 0), undefined, RULE_IDS.hungTerm, cause);
+      d.brokenStep = arriving;
     }
   }
+  // A broken deal's cost, and the yearly fade of earlier ones (standing.ts).
+  settleStanding(ctx, arriving);
 }
 
 /** The open deal a project would serve if built here: it lifts the deal's measure in the deal's council. */

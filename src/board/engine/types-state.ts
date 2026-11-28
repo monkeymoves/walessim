@@ -121,6 +121,11 @@ export interface CouncilState {
   lastReachedStep: number | null;
   /** Rising, steady or slipping (rule R2). Starts "steady". */
   momentum: Momentum;
+  /**
+   * Standing parts of Backing applied so far, by key (standing.ts): a law while it stands, a broken
+   * deal while its anger fades. Not in the moods, so they do not drift back. Absent until one applies.
+   */
+  standing?: Record<string, number>;
 }
 
 export interface ProjectState {

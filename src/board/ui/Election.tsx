@@ -20,7 +20,8 @@ export function Election(props: { view: ElectionView }): JSX.Element {
   const meansVars = () => ({
     years: num(ruleParamOf(model, "P6", "deal_years", 4)),
     kept: num(ruleParamOf(model, "P6", "kept_here", 1.5)),
-    broken: num(ruleParamOf(model, "P6", "broken", 0.5)),
+    broken: num(ruleParamOf(model, "P6", "broken_here", 1.5)),
+    fade: num(ruleParamOf(model, "P6", "broken_years", 4)),
   });
   return (
     <section class="bw-election" aria-labelledby="bw-election-title" data-testid="bw-election">

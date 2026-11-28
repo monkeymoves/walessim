@@ -19,6 +19,10 @@
 .be-score { display: grid; gap: 4px; align-content: start; padding: 12px 16px 14px; background: var(--paper-2); border-left: 3px solid var(--ink); }
 .be-score-big { font-family: var(--font-print); font-stretch: normal; font-weight: 700; font-size: var(--size-figure-big); line-height: 1; font-variant-numeric: var(--figures-print); }
 .be-score-to { font-weight: 400; color: var(--ink-2); }
+/* Left for 2050 decides the result: the side box (doing nothing) is smaller and lighter (playtest 9) */
+.be-score-side { border-left-color: var(--ink-2); }
+.be-score-mid { font-family: var(--font-print); font-stretch: normal; font-weight: 700; font-size: var(--size-title-2); line-height: 1.1; font-variant-numeric: var(--figures-print); color: var(--ink-2); }
+.be-notbuilt-name { margin-top: -4px; }
 .be-record { width: 100%; display: grid; gap: 0; border-top: 1px solid var(--rule-strong); margin-top: 6px; }
 .be-record-row { display: grid; grid-template-columns: 200px 1fr; column-gap: 14px; padding: 8px 0; border-bottom: 1px solid var(--rule); }
 .be-record-row > dt { padding-top: 3px; }

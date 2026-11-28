@@ -2,6 +2,7 @@
  "_note": "The board (docs/design/v2-board.md), route #/bwrdd. Owner: package 10. Plain words (docs/design/plain-wales.md): reading age 11, no sentence over 18 words, coins not pounds, Why? not threads. Full i18n key is board.<key>. Engine Say keys are the same full keys. Plurals use .one and .other with {n}. Names of projects, events (as titles), endings, chapters and places live in model/board/*.yaml as {en, cy} text, not here. No figure appears here: numbers come in through slots from the model, with their labels. The screens' own words are in boardui.json. event.<id> is each event's name as a noun phrase for the middle of a sentence (\"a dirty river\"); the engine sends it as a key in an {event} slot.",
  "mood.measure.up": "{measure} has got better in the last four years.",
  "mood.measure.down": "{measure} has got worse in the last four years.",
+ "mood.measure.slow": "{measure} has got better, but not by as much as people expect after four years.",
  "mood.fell_most.down": "{measure} fell most in the last four years.",
  "mood.fell_most.none": "Nothing has fallen much in the last four years.",
  "mood.promises.waiting": "Your promise is due by {year}. People are waiting to see.",

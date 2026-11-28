@@ -136,11 +136,11 @@ describe("the bot runner", () => {
 });
 
 describe("balance measures", () => {
-  const run = (bot: string, game: number, result: number, ending: string, shift = 0): RunResult => ({
+  const run = (bot: string, game: number, result: number, ending: string, shift = 0, lost = 0, coins?: { income: number; lost: number }): RunResult => ({
     bot, game, start: "s", future: "f", ending, result, life: result, startScore: 47, keystones: [], keystoneBranches: [], projects: 6,
     vector: [0.5 + shift, 0.5], vector2034: [0.5 + shift / 4, 0.5], measures: [[5 + 10 * shift, 5]], valleyYoung: 18 + 10 * shift,
-    youngRatio: { min: 0.9, max: 1.1 }, tips: 2, risen: [], electionsLost: 0, recovered: null, lowestChange: 0, lowestRose: false,
-    chapters: ["holding-on"],
+    youngRatio: { min: 0.9, max: 1.1 }, tips: 2, risen: [], electionsLost: lost, elections: 5, recovered: null, lowestChange: 0, lowestRose: false,
+    chapters: ["holding-on"], ...(coins ? { coins } : {}),
   });
   it("distance and percentiles", () => {
     expect(distance([0, 1], [1, 1])).toBe(0.5);
@@ -164,6 +164,20 @@ describe("balance measures", () => {
     expect(row("Cities first does not win").pass).toBe(true);
     expect(row("Stories differ").pass).toBeNull();
     expect(row("The fairness rule holds").pass).toBe(true);
+  });
+
+  it("marks careless play that never loses, skill that loses often, coins lost to the purse and laws that cost nothing", () => {
+    const easy = [1, 2, 3, 4].flatMap((g) => [run("random", g, 50, "x"), run("skilled", g, 70, "a", 0, g === 1 ? 2 : 0, { income: 100, lost: 20 })]);
+    const rows = balanceTable(easy, { lawCost: { most: 0.2, least: 0 } });
+    const row = (claim: string) => rows.find((r) => r.claim === claim)!;
+    expect(row("Careless loses").pass).toBe(false);
+    expect(row("Skill still wins").value).toBe("0.75");
+    expect(row("Skill still wins").pass).toBe(false);
+    expect(row("Coins have a use").value).toBe("0.167");
+    expect(row("Laws cost").pass).toBe(false);
+    const fair = [1, 2, 3, 4].flatMap((g) => [run("random", g, 50, "x", 0, 1), run("skilled", g, 70, "a", 0, 0, { income: 100, lost: 2 })]);
+    const ok = balanceTable(fair, { lawCost: { most: 0.5, least: 0.3 } });
+    for (const claim of ["Careless loses", "Skill still wins", "Coins have a use", "Laws cost"]) expect(ok.find((r) => r.claim === claim)!.pass, claim).toBe(true);
   });
 });
 

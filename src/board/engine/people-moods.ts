@@ -73,15 +73,17 @@ export function shiftMoods(ctx: StepCtx, code: CouncilCode, points: number, grou
 }
 
 /**
- * Carry changes made to Backing directly (for example by a law's or an event's backing effect
- * applied with `applyOnce`) into the moods, so the next mood move does not undo them: every mood
- * moves by the gap between Backing and the moods' weighted mean.
+ * Carry changes made to Backing directly into the moods, so the next mood move does not undo them:
+ * every mood moves by the gap between Backing, less its standing parts (standing.ts), and the
+ * moods' weighted mean.
  */
 export function syncMoods(model: BoardModel, state: BoardState, code: CouncilCode): void {
   const c = state.councils[code];
   if (!c) return;
   for (const g of model.groups) if (!c.moods[g.id]) c.moods[g.id] = { mood: c.backing };
-  const gap = c.backing - backingFrom(model, code, c.moods, c.backing);
+  // Standing parts (a law, a broken deal: standing.ts) are not moods, so they stay out of the gap.
+  const standing = Object.values(c.standing ?? {}).reduce((a, b) => a + b, 0);
+  const gap = c.backing - standing - backingFrom(model, code, c.moods, c.backing);
   if (Math.abs(gap) < 1e-9) return;
   for (const g of model.groups) c.moods[g.id] = { ...c.moods[g.id]!, mood: round4(clamp10(c.moods[g.id]!.mood + gap)) };
 }
@@ -134,13 +136,28 @@ function measureChange(model: BoardModel, state: BoardState, code: CouncilCode, 
   return { here: change(code), middle: median(model.game.councils.map(change)) };
 }
 
+/**
+ * Rule P1: how much better than four years ago people expect what they care about to be, in
+ * points. `expect_points` in your first term, and `expect_rise` more for each election held since:
+ * the longer you govern, the more they expect (playtest 9 should-fix 1: a careless game won every
+ * election). 0 when the card has neither.
+ */
+export function expectedGain(model: BoardModel, state: BoardState): number {
+  const first = optParam(model, RULE_IDS.moods, "expect_points") ?? 0;
+  const rise = optParam(model, RULE_IDS.moods, "expect_rise") ?? 0;
+  return first + rise * state.election.records.length;
+}
+
 function signal(model: BoardModel, state: BoardState, code: CouncilCode, care: GroupCare, over: Window): Signal {
   const dir = (v: number) => (v >= 0 ? "up" : "down");
   if ((MEASURE_IDS as readonly string[]).includes(care)) {
     const m = care as MeasureId;
     const { here, middle } = measureChange(model, state, code, m, over);
-    const value = here - middleShare(model) * middle;
-    return { value, reason: { key: `board.mood.measure.${dir(value)}`, vars: { measure: measureName(model, m) } } };
+    const expected = expectedGain(model, state);
+    const value = here - middleShare(model) * middle - expected;
+    // Better, but not by as much as people expect: say so, rather than "got worse".
+    const key = value < 0 && here > 0 && expected > 0 ? "board.mood.measure.slow" : `board.mood.measure.${dir(value)}`;
+    return { value, reason: { key, vars: { measure: measureName(model, m) } } };
   }
   if (care === "fell_most") {
     let worst: MeasureId = MEASURE_IDS[0]!;

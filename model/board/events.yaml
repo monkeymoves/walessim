@@ -33,6 +33,9 @@ events:
       - { kind: measure, measure: nature, points: -0.8 }
       - { kind: measure, measure: health, points: -0.2 }
       - { kind: backing, points: -0.2 }
+      # Local truth (playtest 9 should-fix 11): a council the river has just flooded never reads
+      # "Flood risk low". The flood shows the risk: a step up where it lands, less where prepared.
+      - { kind: risk, risk: flood, steps: 1 }
     size:
       - when: [{ kind: project, project: rivers-room, where: within_link, links: [river] }]
         factor: 0.3
@@ -283,7 +286,7 @@ events:
       - { kind: project, tag: college, where: within_link, not: true }
     target: { pick: any }
     warning: { en: "The big employer in {council} is reviewing its sites.", cy: "Mae'r cyflogwr mawr yn {council} yn adolygu ei safleoedd.", cy_review: true }
-    landed: { en: "The big employer closed its site in {council}. Workers who came in by train lost out too.", cy: "Caeodd y cyflogwr mawr ei safle yn {council}. Collodd gweithwyr a ddaeth ar y trên hefyd.", cy_review: true }
+    landed: { en: "The big employer closed its site in {council}. Workers who came in by train lost out too.", cy: "Caeodd y cyflogwr mawr ei safle yn {council}. Collodd gweithwyr oedd yn teithio yno ar y trên eu gwaith hefyd.", cy_review: true }
     effects:
       - { kind: measure, measure: work, points: -1.0, jobs: true }
       - { kind: young_adults, points: -0.2 }
@@ -313,7 +316,7 @@ events:
     size: []
     prepared_by: [social-homes]
     responses:
-      - { id: accept, name: { en: "Let it run", cy: "Gadael iddo redeg", cy_review: true }, what: { en: "Rising prices bring some money into the town.", cy: "Mae prisiau'n codi yn dod â pheth arian i'r dref.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: accept, name: { en: "Let it run", cy: "Gadael iddo redeg", cy_review: true }, what: { en: "Rising prices bring some money into the town.", cy: "Mae prisiau uwch yn dod â pheth arian i'r dref.", cy_review: true }, cost: 0, effects: [], handled_well: false }
       - { id: homes-for-locals, name: { en: "Buy homes for local rent", cy: "Prynu cartrefi i'w rhentu'n lleol", cy_review: true }, what: { en: "Buy empty homes and rent them to local people at a fair price.", cy: "Prynu cartrefi gwag a'u rhentu i bobl leol am bris teg.", cy_review: true }, cost: 2, effects: [{ kind: measure, measure: homes, points: 0.3 }, { kind: young_adults, points: 0.1 }], handled_well: true }
     sources: [housing-elasticity, ons_affordability]
 
@@ -329,8 +332,10 @@ events:
     target: { pick: lowest_measure, measure: health }
     warning: { en: "A doctors' surgery in {council} may close. Its doctors are retiring.", cy: "Gall meddygfa yn {council} gau. Mae ei meddygon yn ymddeol.", cy_review: true }
     landed: { en: "A surgery closed in {council}. Older people now travel further to see a doctor.", cy: "Caeodd meddygfa yn {council}. Mae pobl hŷn yn teithio'n bellach nawr i weld meddyg.", cy_review: true }
+    # Local truth (playtest 9 should-fix 11): Health is healthy life and early deaths, which one
+    # surgery closing moves only a little; at -0.3 two closures took Merthyr Tydfil's bar to 0.2.
     effects:
-      - { kind: measure, measure: health, points: -0.3 }
+      - { kind: measure, measure: health, points: -0.15 }
       - { kind: backing, points: -0.5, group: older }
     size: []
     prepared_by: [buses-meet-trains]
@@ -379,7 +384,7 @@ events:
     size: []
     prepared_by: [warm-terraces, repairs-team]
     responses:
-      - { id: accept, name: { en: "Leave it to landlords", cy: "Gadael i landlordiaid", cy_review: true }, what: { en: "Landlords are told to fix their homes.", cy: "Dywedir wrth landlordiaid am drwsio eu cartrefi.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: accept, name: { en: "Leave it to landlords", cy: "Gadael y cyfan i'r landlordiaid", cy_review: true }, what: { en: "Landlords are told to fix their homes.", cy: "Dywedir wrth landlordiaid am drwsio eu cartrefi.", cy_review: true }, cost: 0, effects: [], handled_well: false }
       - { id: fix-worst, name: { en: "Fix the worst homes", cy: "Trwsio'r cartrefi gwaethaf", cy_review: true }, what: { en: "Fix the worst damp before winter.", cy: "Trwsio'r lleithder gwaethaf cyn y gaeaf.", cy_review: true }, cost: 1, effects: [{ kind: measure, measure: health, points: 0.2 }], handled_well: true }
     sources: [cold-homes-health, wimd_2025]
 
@@ -444,7 +449,7 @@ events:
     size: []
     prepared_by: [welsh-school]
     responses:
-      - { id: accept, name: { en: "Leave it to schools", cy: "Gadael i'r ysgolion", cy_review: true }, what: { en: "Schools carry on as they are.", cy: "Mae ysgolion yn parhau fel y maen nhw.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: accept, name: { en: "Leave it to schools", cy: "Gadael y cyfan i'r ysgolion", cy_review: true }, what: { en: "Schools carry on as they are.", cy: "Mae ysgolion yn parhau fel y maen nhw.", cy_review: true }, cost: 0, effects: [], handled_well: false }
       - { id: welsh-clubs, name: { en: "Welsh clubs after school", cy: "Clybiau Cymraeg ar ôl ysgol", cy_review: true }, what: { en: "Fund sport, music and youth clubs in Welsh.", cy: "Ariannu chwaraeon, cerddoriaeth a chlybiau ieuenctid yn Gymraeg.", cy_review: true }, cost: 1, effects: [{ kind: measure, measure: welsh, points: 0.2 }], handled_well: true }
     sources: [welsh-medium-transmission, statswales_plasc_welsh_home]
 
@@ -466,7 +471,7 @@ events:
     size: []
     prepared_by: [slow-the-water]
     responses:
-      - { id: accept, name: { en: "Leave it to the fire crews", cy: "Gadael i'r criwiau tân", cy_review: true }, what: { en: "The crews put it out. The hill recovers slowly.", cy: "Mae'r criwiau'n ei ddiffodd. Mae'r mynydd yn gwella'n araf.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: accept, name: { en: "Leave it to the fire crews", cy: "Gadael y gwaith i'r criwiau tân", cy_review: true }, what: { en: "The crews put it out. The hill recovers slowly.", cy: "Mae'r criwiau'n ei ddiffodd. Mae'r mynydd yn gwella'n araf.", cy_review: true }, cost: 0, effects: [], handled_well: false }
       - { id: fire-breaks, name: { en: "Fire breaks and wardens", cy: "Bylchau tân a wardeiniaid", cy_review: true }, what: { en: "Cut fire breaks and pay wardens to watch the hills.", cy: "Torri bylchau tân a thalu wardeiniaid i wylio'r bryniau.", cy_review: true }, cost: 1, effects: [{ kind: measure, measure: nature, points: 0.2 }], handled_well: true }
     sources: [ukcp18, greenspace-health]
 
@@ -556,7 +561,7 @@ events:
     size: []
     prepared_by: []
     responses:
-      - { id: accept, name: { en: "Welcome them", cy: "Eu croesawu", cy_review: true }, what: { en: "The town makes room as best it can.", cy: "Mae'r dref yn gwneud lle orau y gall.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: accept, name: { en: "Welcome them", cy: "Eu croesawu", cy_review: true }, what: { en: "The town makes room as best it can.", cy: "Mae'r dref yn gwneud lle iddyn nhw orau y gall hi.", cy_review: true }, cost: 0, effects: [], handled_well: false }
       - { id: more-places, name: { en: "More nursery and school places", cy: "Mwy o lefydd meithrin ac ysgol", cy_review: true }, what: { en: "Add nursery and school places so the families stay.", cy: "Ychwanegu llefydd meithrin ac ysgol fel bod y teuluoedd yn aros.", cy_review: true }, cost: 1, effects: [{ kind: young_adults, points: 0.1 }, { kind: measure, measure: welsh, points: 0.1 }], handled_well: true }
     sources: [ons-internal-migration, housing-elasticity]
 
@@ -599,6 +604,6 @@ events:
     size: []
     prepared_by: []
     responses:
-      - { id: accept, name: { en: "Good for them", cy: "Da iawn nhw", cy_review: true }, what: { en: "The scheme stays as it is.", cy: "Mae'r cynllun yn aros fel y mae.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: accept, name: { en: "Good for them", cy: "Pob lwc iddyn nhw", cy_review: true }, what: { en: "The scheme stays as it is.", cy: "Mae'r cynllun yn aros fel y mae.", cy_review: true }, cost: 0, effects: [], handled_well: false }
       - { id: share-out, name: { en: "Help the next village join", cy: "Helpu'r pentref nesaf i ymuno", cy_review: true }, what: { en: "Help a neighbouring village set up its own share.", cy: "Helpu pentref cyfagos i sefydlu ei gyfran ei hun.", cy_review: true }, cost: 1, effects: [{ kind: measure, measure: homes, points: 0.1, where: linked }, { kind: measure, measure: climate, points: 0.2 }], handled_well: true }
     sources: [community-energy]

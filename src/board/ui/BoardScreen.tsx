@@ -9,7 +9,7 @@ import { t } from "./lang";
 import { PaperSheet, TabButton } from "../../ui/parts";
 import { BuildMenu } from "./BuildMenu";
 import type { Overlay } from "./clock/hold";
-import { clockKey } from "./clock/keys";
+import { clockKey, clockKeyUp } from "./clock/keys";
 import { Settings } from "./clock/Settings";
 import { CouncilPanel } from "./CouncilPanel";
 import { useGame } from "./game";
@@ -48,7 +48,9 @@ export function BoardScreen(props: { fixture: boolean }): JSX.Element {
       clockKey(game, e);
     };
     window.addEventListener("keydown", key);
-    onCleanup(() => window.removeEventListener("keydown", key));
+    // Space works the clock on whatever has focus; on release the focused button must not be pressed too
+    window.addEventListener("keyup", clockKeyUp);
+    onCleanup(() => { window.removeEventListener("keydown", key); window.removeEventListener("keyup", clockKeyUp); });
   });
 
   return (

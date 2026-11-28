@@ -14,7 +14,7 @@ export interface Prefs {
   holdWhileReading: boolean;
   /** No running clock: "Next season" and "Run to the next moment" only. */
   stepByStep: boolean;
-  /** A speed id from `game.speeds`. */
+  /** The speed a game starts at, a speed id from `game.speeds`. The speed picked during a game is not saved (cold playtest 9: it carried over to the next game). */
   speed: string;
 }
 

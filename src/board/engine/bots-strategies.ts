@@ -5,6 +5,7 @@
  * `careful` flag says.
  */
 import { neighbours, siteCouncils } from "./conditions";
+import { freshStartDiscount } from "./roots";
 import { boardScore, leftBoard, lowestCouncils } from "./score";
 import type { BotView } from "./bots-common";
 import { buildOptions, draw, optionCouncils, optionsOf, optionValue, runAhead, valuesOf } from "./bots-common";
@@ -278,5 +279,34 @@ export function scatter(): Bot {
   return skilled({
     id: "scatter",
     allow: (v, o) => o.action.kind !== "build" || !o.branch || !optionCouncils(v.model, o).some((c) => nearOwn(v, o.branch!).has(c)),
+  });
+}
+
+/** The builds allowed now that would get a fresh start (rule R3), worked out once per state. */
+const freshCache = new WeakMap<BotView["state"], Set<ActionOption>>();
+function freshOptions(v: BotView): Set<ActionOption> {
+  let got = freshCache.get(v.state);
+  if (!got) {
+    got = new Set(buildOptions(v).filter((o) => {
+      const def = v.model.projects.find((d) => d.id === o.project);
+      return o.action.kind === "build" && !!def && freshStartDiscount(v.model, v.state, def.cost, o.action.site) > 0;
+    }));
+    freshCache.set(v.state, got);
+  }
+  return got;
+}
+
+/**
+ * Spreader (playtest 9 should-fix 10, the designer's complaint): as Skilled, but whenever a build
+ * with a fresh start (rule R3) is on offer it takes one of those, so it chases new councils over
+ * depth. Not one of the thirteen: the balance script plays it beside them, and depth should beat it.
+ */
+export function spreader(): Bot {
+  return skilled({
+    id: "spreader",
+    allow: (v, o) => {
+      const fresh = freshOptions(v);
+      return fresh.size === 0 || fresh.has(o);
+    },
   });
 }

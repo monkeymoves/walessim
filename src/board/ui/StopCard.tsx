@@ -1,15 +1,26 @@
 /**
- * A soft stop on screen (16.2.5): one line and two buttons, "Look" (selects the council and stays
- * paused) and "Carry on". The clock is held while it shows, so nothing moves while it is read. A
+ * A soft stop on screen (16.2.5): one line and two buttons, "Look" (selects the council and
+ * pauses) and "Carry on". The clock is held while it shows, so nothing moves while it is read. A
  * warning is a slate slip, pinned and askew, as the forecast was; everything else is a paper slip.
+ *
+ * After cold playtest 9:
+ * - It sits in the lane between the build menu and the council panel (clock.css), so it never
+ *   covers the build menu or its Build button, and it scrolls inside itself rather than clip.
+ * - Its note says what time will do after it: run again if it was running, stay paused if the
+ *   player had paused it; Look pauses (should fix 4).
+ * - With several cards waiting it says which of how many, and offers to carry on past them all
+ *   (they are all in the ticker), so cards come one at a time and never pile up unseen.
+ * - A new tier names the builds that opened it and what it offers (should fix 5).
+ * - A warning gives its window in game time: it only comes closer while time runs.
  */
 import { onMount, Show, type JSX } from "solid-js";
 import { t } from "./lang";
 import { StampButton, TabButton } from "../../ui/parts";
-import { eventNoun, type BoardModel, type Stop } from "../engine/api";
+import { eventNoun, keystoneLastStep, type BoardModel, type ProjectState, type Stop } from "../engine/api";
 import { visitBlockWords } from "./blockers";
 import { useGame } from "./game";
-import { councilName, projectName, say, tx, whenWords } from "./words";
+import { openedBy } from "./clock/opened";
+import { branchName, councilName, listOf, projectName, say, tx, whenWords } from "./words";
 import type { QueuedStop } from "./clock/stops";
 
 /** The fallback line while the engine's sentence (`board.stop.<kind>`, package 10) is not written. */
@@ -30,15 +41,63 @@ function fallbackLine(model: BoardModel, stop: Stop): string {
   return t(`boardui.stop.${stop.kind}.line`, vars);
 }
 
+/** A build and where it stands: its council, or both ends of its line. */
+function builtAt(model: BoardModel, p: ProjectState): string {
+  const project = projectName(model, p.project);
+  if (p.site.council) return t("boardclock.tier.builtAt", { project, place: councilName(model, p.site.council) });
+  const link = model.links.find((l) => l.id === p.site.link);
+  return t("boardclock.tier.builtOn", { project, from: councilName(model, link?.from), to: councilName(model, link?.to) });
+}
+
+const builtWords = (model: BoardModel, ps: ProjectState[]): string => listOf(ps.map((p) => builtAt(model, p)));
+
+/** Where a build stands, for "is working in". */
+const placeOf = (model: BoardModel, p: ProjectState): string =>
+  councilName(model, p.site.council ?? model.links.find((l) => l.id === p.site.link)?.from);
+
+/** A new tier, in words: its title and lines, naming what opened it. Null when the board cannot say. */
+function tierWords(model: BoardModel, opened: ReturnType<typeof openedBy>): { title: string; lines: string[] } | null {
+  if (!opened) return null;
+  if (opened.kind === "legacy") {
+    const lines = [opened.at
+      ? t("boardclock.tier.legacyBy", { project: projectName(model, opened.project), keystone: projectName(model, opened.keystone), place: placeOf(model, opened.at) })
+      : t("boardui.stop.tier_open.legacy", { project: projectName(model, opened.project) })];
+    return { title: t("boardui.stop.tier_open.title"), lines };
+  }
+  const branch = branchName(model, opened.branch);
+  const lines: string[] = [];
+  if (opened.by.length) lines.push(t("boardclock.tier.by", { list: builtWords(model, opened.by), n: opened.need, tier: t(`boardui.tierName.${opened.needTier}`) }));
+  const keystone = opened.offers.find((p) => p.keystone);
+  if (keystone) {
+    // the same season the engine's blocker and the time line use (time.ts keystoneLastStep)
+    const last = keystoneLastStep(model);
+    lines.push(t("boardclock.tier.keystoneNow", { project: projectName(model, keystone.id), n: keystone.build_years, when: whenWords(model, last) }));
+  } else if (opened.offers.length) {
+    lines.push(t("boardclock.tier.offers", { list: listOf(opened.offers.map((p) => projectName(model, p.id))) }));
+  }
+  return { title: t(opened.tier >= 3 ? "boardclock.tier.title3" : "boardclock.tier.title2", { branch }), lines };
+}
+
 export function StopCard(props: { item: QueuedStop }): JSX.Element {
   const game = useGame();
   const model = game.model;
+  const c = game.clock;
   const stop = () => props.item.stop;
   /** The engine's sentence leads when it is written; until then, the kind of stop and a plain line. */
   const said = () => say(stop().say);
+  const tier = () => {
+    const s = stop(), st = game.state();
+    return s.kind === "tier_open" && s.ref && st ? tierWords(model, openedBy(model, st, s.ref)) : null;
+  };
+  /** A warning's window, in game time. */
+  const window = () => {
+    const s = stop();
+    if (s.kind !== "warning") return null;
+    return game.forecast()?.warnings.find((w) => w.event === s.ref) ?? null;
+  };
   const look = () => {
     const s = stop();
-    game.clock.look();
+    c.look();
     if (s.kind === "warning" && s.ref) game.setWarning(s.ref);
   };
   const visitPlace = () => (stop().kind === "visit" ? stop().ref : undefined);
@@ -47,32 +106,59 @@ export function StopCard(props: { item: QueuedStop }): JSX.Element {
     const place = visitPlace(), s = game.state();
     return place && s ? visitBlockWords(model, s, place) : null;
   };
+  const waiting = () => c.queue().length;
+  /** Soft cards waiting, this one included: "Carry on past them" drops these (hard ones still come). */
+  const soft = () => c.queue().filter((q) => !q.stop.hard).length;
+  /** What time does after this card: what it did before it. Look and a visit pause it. */
+  const note = () => {
+    // the last card: no time is left to run, so it says where it leads, not what the clock does
+    if (stop().kind === "ended") return t("boardclock.card.ended");
+    if (c.prefs().stepByStep) return t("boardclock.card.step");
+    if (!c.playing()) return t("boardclock.card.paused");
+    return stop().council || visitPlace() ? t("boardclock.card.runsLook") : t("boardclock.card.runs");
+  };
   let card!: HTMLDivElement;
   // a keyboard player lands on the card's own buttons, not on whatever the clock left behind
   onMount(() => card.querySelector<HTMLButtonElement>("[data-testid=bw-stop-on], [data-testid=bw-stop-visit]")?.focus());
   return (
-    <div ref={card} class={`bw-stop bw-stop-${stop().kind}`} classList={{ "on-slate": stop().kind === "warning" }} role="alertdialog" aria-labelledby="bw-stop-title" aria-describedby="bw-stop-line" data-testid="bw-stop">
+    <div ref={card} class={`bw-stop bw-lane bw-stop-${stop().kind}`} classList={{ "on-slate": stop().kind === "warning" }} role="alertdialog" aria-labelledby="bw-stop-title" aria-describedby="bw-stop-line" data-testid="bw-stop">
       <Show when={stop().kind === "warning"}><span class="bw-slip-pin" aria-hidden="true" /></Show>
-      <p class="label bw-stop-when">{whenWords(model, props.item.step + 1, true)}. {t(`boardui.stop.${stop().kind}.title`)}</p>
-      <Show when={said()} fallback={<>
-        <h2 class="t-2 bw-stop-title" id="bw-stop-title">{t(`boardui.stop.${stop().kind}.title`)}</h2>
-        <p class="bw-stop-line" id="bw-stop-line">{fallbackLine(model, stop())}</p>
-      </>}>
-        <h2 class="t-2 bw-stop-title" id="bw-stop-title">{said()}</h2>
-        <span id="bw-stop-line" hidden />
+      <p class="label bw-stop-when">
+        {whenWords(model, props.item.step + 1, true)}. {t(`boardui.stop.${stop().kind}.title`)}
+        <Show when={waiting() > 1}><span class="bw-stop-count" data-testid="bw-stop-count">. {t("boardclock.card.count", { n: 1, of: waiting() })}</span></Show>
+      </p>
+      <Show when={tier()} keyed fallback={
+        <Show when={said()} fallback={<>
+          <h2 class="t-2 bw-stop-title" id="bw-stop-title">{t(`boardui.stop.${stop().kind}.title`)}</h2>
+          <p class="bw-stop-line" id="bw-stop-line">{fallbackLine(model, stop())}</p>
+        </>}>
+          <h2 class="t-2 bw-stop-title" id="bw-stop-title">{said()}</h2>
+          <span id="bw-stop-line" hidden />
+        </Show>
+      }>
+        {(w) => <>
+          <h2 class="t-2 bw-stop-title" id="bw-stop-title">{w.title}</h2>
+          <div id="bw-stop-line" class="bw-stop-lines" data-testid="bw-stop-opened">{w.lines.map((l) => <p class="bw-stop-line">{l}</p>)}</div>
+        </>}
+      </Show>
+      <Show when={window()} keyed>
+        {(w) => <p class="small bw-stop-window" data-testid="bw-stop-window">{t("boardclock.warn.window", { from: whenWords(model, w.fromStep), to: whenWords(model, w.toStep) })}</p>}
       </Show>
       <div class="bw-stop-row">
         <Show when={visitPlace()}>
-          <StampButton onClick={() => { game.clock.look(); game.setVisit(visitPlace()!); }} why={visitBlock()} data-testid="bw-stop-visit">{t("boardui.stop.visitGo")}</StampButton>
+          <StampButton onClick={() => { c.look(); game.setVisit(visitPlace()!); }} why={visitBlock()} data-testid="bw-stop-visit">{t("boardui.stop.visitGo")}</StampButton>
         </Show>
         <Show when={stop().council}>
           <TabButton onClick={look} data-testid="bw-stop-look">{t("boardui.stop.lookAt", { council: councilName(model, stop().council) })}</TabButton>
         </Show>
-        <Show when={visitPlace()} fallback={<StampButton onClick={() => game.clock.carryOn()} data-testid="bw-stop-on">{stop().kind === "ended" ? t("boardui.report.toEnd") : t("boardui.stop.carryOn")}</StampButton>}>
-          <TabButton onClick={() => game.clock.carryOn()} data-testid="bw-stop-on">{t("boardui.stop.carryOn")}</TabButton>
+        <Show when={visitPlace()} fallback={<StampButton onClick={() => c.carryOn()} data-testid="bw-stop-on">{stop().kind === "ended" ? t("boardui.report.toEnd") : t("boardui.stop.carryOn")}</StampButton>}>
+          <TabButton onClick={() => c.carryOn()} data-testid="bw-stop-on">{t("boardui.stop.carryOn")}</TabButton>
         </Show>
       </div>
-      <p class="small bw-stop-note">{t("boardui.stop.note")}</p>
+      <p class="small bw-stop-note" data-testid="bw-stop-note">{note()}</p>
+      <Show when={soft() > 1 && !stop().hard}>
+        <button type="button" class="inklink small bw-stop-all" onClick={() => c.carryOnAll()} data-testid="bw-stop-all">{t("boardclock.card.all", { n: soft() })}</button>
+      </Show>
     </div>
   );
 }

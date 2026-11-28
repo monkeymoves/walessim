@@ -11,13 +11,14 @@
  */
 import type { BoardModel, BoardState, CouncilCode, ElectionResult, Ending, Frame, Text } from "../../engine/api";
 import { meanOf } from "./view";
+import { ruleParamOf } from "../rules";
 
 export type Against = "ahead" | "behind" | "level";
 /** Ahead or behind by `little` points or more (rule G1 `band_little`, the same line the result band draws), else level. */
 const against = (d: number, little: number): Against => (d >= little ? "ahead" : d <= -little ? "behind" : "level");
 
 /** The points that count as "a little" better or worse (rule G1 `band_little`), from the model. */
-export const littleOf = (model: BoardModel): number => model.rules.find((r) => r.id === "G1")?.params["band_little"]?.default ?? 3;
+export const littleOf = (model: BoardModel): number => ruleParamOf(model, "G1", "band_little", 1.5);
 
 export interface Verdict {
   /** The 2026 board and the Wales you leave, out of 100. */
@@ -43,13 +44,14 @@ export function verdictOf(ending: Ending, little: number): Verdict {
 }
 
 /**
- * The gap the words give ("about {d} points better"), from the whole numbers the screen shows, so
- * "45 → 52" never reads "about 6 points better" (join after fix round 1). A gap the verdict calls
- * better or worse is never said as 0.
+ * The gap the words give ("about {d} points better"), from the figures the screen shows, which are
+ * rounded to a tenth as the top strip rounds Left for 2050 in play (playtest 9, should-fix 3:
+ * "about 12 points" beside "About 13 points"; the join after fix round 1: "45 → 52" beside "about 6
+ * points better"). A gap the verdict calls better or worse is never said as 0.0.
  */
 export function shownGap(from: number, to: number, against: Against): number {
-  const d = Math.abs(Math.round(to) - Math.round(from));
-  return against === "level" ? d : Math.max(1, d);
+  const d = Math.abs(Math.round(to * 10) - Math.round(from * 10)) / 10;
+  return against === "level" ? d : Math.max(0.1, d);
 }
 
 export interface PromiseRecord { text: Text; byYear: number; kept: boolean | null }

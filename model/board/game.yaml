@@ -35,8 +35,8 @@ year_lines_max: 2
 # Clock speeds for the screens. Never part of the state or the run code.
 speeds:
   - { id: steady, ms_per_step: 4000 }
-  - { id: brisk, ms_per_step: 1500 }
-  - { id: fast, ms_per_step: 750 }
+  - { id: brisk, ms_per_step: 2500 }
+  - { id: fast, ms_per_step: 1500 }
 default_speed: steady
 # What pauses the clock (section 16.2.5). Hard stops cannot be switched off; the rest are the
 # player's settings, on or off by default. The engine reports them all and never reads the settings.

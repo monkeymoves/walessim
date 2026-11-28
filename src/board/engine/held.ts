@@ -155,6 +155,9 @@ const appliedCache = new WeakMap<readonly Contribution[], { upTo: number; sums: 
 
 function addTo(sums: Applied, c: Contribution): void {
   if (!HELD_CAUSES.has(c.cause.kind) || RUN_RULES.has(c.rule) || c.quantity === "coins" || c.quantity === "fairness") return;
+  // A law's backing is a standing part (standing.ts), not a held effect: never take it back here.
+  // (Playtest 9 must-fix 2: it was taken back the step after the law passed, while the moods kept it.)
+  if (c.cause.kind === "law" && c.quantity === "backing") return;
   const k = heldKey(c);
   const got = sums.get(k);
   if (got) got.sum += c.delta;

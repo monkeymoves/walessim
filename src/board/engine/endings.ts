@@ -46,17 +46,26 @@ function meanChange(state: BoardState, c: CouncilCode): number {
   return councilMean(state.councils[c]!) - (then ? councilMean(then) : councilMean(state.councils[c]!));
 }
 
+/** The step a council first tipped to rising, from the yearly frames, or null. */
+export function firstRise(state: BoardState, code: CouncilCode): number | null {
+  return state.history.find((f) => f.councils[code]?.momentum === "rising")?.step ?? null;
+}
+
 /**
- * The project that stands for a council in its letter: one the ending is about first (`about`),
- * then a keystone, then the highest tier, then the latest.
+ * The project that stands for a council in its letter: one the ending is about first (`about`);
+ * then, where the council turned a corner, one that opened by then, since letters tell how a place
+ * turned ("It started to turn with ..."; playtest 9: "Station quarter in 2045" for a council that
+ * turned in 2030); then the highest tier; then the earliest to open.
  */
 export function namedProject(model: BoardModel, state: BoardState, code: CouncilCode, about: (d: ProjectDef) => boolean = () => false): ProjectState | undefined {
   const def = (p: ProjectState) => projectDefOf(model, p);
   const tier = (p: ProjectState) => def(p)?.tier ?? 0;
   const fits = (p: ProjectState) => Number(!!def(p) && about(def(p)!));
+  const rose = firstRise(state, code);
+  const byRise = (p: ProjectState) => Number(rose !== null && p.readyStep + 1 <= rose);
   return state.projects
     .filter((p) => p.status !== "building" && siteCouncils(model, p).includes(code))
-    .sort((a, b) => fits(b) - fits(a) || tier(b) - tier(a) || b.startedStep - a.startedStep || a.id.localeCompare(b.id))[0];
+    .sort((a, b) => fits(b) - fits(a) || byRise(b) - byRise(a) || tier(b) - tier(a) || a.readyStep - b.readyStep || a.id.localeCompare(b.id))[0];
 }
 
 /**
@@ -131,6 +140,20 @@ export function letterFrom(model: BoardModel, state: BoardState, built: EndingDe
   return mostChanged(model, state)[0] ?? model.game.councils[0]!;
 }
 
+/**
+ * The council an ending about an event is about: where that event last landed (The gamble: where the
+ * big employer left). Its evidence lines read that council, so the ending names one place, not three
+ * (playtest 9: "opened in Merthyr Tydfil", "Blaenau Gwent found new work"). Null for other endings.
+ */
+export function focusOf(model: BoardModel, state: BoardState, built: EndingDef): CouncilCode | null {
+  for (const c of built.when) {
+    if (c.kind !== "event_landed") continue;
+    const at = state.events.filter((e) => e.event === c.event).slice(-1)[0]?.councils[0];
+    if (at && state.councils[at]) return at;
+  }
+  return null;
+}
+
 /** River floods that hit a council, in order of time. */
 const floodsAt = (model: BoardModel, state: BoardState, code: CouncilCode) =>
   state.events.filter((e) => e.councils.includes(code) && isRiverEvent(model, e.event) && !model.events.find((d) => d.id === e.event)?.good);
@@ -148,11 +171,12 @@ const floodsAt = (model: BoardModel, state: BoardState, code: CouncilCode) =>
  *   guards when none were), with the year of its last flood; "up" when it has not flooded since
  *   the ending's project opened, or never flooded at all ({year} is then the first year).
  */
-export function evidenceLine(model: BoardModel, state: BoardState, ev: EvidenceDef, about: (d: ProjectDef) => boolean = () => false): EvidenceLine {
+export function evidenceLine(model: BoardModel, state: BoardState, ev: EvidenceDef, about: (d: ProjectDef) => boolean = () => false, focus: CouncilCode | null = null): EvidenceLine {
   const then = state.history[0]?.councils;
   const codes = flagged(model, ev.flag).filter((c) => state.councils[c]);
   const pick = (change: (c: CouncilCode) => number) => {
-    const best = [...codes].sort((a, b) => Math.abs(change(b)) - Math.abs(change(a)) || a.localeCompare(b))[0] ?? model.game.councils[0]!;
+    const best = (focus && codes.includes(focus) ? focus : undefined)
+      ?? [...codes].sort((a, b) => Math.abs(change(b)) - Math.abs(change(a)) || a.localeCompare(b))[0] ?? model.game.councils[0]!;
     return { code: best, up: change(best) >= 0, vars: placeSlots(model, best) };
   };
   let code: CouncilCode | null;
@@ -160,7 +184,7 @@ export function evidenceLine(model: BoardModel, state: BoardState, ev: EvidenceD
   let vars: Slots;
   if (ev.kind === "gap_change") {
     code = null;
-    up = !!then && fairnessGap(model, state.councils) <= fairnessGap(model, then);
+    up = gapClosed(model, state);
     vars = {};
   } else if (ev.kind === "young_adults_change") {
     ({ code, up, vars } = pick((c) => state.councils[c]!.young - (then?.[c]?.young ?? state.councils[c]!.young)));
@@ -170,12 +194,14 @@ export function evidenceLine(model: BoardModel, state: BoardState, ev: EvidenceD
   } else if (ev.kind === "project_standing") {
     const def = (p: ProjectState) => projectDefOf(model, p);
     const fits = (p: ProjectState) => Number(!!def(p) && about(def(p)!));
+    const atFocus = (p: ProjectState) => Number(!!focus && siteCouncils(model, p).includes(focus));
     const best = state.projects
       .filter((p) => p.status === "working" && siteCouncils(model, p).some((c) => codes.includes(c)))
-      .sort((a, b) => fits(b) - fits(a) || Number(!!def(b)?.keystone) - Number(!!def(a)?.keystone) || (def(b)?.tier ?? 0) - (def(a)?.tier ?? 0)
+      .sort((a, b) => fits(b) - fits(a) || atFocus(b) - atFocus(a) || Number(!!def(b)?.keystone) - Number(!!def(a)?.keystone) || (def(b)?.tier ?? 0) - (def(a)?.tier ?? 0)
         || a.readyStep - b.readyStep || a.id.localeCompare(b.id))[0];
     if (best) {
-      code = siteCouncils(model, best).find((c) => codes.includes(c)) ?? siteCouncil(model, best) ?? null;
+      code = (focus && codes.includes(focus) && siteCouncils(model, best).includes(focus) ? focus : undefined)
+        ?? siteCouncils(model, best).find((c) => codes.includes(c)) ?? siteCouncil(model, best) ?? null;
       up = true;
       vars = code ? projectSlots(model, best, code) : {};
     } else {
@@ -197,6 +223,34 @@ export function evidenceLine(model: BoardModel, state: BoardState, ev: EvidenceD
   return { council: code, say: { key: "board.ending.evidence", vars: { line: up ? ev.up : ev.down, ...vars } } };
 }
 
+/** Is the fairness gap no wider than in 2026? The one measure every gap line and gap chapter reads (score.ts `fairnessGap`). */
+export function gapClosed(model: BoardModel, state: BoardState): boolean {
+  const then = state.history[0]?.councils;
+  return !!then && fairnessGap(model, state.councils) <= fairnessGap(model, then);
+}
+
+/**
+ * The ways the chapters told the gap: "closed" for a term named by a chapter whose condition is the
+ * gap closing (Closing the gap), "wider" for one whose condition is the gap widening (Two speeds).
+ */
+export function gapTold(model: BoardModel, state: BoardState): Set<"closed" | "wider"> {
+  const out = new Set<"closed" | "wider">();
+  for (const rec of state.story.chapters) {
+    for (const c of model.chapters.find((d) => d.id === rec.chapter)?.when ?? []) if (c.kind === "gap") out.add(c.change);
+  }
+  return out;
+}
+
+/**
+ * Would a gap line say the opposite of a chapter? A chapter tells one term and the line the whole
+ * run, so "Closing the gap" and "the gap has grown" can both be true, but read as a contradiction
+ * (playtest 9, must-fix 3). The end then leaves the gap line out: it says less, never the opposite.
+ */
+export function gapClashes(model: BoardModel, state: BoardState): boolean {
+  const told = gapTold(model, state);
+  return gapClosed(model, state) ? told.has("wider") : told.has("closed");
+}
+
 /** True when every slot a line names has a value, so it can be said whole. */
 export function sayable(line: EvidenceLine): boolean {
   const vars = line.say.vars ?? {};
@@ -205,16 +259,54 @@ export function sayable(line: EvidenceLine): boolean {
   return [...`${text.en} ${text.cy}`.matchAll(/\{(\w+)\}/g)].every((m) => vars[m[1]!] !== undefined);
 }
 
-/** The share of an ending's conditions that hold now (its nearness), 0 to 1. */
-export function nearness(model: BoardModel, state: BoardState, e: EndingDef): number {
-  if (e.when.length === 0) return 0;
-  return e.when.filter((c) => endHolds(model, state, c)).length / e.when.length;
+/** The branch's own projects working now (legacy projects aside), highest tier first. */
+const branchTier = (model: BoardModel, state: BoardState, branch: string): number => Math.max(0, ...state.projects
+  .filter((p) => p.status === "working")
+  .map((p) => projectDefOf(model, p))
+  .filter((d): d is ProjectDef => !!d && d.branch === branch && !d.legacy_of)
+  .map((d) => d.tier));
+
+/**
+ * How near one condition is, 0 to 1: 1 when it holds; for a keystone not standing, how far up its
+ * branch you built (a working tier 2 is two thirds of the way to a tier 3 keystone, never 1).
+ */
+function conditionNear(model: BoardModel, state: BoardState, c: EndingDef["when"][number]): number {
+  if (endHolds(model, state, c)) return 1;
+  if (c.kind !== "keystone") return 0;
+  const key = model.projects.find((d) => d.id === c.project);
+  return key && key.tier > 0 ? Math.min(0.9, branchTier(model, state, key.branch) / key.tier) : 0;
 }
 
-/** The nearest other ending: the most of its conditions holding, then by priority. Never the fallback. */
+/** The share of an ending's conditions that hold now (its nearness), 0 to 1, with a keystone's branch counted part way. */
+export function nearness(model: BoardModel, state: BoardState, e: EndingDef): number {
+  if (e.when.length === 0) return 0;
+  return e.when.reduce((a, c) => a + conditionNear(model, state, c), 0) / e.when.length;
+}
+
+/**
+ * Could this ending be "the Wales you did not build"? Not when you did build it: every condition
+ * holds and it lost only on priority, or its keystone stands (playtest 9: "With room for the rivers,
+ * you might have had: The green valleys" after building Rivers given room).
+ */
+export function notBuildable(model: BoardModel, state: BoardState, e: EndingDef): boolean {
+  if (e.when.length === 0) return false;
+  if (allEndHold(model, state, e.when)) return true;
+  return e.when.some((c) => c.kind === "keystone" && state.projects.some((p) => p.project === c.project && p.status === "working"));
+}
+
+/**
+ * The nearest other ending you did not build. A route of your own first, an ending with a keystone
+ * (it has a ghost map, and it is a Wales worth trying for: playtest 9 found "you might have had:
+ * Two countries" in game after game, since half its conditions hold whenever a keystone stands);
+ * then the most of its conditions holding, a keystone's branch counted part way; then by priority.
+ * Never the fallback, never one you built.
+ */
 export function nearestNotBuilt(model: BoardModel, state: BoardState, built: EndingDef): EndingDef {
   const others = model.endings.filter((e) => e.id !== built.id && e.when.length > 0);
-  return others.sort((a, b) => nearness(model, state, b) - nearness(model, state, a) || a.priority - b.priority)[0] ?? built;
+  const open = others.filter((e) => !notBuildable(model, state, e));
+  const route = (e: EndingDef) => Number(e.when.some((c) => c.kind === "keystone"));
+  const byNear = (xs: EndingDef[]) => [...xs].sort((a, b) => route(b) - route(a) || nearness(model, state, b) - nearness(model, state, a) || a.priority - b.priority)[0];
+  return byNear(open) ?? byNear(others) ?? built;
 }
 
 /** Scores of the same game number and start played on autopilot. */
@@ -274,9 +366,12 @@ export function ending(model: BoardModel, state: BoardState): Ending {
   const named = near && (!model.projects.some(about) || (nearDef && about(nearDef))) ? near : undefined;
   const letter = letterChoices(model, state, built, own.lower)[0];
   const other = nearestNotBuilt(model, state, built);
+  const focus = focusOf(model, state, built);
+  const clash = gapClashes(model, state);
   return {
     id: built.id, name: built.name, summary: built.summary,
-    evidence: built.evidence.map((ev) => evidenceLine(model, state, ev, about)).filter(sayable).slice(0, 3),
+    evidence: built.evidence.filter((ev) => !(ev.kind === "gap_change" && clash))
+      .map((ev) => evidenceLine(model, state, ev, about, focus)).filter(sayable).slice(0, 3),
     scores: own,
     autopilot: autopilotScores(model, state),
     mostChanged: changed.slice(0, 3),

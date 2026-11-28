@@ -61,16 +61,28 @@ describe("deals after a lost election (rule P6)", () => {
     expect(s.ledger.filter((c) => c.rule === "P6").every((c) => c.cause.kind === "deal" && c.cause.council === merthyr)).toBe(true);
   });
 
-  it("broken when the due date passes first: Backing falls everywhere", () => {
+  it("broken when the due date passes first: Backing falls in that council only, then fades evenly over four years", () => {
     const s = seeded();
     s.deals.push({ council: merthyr, measure: "homes", madeStep: 0, dueStep: 16, kept: null });
-    const before = s.councils[cardiff]!.backing;
+    const before = { here: s.councils[merthyr]!.backing, other: s.councils[cardiff]!.backing };
     nextYears(model, s, 4);
     const ctx = ctxOf(model, s);
     ctx.step = 15;
     judgeDeals(ctx);
     expect(s.deals[0]!.kept).toBe(false);
-    expect(s.councils[cardiff]!.backing - before).toBeCloseTo(-0.5, 3);
+    expect(s.councils[merthyr]!.backing - before.here).toBeCloseTo(-1.5, 3);
+    expect(s.councils[cardiff]!.backing).toBeCloseTo(before.other, 6);
+    // Each year that closes gives back a quarter, recorded under P6 with the deal as its cause.
+    const fade: number[] = [];
+    for (let year = 1; year <= 5; year++) {
+      const at = ctxOf(model, s);
+      at.step = 15 + 4 * year;
+      const was = s.councils[merthyr]!.backing;
+      judgeDeals(at);
+      fade.push(Math.round((s.councils[merthyr]!.backing - was) * 1000) / 1000);
+    }
+    expect(fade).toEqual([0.375, 0.375, 0.375, 0.375, 0]);
+    expect(s.ledger.filter((c) => c.rule === "P6").every((c) => c.cause.kind === "deal" && c.cause.council === merthyr)).toBe(true);
   });
 
   it("the project that keeps an open deal costs a coin less there, and only there", () => {

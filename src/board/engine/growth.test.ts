@@ -24,7 +24,7 @@ beforeAll(() => {
 describe("growth and spread on the real board", () => {
   it("carries the R1 to R4 cards, the purse and the bounded S3", () => {
     for (const id of ["R1", "R2", "R3", "R4"]) expect(model.rules.some((r) => r.id === id), id).toBe(true);
-    expect(model.rules.find((r) => r.id === "B1")?.params.purse_max?.default).toBe(16);
+    expect(model.rules.find((r) => r.id === "B1")?.params.purse_max?.default).toBe(20);
     expect(model.rules.find((r) => r.id === "S3")?.params.floor_share?.default).toBe(0.85);
   });
 

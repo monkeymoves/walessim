@@ -59,7 +59,7 @@ export function keystonesWorking(model: BoardModel, state: BoardState): string[]
 
 type ProjectTest = Extract<Condition, { kind: "project" }>;
 
-/** Projects matching a `project` condition, counted for one council. */
+/** Projects matching a `project` condition, counted for one council. A `tier` match never counts a legacy project. */
 export function countProjects(model: BoardModel, state: BoardState, code: CouncilCode, c: ProjectTest): number {
   const status = c.status ?? "working";
   const reach = new Set<CouncilCode>([code]);
@@ -71,7 +71,9 @@ export function countProjects(model: BoardModel, state: BoardState, code: Counci
     const def = projectDef(model, p.project);
     if (c.tag && !def?.tags.includes(c.tag)) return false;
     if (c.branch && def?.branch !== c.branch) return false;
-    if (c.tier && def?.tier !== c.tier) return false;
+    // A legacy project sits on tier 2 but comes after the keystone: it never counts as one of its
+    // tier's projects, so a tier gate cannot wait on it (playtest 9 must-fix 1).
+    if (c.tier && (def?.tier !== c.tier || !!def.legacy_of)) return false;
     if (c.where === "anywhere") return true;
     return siteCouncils(model, p).some((s) => reach.has(s));
   }).length;

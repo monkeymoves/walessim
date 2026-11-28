@@ -175,9 +175,34 @@
 .bw-ticker-when { color: var(--ink-2); min-width: 0; font-weight: var(--wght-grot-strong); }
 .bw-ticker-first { font-family: var(--font-print); font-size: 15px; font-weight: 600; padding: 7px 14px 8px; box-shadow: var(--lit-edge), var(--shadow-sheet); }
 
+/* ---------- the lane: cards between the build menu and the council panel ----------
+   Cold playtest 9, must fix 4: stop cards, warnings and events sat at the top left, over the build
+   menu and its Build button. They now sit in the lane between the left column (the build menu,
+   board.css .bw-build: 14px in, 432px wide; 392px at 1280) and the right column (the council
+   panel, .bw-right: 14px in, 372px wide; 336px at 1280), centred, never wider than the lane, and
+   they scroll inside themselves rather than run under the ticker. The column sizes are repeated
+   here as custom properties; tests/e2e/board-lane.spec.ts measures the real boxes at 1280 x 800
+   and 1440 x 900 and fails if a card touches either column or leaves the stage. */
+.bw-stage { --bw-left-col: 446px; --bw-right-col: 386px; --bw-lane-gap: 14px; --bw-lane-foot: 132px; }
+.bw-stage .bw-lane, .bw-stage .bw-respond {
+  position: absolute; top: 18px; bottom: auto;
+  left: calc(var(--bw-left-col) + var(--bw-lane-gap)); right: calc(var(--bw-right-col) + var(--bw-lane-gap));
+  width: auto; max-width: 360px; margin: 0 auto; box-sizing: border-box;
+  max-height: calc(100% - 18px - var(--bw-lane-foot)); overflow-y: auto; overscroll-behavior: contain;
+}
+.bw-stage .bw-slip.bw-lane, .bw-stage .bw-respond { max-width: 340px; }
+.bw-slip-game { color: var(--on-slate-2); margin-top: 2px; }
+.bw-stop-count { color: var(--ink-2); font-weight: var(--wght-grot-strong); }
+.bw-stop.on-slate .bw-stop-count { color: var(--on-slate-2); }
+.bw-stop-lines { display: grid; gap: 6px; }
+.bw-stop-window { color: var(--ink-2); }
+.bw-stop.on-slate .bw-stop-window { color: var(--on-slate-2); }
+.bw-stop-all { margin-top: 2px; }
+.bw-stop.on-slate .bw-stop-all { color: var(--on-slate); }
+
 /* ---------- a soft stop: one line, Look and Carry on ---------- */
 .bw-stop {
-  position: absolute; left: 18px; top: 18px; width: 320px; z-index: 22; padding: 14px 16px 14px;
+  z-index: 22; padding: 14px 16px 14px;
   display: grid; gap: 6px; justify-items: start;
   background: var(--paper) var(--grain); box-shadow: var(--lit-edge), var(--shadow-held);
   animation: bw-slide var(--dur-slide) var(--ease-paper);
@@ -271,6 +296,7 @@
 
 /* ---------- 1280 x 800 ---------- */
 @media (max-width: 1360px) {
+  .bw-stage { --bw-left-col: 406px; --bw-right-col: 350px; --bw-lane-gap: 12px; }
   .bw-clock { width: 240px; }
   .bw-clock-play { min-width: 80px; }
   .bw-ticker { right: 364px; }
@@ -287,3 +313,28 @@
 }
 /* a stop slides in without fading, so its words are at full strength from the first frame */
 @keyframes bw-slide { from { translate: 0 -24px; } to { translate: 0 0; } }
+
+/* the reason the income moved (cold playtest 9, should fix 8) */
+.bw-coins-why { display: block; white-space: nowrap; color: var(--ink-2); line-height: 1.2; }
+.bw-coins-why.down { color: var(--warn); }
+
+/* with the build menu open the ticker moves into the lane, so its lines are not hidden under the menu */
+.bw-stage:has(> .bw-build) .bw-ticker { left: calc(var(--bw-left-col) + var(--bw-lane-gap)); }
+/* the button's word stays on one line in both languages ("Yn aros" wrapped in two) */
+.bw-clock-play { white-space: nowrap; }
+.bw-clock-play svg { flex: none; }
+.bw-clock-play { width: max-content; }
+@media (max-width: 1360px) { .bw-clock { width: auto; min-width: 240px; } }
+/* the status line wraps to the controls' width rather than widening the clock */
+.bw-clock-held { contain: inline-size; }
+
+/*
+ * The strip gives way instead of pushing the page wider than the screen (fix round 2, the Welsh
+ * pass: a long word in the last year put the language switch off the right edge). Each line stays
+ * on one line, and a line too long for the room ends in an ellipsis; its tip still says it all.
+ */
+.tip-host:has(> .bw-coins) { flex: 0 1 auto; min-width: 0; }
+.bw-coins { flex: 0 1 auto; min-width: 0; }
+.bw-coins-word { min-width: 0; }
+.bw-coins-line, .bw-coins-note, .bw-coins-why, .bw-head-note, .bw-score-word b, .bw-score-word .small { overflow: hidden; text-overflow: ellipsis; }
+.bw-strip { min-width: 0; max-width: 100%; }

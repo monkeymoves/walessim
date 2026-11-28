@@ -8,19 +8,26 @@
  * that can be built; the headline shows one decimal, how it has moved since 2026, how much of it is
  * still being built and when that opens, and what it would be if you built the project pointed at
  * (./clock/headway.ts).
+ *
+ * After cold playtest 9 (should fix 8): the income a year is what comes in before the purse cuts
+ * it (a full purse is said on its own line, never as "About +0 a year"), and when it has moved by a
+ * quarter coin or more in the last year a line under it says why, from the engine's Why? for coins
+ * (./clock/coins.ts `incomeParts`, `incomeChange`). The tip lists every part.
  */
 import { createEffect, createMemo, createSignal, Match, onCleanup, Show, Switch, type JSX } from "solid-js";
 import { formatNum, t, tn } from "./lang";
 import { LangToggle, Tooltip } from "../../ui/parts";
 import type { CoinsReport } from "../engine/api";
-import { seasonOf, stepsOf, tick, yearOfStep } from "../engine/api";
+import { RULE_IDS, seasonOf, stepOfYear, stepsOf, tick, why, yearOfStep } from "../engine/api";
 import { scores } from "./engine";
-import { coinNote, wholeCoins, type CoinNote } from "./clock/coins";
+import { coinNote, incomeChange, incomeParts, wholeCoins, type CoinNote, type IncomePart } from "./clock/coins";
 import { direction, headlineIf, headway, tenths, type Headway } from "./clock/headway";
 import { useGame } from "./game";
 import { backsAtOf } from "./mapLinks";
 import { ruleParamOf } from "./rules";
-import { capFirst } from "./words";
+import { capFirst, incomeWords, listOf, projectName } from "./words";
+
+const INCOME_RULES = { coins: RULE_IDS.coins, careBill: RULE_IDS.careBill, momentum: RULE_IDS.momentum, weak: "B3" };
 
 /** A coin with a ring round it that fills towards the next whole coin. */
 function CoinRing(props: { coins: number }): JSX.Element {
@@ -55,10 +62,55 @@ export function TopStrip(): JSX.Element {
     if (!st || st.phase !== "play") return null;
     try { return tick(model, st).report.coins; } catch { return null; }
   });
+  /** A year's income after costs, before the purse cuts it: coins not paid for a full purse still count here. */
   const perYear = () => {
     const c = step();
-    return c ? (c.income - c.running - c.charges) * stepsOf(model, 1) : null;
+    return c ? (c.income + (c.lost ?? 0) - c.running - c.charges) * stepsOf(model, 1) : null;
   };
+  /**
+   * A whole closed year's income, in parts. The engine folds a closed year's records together, so
+   * parts are read a year at a time. The first year also holds the opening coins (B1 `opening`),
+   * which are not income, so it is never read.
+   */
+  const yearParts = (year: number): IncomePart[] => {
+    if (year <= model.game.first_year) return [];
+    const from = stepOfYear(model, year), to = stepOfYear(model, year + 1) - 1;
+    return incomeParts(why(model, s(), { measure: "coins", fromStep: from, toStep: to }), 1, INCOME_RULES);
+  };
+  /** True when the purse cut a year's coins (its parts are then not the whole income). */
+  const purseCut = (year: number): boolean => {
+    const log = game.clock.coinLog();
+    for (let k = stepOfYear(model, year); k < stepOfYear(model, year + 1); k++) if ((log[k]?.lost ?? 0) > 0 || !log[k]) return true;
+    return false;
+  };
+  /** The last year closed. */
+  const closed = () => yearOfStep(model, s().step) - 1;
+  /** What moved the income most from the year before to the last closed year, when the purse cut neither. */
+  const incomeMoved = createMemo(() => {
+    const y = closed();
+    if (y - 1 <= model.game.first_year || purseCut(y) || purseCut(y - 1)) return null;
+    return incomeChange(yearParts(y), yearParts(y - 1));
+  });
+  const f1c = (n: number) => formatNum(Math.round(Math.abs(n) * 10) / 10, { maximumFractionDigits: 1 });
+  const movedWords = () => {
+    const m = incomeMoved();
+    if (!m) return "";
+    return t(`boardclock.income.why.${m.part.kind}.${m.change > 0 ? "up" : "down"}`, { n: f1c(m.change), project: m.part.project ? projectName(model, m.part.project) : "" });
+  };
+  /** Every part of a year's income, for the tip: what comes in, what goes out. */
+  const partsWords = createMemo(() => {
+    const parts = yearParts(closed());
+    if (!parts.length) return "";
+    const ins: string[] = [], outs: string[] = [];
+    const run = parts.filter((p) => p.kind === "running");
+    for (const p of parts) {
+      if (p.kind === "running") continue;
+      const words = t(`boardclock.income.part.${p.kind}`, { n: f1c(p.perYear), project: p.project ? projectName(model, p.project) : "" });
+      (p.perYear >= 0 ? ins : outs).push(words);
+    }
+    if (run.length) outs.push(tn("boardclock.income.part.running", run.length, { n: f1c(run.reduce((a, p) => a + p.perYear, 0)), count: run.length }));
+    return [ins.length ? t("boardclock.income.in", { list: listOf(ins) }) : "", outs.length ? t("boardclock.income.out", { list: listOf(outs) }) : ""].filter(Boolean).join(" ");
+  });
   const purse = () => ruleParamOf(model, "B1", "purse_max", 0);
   const buildOpen = () => game.clock.shown().includes("build");
   const pointed = createMemo(() => {
@@ -103,7 +155,7 @@ export function TopStrip(): JSX.Element {
           <span>{t("boardui.strip.left", { n: Math.max(0, model.game.end_year - year()) })}</span>
         </span>
       </div>
-      <Tooltip heading={t("boardclock.purse.tipTitle")} content={purse() > 0 ? t("boardclock.purse.tip", { n: purse() }) : t("boardui.strip.coinsNote")}>
+      <Tooltip heading={t("boardclock.purse.tipTitle")} content={[purse() > 0 ? t("boardclock.purse.tip", { n: purse() }) : t("boardui.strip.coinsNote"), partsWords()].filter(Boolean).join(" ")}>
         <div class="bw-coins" classList={{ soon: note().kind === "soon", full: note().kind === "full" }} tabindex="0" data-testid="bw-coins">
           <CoinRing coins={s().coins} />
           <span class="bw-coins-word">
@@ -117,10 +169,13 @@ export function TopStrip(): JSX.Element {
                 <Match when={note().kind === "after"}>{t("boardui.strip.coinsAfter", { n: (note() as { n: number }).n })}</Match>
                 <Match when={note().kind === "full"}>{t("boardclock.purse.full")}</Match>
                 <Match when={note().kind === "soon"}>{t("boardclock.purse.soon")}</Match>
-                <Match when={note().kind === "income"}>{t("boardui.strip.income", { n: (perYear()! >= 0 ? "+" : "") + formatNum(perYear()!, { maximumFractionDigits: 1 }) })}</Match>
+                <Match when={note().kind === "income"}>{t("boardui.strip.income", { n: incomeWords(perYear()!) })}</Match>
                 <Match when={true}>{t("boardui.strip.coinsNote")}</Match>
               </Switch>
             </span>
+            <Show when={(note().kind === "income" || note().kind === "soon") && movedWords()}>
+              <span class="small bw-coins-why" classList={{ down: (incomeMoved()?.change ?? 0) < 0 }} data-testid="bw-coins-why">{movedWords()}</span>
+            </Show>
           </span>
         </div>
       </Tooltip>
@@ -138,7 +193,9 @@ export function TopStrip(): JSX.Element {
                     {t(`boardclock.head.${direction(head()!.since)}`, { n: f1(Math.abs(head()!.since)), start: f1(head()!.start) })}
                   </span>
                   <Show when={tenths(head()!.building) > 0 && head()!.buildingBy !== null}>
-                    <span class="bw-head-note bw-head-building" data-testid="bw-head-building">{t("boardclock.head.building", { n: f1(head()!.building), year: head()!.buildingBy! })}</span>
+                    <span class="bw-head-note bw-head-building" data-testid="bw-head-building">{head()!.buildingBy! > model.game.end_year
+                      ? t("boardclock.head.buildingAfter", { n: f1(head()!.building), year: model.game.end_year })
+                      : t("boardclock.head.building", { n: f1(head()!.building), year: head()!.buildingBy! })}</span>
                   </Show>
                 </Show>
               </span>

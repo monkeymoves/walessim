@@ -5,6 +5,7 @@
  */
 import type { RunResult } from "./bots-balance";
 import { byBot, distance, mean, median, percentile, sameGame } from "./bots-balance";
+import { LAW_COST_YEARS } from "./bots-probes";
 
 export interface Row {
   claim: string;
@@ -19,12 +20,16 @@ export interface Extras {
   /** Nothing slides by itself: the largest change of the result from 2026, no actions and no events. */
   idleDrift?: number;
   shuffledMedian?: number;
+  /** Spreader's median: Skilled that takes a fresh start (R3) whenever one is on offer. */
+  spreaderMedian?: number;
   compoundRatio?: number;
   searchKeystones?: { runs: number; four: number; three: number };
   severity?: { min: number; max: number; lo: number; hi: number };
   /** Endings and chapters in the model. */
   endingsTotal?: number;
   chaptersTotal?: number;
+  /** Laws cost (bots-probes.ts `lawCost`): over the games probed, the largest Backing change a law made four years on, and the weakest law's. */
+  lawCost?: { most: number; least: number };
   /** Replay of a log is byte equal; ticking every step equals advancing. */
   clock?: { replay: boolean; tickAdvance: boolean };
   /** Seconds the run took, and whether it was the quick run. */
@@ -86,6 +91,10 @@ export function balanceTable(runs: RunResult[], x: Extras = {}): Row[] {
   if (x.compoundRatio !== undefined) row("Early choices compound", "a free joined tier 1 project in Skilled's game: effect by 2050, 2027 over 2039 (median)", fmt(x.compoundRatio), ">= 2", ok(x.compoundRatio, (v) => v >= 2));
   const together = medianOf("skilled") - medianOf("scatter");
   row("Together beats scattered", "Skilled median less Scatter median", fmt(together, 1), ">= 6", ok(together, (v) => v >= 6));
+  if (x.spreaderMedian !== undefined) {
+    const depth = medianOf("skilled") - x.spreaderMedian;
+    row("Depth beats spread", "Skilled median less Spreader (always takes a fresh start when one is on offer)", fmt(depth, 1), "> 0", ok(depth, (v) => v > 0));
+  }
   if (x.shuffledMedian !== undefined) {
     const fall = medianOf("skilled") - x.shuffledMedian;
     row("Place matters", "Skilled median less Skilled at random sites", fmt(fall, 1), ">= 8", ok(fall, (v) => v >= 8));
@@ -129,6 +138,19 @@ export function balanceTable(runs: RunResult[], x: Extras = {}): Row[] {
   }));
   const overlap = mean(overlaps);
   row("Tipping points happen, and differ", "momentum changes, median Skilled run; risen councils in common, branch bots", `${fmt(tips, 1)}; ${fmt(overlap)}`, ">= 3; <= 0.5", both(ok(tips, (v) => v >= 3), ok(overlap, (v) => v <= 0.5)));
+
+  // Playtest 9 should-fix 1: careless play must be able to lose, skilled play should usually win,
+  // and a full purse should not be where a good player's coins go.
+  const randomRuns = byBot(runs, "random");
+  const careless = randomRuns.length ? randomRuns.filter((r) => r.electionsLost > 0).length / randomRuns.length : NaN;
+  row("Careless loses", "Random loses at least one election: share of runs", fmt(careless), ">= 0.70", ok(careless, (v) => v >= 0.7));
+  const skilledRuns = byBot(runs, "skilled");
+  const skillWins = skilledRuns.length ? skilledRuns.filter((r) => r.elections - r.electionsLost >= 4).length / skilledRuns.length : NaN;
+  row("Skill still wins", "Skilled wins 4 of 5 elections or more: share of runs", fmt(skillWins), ">= 0.80", ok(skillWins, (v) => v >= 0.8));
+  const watched = skilledRuns.flatMap((r) => (r.coins ? [r.coins] : []));
+  const lostShare = watched.length ? watched.reduce((a, c) => a + c.lost, 0) / Math.max(1e-9, watched.reduce((a, c) => a + c.income + c.lost, 0)) : NaN;
+  row("Coins have a use", "Skilled: coins lost to a full purse, share of coins earned", fmt(lostShare, 3), "< 0.10", ok(lostShare, (v) => v < 0.1));
+  if (x.lawCost) row("Laws cost", `largest change a law makes to one council's Backing ${LAW_COST_YEARS} years on (weakest law ${fmt(x.lawCost.least)})`, fmt(x.lawCost.most), ">= 0.5", ok(x.lawCost.most, (v) => v >= 0.5));
 
   const pool = runs.filter((r) => branchBots.includes(r.bot) || r.bot === "skilled");
   const lost = pool.filter((r) => r.recovered !== null);

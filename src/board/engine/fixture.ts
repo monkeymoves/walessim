@@ -16,7 +16,7 @@ import { CARDIFF, MERTHYR, RCT, fixtureBands, fixtureCouncils, fixtureIndicators
 import { fixtureRules } from "./fixture-rules";
 import { fixtureBranches, fixtureGroups, fixtureLaws, fixturePairs, fixturePlaces, fixtureProjects } from "./fixture-content";
 import { fixtureEndings, fixtureEvents, fixtureFutures, fixtureLetters, fixtureStarts } from "./fixture-story";
-import type { BoardGame, BoardModel, BoardRule, BranchDef } from "./types";
+import type { BoardGame, BoardModel, BoardRule, BranchDef, Text } from "./types";
 
 /** Which stops are hard and which are on by default (docs/design/v2-board.md 16.2.5), as game.yaml has them. */
 export const FIXTURE_STOPS: BoardGame["stops"] = {
@@ -32,19 +32,25 @@ export const FIXTURE_COUNCILS = { merthyr: MERTHYR, rct: RCT, cardiff: CARDIFF }
  * The build turns every tier gate into a `requires` rule card (ADR 0005), id
  * `need:<branch>:<tier>`, so a locked project's Why? ends at a rule page. Done the same way here.
  */
-export function gateRules(branches: BranchDef[]): BoardRule[] {
+export function gateRules(branches: BranchDef[], notes: Record<string, Text> = {}): BoardRule[] {
   const out: BoardRule[] = [];
   for (const b of branches) {
     for (const t of b.tiers) {
       if (t.opens.length === 0) continue;
       const id = `need:${b.id}:${t.tier}`;
       t.rule = id;
-      const needs = t.tier === 2 ? "three tier 1 projects" : "two tier 2 projects";
-      const needsCy = t.tier === 2 ? "tri phrosiect haen 1" : "dau brosiect haen 2";
+      // The notes are data in tree.yaml `gate_notes` (the Welsh pass owns them); these are the fixture's.
+      // Playtest 9 must-fix 1: the keystone's gate is the branch's one bigger project working in two
+      // councils, said exactly. The project after the keystone (legacy) never counts.
+      const note = notes[String(t.tier)] ?? (t.tier === 2
+        ? tx("Bigger projects open when three starter projects of this branch are working anywhere. The same one in two councils counts twice.",
+          "Mae prosiectau mwy yn agor pan fydd tri phrosiect cychwynnol o'r gangen hon yn gweithio, unrhyw le. Mae'r un prosiect mewn dau gyngor yn cyfrif ddwywaith.")
+        : tx("The keystone opens when this branch's bigger project is working in two councils. The project that comes after the keystone does not count.",
+          "Mae'r maen clo yn agor pan fydd prosiect mwy'r gangen hon yn gweithio mewn dau gyngor. Dydy'r prosiect sy'n dod ar ôl y maen clo ddim yn cyfrif."));
       out.push({
         id, theme: "projects", kind: "requires",
         name: tx(`${b.name.en}: tier ${t.tier} opens`, `${b.name.cy}: haen ${t.tier} yn agor`),
-        note: tx(`Tier ${t.tier} opens when ${needs} of this branch are working anywhere.`, `Mae haen ${t.tier} yn agor pan fydd ${needsCy} o'r gangen hon yn gweithio yn unrhyw le.`),
+        note,
         params: {}, sources: [], confidence: "high", evidence: "placeholder", game_rule: true,
         requires: { applies_to: { branch: b.id, tier: t.tier }, needs: t.opens },
       });

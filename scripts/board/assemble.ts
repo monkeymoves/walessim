@@ -13,7 +13,7 @@
  */
 import { checkBoardFile, checkBoardModel, formatIssues, type Issue } from "../../src/board/model";
 import { boardFixture, gateRules } from "../../src/board/engine/fixture";
-import { REQUIRED_RULE_IDS, type BoardGame, type ChapterDef, type BoardModel, type BoardRule, type CouncilDef, type CouncilFlag, type IndicatorDef, type LinkDef, type PlaceDef, type StubDef } from "../../src/board/engine/types";
+import { REQUIRED_RULE_IDS, type BoardGame, type ChapterDef, type BoardModel, type BoardRule, type CouncilDef, type CouncilFlag, type IndicatorDef, type LinkDef, type PlaceDef, type StubDef, type Text } from "../../src/board/engine/types";
 import { arr, bool, check, nullable, obj, str } from "../../src/board/model/shape";
 import { text } from "../../src/board/model/shapes";
 import { borders, centreOf, outlines, type Geo, type Outline } from "./geo";
@@ -229,7 +229,7 @@ function assembleOnce(inp: BoardInputs, data: Data, game: BoardGame, allFixture:
   const c = content(inp, fixture, () => allFixture, toCheck);
   // Tier gates become `requires` rule cards, unless the rules files already carry them.
   const branches = structuredClone(c.branches);
-  const made = gateRules(branches);
+  const made = gateRules(branches, (inp.files["tree.yaml"] as { gate_notes?: Record<string, Text> } | undefined)?.gate_notes);
   const rules = [...c.rules, ...made.filter((r) => !c.rules.some((x) => x.id === r.id))];
   for (const b of branches) for (const t of b.tiers) if (t.rule && !rules.some((r) => r.id === t.rule)) t.rule = undefined;
   // T1 and T2 places carry the v1 board they grade against.

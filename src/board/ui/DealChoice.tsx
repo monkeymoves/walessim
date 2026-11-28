@@ -1,17 +1,19 @@
 /**
  * After a lost election you govern with others (rule P6, 16.4): pick one of two deals, each from a
  * council that backs you least. A deal is that council's weakest measure and a date. No coins are
- * taken and no council refuses builds.
+ * taken and no council refuses builds. Each offer says plainly what you must build, where and by
+ * when, with projects that would keep it (playtest 9, must-fix 9).
  */
 import { createMemo, For, Show, type JSX } from "solid-js";
 import { t } from "./lang";
 import { TabButton } from "../../ui/parts";
 import { stepsOf } from "../engine/api";
 import { blockerWords } from "./blockers";
+import { dealAsk, dealNoteVars } from "./dealWords";
 import { options } from "./engine";
 import { useGame } from "./game";
 import { ruleParamOf } from "./rules";
-import { councilName, measureName, whenWords } from "./words";
+import { councilName, measureName } from "./words";
 
 /** True while a deal is on offer. */
 export const dealPending = (game: ReturnType<typeof useGame>): boolean => !!game.state()?.pending.some((p) => p.kind === "deal");
@@ -25,12 +27,12 @@ export function DealChoice(): JSX.Element {
     try { return options(model, s).filter((o) => o.action.kind === "deal"); } catch { return []; }
   });
   const years = () => ruleParamOf(model, "P6", "deal_years", 4);
-  const due = () => whenWords(model, (game.state()?.step ?? 0) + stepsOf(model, years()));
+  const dueStep = () => (game.state()?.step ?? 0) + stepsOf(model, years());
   return (
     <Show when={deals().length}>
       <section class="bw-deals" aria-labelledby="bw-deals-title" data-testid="bw-deals">
         <h3 class="t-3" id="bw-deals-title">{t("boardui.deal.title")}</h3>
-        <p class="story-small">{t("boardui.deal.ask", { when: due() })}</p>
+        <p class="story-small">{t("boardui.deal.ask", { off: dealNoteVars(model).off })}</p>
         <ul class="bw-deal-list">
           <For each={deals()}>
             {(o) => {
@@ -40,12 +42,13 @@ export function DealChoice(): JSX.Element {
                   <TabButton onClick={() => game.act(o.action)} why={o.allowed ? null : o.blockers.map((b) => blockerWords(model, b)).join(" ")} data-testid="bw-deal">
                     {t("boardui.deal.pick", { council: councilName(model, a?.council), measure: measureName(model, a?.measure ?? "work") })}
                   </TabButton>
+                  <p class="small bw-deal-ask">{a ? dealAsk(model, a.council, a.measure, dueStep()) : ""}</p>
                 </li>
               );
             }}
           </For>
         </ul>
-        <p class="small">{t("boardui.deal.note")}</p>
+        <p class="small">{t("boardui.deal.note", dealNoteVars(model))}</p>
       </section>
     </Show>
   );

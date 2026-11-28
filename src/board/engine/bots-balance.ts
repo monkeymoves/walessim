@@ -8,7 +8,7 @@ import { flagged, keystonesStanding } from "./end-conditions";
 import { pickEnding } from "./endings";
 import { frameAtYear } from "./frame";
 import { councilMean, lowestCouncils, scores } from "./score";
-import type { BoardModel, BoardState, CouncilCode, Frame, MeasureId } from "./types";
+import type { BoardModel, BoardState, CouncilCode, Frame, MeasureId, StepReport } from "./types";
 import { stepOfYear } from "./time";
 import { MEASURE_IDS } from "./types";
 
@@ -45,6 +45,10 @@ export interface RunResult {
   /** Councils that were ever on the rise. */
   risen: CouncilCode[];
   electionsLost: number;
+  /** Elections held in the game (five in a whole game). */
+  elections: number;
+  /** Coins paid in over the game, and coins lost to a full purse (B1 `purse_max`), when the run watched its steps. */
+  coins?: { income: number; lost: number };
   /** After the first lost election, was the next one won? null with no loss or no election after it. */
   recovered: boolean | null;
   /** The council lowest in 2026: how far its mean moved by 2050, and whether it was ever on the rise. */
@@ -61,6 +65,21 @@ function vectorOf(model: BoardModel, councils: Record<CouncilCode, { measures: R
     const x = councils[c];
     return x ? [...MEASURE_IDS.map((m) => x.measures[m] / 10), x.young / 100, x.backing / 10] : [];
   });
+}
+
+/** Sums the coins of a game's own steps: pass `observe` to `playGame` as `onReports`, then read `coins()`. */
+export function coinWatch(): { observe: (reports: StepReport[]) => void; coins: () => { income: number; lost: number } } {
+  let income = 0;
+  let lost = 0;
+  return {
+    observe: (reports) => {
+      for (const r of reports) {
+        income += r.coins.income;
+        lost += r.coins.lost ?? 0;
+      }
+    },
+    coins: () => ({ income, lost }),
+  };
 }
 
 /**
@@ -81,7 +100,7 @@ export function earlyWatch(model: BoardModel): { observe: (s: BoardState) => voi
 }
 
 /** Summarise a finished state for the table. */
-export function runResult(model: BoardModel, bot: string, game: number, state: BoardState, early?: number): RunResult {
+export function runResult(model: BoardModel, bot: string, game: number, state: BoardState, early?: number, coins?: { income: number; lost: number }): RunResult {
   const sc = scores(model, state);
   const first = state.history[0];
   const frames: Frame[] = [...state.history];
@@ -111,6 +130,8 @@ export function runResult(model: BoardModel, bot: string, game: number, state: B
     youngRatio: { min: Math.min(...ratios), max: Math.max(...ratios) },
     tips, risen,
     electionsLost: records.filter((r) => r.result === "lost").length,
+    elections: records.length,
+    ...(coins ? { coins } : {}),
     recovered: lostAt >= 0 && records[lostAt + 1] ? records[lostAt + 1]!.result !== "lost" : null,
     lowestChange: lowest && first ? councilMean(state.councils[lowest]!) - councilMean(first.councils[lowest]!) : NaN,
     lowestRose: !!lowest && risen.includes(lowest),

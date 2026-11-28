@@ -29,6 +29,8 @@ export type Condition = { not?: boolean } & (
    * Projects matching every given filter, counted `where`: in this council; in this council or one
    * link away (any of `links`, default all kinds; a link project counts at both ends); or anywhere. Holds when the count is `at_least` (default 1).
    * `status` defaults to "working". Tier gates are `{ kind: "project", branch, tier: 1, where: "anywhere", at_least: 3 }`.
+   * A `tier` match never counts a legacy project (`legacy_of`): it comes after the keystone. With
+   * `project` as well, the gate names the one project it waits on (the keystone's gate, tree.yaml).
    */
   | {
       kind: "project";

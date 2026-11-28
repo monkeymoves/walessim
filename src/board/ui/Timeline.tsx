@@ -8,6 +8,10 @@
  * `TimelineStrip` is the strip alone, driven by props, for the end screen too (package 12): it
  * takes an `at` step for the pin and, with `onScrub`, becomes a slider over the years.
  * `Timeline` is the board's own, with the clock at its left end.
+ *
+ * After cold playtest 9 (should fix 6): the keystone mark says what it means where it stands,
+ * "Keystones: start by here", and its tip says why: a keystone takes so many years to build
+ * (from projects.yaml), so one started later would not work by 2050.
  */
 import { createMemo, For, Match, Show, Switch, type JSX } from "solid-js";
 import { t } from "./lang";
@@ -48,6 +52,12 @@ export function underNow(year: number, now: number): boolean {
   return now > 0.86 ? d > -0.095 && d < 0.025 : d > -0.025 && d < 0.095;
 }
 
+/** Years a keystone takes to build: the longest of the keystones in projects.yaml. */
+const keystoneYears = (model: BoardModel): number => Math.max(0, ...model.projects.filter((p) => p.keystone).map((p) => p.build_years));
+
+/** The short words on a date mark. */
+const markShort = (mark: string): string => (mark === "keystone_last_start" ? t("boardclock.timeline.keystoneShort") : t(`boardui.timeline.markShort.${mark}`));
+
 /** The plain name of a piece, for its button and its tip. */
 function itemWords(model: BoardModel, state: BoardState, i: TimelineItem): string {
   switch (i.kind) {
@@ -60,7 +70,9 @@ function itemWords(model: BoardModel, state: BoardState, i: TimelineItem): strin
     case "build": return t("boardui.timeline.build", { name: projectName(model, i.project), place: councilName(model, i.site.council ?? model.links.find((l) => l.id === i.site.link)?.from), when: whenWords(model, i.readyStep + 1) });
     case "more": return t("boardui.timeline.more", { n: i.count });
     case "warning": return t("boardui.timeline.warning", { name: tx(model.events.find((e) => e.id === i.event)?.name), noun: t(eventNoun(i.event)), place: councilName(model, i.councils[0]), when: whenWords(model, i.fromStep) });
-    case "mark": return say(i.say) || t(`boardui.timeline.mark.${i.mark}`, { when: whenWords(model, i.step), council: councilName(model, i.council) });
+    case "mark":
+      if (i.mark === "keystone_last_start") return t("boardclock.timeline.keystoneLong", { when: whenWords(model, i.step), n: keystoneYears(model) });
+      return say(i.say) || t(`boardui.timeline.mark.${i.mark}`, { when: whenWords(model, i.step), council: councilName(model, i.council) });
   }
 }
 
@@ -116,7 +128,7 @@ export function TimelineStrip(props: TimelineStripProps): JSX.Element {
         )}</Match>
         <Match when={i.kind === "mark" && i}>{(x) => (
           <button {...common} class={`bw-tl-mark bw-tl-mark-${x().mark}${x().at > 0.86 ? " late" : ""}`} style={{ left: pct(x().at) }}>
-            <i aria-hidden="true" /><Show when={x().labelled}><span class="small">{t(`boardui.timeline.markShort.${x().mark}`)}</span></Show>
+            <i aria-hidden="true" /><Show when={x().labelled}><span class="small">{markShort(x().mark)}</span></Show>
           {sr}</button>
         )}</Match>
       </Switch>

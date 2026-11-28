@@ -4,7 +4,7 @@
  * are working and how many are being built. The gates are the branch's own `opens` conditions from
  * tree.yaml (counted as the engine counts them: working projects of that branch and tier, anywhere).
  */
-import type { BoardModel, BoardState, BranchDef, ProjectDef, Tier } from "../engine/api";
+import { keystoneLastStep, type BoardModel, type BoardState, type BranchDef, type Condition, type ProjectDef, type Tier } from "../engine/api";
 
 export interface Gate {
   /** The tier this gate opens (2 or 3). */
@@ -12,6 +12,8 @@ export interface Gate {
   /** The tier counted towards it. */
   from: Tier;
   need: number;
+  /** The gate as tree.yaml writes it, for gateWords in blockers.ts. */
+  condition: Condition;
   working: number;
   building: number;
   open: boolean;
@@ -24,11 +26,12 @@ export interface BranchPath {
   gates: Gate[];
   /** "none", "building" or "working": where the keystone stands, anywhere on the board. */
   keystoneAt: "none" | "building" | "working";
-  /** The last calendar year a keystone can be started (game rule). */
+  /** The last step a keystone can be started (game rule; engine time.ts keystoneLastStep). */
   lastStart: number;
 }
 
-const countOf = (model: BoardModel, state: BoardState, branch: string, tier: Tier, status: "working" | "building"): number =>
+/** Projects of a branch and tier standing anywhere with this status, as the engine counts a tier gate. */
+export const tierCount = (model: BoardModel, state: BoardState, branch: string, tier: Tier, status: "working" | "building"): number =>
   state.projects.filter((p) => p.status === status && model.projects.some((d) => d.id === p.project && d.branch === branch && d.tier === tier)).length;
 
 export function branchPath(model: BoardModel, state: BoardState, branch: BranchDef): BranchPath {
@@ -38,12 +41,12 @@ export function branchPath(model: BoardModel, state: BoardState, branch: BranchD
     const c = t.opens[0]!;
     const from = (c.kind === "project" && c.tier ? c.tier : t.tier - 1) as Tier;
     const need = c.kind === "project" ? c.at_least ?? 1 : 1;
-    const working = countOf(model, state, branch.id, from, "working");
-    return { tier: t.tier, from, need, working, building: countOf(model, state, branch.id, from, "building"), open: working >= need };
+    const working = tierCount(model, state, branch.id, from, "working");
+    return { tier: t.tier, from, need, condition: c, working, building: tierCount(model, state, branch.id, from, "building"), open: working >= need };
   });
   const standing = keystone ? state.projects.filter((p) => p.project === keystone.id) : [];
   const keystoneAt = standing.some((p) => p.status !== "building") ? "working" : standing.length ? "building" : "none";
-  return { branch, keystone, legacy, gates, keystoneAt, lastStart: model.game.keystone_last_start_year };
+  return { branch, keystone, legacy, gates, keystoneAt, lastStart: keystoneLastStep(model) };
 }
 
 /** The first gate still shut, or null when the keystone's tier is open. */

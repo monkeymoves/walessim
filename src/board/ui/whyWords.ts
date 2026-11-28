@@ -4,7 +4,7 @@
  * board's rule book that holds it; and source dockets whose labels are all different and never
  * the bare word "Various". fixC.test.ts checks every Why? of a real game.
  */
-import { t } from "./lang";
+import { hasKey, t } from "./lang";
 import type { Source } from "../../model/schema";
 import type { BoardModel, Text } from "../engine/api";
 import { tx } from "./words";
@@ -26,13 +26,44 @@ export function ruleLabel(model: BoardModel, id: string): RuleLabel {
   return { name: t("boardui.why.ruleOf.other"), note: "" };
 }
 
-/** The rule book page for a Why?: the card's own page, or the board's list that holds that content. */
+/**
+ * The rule book page for a Why?: the card's own page, or the board's list that holds that content,
+ * with the item's id after it ("#/llyfr/bwrdd/projects/back-local-firms") so the book can open at
+ * it (playtest 9, must-fix 12: the link opened the top of the projects page).
+ */
 export function ruleHref(model: BoardModel, id: string): string {
   if (model.rules.some((r) => r.id === id)) return `#/llyfr/bwrdd/${encodeURIComponent(id)}`;
-  const kind = id.split(":")[0];
-  if (kind === "project" || kind === "pair") return "#/llyfr/bwrdd/projects";
-  if (kind === "event") return "#/llyfr/bwrdd/events";
+  const [kind, ref] = id.split(":") as [string, string | undefined];
+  const at = (page: string, item?: string) => `#/llyfr/bwrdd/${page}${item ? `/${encodeURIComponent(item)}` : ""}`;
+  if (kind === "project") return at("projects", ref);
+  if (kind === "pair") return at("projects", model.pairs.find((x) => x.id === ref)?.project);
+  if (kind === "event") return at("events", ref);
   return "#/llyfr/bwrdd";
+}
+
+/** A data id written into a source's notes ("low_pay_hourly"), as the measure's plain name. */
+const ID_IN_TEXT = /\b[a-z][a-z0-9]*(?:_[a-z0-9]+)+\b/g;
+export function plainIds(text: string): string {
+  return text.replace(ID_IN_TEXT, (id) => {
+    for (const k of [`facts.measure.${id}`, `atlas.short.${id}`]) if (hasKey(k)) return t(k);
+    return id.replace(/_/g, " ");
+  });
+}
+
+/**
+ * A source as the board shows it: its notes with no raw data ids (playtest 9, must-fix 12:
+ * "low_pay_hourly is the 20th percentile" in a source card). The notes are shared with the atlas
+ * and written for the data team; the board says them in words.
+ */
+export function boardSource(model: BoardModel, id: string): Source | null {
+  const s = model.sources.find((x) => x.id === id) as unknown as (Source & { note?: unknown; notes?: unknown }) | undefined;
+  if (!s) return null;
+  const clean = (v: unknown): unknown => {
+    if (typeof v === "string") return plainIds(v);
+    if (v && typeof v === "object" && "en" in v) return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, typeof x === "string" ? plainIds(x) : x]));
+    return v;
+  };
+  return { ...s, ...(s.note !== undefined ? { note: clean(s.note) } : {}), ...(s.notes !== undefined ? { notes: clean(s.notes) } : {}) } as Source;
 }
 
 const titleOf = (s: Source): string => (typeof s.title === "string" ? s.title : tx(s.title as unknown as Text));

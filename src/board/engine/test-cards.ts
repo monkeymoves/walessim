@@ -36,7 +36,7 @@ export function setParam(model: BoardModel, id: RuleId, name: string, value: num
 }
 
 /** The P6 card with its starting values (model/board/rules/people.yaml). */
-export const P6_START = { choices: 2, deal_years: 4, deal_discount: 1, kept_here: 1.5, kept_near: 0.5, broken: 0.5 };
+export const P6_START = { choices: 2, deal_years: 4, deal_discount: 1, kept_here: 1.5, kept_near: 0.5, broken_here: 1.5, broken_years: 4 };
 /** The E2 card with its starting values. */
 export const E2_START = { severity_at_least: 2, years: 2, time_share: 0.5 };
 

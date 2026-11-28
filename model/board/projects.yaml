@@ -209,7 +209,7 @@ projects:
     build_years: 6
     name: { en: "A cluster that roots", cy: "Clwstwr sy'n gwreiddio", cy_review: true }
     what: { en: "Advanced manufacturing and its supply firms grow together. Firms stay because the skills are here.", cy: "Mae gweithgynhyrchu uwch a'i gwmnïau cyflenwi'n tyfu gyda'i gilydd. Mae cwmnïau'n aros am fod y sgiliau yma.", cy_review: true }
-    example: { en: "Chip making and advanced manufacturing around Newport and Caerphilly. Steel and its supply firms around Newport.", cy: "Gwneud sglodion a gweithgynhyrchu uwch o gwmpas Casnewydd a Chaerffili. Dur a'i gwmnïau cyflenwi o gwmpas Casnewydd.", cy_review: true }
+    example: { en: "Chip making and advanced manufacturing around Newport and Caerphilly. Steel and its supply firms around Newport.", cy: "Gwneud lled-ddargludyddion a gweithgynhyrchu uwch o gwmpas Casnewydd a Chaerffili. Dur a'i gwmnïau cyflenwi o gwmpas Casnewydd.", cy_review: true }
     catch: { en: "Factories need land, power and lorries. Nature and Climate pay a price.", cy: "Mae angen tir, pŵer a lorïau ar ffatrïoedd. Mae Natur a Hinsawdd yn talu pris.", cy_review: true }
     needs: []
     effects:

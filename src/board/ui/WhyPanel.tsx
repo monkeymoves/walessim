@@ -22,7 +22,8 @@ export function WhyPanel(): JSX.Element {
   const reasons = createMemo<Why[]>(() => {
     const s = game.state(), w = game.whyAt();
     if (!s || !w) return [];
-    try { return eng.why(model, s, w); } catch (e) { console.warn(e); return []; }
+    // a reason that rounds to 0 at one decimal reads as "0 points" and explains nothing (fix round 2 join)
+    try { return eng.why(model, s, w).filter((r) => Math.round(Math.abs(r.delta) * 10) > 0); } catch (e) { console.warn(e); return []; }
   });
   const ruleOf = (id: string) => model.rules.find((r) => r.id === id);
   const now = () => game.state()?.step ?? 0;
@@ -69,7 +70,7 @@ export function WhyPanel(): JSX.Element {
                 </p>
                 <p class="small"><a class="threadlink" href={ruleHref(model, w.rule)}>{t("boardui.why.ruleLink")}</a></p>
                 <Show when={w.sources.length}>
-                  <p class="bw-why-sources"><For each={sourceLabels(w.sources.map((id) => sourceOf(model, id)), sourceShort)}>{(label, i) => <SourceTag source={sourceOf(model, w.sources[i()]!)} label={label} />}</For></p>
+                  <p class="bw-why-sources"><span class="small bw-why-sources-label">{t("boardui.why.sources")}</span> <For each={sourceLabels(w.sources.map((id) => sourceOf(model, id)), sourceShort)}>{(label, i) => <SourceTag source={sourceOf(model, w.sources[i()]!)} label={label} />}</For></p>
                 </Show>
               </li>
             )}

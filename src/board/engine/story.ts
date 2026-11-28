@@ -45,8 +45,8 @@ function momentsOf(ctx: StepCtx, facts: StepFacts): Moment[] {
   const year = yearOfStep(model, at);
   const has = (kind: MomentKind, ref: string, council?: CouncilCode) =>
     state.story.moments.some((m) => m.kind === kind && m.ref === ref && m.council === council) || out.some((m) => m.kind === kind && m.ref === ref && m.council === council);
-  const add = (kind: MomentKind, ref: string, say: Say, council?: CouncilCode) => {
-    if (!has(kind, ref, council)) out.push({ step: at, year, kind, ...(council ? { council } : {}), ref, say, weight: 0 });
+  const add = (kind: MomentKind, ref: string, say: Say, council?: CouncilCode, when = year) => {
+    if (!has(kind, ref, council)) out.push({ step: at, year: when, kind, ...(council ? { council } : {}), ref, say, weight: 0 });
   };
   const withCouncil = (code: CouncilCode | undefined, vars: Record<string, SayVar> = {}) => (code ? { ...vars, council: nameOf(model, code) } : vars);
 
@@ -62,7 +62,8 @@ function momentsOf(ctx: StepCtx, facts: StepFacts): Moment[] {
     const p = state.projects.find((x) => x.id === id);
     if (!p || !model.projects.find((d) => d.id === p.project)?.keystone) continue;
     const code = siteCouncil(model, p);
-    add("keystone", p.project, { key: "board.moment.keystone", vars: withCouncil(code, { project: projectName(model, p.project) }) }, code);
+    // dated the year it opens, as the letter, the evidence and every screen date it: the step after `readyStep`
+    add("keystone", p.project, { key: "board.moment.keystone", vars: withCouncil(code, { project: projectName(model, p.project) }) }, code, yearOfStep(model, p.readyStep + 1));
   }
   for (const tip of facts.tipped) {
     if (tip.to === "steady") continue;

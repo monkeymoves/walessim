@@ -17,7 +17,7 @@ import type { BoardEngine, BotView } from "./bots-common";
 import { actionKey, answerAll, keepDealOption, pickDeal, pickResponse, pickVisit } from "./bots-common";
 import type { Bot } from "./bots-strategies";
 import { autopilot, branchBot, cardiffFirst, random, reactive, rescue, scatter, secondBranch, skilled, sleeper, spender } from "./bots-strategies";
-import type { Action, BoardModel, BoardState, StartId, StopKind } from "./types";
+import type { Action, BoardModel, BoardState, StartId, StepReport, StopKind } from "./types";
 
 export type { Bot } from "./bots-strategies";
 export type { BoardEngine } from "./bots-common";
@@ -88,16 +88,22 @@ export function stepsToDecision(model: BoardModel, step: number): number {
 /**
  * Play a whole game: the bot's choices at the start, when each year closes, and at stops, to 2050.
  * `observe` sees the state each time the clock stops, before the bot acts (for measures taken mid
- * game, such as the headline at the first election).
+ * game, such as the headline at the first election). `onReports` sees the reports of the steps the
+ * game itself ran (never a bot's look ahead), for measures such as coins lost to a full purse.
  */
-export function playGame(model: BoardModel, bot: Bot, gameNumber: number | string, start: StartId, engine: BoardEngine = realEngine, observe?: (state: BoardState) => void): BoardState {
+export function playGame(
+  model: BoardModel, bot: Bot, gameNumber: number | string, start: StartId, engine: BoardEngine = realEngine,
+  observe?: (state: BoardState) => void, onReports?: (reports: StepReport[]) => void,
+): BoardState {
   const v: BotView = { model, engine, state: engine.newBoard(model, gameNumber, start), seed: hashSeed(`${bot.id}:${gameNumber}`), tried: new Set() };
   for (let guard = 0; guard < model.game.steps * 4 && v.state.phase !== "ended"; guard++) {
     observe?.(v.state);
     playTurn(v, bot);
     v.state = answerAll(engine, model, v.state);
     if (v.state.phase !== "play") break;
-    v.state = engine.advance(model, v.state, { maxSteps: stepsToDecision(model, v.state.step), stopOn: BOT_STOPS }).state;
+    const out = engine.advance(model, v.state, { maxSteps: stepsToDecision(model, v.state.step), stopOn: BOT_STOPS });
+    onReports?.(out.reports);
+    v.state = out.state;
   }
   return v.state;
 }

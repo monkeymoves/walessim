@@ -6,16 +6,28 @@
  */
 import { hasKey, lang, t as tPlain, tIn } from "../../i18n";
 import { fillCy, isBoardKey } from "./cymraeg";
+import { namesFrom, withArticles } from "./english";
+
+const WITH_THE = "boardui.grammar.withThe";
 
 export * from "../../i18n";
 
-/** `t()` with Welsh mutation of board slot values. English, and keys outside the board, are filled as they are. */
+/**
+ * `t()` with Welsh mutation of board slot values, and in English "the" before a place name that
+ * takes it (english.ts). Keys outside the board are filled as they are.
+ */
 export function t(key: string, vars?: Record<string, string | number>): string {
-  if (!vars || lang() !== "cy" || !isBoardKey(key)) return tPlain(key, vars);
+  if (!vars || !isBoardKey(key)) return tPlain(key, vars);
+  if (lang() !== "cy") return withArticles(tPlain(key, vars), namesFrom(tIn("en", WITH_THE), WITH_THE));
   const cy = tIn("cy", key);
   // a key with no Welsh yet falls back to English, which must not be mutated
   if (cy === tIn("en", key)) return tPlain(key, vars);
   return fillCy(cy, vars);
+}
+
+/** Fill a model sentence's `{slots}` in English, with "the" before a place name that takes it. */
+export function fillEn(text: string, vars: Record<string, string>): string {
+  return withArticles(text.replace(/\{(\w+)\}/g, (all, k: string) => vars[k] ?? all), namesFrom(tIn("en", WITH_THE), WITH_THE));
 }
 
 /**

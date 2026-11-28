@@ -225,3 +225,67 @@ describe("every board screen fills its Welsh through the grammar", () => {
     expect(direct.map((f) => relative(root, join(dir, f)))).toEqual([]);
   });
 });
+
+// ---- the board's agreed Welsh words, and lines that must fit (playtest 9, must-fix 10, should-fix 13) ----
+
+/** Every Welsh board string: the four copy files and every cy field under model/board. */
+const allCy: { where: string; cy: string }[] = [
+  ...AREAS.flatMap((a) => Object.entries(words(a, "cy")).filter(([k, v]) => !k.startsWith("_") && typeof v === "string").map(([k, v]) => ({ where: `${a}.${k}`, cy: v as string }))),
+  ...modelTexts.map((t) => ({ where: t.en.slice(0, 40), cy: t.cy })),
+];
+
+/** Words the Welsh board never uses, each with the word it uses instead. */
+const NOT_THESE: [RegExp, string][] = [
+  [/\b(c|g|ch|ngh)arreg glo\b/i, "the keystone is maen clo (carreg glo is a lump of coal)"],
+  [/onglf(aen|eini)/i, "the keystone is maen clo, plural meini clo"],
+  [/\bcytundeb/i, "a deal is bargen"],
+  [/\b(d|dd|nh)eddf\b/i, "a law is cyfraith, as on the laws sheet"],
+  [/Wedi'i wneud yma/, "the branch is Diwydiant lleol, which reads after a preposition"],
+  [/^\s*costs?\s*:?\s*$/i, "a price label is Pris"],
+  [/\bCOSTS?\b/, "a price label is Pris"],
+  [/\bpunnoedd\b/i, "after a figure, punt"],
+  [/\bBeth bynnag y canlyniad\b/, "Beth bynnag fo'r canlyniad"],
+  [/\bPa le\b/, "Ble"],
+  [/\bAr ôl ar gyfer 2050\b/, "Gwaddol 2050"],
+  [/\bBywyd yn eich blynyddoedd\b/, "Bywyd yn eich cyfnod"],
+  [/\boddi ar y pris llawn o\b/, "Gostyngiad o {n}: y pris llawn yw {full}"],
+];
+
+describe("the board's Welsh words", () => {
+  it("the check catches the playtest's words", () => {
+    const hit = (s: string) => NOT_THESE.some(([re]) => re.test(s));
+    for (const s of ["Carreg glo: brig y gangen hon", "Y flwyddyn olaf i ddechrau carreg glo", "COST", "Costs", "Mae conglfaen yn sefyll", "711.2 punnoedd yr wythnos"]) expect(hit(s), s).toBe(true);
+    for (const s of ["Pris", "Cost cynnal: tua 1 darn arian y flwyddyn.", "Maen clo: brig y gangen hon", "Y gost:"]) expect(hit(s), s).toBe(false);
+  });
+
+  it("never uses a word the board has replaced", () => {
+    const bad = allCy.flatMap((s) => NOT_THESE.filter(([re]) => re.test(s.cy)).map(([, use]) => `${s.where}: ${use}: ${s.cy}`));
+    expect(bad).toEqual([]);
+  });
+});
+
+/**
+ * The top strip's lines do not wrap (clock.css), so a Welsh line much longer than the English
+ * pushed the strip wider than the screen and hid the language switch at 2050 (cymraeg g1-44).
+ * Each strip line in Welsh stays within a quarter of its English length, plus a few letters.
+ */
+const STRIP: Record<string, string[]> = {
+  boardclock: ["purse.count", "purse.full", "purse.soon", "head.up", "head.down", "head.same", "head.building", "head.ifBuilt",
+    ...["budget", "rising", "earns", "running", "care", "weak"].flatMap((k) => [`income.why.${k}.up`, `income.why.${k}.down`])],
+  boardui: ["strip.left", "strip.left2050", "strip.life", "strip.outOf100", "strip.income", "strip.coinsAfter", "strip.coinsNote", "strip.backers"],
+};
+
+describe("the top strip in Welsh", () => {
+  it("keeps every line about as short as the English", () => {
+    const long: string[] = [];
+    for (const [area, keys] of Object.entries(STRIP)) {
+      const en = words(area, "en"), cy = words(area, "cy");
+      for (const k of keys) {
+        const e = String(en[k] ?? ""), c = String(cy[k] ?? "");
+        expect(e && c, `${area}.${k}`).toBeTruthy();
+        if (c.length > e.length * 1.25 + 4) long.push(`${area}.${k}: ${c.length} letters against ${e.length}: ${c}`);
+      }
+    }
+    expect(long).toEqual([]);
+  });
+});

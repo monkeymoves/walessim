@@ -97,7 +97,7 @@ describe.skipIf(!existsSync(realPath))("board panel words in a real game", () =>
           const shut = gated.some((o) => o.blockers.some((x) => x.kind === "needs" && x.condition.kind === "project" && x.condition.branch === b.id && x.condition.tier === g.from));
           expect(g.open, `${b.id} tier ${g.tier} in ${s.year}`).toBe(!shut);
         }
-        expect(roadWords(path, s.year)).not.toMatch(/\{\w+\}/);
+        expect(roadWords(model, path, s)).not.toMatch(/\{\w+\}/);
       }
     }
   });
@@ -134,8 +134,10 @@ describe.skipIf(!existsSync(realPath))("board panel words in a real game", () =>
           expect(r.name, w.rule).not.toMatch(/^[a-z_]+:[\w-]+$|undefined/);
           expect(r.name.length).toBeGreaterThan(1);
           const href = ruleHref(model, w.rule);
-          const page = decodeURIComponent(href.replace("#/llyfr/bwrdd", "").replace(/^\//, ""));
+          const [page, item] = decodeURIComponent(href.replace("#/llyfr/bwrdd", "").replace(/^\//, "")).split("/") as [string, string | undefined];
           expect(pages.includes(page) || model.rules.some((x) => x.id === page), href).toBe(true);
+          // a project, pair or event Why? opens its own item on the list page, not the top of it
+          if (/^(project|pair|event):/.test(w.rule)) expect(item, href).toBeTruthy();
           // the publisher alone is the harshest shortener: "ONS" twice, "Various" often
           const labels = sourceLabels(sources(w.sources), (x) => x.publisher ?? "");
           expect(new Set(labels).size, labels.join(" | ")).toBe(labels.length);

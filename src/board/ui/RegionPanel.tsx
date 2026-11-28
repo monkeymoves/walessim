@@ -3,7 +3,7 @@
  * furthest ahead, who backs you, and what is on its way. Every row opens that council.
  */
 import { For, Show, type JSX } from "solid-js";
-import { lang, Pair, t } from "./lang";
+import { lang, Pair, t, tn } from "./lang";
 import { TabButton } from "../../ui/parts";
 import type { ProjectState } from "../engine/api";
 import { useGame } from "./game";
@@ -16,6 +16,7 @@ export function RegionPanel(): JSX.Element {
   const s = () => game.state()!;
   const rows = () => [...model.game.councils].sort((a, b) => councilMean(s(), a) - councilMean(s(), b));
   const coming = () => s().projects.filter((p) => p.status === "building");
+  const working = () => s().projects.filter((p) => p.status !== "building").length;
   const site = (p: ProjectState) => councilName(model, p.site.council ?? model.links.find((l) => l.id === p.site.link)?.from);
   return (
     <aside class="bw-council bw-region sheet" aria-labelledby="bw-region-name" data-testid="bw-region">
@@ -43,7 +44,8 @@ export function RegionPanel(): JSX.Element {
         <p class="small">{t("boardui.region.leagueNote", { at: num(backsAtOf(model)) })}</p>
         <section class="bw-sec">
           <h3 class="label">{t("boardui.region.coming")}</h3>
-          <Show when={coming().length} fallback={<p class="small">{t("boardui.region.nothingComing")}</p>}>
+          {/* "yet" read wrong with twenty projects working (playtest 9, should-fix 9) */}
+          <Show when={coming().length} fallback={<p class="small">{working() ? `${t("boardui.region.nothingNow")} ${tn("boardui.region.working", working())}` : t("boardui.region.nothingComing")}</p>}>
             <ul class="bw-here">
               <For each={coming()}>
                 {(p) => (
