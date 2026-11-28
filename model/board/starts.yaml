@@ -1,0 +1,47 @@
+# What you were elected on (docs/design/v2-board.md section 7.2). Owner: package 4.
+# The start is always the real South East Wales of 2026. A start sets one promise to keep by 2034,
+# one free tier 1 project (the player places it in turn 1) and which councils back you first.
+# Backing nudges and the promise year are GAME RULES (tune).
+note: "Backing nudges and the promise year are game rules (tune). The 2026 board is never changed."
+starts:
+  - id: work-valleys
+    name: { en: "Work in the valleys", cy: "Gwaith yn y cymoedd", cy_review: true }
+    pitch: { en: "You promised work people can reach without leaving home.", cy: "Fe wnaethoch addo gwaith y gall pobl ei gyrraedd heb adael cartref.", cy_review: true }
+    promise:
+      text: { en: "Work and pay goes up in the valley councils by 2034.", cy: "Gwaith a chyflog yn codi yng nghynghorau'r cymoedd erbyn 2034.", cy_review: true }
+      by_year: 2034
+      kept_when:
+        - { kind: measure, measure: work, flag: valley, vs_2026: up }
+    free_project: skills-college
+    backing:
+      - { flag: valley, points: 1 }
+      - { flag: city, points: -0.5 }
+
+  - id: warm-homes
+    name: { en: "Warm, safe homes", cy: "Cartrefi cynnes, diogel", cy_review: true }
+    pitch: { en: "You promised warm homes that people can afford.", cy: "Fe wnaethoch addo cartrefi cynnes y gall pobl eu fforddio.", cy_review: true }
+    promise:
+      text: { en: "Homes and community goes up across the region by 2034.", cy: "Cartrefi a chymuned yn codi ar draws y rhanbarth erbyn 2034.", cy_review: true }
+      by_year: 2034
+      kept_when:
+        - { kind: measure, measure: homes, vs_2026: up }
+    free_project: warm-terraces
+    backing:
+      - { flag: city, points: 1 }
+      - { flag: coal_valley, points: 0.5 }
+      - { flag: rural, points: -0.5 }
+
+  - id: ready-weather
+    name: { en: "Ready for the weather", cy: "Yn barod am y tywydd", cy_review: true }
+    pitch: { en: "You promised to keep homes safe from floods and slipping tips.", cy: "Fe wnaethoch addo cadw cartrefi'n ddiogel rhag llifogydd a thomenni'n llithro.", cy_review: true }
+    promise:
+      text: { en: "Nature and floods goes up across the region by 2034.", cy: "Natur a llifogydd yn codi ar draws y rhanbarth erbyn 2034.", cy_review: true }
+      by_year: 2034
+      kept_when:
+        - { kind: measure, measure: nature, vs_2026: up }
+    free_project: slow-the-water
+    backing:
+      - { flag: coal_valley, points: 0.5 }
+      - { flag: coast, points: 0.5 }
+      - { flag: rural, points: 0.5 }
+      - { flag: city, points: -0.5 }

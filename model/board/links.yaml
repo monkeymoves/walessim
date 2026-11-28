@@ -1,0 +1,108 @@
+# Authored links of the board (docs/design/v2-board.md section 4.2).
+# - River links: `from` is the council upstream of `to` on the named river, one hop each. A river
+#   link is a direction, not a flow figure. Authored from knowledge of the river courses, NOT yet
+#   checked against OS Open Rivers or the NRW catchment maps, so every row carries to_check: true.
+#   The Ogmore is Bridgend's river. It rises and runs inside Bridgend and its estuary is the border
+#   with the Vale of Glamorgan, so it is written as Bridgend upstream of the Vale (a weak case,
+#   to check first).
+# - Stubs: places off the board, shown at the map edge. Commute links to them (the real shares in
+#   model/data/board-commute.json) carry a fixed outside flow and cannot be built on.
+#   Swansea is not a stub: under 3 in 100 of any council in play work there. Centres are in the km
+#   frame of CLAUDE.md. Powys sits at the map edge north of Merthyr Tydfil; Bristol and the border
+#   are their real positions (Bristol city centre, Lydney in the Forest of Dean).
+# - Rail links are derived at build from model/data/wales-rail.json, not authored here.
+note: River order, to check against the source, and the off-board stubs.
+links:
+  - id: "river:taff:merthyr-tydfil-rhondda-cynon-taf"
+    kind: river
+    from: W06000024
+    to: W06000016
+    name: { en: "Taff", cy: "Taf", cy_review: true }
+    honesty: real
+    sources: [os_open_rivers, nrw_catchments]
+    to_check: true
+  - id: "river:taff:rhondda-cynon-taf-cardiff"
+    kind: river
+    from: W06000016
+    to: W06000015
+    name: { en: "Taff", cy: "Taf", cy_review: true }
+    honesty: real
+    sources: [os_open_rivers, nrw_catchments]
+    to_check: true
+  - id: "river:rhymney:caerphilly-cardiff"
+    kind: river
+    from: W06000018
+    to: W06000015
+    name: { en: "Rhymney", cy: "Rhymni", cy_review: true }
+    honesty: real
+    sources: [os_open_rivers, nrw_catchments]
+    to_check: true
+  - id: "river:ebbw:blaenau-gwent-caerphilly"
+    kind: river
+    from: W06000019
+    to: W06000018
+    name: { en: "Ebbw", cy: "Ebwy", cy_review: true }
+    honesty: real
+    sources: [os_open_rivers, nrw_catchments]
+    to_check: true
+  - id: "river:ebbw:caerphilly-newport"
+    kind: river
+    from: W06000018
+    to: W06000022
+    name: { en: "Ebbw", cy: "Ebwy", cy_review: true }
+    honesty: real
+    sources: [os_open_rivers, nrw_catchments]
+    to_check: true
+  - id: "river:afon-lwyd:torfaen-newport"
+    kind: river
+    from: W06000020
+    to: W06000022
+    name: { en: "Afon Lwyd", cy: "Afon Lwyd", cy_review: true }
+    honesty: real
+    sources: [os_open_rivers, nrw_catchments]
+    to_check: true
+  - id: "river:usk:monmouthshire-newport"
+    kind: river
+    from: W06000021
+    to: W06000022
+    name: { en: "Usk", cy: "Wysg", cy_review: true }
+    honesty: real
+    sources: [os_open_rivers, nrw_catchments]
+    to_check: true
+  - id: "river:ely:rhondda-cynon-taf-vale-of-glamorgan"
+    kind: river
+    from: W06000016
+    to: W06000014
+    name: { en: "Ely", cy: "Elái", cy_review: true }
+    honesty: real
+    sources: [os_open_rivers, nrw_catchments]
+    to_check: true
+  - id: "river:ely:rhondda-cynon-taf-cardiff"
+    kind: river
+    from: W06000016
+    to: W06000015
+    name: { en: "Ely", cy: "Elái", cy_review: true }
+    honesty: real
+    sources: [os_open_rivers, nrw_catchments]
+    to_check: true
+  - id: "river:ogmore:bridgend-vale-of-glamorgan"
+    kind: river
+    from: W06000013
+    to: W06000014
+    name: { en: "Ogmore", cy: "Ogwr", cy_review: true }
+    honesty: real
+    sources: [os_open_rivers, nrw_catchments]
+    to_check: true
+stubs:
+  - id: "stub:npt"
+    name: { en: "Neath Port Talbot", cy: "Castell-nedd Port Talbot", cy_review: true }
+    centre: [112.6, 202.2]
+  - id: "stub:powys"
+    name: { en: "Powys", cy: "Powys", cy_review: true }
+    centre: [135.8, 166.8]
+  - id: "stub:bristol"
+    name: { en: "Bristol and South Gloucestershire", cy: "Bryste a Swydd Gaerloyw'r De", cy_review: true }
+    centre: [191.0, 227.5]
+  - id: "stub:border"
+    name: { en: "The English border: Forest of Dean and Herefordshire", cy: "Y ffin â Lloegr: Fforest y Ddena a Swydd Henffordd", cy_review: true }
+    centre: [193.6, 189.0]

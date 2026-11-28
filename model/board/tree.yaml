@@ -1,0 +1,55 @@
+# The tree: four branches, three tiers each (docs/design/v2-board.md section 5.3). Owner: package 4.
+#
+# Tier gates are GAME RULES (tune): tier 2 opens when three tier 1 projects of the branch are
+# working anywhere on the board; tier 3 (the keystone) opens when two tier 2 projects of the branch
+# are working. The build turns each gate into a `requires` rule card `need:<branch>:<tier>` and sets
+# `rule` (src/board/NEEDS.md, package 1), so `rule` is left out here.
+note: "Tier gates are game rules (tune). The build compiles each gate to a requires card."
+branches:
+  - id: valleys
+    name: { en: "Joined-up valleys", cy: "Cymoedd cysylltiedig", cy_review: true }
+    note: { en: "Rail, towns and reach. Trains carry people both ways, so what waits at the valley end matters.", cy: "Rheilffyrdd, trefi a chyrraedd. Mae trenau'n cario pobl y ddwy ffordd, felly mae pen y cwm yn bwysig.", cy_review: true }
+    tiers:
+      - { tier: 1, opens: [] }
+      - tier: 2
+        opens:
+          - { kind: project, branch: valleys, tier: 1, where: anywhere, at_least: 3 }
+      - tier: 3
+        opens:
+          - { kind: project, branch: valleys, tier: 2, where: anywhere, at_least: 2 }
+
+  - id: made_here
+    name: { en: "Made here", cy: "Wedi'i wneud yma", cy_review: true }
+    note: { en: "Skills and firms that stay. Quick wins are on offer, but some of them leave.", cy: "Sgiliau a chwmnïau sy'n aros. Mae enillion cyflym ar gael, ond mae rhai ohonyn nhw'n gadael.", cy_review: true }
+    tiers:
+      - { tier: 1, opens: [] }
+      - tier: 2
+        opens:
+          - { kind: project, branch: made_here, tier: 1, where: anywhere, at_least: 3 }
+      - tier: 3
+        opens:
+          - { kind: project, branch: made_here, tier: 2, where: anywhere, at_least: 2 }
+
+  - id: landscape
+    name: { en: "Living landscape", cy: "Tirwedd fyw", cy_review: true }
+    note: { en: "Tips, water and woods. What you do upstream is felt downstream.", cy: "Tomenni, dŵr a choed. Mae'r hyn a wnewch i fyny'r afon i'w deimlo i lawr yr afon.", cy_review: true }
+    tiers:
+      - { tier: 1, opens: [] }
+      - tier: 2
+        opens:
+          - { kind: project, branch: landscape, tier: 1, where: anywhere, at_least: 3 }
+      - tier: 3
+        opens:
+          - { kind: project, branch: landscape, tier: 2, where: anywhere, at_least: 2 }
+
+  - id: homes
+    name: { en: "Good homes, strong communities", cy: "Cartrefi da, cymunedau cryf", cy_review: true }
+    note: { en: "Homes, health and Welsh. Slow to show, and the gap between places closes fastest here.", cy: "Cartrefi, iechyd a'r Gymraeg. Araf i'w weld, ac yma mae'r bwlch rhwng llefydd yn cau gyflymaf.", cy_review: true }
+    tiers:
+      - { tier: 1, opens: [] }
+      - tier: 2
+        opens:
+          - { kind: project, branch: homes, tier: 1, where: anywhere, at_least: 3 }
+      - tier: 3
+        opens:
+          - { kind: project, branch: homes, tier: 2, where: anywhere, at_least: 2 }

@@ -1,0 +1,148 @@
+note: >
+  Rule cards for people, backing and elections (P1 to P5), and, because the board has no other
+  file for them, the two scores (G1), the weight of outside trouble (E1) and place visits (V1).
+  The engine reads them by id (RULE_IDS in src/board/engine/types-model.ts, and
+  src/board/engine/rule-defaults.ts for the extra params). Every size here is a design choice
+  with no evidence behind it, so every card is a game rule. Params marked tune are set by the
+  balance bots (docs/design/v2-board.md section 13.2).
+rules:
+  - id: P1
+    theme: people
+    kind: stock
+    name: { en: Moods move slowly, cy: Mae hwyliau'n symud yn araf, cy_review: true }
+    note:
+      en: Each group compares what it cares about with four years ago and with how the middle council did. Moods remember where they were.
+      cy: Mae pob grŵp yn cymharu'r hyn sy'n bwysig iddo â phedair blynedd yn ôl ac â'r cyngor canol. Mae hwyliau'n cofio lle'r oedden nhw.
+      cy_review: true
+    params:
+      memory: { default: 0.6, min: 0.3, max: 0.9, unit: { en: share kept each turn, cy: cyfran sy'n aros bob tro, cy_review: true }, adjustable: true, tune: true }
+      compare_years: { default: 4, min: 2, max: 8, unit: { en: years, cy: blynyddoedd, cy_review: true }, adjustable: false }
+      pull: { default: 0.8, min: 0.2, max: 2, unit: { en: points of mood per point better or worse, cy: pwyntiau o hwyliau am bob pwynt yn well neu'n waeth, cy_review: true }, adjustable: true, tune: true }
+      promise_points: { default: 1, min: 0, max: 3, unit: { en: points, cy: pwyntiau, cy_review: true }, adjustable: true, tune: true }
+      crisis_points: { default: 0.5, min: 0, max: 2, unit: { en: points for each crisis, cy: pwyntiau am bob argyfwng, cy_review: true }, adjustable: true, tune: true }
+      presence_points: { default: 0.5, min: 0, max: 2, unit: { en: points, cy: pwyntiau, cy_review: true }, adjustable: true, tune: true }
+    sources: []
+    confidence: low
+    evidence: placeholder
+    game_rule: true
+  - id: P2
+    theme: people
+    kind: linear
+    name: { en: Backing at the start, cy: Cefnogaeth ar y dechrau, cy_review: true }
+    note:
+      en: Every council starts at 5 out of 10. What you were elected on nudges some councils up.
+      cy: Mae pob cyngor yn dechrau ar 5 allan o 10. Mae'r hyn y cawsoch eich ethol arno yn codi rhai cynghorau.
+      cy_review: true
+    params:
+      start: { default: 5, min: 5, max: 5, unit: { en: points out of 10, cy: pwyntiau allan o 10, cy_review: true }, adjustable: false }
+      start_nudge: { default: 1, min: 0, max: 2, unit: { en: times the start's points, cy: gwaith pwyntiau'r dechrau, cy_review: true }, adjustable: true, tune: true }
+    sources: []
+    confidence: high
+    evidence: placeholder
+    game_rule: true
+  - id: P3
+    theme: people
+    kind: threshold
+    name: { en: Passed over, cy: Wedi'u hanwybyddu, cy_review: true }
+    note:
+      en: A place with nothing built in it or next to it for 8 years backs you less.
+      cy: Mae lle heb ddim wedi'i adeiladu ynddo nac wrth ei ymyl am 8 mlynedd yn eich cefnogi llai.
+      cy_review: true
+    params:
+      years: { default: 8, min: 4, max: 12, unit: { en: years, cy: blynyddoedd, cy_review: true }, adjustable: true, tune: true }
+      loss: { default: 0.5, min: 0.1, max: 1, unit: { en: points a turn, cy: pwyntiau y tro, cy_review: true }, adjustable: true, tune: true }
+    sources: []
+    confidence: low
+    evidence: placeholder
+    game_rule: true
+  - id: P4
+    theme: people
+    kind: threshold
+    name: { en: Elections, cy: Etholiadau, cy_review: true }
+    note:
+      en: A council backs you at 5 out of 10 or more. You win if they hold more than half the people.
+      cy: Mae cyngor yn eich cefnogi ar 5 allan o 10 neu fwy. Rydych chi'n ennill os oes ganddyn nhw fwy na hanner y bobl.
+      cy_review: true
+    params:
+      backs_at: { default: 5, min: 5, max: 5, unit: { en: points out of 10, cy: pwyntiau allan o 10, cy_review: true }, adjustable: false }
+      win_share: { default: 0.5, min: 0.5, max: 0.5, unit: { en: share of people, cy: cyfran o'r bobl, cy_review: true }, adjustable: false }
+      strong_share: { default: 0.667, min: 0.6, max: 0.75, unit: { en: share of people, cy: cyfran o'r bobl, cy_review: true }, adjustable: true, tune: true }
+      refuse_cost: { default: 4, min: 3, max: 7, unit: { en: coins, cy: darnau arian, cy_review: true }, adjustable: true, tune: true }
+    sources: []
+    confidence: high
+    evidence: placeholder
+    game_rule: true
+  - id: P5
+    theme: people
+    kind: linear
+    name: { en: Everyone, cy: Pawb, cy_review: true }
+    note:
+      en: Everyone counts for a fixed weight in every council. It is a game rule with no figure behind it.
+      cy: Mae Pawb yn cyfrif am bwysau sefydlog ym mhob cyngor. Rheol gêm yw hi heb ffigur y tu ôl iddi.
+      cy_review: true
+    params:
+      base_weight: { default: 0.3, min: 0.1, max: 0.5, unit: { en: weight beside the real shares, cy: pwysau wrth ymyl y cyfrannau go iawn, cy_review: true }, adjustable: true, tune: true }
+    sources: []
+    confidence: low
+    evidence: placeholder
+    game_rule: true
+  - id: G1
+    theme: score
+    kind: linear
+    name: { en: The two scores, cy: Y ddwy sgôr, cy_review: true }
+    note:
+      en: Both scores weigh councils by their people. A quarter of each comes from the three lowest councils alone.
+      cy: Mae'r ddwy sgôr yn pwyso cynghorau yn ôl eu pobl. Daw chwarter pob un o'r tri chyngor isaf yn unig.
+      cy_review: true
+    params:
+      fairness_share: { default: 0.25, min: 0.1, max: 0.4, unit: { en: share of each score, cy: cyfran o bob sgôr, cy_review: true }, adjustable: true, tune: true }
+      lowest_count: { default: 3, min: 1, max: 3, unit: { en: councils, cy: cynghorau, cy_review: true }, adjustable: false }
+      future_years: { default: 8, min: 0, max: 8, unit: { en: years after 2050, cy: blynyddoedd ar ôl 2050, cy_review: true }, adjustable: false }
+      band_little: { default: 2, min: 1, max: 4, unit: { en: points out of 100, cy: pwyntiau allan o 100, cy_review: true }, adjustable: true, tune: true }
+      band_much: { default: 6, min: 4, max: 12, unit: { en: points out of 100, cy: pwyntiau allan o 100, cy_review: true }, adjustable: true, tune: true }
+      risk_left_points: { default: 0.3, min: 0, max: 1, unit: { en: points out of 10 for each risk left high, cy: pwyntiau allan o 10 am bob perygl sy'n uchel, cy_review: true }, adjustable: true, tune: true }
+    sources: []
+    confidence: medium
+    evidence: placeholder
+    game_rule: true
+  - id: E1
+    theme: events
+    kind: threshold
+    name: { en: The same weight of trouble, cy: Yr un pwysau o drafferth, cy_review: true }
+    note:
+      en: Every game brings the same amount of trouble from outside. Only the kind and the timing differ.
+      cy: Mae pob gêm yn dod â'r un faint o drafferth o'r tu allan. Dim ond y math a'r amseru sy'n wahanol.
+      cy_review: true
+    params:
+      min: { default: 9, min: 9, max: 9, unit: { en: severity points, cy: pwyntiau difrifoldeb, cy_review: true }, adjustable: false }
+      max: { default: 11, min: 11, max: 11, unit: { en: severity points, cy: pwyntiau difrifoldeb, cy_review: true }, adjustable: false }
+      first_turn: { default: 1, min: 0, max: 3, unit: { en: turns, cy: troeon, cy_review: true }, adjustable: false }
+      grown_per_turn: { default: 1, min: 0, max: 2, unit: { en: events a turn, cy: digwyddiadau y tro, cy_review: true }, adjustable: true, tune: true }
+      prepared_cut: { default: 0.5, min: 0.25, max: 0.5, unit: { en: share left for each project ready for it, cy: cyfran sy'n weddill am bob prosiect sy'n barod amdano, cy_review: true }, adjustable: true, tune: true }
+      storm_step: { default: 0.5, min: 0.25, max: 0.75, unit: { en: share of a storm left when rivers have room, cy: cyfran o storm sy'n weddill pan fo lle i afonydd, cy_review: true }, adjustable: true, tune: true }
+    sources: []
+    confidence: high
+    evidence: placeholder
+    game_rule: true
+  - id: V1
+    theme: projects
+    kind: threshold
+    name: { en: Place visits, cy: Ymweld â lle, cy_review: true }
+    note:
+      en: How well a visit goes makes its project stronger or weaker there. It also moves backing in that council.
+      cy: Mae pa mor dda mae ymweliad yn mynd yn gwneud ei brosiect yn gryfach neu'n wannach yno. Mae hefyd yn symud cefnogaeth yn y cyngor hwnnw.
+      cy_review: true
+    params:
+      factor_poorly: { default: 0.5, min: 0.25, max: 1, unit: { en: times the project, cy: gwaith y prosiect, cy_review: true }, adjustable: true, tune: true }
+      factor_adequately: { default: 1, min: 1, max: 1, unit: { en: times the project, cy: gwaith y prosiect, cy_review: true }, adjustable: false }
+      factor_well: { default: 1.25, min: 1, max: 1.5, unit: { en: times the project, cy: gwaith y prosiect, cy_review: true }, adjustable: true, tune: true }
+      factor_very_well: { default: 1.5, min: 1, max: 2, unit: { en: times the project, cy: gwaith y prosiect, cy_review: true }, adjustable: true, tune: true }
+      backing_poorly: { default: -0.5, min: -1, max: 0, unit: { en: points of backing, cy: pwyntiau o gefnogaeth, cy_review: true }, adjustable: true, tune: true }
+      backing_adequately: { default: 0, min: 0, max: 0, unit: { en: points of backing, cy: pwyntiau o gefnogaeth, cy_review: true }, adjustable: false }
+      backing_well: { default: 0.3, min: 0, max: 1, unit: { en: points of backing, cy: pwyntiau o gefnogaeth, cy_review: true }, adjustable: true, tune: true }
+      backing_very_well: { default: 0.5, min: 0, max: 1, unit: { en: points of backing, cy: pwyntiau o gefnogaeth, cy_review: true }, adjustable: true, tune: true }
+      wet_track: { default: 0.5, min: 0.3, max: 0.8, unit: { en: weather pressure, cy: pwysau tywydd, cy_review: true }, adjustable: true, tune: true }
+    sources: []
+    confidence: low
+    evidence: placeholder
+    game_rule: true

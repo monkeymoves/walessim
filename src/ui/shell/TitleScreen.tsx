@@ -59,6 +59,10 @@ export function TitleScreen(props: { geo: WalesGeo | null }): JSX.Element {
             <span class="small">{t("shell.title.playNote")}</span>
           </li>
           <li>
+            <TabButton onClick={() => navigate("#/bwrdd")} data-testid="way-bwrdd">{t("boardui.title.try")}</TabButton>
+            <span class="small">{t("boardui.title.tryNote")}</span>
+          </li>
+          <li>
             <TabButton onClick={() => navigate("#/heddiw")} data-testid="way-heddiw">{t("shell.title.explore")}</TabButton>
             <span class="small">{t("shell.title.exploreNote")}</span>
           </li>

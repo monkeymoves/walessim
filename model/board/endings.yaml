@@ -1,0 +1,177 @@
+# The eight named endings (docs/design/v2-board.md sections 5.4 and 8). Owner: package 4.
+#
+# The first ending by `priority` whose `when` conditions all hold is the player's. Every keystone
+# ending needs only its keystone, so a game with a keystone never falls through to The drift.
+# The joined-up valleys also needs young adults held in the valleys; without that, upgraded lines
+# fall through to The city and its bedrooms, which is the honest story.
+# Each ending has three evidence lines read from the board, and a `not_built` line used when it is
+# the nearest Wales the player did not build. Conditions are GAME RULES (tune with the bots).
+# Evidence slots: {council}, {town}, {year}, {project}, {river}.
+note: "Ending conditions are game rules (tune). Evidence lines are filled from the board at the end."
+endings:
+  - id: two-countries
+    priority: 1
+    name: { en: "Two countries", cy: "Dwy wlad", cy_review: true }
+    summary: { en: "Something big was built, but the places furthest behind fell further back.", cy: "Cafodd rhywbeth mawr ei adeiladu, ond llithrodd y llefydd pellaf ar ôl yn ôl ymhellach.", cy_review: true }
+    route: { en: "Any route that builds big but passes over the places furthest behind.", cy: "Unrhyw lwybr sy'n adeiladu'n fawr ond yn anwybyddu'r llefydd pellaf ar ôl.", cy_review: true }
+    when:
+      - { kind: keystones, at_least: 1 }
+      - { kind: lowest_three, vs_2026: lower }
+    evidence:
+      - kind: gap_change
+        up: { en: "The gap between places closed a little, but not for everyone.", cy: "Caeodd y bwlch rhwng llefydd ychydig, ond nid i bawb.", cy_review: true }
+        down: { en: "The gap between the best and worst off places is wider than in 2026.", cy: "Mae'r bwlch rhwng y llefydd gorau a gwaethaf eu byd yn lletach nag yn 2026.", cy_review: true }
+      - kind: measure_change
+        measure: work
+        flag: valley
+        up: { en: "Work and pay in {council} rose, but slower than elsewhere.", cy: "Cododd Gwaith a chyflog yn {council}, ond yn arafach nag mewn llefydd eraill.", cy_review: true }
+        down: { en: "Work and pay in {council} is lower than in 2026.", cy: "Mae Gwaith a chyflog yn {council} yn is nag yn 2026.", cy_review: true }
+      - kind: project_standing
+        up: { en: "{project} stands in {council}, built in {year}.", cy: "Mae {project} yn sefyll yn {council}, wedi'i adeiladu yn {year}.", cy_review: true }
+        down: { en: "Nothing you built reached {town}.", cy: "Ni chyrhaeddodd dim a adeiladwyd gennych {town}.", cy_review: true }
+    not_built: { en: "Leave the places furthest behind out, and this would have been Two countries.", cy: "Anwybyddwch y llefydd pellaf ar ôl, a Dwy wlad fyddai hon.", cy_review: true }
+
+  - id: joined-up-valleys
+    priority: 2
+    name: { en: "The joined-up valleys", cy: "Y cymoedd cysylltiedig", cy_review: true }
+    summary: { en: "Work came up the line. The valley towns are busy, and young people stayed.", cy: "Daeth gwaith i fyny'r lein. Mae trefi'r cymoedd yn brysur, ac arhosodd pobl ifanc.", cy_review: true }
+    route: { en: "Joined-up valleys, with Good homes or with Made here.", cy: "Cymoedd cysylltiedig, gyda Chartrefi da neu gyda Wedi'i wneud yma.", cy_review: true }
+    when:
+      - { kind: keystone, project: work-up-the-line }
+      - { kind: young_adults, flag: valley, vs_2026: held }
+    evidence:
+      - kind: young_adults_change
+        flag: valley
+        up: { en: "{council} has more young adults than in 2026.", cy: "Mae gan {council} fwy o oedolion ifanc nag yn 2026.", cy_review: true }
+        down: { en: "{council} still lost some young adults, but fewer than before.", cy: "Collodd {council} rai oedolion ifanc o hyd, ond llai nag o'r blaen.", cy_review: true }
+      - kind: project_standing
+        up: { en: "Offices opened in {town} in {year}. The morning trains now fill both ways.", cy: "Agorodd swyddfeydd yn {town} yn {year}. Mae trenau'r bore'n llenwi'r ddwy ffordd nawr.", cy_review: true }
+        down: { en: "{project} in {town} has run down since {year}.", cy: "Mae {project} yn {town} wedi dirywio ers {year}.", cy_review: true }
+      - kind: gap_change
+        up: { en: "The gap between the valleys and the cities has closed a little.", cy: "Mae'r bwlch rhwng y cymoedd a'r dinasoedd wedi cau ychydig.", cy_review: true }
+        down: { en: "The gap between places is still wider than in 2026.", cy: "Mae'r bwlch rhwng llefydd yn dal yn lletach nag yn 2026.", cy_review: true }
+    not_built: { en: "With homes and work at the valley end of your lines, this could have been The joined-up valleys.", cy: "Gyda chartrefi a gwaith ym mhen y cwm, gallai hon fod wedi bod yn Y cymoedd cysylltiedig.", cy_review: true }
+
+  - id: warm-country
+    priority: 3
+    name: { en: "The warm country", cy: "Y wlad gynnes", cy_review: true }
+    summary: { en: "Every cold home was treated. The gap between places is the smallest it has been.", cy: "Cafodd pob cartref oer ei drin. Mae'r bwlch rhwng llefydd yn llai nag erioed.", cy_review: true }
+    route: { en: "Good homes, strong communities taken all the way, with a little Living landscape.", cy: "Cartrefi da, cymunedau cryf yr holl ffordd, gydag ychydig o Dirwedd fyw.", cy_review: true }
+    when:
+      - { kind: keystone, project: heat-and-homes }
+    evidence:
+      - kind: measure_change
+        measure: health
+        up: { en: "People in {council} are healthier than in 2026. Fewer fall ill in winter.", cy: "Mae pobl yn {council} yn iachach nag yn 2026. Mae llai'n mynd yn sâl yn y gaeaf.", cy_review: true }
+        down: { en: "Health in {council} has not caught up yet.", cy: "Dydy iechyd yn {council} ddim wedi dal i fyny eto.", cy_review: true }
+      - kind: gap_change
+        up: { en: "The gap between places has closed more than on any other route.", cy: "Mae'r bwlch rhwng llefydd wedi cau'n fwy nag ar unrhyw lwybr arall.", cy_review: true }
+        down: { en: "Homes are warmer, but the gap between places is still wide.", cy: "Mae cartrefi'n gynhesach, ond mae'r bwlch rhwng llefydd yn dal yn llydan.", cy_review: true }
+      - kind: measure_change
+        measure: climate
+        up: { en: "Homes in {council} burn far less gas than in 2026.", cy: "Mae cartrefi yn {council} yn llosgi llawer llai o nwy nag yn 2026.", cy_review: true }
+        down: { en: "Climate in {council} is still behind.", cy: "Mae Hinsawdd yn {council} yn dal ar ei hôl hi.", cy_review: true }
+    not_built: { en: "With warm homes taken all the way, this could have been The warm country.", cy: "Gyda chartrefi cynnes yr holl ffordd, gallai hon fod wedi bod yn Y wlad gynnes.", cy_review: true }
+
+  - id: green-valleys
+    priority: 4
+    name: { en: "The green valleys", cy: "Y cymoedd gwyrdd", cy_review: true }
+    summary: { en: "The rivers got room. Storms pass, the hills are green, and work grew slowly.", cy: "Cafodd yr afonydd le. Mae stormydd yn pasio, mae'r bryniau'n wyrdd, a thyfodd gwaith yn araf.", cy_review: true }
+    route: { en: "Living landscape, with Good homes, strong communities.", cy: "Tirwedd fyw, gyda Chartrefi da, cymunedau cryf.", cy_review: true }
+    when:
+      - { kind: keystone, project: rivers-room }
+    evidence:
+      - kind: no_event_since
+        up: { en: "The {river} has not flooded {town} since {year}.", cy: "Dydy {river} ddim wedi gorlifo {town} ers {year}.", cy_review: true }
+        down: { en: "The {river} still flooded {town} in {year}, but the water went down faster.", cy: "Gorlifodd {river} {town} o hyd yn {year}, ond aeth y dŵr i lawr yn gynt.", cy_review: true }
+      - kind: measure_change
+        measure: health
+        up: { en: "People in {council} are healthier than in 2026.", cy: "Mae pobl yn {council} yn iachach nag yn 2026.", cy_review: true }
+        down: { en: "Health in {council} has slipped since 2026.", cy: "Mae iechyd yn {council} wedi llithro ers 2026.", cy_review: true }
+      - kind: measure_change
+        measure: work
+        up: { en: "Work and pay in {council} grew, but slowly.", cy: "Tyfodd Gwaith a chyflog yn {council}, ond yn araf.", cy_review: true }
+        down: { en: "Work and pay in {council} fell behind.", cy: "Syrthiodd Gwaith a chyflog yn {council} ar ei hôl hi.", cy_review: true }
+    not_built: { en: "With room for the rivers, this could have been The green valleys.", cy: "Gyda lle i'r afonydd, gallai hon fod wedi bod yn Y cymoedd gwyrdd.", cy_review: true }
+
+  - id: workshop
+    priority: 5
+    name: { en: "The workshop", cy: "Y gweithdy", cy_review: true }
+    summary: { en: "A cluster took root. Work and pay is strong, but nature and climate fell behind.", cy: "Gwreiddiodd clwstwr. Mae Gwaith a chyflog yn gryf, ond syrthiodd natur a hinsawdd ar ôl.", cy_review: true }
+    route: { en: "Made here, with Joined-up valleys.", cy: "Wedi'i wneud yma, gyda Chymoedd cysylltiedig.", cy_review: true }
+    when:
+      - { kind: keystone, project: cluster-roots }
+    evidence:
+      - kind: measure_change
+        measure: work
+        up: { en: "Work and pay in {council} is the strongest it has been since 2026.", cy: "Mae Gwaith a chyflog yn {council} yn gryfach nag ar unrhyw adeg ers 2026.", cy_review: true }
+        down: { en: "Even with the cluster, Work and pay in {council} slipped.", cy: "Hyd yn oed gyda'r clwstwr, llithrodd Gwaith a chyflog yn {council}.", cy_review: true }
+      - kind: project_standing
+        up: { en: "{project} has stood in {town} since {year}. It did not leave in the hard years.", cy: "Mae {project} wedi sefyll yn {town} ers {year}. Wnaeth e ddim gadael yn y blynyddoedd caled.", cy_review: true }
+        down: { en: "{project} in {town} has run down since {year}.", cy: "Mae {project} yn {town} wedi dirywio ers {year}.", cy_review: true }
+      - kind: measure_change
+        measure: nature
+        up: { en: "Nature in {council} held up beside the factories.", cy: "Daliodd natur yn {council} ei thir wrth ymyl y ffatrïoedd.", cy_review: true }
+        down: { en: "Nature in {council} paid for the factories.", cy: "Talodd natur yn {council} am y ffatrïoedd.", cy_review: true }
+    not_built: { en: "With a college feeding a cluster, this could have been The workshop.", cy: "Gyda choleg yn bwydo clwstwr, gallai hon fod wedi bod yn Y gweithdy.", cy_review: true }
+
+  - id: city-bedrooms
+    priority: 6
+    name: { en: "The city and its bedrooms", cy: "Y ddinas a'i llofftydd", cy_review: true }
+    summary: { en: "The lines got faster and the cities grew. Young people left the valleys to live near work.", cy: "Aeth y llinellau'n gyflymach a thyfodd y dinasoedd. Gadawodd pobl ifanc y cymoedd i fyw ger gwaith.", cy_review: true }
+    route: { en: "Faster trains, with no homes or work at the valley end.", cy: "Trenau cyflymach, heb gartrefi na gwaith ym mhen y cwm.", cy_review: true }
+    when:
+      - { kind: links_upgraded, at_least: 1 }
+      - { kind: young_adults, flag: valley, vs_2026: fell }
+    evidence:
+      - kind: young_adults_change
+        flag: valley
+        up: { en: "{council} kept its young adults, against the tide.", cy: "Cadwodd {council} ei oedolion ifanc, yn erbyn y llif.", cy_review: true }
+        down: { en: "{council} has fewer young adults than in 2026.", cy: "Mae gan {council} lai o oedolion ifanc nag yn 2026.", cy_review: true }
+      - kind: measure_change
+        measure: homes
+        flag: city
+        up: { en: "Homes in {council} are easier to find than in 2026.", cy: "Mae'n haws dod o hyd i gartref yn {council} nag yn 2026.", cy_review: true }
+        down: { en: "Homes in {council} are dearer and harder to find than in 2026.", cy: "Mae cartrefi yn {council} yn ddrutach ac yn anoddach dod o hyd iddyn nhw nag yn 2026.", cy_review: true }
+      - kind: gap_change
+        up: { en: "The gap between places closed a little, all the same.", cy: "Caeodd y bwlch rhwng llefydd ychydig, er hynny.", cy_review: true }
+        down: { en: "The gap between the cities and the valleys has grown.", cy: "Mae'r bwlch rhwng y dinasoedd a'r cymoedd wedi tyfu.", cy_review: true }
+    not_built: { en: "With faster lines and nothing at the valley end, this could have been The city and its bedrooms.", cy: "Gyda llinellau cyflymach a dim ym mhen y cwm, Y ddinas a'i llofftydd fyddai hon.", cy_review: true }
+
+  - id: patchwork
+    priority: 7
+    name: { en: "The patchwork", cy: "Y clytwaith", cy_review: true }
+    summary: { en: "Lots of small things in lots of places. A little better almost everywhere.", cy: "Llawer o bethau bach mewn llawer o lefydd. Ychydig yn well bron ym mhobman.", cy_review: true }
+    route: { en: "Going broad: many small projects and no keystone.", cy: "Mynd yn eang: llawer o brosiectau bach a dim carreg glo.", cy_review: true }
+    when:
+      - { kind: projects, tier: 1, at_least: 5 }
+      - { kind: wales, vs_2026: better }
+    evidence:
+      - kind: measure_change
+        up: { en: "{council} is a little better off than in 2026.", cy: "Mae {council} ychydig yn well ei byd nag yn 2026.", cy_review: true }
+        down: { en: "{council} slipped a little, even so.", cy: "Llithrodd {council} ychydig, er hynny.", cy_review: true }
+      - kind: project_standing
+        up: { en: "{project} has worked in {town} since {year}.", cy: "Mae {project} wedi gweithio yn {town} ers {year}.", cy_review: true }
+        down: { en: "{project} in {town} has run down since {year}.", cy: "Mae {project} yn {town} wedi dirywio ers {year}.", cy_review: true }
+      - kind: gap_change
+        up: { en: "The gap between places has closed a little.", cy: "Mae'r bwlch rhwng llefydd wedi cau ychydig.", cy_review: true }
+        down: { en: "The gap between places has grown a little.", cy: "Mae'r bwlch rhwng llefydd wedi tyfu ychydig.", cy_review: true }
+    not_built: { en: "Spread across every council, this could have been The patchwork.", cy: "Wedi'i wasgaru ar draws pob cyngor, gallai hon fod wedi bod yn Y clytwaith.", cy_review: true }
+
+  - id: drift
+    priority: 8
+    name: { en: "The drift", cy: "Y drifft", cy_review: true }
+    summary: { en: "Little was built to last, so the weather and the markets did the steering. Places held on.", cy: "Ychydig a adeiladwyd i bara, felly'r tywydd a'r farchnad oedd yn llywio. Daliodd llefydd eu tir.", cy_review: true }
+    route: { en: "Autopilot, or only answering events as they came.", cy: "Awtobeilot, neu ateb digwyddiadau wrth iddyn nhw ddod yn unig.", cy_review: true }
+    when: []
+    evidence:
+      - kind: no_event_since
+        up: { en: "The {river} has stayed in its banks at {town} since {year}.", cy: "Mae {river} wedi aros yn ei glannau yn {town} ers {year}.", cy_review: true }
+        down: { en: "The {river} flooded {town} in {year}, and little had changed to stop it.", cy: "Gorlifodd {river} {town} yn {year}, a phrin fod dim wedi newid i'w atal.", cy_review: true }
+      - kind: young_adults_change
+        up: { en: "{council} kept its young adults, mostly on its own.", cy: "Cadwodd {council} ei oedolion ifanc, ar ei ben ei hun gan fwyaf.", cy_review: true }
+        down: { en: "{council} has fewer young adults than in 2026.", cy: "Mae gan {council} lai o oedolion ifanc nag yn 2026.", cy_review: true }
+      - kind: measure_change
+        up: { en: "{council} did better than expected, mostly through its own efforts.", cy: "Gwnaeth {council} yn well na'r disgwyl, drwy ei ymdrech ei hun gan fwyaf.", cy_review: true }
+        down: { en: "{council} is worse off than in 2026.", cy: "Mae {council} yn waeth ei byd nag yn 2026.", cy_review: true }
+    not_built: { en: "Without a plan of your own, this could have been The drift.", cy: "Heb gynllun eich hun, gallai hon fod wedi bod yn Y drifft.", cy_review: true }

@@ -1,0 +1,29 @@
+# Plain names, units and direction for the real indicators the board uses (docs/design/v2-board.md 4.1).
+# The build adds each indicator's period (from model/data/la-indicators.json) and source (from
+# model/indicators.yaml). `higher_is_better: null` means no direction (people). Welsh is a draft.
+# pop, young_adults, age65, income_deprivation and enterprises_10k feed people, groups and risk steps;
+# the other 18 seed the six measures.
+indicators:
+  - { id: pop, name: { en: "Population (mid-year estimate)", cy: "Poblogaeth (amcangyfrif canol blwyddyn)", cy_review: true }, unit: { en: "people", cy: "pobl", cy_review: true }, higher_is_better: null }
+  - { id: young_adults, name: { en: "Share aged 20 to 34", cy: "Cyfran 20 i 34 oed", cy_review: true }, unit: { en: "percent of residents", cy: "y cant o drigolion", cy_review: true }, higher_is_better: true }
+  - { id: age65, name: { en: "Share aged 65 and over", cy: "Cyfran 65 oed a throsodd", cy_review: true }, unit: { en: "percent of residents", cy: "y cant o drigolion", cy_review: true }, higher_is_better: false }
+  - { id: income_deprivation, name: { en: "People on a very low income", cy: "Pobl ar incwm isel iawn", cy_review: true }, unit: { en: "percent of people", cy: "y cant o bobl", cy_review: true }, higher_is_better: false }
+  - { id: employment, name: { en: "Employment rate, 16 to 64", cy: "Cyfradd cyflogaeth, 16 i 64", cy_review: true }, unit: { en: "percent", cy: "y cant", cy_review: true }, higher_is_better: true }
+  - { id: earnings, name: { en: "Median weekly earnings, full-time", cy: "Enillion wythnosol canolrifol, llawn amser", cy_review: true }, unit: { en: "pounds a week", cy: "punnoedd yr wythnos", cy_review: true }, higher_is_better: true }
+  - { id: jobs_density, name: { en: "Jobs per working-age resident", cy: "Swyddi fesul preswylydd oed gweithio", cy_review: true }, unit: { en: "jobs per resident aged 16 to 64", cy: "swyddi fesul preswylydd 16 i 64", cy_review: true }, higher_is_better: true }
+  - { id: level4, name: { en: "Adults with a degree-level qualification", cy: "Oedolion a chymhwyster lefel gradd", cy_review: true }, unit: { en: "percent of people aged 18 to 64", cy: "y cant o bobl 18 i 64", cy_review: true }, higher_is_better: true }
+  - { id: affordability, name: { en: "House price to earnings ratio", cy: "Cymhareb pris tŷ i enillion", cy_review: true }, unit: { en: "ratio", cy: "cymhareb", cy_review: true }, higher_is_better: false }
+  - { id: poor_housing, name: { en: "Poor quality housing", cy: "Tai o ansawdd gwael", cy_review: true }, unit: { en: "percent of homes", cy: "y cant o gartrefi", cy_review: true }, higher_is_better: false }
+  - { id: social_housing, name: { en: "Council and housing association homes", cy: "Cartrefi cyngor a chymdeithas dai", cy_review: true }, unit: { en: "percent of homes", cy: "y cant o gartrefi", cy_review: true }, higher_is_better: true }
+  - { id: temp_accommodation, name: { en: "Homeless people in temporary accommodation", cy: "Pobl ddigartref mewn llety dros dro", cy_review: true }, unit: { en: "per 10,000 residents", cy: "fesul 10,000 o drigolion", cy_review: true }, higher_is_better: false }
+  - { id: healthy_life_exp, name: { en: "Healthy life expectancy at birth", cy: "Disgwyliad oes iach adeg geni", cy_review: true }, unit: { en: "years", cy: "blynyddoedd", cy_review: true }, higher_is_better: true }
+  - { id: premature_deaths, name: { en: "Deaths before age 75", cy: "Marwolaethau cyn 75 oed", cy_review: true }, unit: { en: "per 100,000 people", cy: "fesul 100,000 o bobl", cy_review: true }, higher_is_better: false }
+  - { id: flood_exposure, name: { en: "Homes at risk of flooding", cy: "Cartrefi mewn perygl o lifogydd", cy_review: true }, unit: { en: "per 100 households", cy: "fesul 100 o aelwydydd", cy_review: true }, higher_is_better: false }
+  - { id: river_good_status, name: { en: "River length in good health", cy: "Hyd afonydd mewn cyflwr da", cy_review: true }, unit: { en: "percent of river length", cy: "y cant o hyd afonydd", cy_review: true }, higher_is_better: true }
+  - { id: woodland_cover, name: { en: "Land covered by woodland", cy: "Tir dan goetir", cy_review: true }, unit: { en: "percent of land", cy: "y cant o dir", cy_review: true }, higher_is_better: true }
+  - { id: welsh_speakers, name: { en: "Welsh speakers aged 3 and over", cy: "Siaradwyr Cymraeg 3 oed a throsodd", cy_review: true }, unit: { en: "percent of residents aged 3 and over", cy: "y cant o drigolion 3 oed a throsodd", cy_review: true }, higher_is_better: true }
+  - { id: welsh_medium_pupils, name: { en: "Pupils in Welsh-medium education", cy: "Disgyblion mewn addysg cyfrwng Cymraeg", cy_review: true }, unit: { en: "percent of pupils", cy: "y cant o ddisgyblion", cy_review: true }, higher_is_better: true }
+  - { id: emissions_head, name: { en: "Greenhouse gas emissions per person", cy: "Allyriadau nwyon tŷ gwydr y pen", cy_review: true }, unit: { en: "tonnes a person", cy: "tunelli y pen", cy_review: true }, higher_is_better: false }
+  - { id: home_energy_efficiency, name: { en: "How well homes keep their heat in", cy: "Pa mor dda mae cartrefi yn cadw eu gwres", cy_review: true }, unit: { en: "average energy score out of 100", cy: "sgôr ynni cyfartalog allan o 100", cy_review: true }, higher_is_better: true }
+  - { id: drive_to_work, name: { en: "Commuters who drive to work", cy: "Cymudwyr sy'n gyrru i'r gwaith", cy_review: true }, unit: { en: "percent of commuters", cy: "y cant o gymudwyr", cy_review: true }, higher_is_better: false }
+  - { id: enterprises_10k, name: { en: "Businesses per 10,000 working-age people", cy: "Busnesau fesul 10,000 o bobl oed gweithio", cy_review: true }, unit: { en: "businesses per 10,000 people aged 16 to 64", cy: "busnesau fesul 10,000 o bobl 16 i 64 oed", cy_review: true }, higher_is_better: true }

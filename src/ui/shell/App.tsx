@@ -17,6 +17,8 @@ import "./shell.css";
 const gameModules = import.meta.glob<{ default: Component }>("../game/index.tsx");
 const gameLoader = gameModules["../game/index.tsx"];
 const Game = gameLoader ? lazy(gameLoader) : null;
+// the board (v2), beside v1, loaded only on its own route (docs/design/v2-board.md section 12)
+const Board = lazy(() => import("../../board/ui"));
 
 export function App(): JSX.Element {
   startLoading();
@@ -48,6 +50,9 @@ export function App(): JSX.Element {
       </Match>
       <Match when={route().name === "yfory" && narrow()}>
         <Framed><PhoneNotice game /></Framed>
+      </Match>
+      <Match when={route().name === "bwrdd"}>
+        <Ready><Suspense fallback={<Framed><Loading /></Framed>}><Board /></Suspense></Ready>
       </Match>
       <Match when={route().name === "heddiw"}>
         <Framed atlas slot={<HeddiwSlot />}>

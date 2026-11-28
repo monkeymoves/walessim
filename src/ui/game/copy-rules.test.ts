@@ -102,10 +102,28 @@ function yamlEntries(file: string): Entry[] {
 }
 
 const placeFiles = readdirSync(join(model, "places")).filter((f) => f.endsWith(".yaml")).map((f) => `places/${f}`);
+
+/**
+ * The board (docs/design/v2-board.md): every YAML file under model/board, at any depth, relative to
+ * model/. Its i18n strings (model/i18n/{en,cy}/board.json) are already read by i18nEntries().
+ * board/letters.yaml is people talking, so it joins the speech list.
+ */
+function boardFiles(dir = join(model, "board"), rel = "board"): string[] {
+  try {
+    return readdirSync(dir, { withFileTypes: true }).flatMap((d) =>
+      d.isDirectory() ? boardFiles(join(dir, d.name), `${rel}/${d.name}`) : d.name.endsWith(".yaml") ? [`${rel}/${d.name}`] : []);
+  } catch {
+    return [];
+  }
+}
+const BOARD_SPEECH = "board/letters.yaml";
+const boardCopy = boardFiles().filter((f) => f !== BOARD_SPEECH);
+const boardSpeech = boardFiles().filter((f) => f === BOARD_SPEECH);
+
 /** Player-facing copy: the word list, length and dash rules all apply. */
-const copy: Entry[] = [...i18nEntries(), ...["cards.yaml", "curveballs.yaml", "game.yaml", "strands.yaml", ...placeFiles].flatMap(yamlEntries)];
+const copy: Entry[] = [...i18nEntries(), ...["cards.yaml", "curveballs.yaml", "game.yaml", "strands.yaml", ...placeFiles, ...boardCopy].flatMap(yamlEntries)];
 /** People talking: length and dash rules only. */
-const speech: Entry[] = ["letters.yaml", "voices.yaml"].flatMap(yamlEntries);
+const speech: Entry[] = ["letters.yaml", "voices.yaml", ...boardSpeech].flatMap(yamlEntries);
 
 const noSlots = (s: string) => s.replace(/\{[a-z_]+\}/g, "X");
 
@@ -128,6 +146,12 @@ describe("plain words in every player string", () => {
   it("finds the copy", () => {
     expect(copy.length).toBeGreaterThan(1000);
     expect(speech.length).toBeGreaterThan(100);
+  });
+
+  it("reads the board's words: board.json in both languages and the model/board files", () => {
+    for (const lang of ["en", "cy"] as const) expect(copy.some((e) => e.where.startsWith(`${lang}/board.json `)), `${lang}/board.json`).toBe(true);
+    expect(boardCopy).toContain("board/projects.yaml");
+    expect(boardSpeech).toEqual([BOARD_SPEECH]);
   });
 
   it("uses none of the retired words in English", () => {

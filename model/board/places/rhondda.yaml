@@ -1,0 +1,16 @@
+# The Rhondda (Rhondda Cynon Taf): T1 "which first", v1's tip board reused whole
+# (docs/design/v2-board.md section 9). Owner: package 4. The build copies v1's PlaceBoard into
+# `board` (src/board/NEEDS.md, package 1). The tips, tests and grading are v1's, unchanged.
+id: rhondda
+council: W06000016
+template: T1
+v1_place: rhondda
+scales: coal-tips-safe
+name: { en: "The Rhondda", cy: "Y Rhondda", cy_review: true }
+prompt: { en: "There are more old tips than you can make safe this turn. Which first?", cy: "Mae mwy o hen domenni nag y gallwch eu gwneud yn ddiogel y tro hwn. Pa rai yn gyntaf?", cy_review: true }
+why_hard: { en: "The tips above the most homes are not the riskiest. The poorest streets sit under others again.", cy: "Nid y tomenni uwchben y nifer fwyaf o gartrefi yw'r rhai mwyaf peryglus. Mae'r strydoedd tlotaf o dan rai eraill eto.", cy_review: true }
+offered_by:
+  projects: [coal-tips-safe]
+  events: [tip-moves]
+sources: [bgs-landslide, coal-tip-safety]
+confidence: low

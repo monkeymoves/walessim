@@ -1,0 +1,59 @@
+# The Gwent Levels (Newport): T3 "one hard choice" (docs/design/v2-board.md section 9). Owner: package 4.
+# Low, reclaimed land between Newport, Cardiff and the Severn estuary, much of it protected for its
+# wildlife and drained by old ditches (sources nrw_sssi, statswales_flood). Offered when wetlands
+# are built on the coast in Newport, or a storm surge lands there.
+# Effect sizes and grade rules are GAME RULES (tune). No real body has agreed to any option.
+id: gwent-levels
+council: W06000022
+template: T3
+scales: coast-wetlands
+name: { en: "The Gwent Levels", cy: "Gwastadeddau Gwent", cy_review: true }
+prompt: { en: "Room is short between the city and the sea. What is this land for?", cy: "Mae lle'n brin rhwng y ddinas a'r môr. Beth yw pwrpas y tir hwn?", cy_review: true }
+why_hard: { en: "Wet fields hold back the sea and the wildlife. The city wants the same land for homes and work.", cy: "Mae caeau gwlyb yn dal y môr yn ôl ac yn cadw bywyd gwyllt. Mae'r ddinas eisiau'r un tir ar gyfer cartrefi a gwaith.", cy_review: true }
+offered_by:
+  projects: [coast-wetlands]
+  events: [coastal-surge]
+options:
+  - id: wetland
+    branch: landscape
+    name: { en: "Wetland and room for floods", cy: "Gwlyptir a lle i lifogydd", cy_review: true }
+    gain: { en: "High tides spread out here, not in the streets. Birds and otters stay.", cy: "Mae llanw uchel yn lledu yma, nid yn y strydoedd. Mae adar a dyfrgwn yn aros.", cy_review: true }
+    loss: { en: "No new homes or jobs on this land.", cy: "Dim cartrefi na swyddi newydd ar y tir hwn.", cy_review: true }
+    effects:
+      - { kind: measure, measure: nature, points: 0.5 }
+      - { kind: risk, risk: flood, steps: -1 }
+      - { kind: measure, measure: homes, points: -0.1 }
+    grades:
+      - when: [{ kind: project, project: slow-the-water, where: within_link, links: [river] }]
+        grade: very_well
+    default_grade: well
+  - id: build-behind-wall
+    branch: made_here
+    name: { en: "Homes and a works behind a wall", cy: "Cartrefi a gwaith y tu ôl i wal", cy_review: true }
+    gain: { en: "New homes and jobs close to the city.", cy: "Cartrefi a swyddi newydd yn agos at y ddinas.", cy_review: true }
+    loss: { en: "The wall needs care for ever, and the old wet fields are lost.", cy: "Bydd angen gofalu am y wal am byth, ac mae'r hen gaeau gwlyb yn cael eu colli.", cy_review: true }
+    effects:
+      - { kind: measure, measure: work, points: 0.4, jobs: true }
+      - { kind: measure, measure: homes, points: 0.3 }
+      - { kind: measure, measure: nature, points: -0.4 }
+      - { kind: risk, risk: flood, steps: 1 }
+    grades:
+      - when: [{ kind: risk, risk: flood, at_least: 3 }]
+        grade: poorly
+      - when: [{ kind: law, law: flood-plain-rule }]
+        grade: poorly
+    default_grade: adequately
+  - id: split
+    name: { en: "A little of each", cy: "Ychydig o'r ddau", cy_review: true }
+    gain: { en: "Some homes, some wetland. Nobody loses everything.", cy: "Rhai cartrefi, peth gwlyptir. Does neb yn colli popeth.", cy_review: true }
+    loss: { en: "Neither is done well. The sea still finds the weak spots.", cy: "Dydy'r naill na'r llall ddim yn cael ei wneud yn dda. Mae'r môr yn dal i ddod o hyd i'r mannau gwan.", cy_review: true }
+    effects:
+      - { kind: measure, measure: nature, points: 0.2 }
+      - { kind: measure, measure: work, points: 0.2, jobs: true }
+      - { kind: measure, measure: homes, points: 0.1 }
+    grades:
+      - when: [{ kind: project, tag: homes, where: here }]
+        grade: well
+    default_grade: adequately
+sources: [nrw_sssi, statswales_flood, nrw-flood-risk, nfm-evidence]
+confidence: low

@@ -1,0 +1,32 @@
+note: >
+  The five groups of people (docs/design/v2-board.md section 6). Each has a real share in every
+  council, from the indicator named in share_from, except Everyone, whose weight is a game rule
+  with no figure behind it (rule P5). Groups overlap: people can be in more than one group.
+  What each group cares about is a design choice, read by rule P1.
+groups:
+  - id: young
+    name: { en: Young adults, cy: Oedolion ifanc, cy_review: true }
+    share_from: young_adults
+    cares: [work, homes]
+    sources: [nomis_mye]
+  - id: older
+    name: { en: Older people, cy: Pobl hŷn, cy_review: true }
+    share_from: age65
+    cares: [health, services]
+    sources: [nomis_mye]
+  - id: low_income
+    name: { en: Families on low incomes, cy: Teuluoedd ar incwm isel, cy_review: true }
+    share_from: income_deprivation
+    cares: [homes, work]
+    sources: [statswales_wimd2025_la]
+  - id: welsh_speakers
+    name: { en: Welsh speakers, cy: Siaradwyr Cymraeg, cy_review: true }
+    share_from: welsh_speakers
+    cares: [welsh, young_adults]
+    sources: [nomis_census_ts033]
+  - id: everyone
+    name: { en: Everyone, cy: Pawb, cy_review: true }
+    share_from: null
+    base_weight: 0.3
+    cares: [fell_most, promises, crises]
+    sources: []

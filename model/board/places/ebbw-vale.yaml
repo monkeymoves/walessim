@@ -1,0 +1,59 @@
+# Ebbw Vale (Blaenau Gwent): T3 "one hard choice" (docs/design/v2-board.md section 9). Owner: package 4.
+# Offered when frequent trains or a station quarter are built touching Blaenau Gwent. Each option
+# feeds a different branch and a different S3 outcome (young adults stay, or ride out).
+# Effect sizes and grade rules are GAME RULES (tune). No real body has agreed to any option.
+id: ebbw-vale
+council: W06000019
+template: T3
+scales: frequent-trains
+name: { en: "Ebbw Vale", cy: "Glynebwy", cy_review: true }
+prompt: { en: "The trains to Newport are frequent now. What is the station for?", cy: "Mae'r trenau i Gasnewydd yn aml nawr. Beth yw pwrpas yr orsaf?", cy_review: true }
+why_hard: { en: "There is room by the station for one big thing. Each choice helps one group and costs another.", cy: "Mae lle wrth yr orsaf i un peth mawr. Mae pob dewis yn helpu un grŵp ac yn costio i un arall.", cy_review: true }
+offered_by:
+  projects: [frequent-trains, station-quarter]
+options:
+  - id: homes
+    branch: homes
+    name: { en: "Homes for local rent", cy: "Cartrefi i'w rhentu'n lleol", cy_review: true }
+    gain: { en: "Young families can stay and still reach work down the line.", cy: "Gall teuluoedd ifanc aros a dal i gyrraedd gwaith i lawr y lein.", cy_review: true }
+    loss: { en: "No new work comes to the town itself.", cy: "Does dim gwaith newydd yn dod i'r dref ei hun.", cy_review: true }
+    effects:
+      - { kind: measure, measure: homes, points: 0.4 }
+      - { kind: young_adults, points: 0.2 }
+      - { kind: block, spread: S2, share: 0.3 }
+    grades:
+      - when: [{ kind: measure, measure: work, op: at_least, value: 5 }]
+        grade: very_well
+      - when: [{ kind: link_quality, at_least: 2 }]
+        grade: well
+    default_grade: adequately
+  - id: workspace
+    branch: made_here
+    name: { en: "Workspace for firms", cy: "Gweithle i gwmnïau", cy_review: true }
+    gain: { en: "Work comes up the line to Ebbw Vale instead of leaving it.", cy: "Mae gwaith yn dod i fyny'r lein i Lynebwy yn lle ei gadael.", cy_review: true }
+    loss: { en: "Homes near the station get dearer.", cy: "Mae cartrefi ger yr orsaf yn mynd yn ddrutach.", cy_review: true }
+    effects:
+      - { kind: measure, measure: work, points: 0.4, jobs: true }
+      - { kind: measure, measure: homes, points: -0.1 }
+      - { kind: risk, risk: employer, steps: -1 }
+    grades:
+      - when: [{ kind: project, tag: college, where: within_link }]
+        grade: very_well
+      - when: [{ kind: link_quality, at_least: 2 }]
+        grade: well
+    default_grade: adequately
+  - id: park-ride
+    branch: valleys
+    name: { en: "Park and ride", cy: "Parcio a theithio", cy_review: true }
+    gain: { en: "Easy trips to jobs in Newport and Cardiff. Fewer cars on the roads south.", cy: "Teithiau hawdd i swyddi yng Nghasnewydd a Chaerdydd. Llai o geir ar y ffyrdd i'r de.", cy_review: true }
+    loss: { en: "Young adults drift to the cities. The town is quiet by day.", cy: "Mae oedolion ifanc yn symud i'r dinasoedd. Mae'r dref yn dawel yn ystod y dydd.", cy_review: true }
+    effects:
+      - { kind: measure, measure: climate, points: 0.2 }
+      - { kind: measure, measure: work, points: 0.2 }
+      - { kind: young_adults, points: -0.2 }
+    grades:
+      - when: [{ kind: link_quality, at_least: 3 }]
+        grade: well
+    default_grade: adequately
+sources: [transport-labour, housing-elasticity, ons-internal-migration]
+confidence: low

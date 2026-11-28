@@ -2,6 +2,8 @@
 import { foldDown, foldUp } from "./fold";
 import { LaIndex } from "./hit";
 import { NationalSheet } from "./national";
+import type { MapLink } from "./national";
+export type { MapLink, MapLinkEnd } from "./national";
 import { readPalette, type Palette } from "./palette";
 import { PlaceSheet } from "./place";
 import { prepareNationalRelief, type NationalRelief } from "./relief";
@@ -169,6 +171,12 @@ export class PaperMap {
   }
 
   setStitches(stitches: Stitch[]): void { this.nat.stitches = stitches.slice(); this.requestRender(); }
+  /**
+   * Real links between places (the board): commuting, rail and rivers, drawn under the names.
+   * A link may be lit (the player's preview) or carry a pulse bead at 0 to 1 along it; call again
+   * each animation frame to move the beads. An empty list removes them.
+   */
+  setLinks(links: MapLink[]): void { this.nat.links = links.slice(); this.requestRender(); }
   setMarkers(markers: Marker[]): void { this.nat.markers = markers.slice(); this.requestRender(); }
 
   setLayers(layers: Partial<Layers>): void {

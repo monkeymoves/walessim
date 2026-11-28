@@ -1,0 +1,432 @@
+# The board's projects (docs/design/v2-board.md section 5.3). Owner: package 4 (content and words).
+#
+# Honesty: every cost, build time, running cost, level factor and effect size here is a GAME RULE
+# (a starting value marked "tune" in the design, set by the balance bots in section 13). None is a
+# real figure. `sources` name the evidence for the direction of each effect, not its size.
+# Examples name real places and real kinds of thing. No project claims any real body has agreed to it.
+# Every Welsh string is a fresh draft for a fluent reviewer (cy_review: true).
+note: "Costs, build times and effect sizes are game rules (tune). Sources back the direction of each effect, not its size."
+projects:
+  # ---------------------------------------------------------------------------
+  # Branch 1: Joined-up valleys (rail, towns and reach)
+  - id: frequent-trains
+    branch: valleys
+    tier: 1
+    keystone: false
+    site: link
+    cost: 3
+    build_turns: 1
+    name: { en: "Frequent trains on a valley line", cy: "Trenau aml ar lein y cwm", cy_review: true }
+    what: { en: "More trains, more often, on one stretch of line. Work and college get easier to reach.", cy: "Mwy o drenau, yn amlach, ar un darn o'r lein. Mae'n haws cyrraedd gwaith a choleg.", cy_review: true }
+    example: { en: "The Treherbert, Aberdare and Merthyr lines into Pontypridd and Cardiff. The Ebbw Vale line through Newbridge to Newport.", cy: "Llinellau Treherbert, Aberdâr a Merthyr i Bontypridd a Chaerdydd. Llinell Glynebwy drwy Drecelyn i Gasnewydd.", cy_review: true }
+    catch: { en: "It works both ways. Without homes and work at the valley end, young people ride out and stay out.", cy: "Mae'n gweithio'r ddwy ffordd. Heb gartrefi a gwaith ym mhen y cwm, mae pobl ifanc yn teithio allan ac yn aros allan.", cy_review: true }
+    needs:
+      - { kind: feature, feature: rail }
+    effects:
+      - { kind: link_quality, steps: 1 }
+      - { kind: measure, measure: climate, points: 0.2, where: link_ends }
+    upgrade_costs: [4, 5]
+    level_factor: [1, 2.2, 3.5]
+    tags: [rail]
+    visit: ebbw-vale
+    sources: [transport-labour, ons-internal-migration]
+
+  - id: buses-meet-trains
+    branch: valleys
+    tier: 1
+    keystone: false
+    site: council
+    cost: 2
+    build_turns: 1
+    running: { coins: 1, every_turns: 2 }
+    name: { en: "Buses that meet the trains", cy: "Bysiau sy'n cwrdd â'r trenau", cy_review: true }
+    what: { en: "Buses timed to the trains, from the top of the valley to the station.", cy: "Bysiau wedi'u hamseru gyda'r trenau, o ben y cwm i'r orsaf.", cy_review: true }
+    example: { en: "Maerdy to Porth. Blaenavon to Pontypool.", cy: "Y Maerdy i'r Porth. Blaenafon i Bont-y-pŵl.", cy_review: true }
+    catch: { en: "Buses cost coins to keep running, for as long as they run.", cy: "Mae bysiau'n costio darnau arian i'w cadw i redeg, cyhyd ag y maen nhw'n rhedeg.", cy_review: true }
+    needs:
+      - { kind: feature, feature: rail }
+    effects:
+      - { kind: measure, measure: health, points: 0.3 }
+      - { kind: measure, measure: work, points: 0.2 }
+      - { kind: measure, measure: climate, points: 0.1 }
+    upgrade_costs: [2, 3]
+    level_factor: [1, 2.2, 3.5]
+    tags: [bus, services]
+    sources: [transport-labour]
+
+  - id: station-quarter
+    branch: valleys
+    tier: 2
+    keystone: false
+    site: council
+    cost: 4
+    build_turns: 2
+    name: { en: "Station quarter", cy: "Ardal yr orsaf", cy_review: true }
+    what: { en: "Homes, a health centre and workspace beside the station. Homes stay affordable when the line gets busy.", cy: "Cartrefi, canolfan iechyd a gweithle wrth ymyl yr orsaf. Mae cartrefi'n aros yn fforddiadwy pan fydd y lein yn brysur.", cy_review: true }
+    example: { en: "Pontypridd, Bargoed or Ebbw Vale.", cy: "Pontypridd, Bargod neu Lynebwy.", cy_review: true }
+    catch: { en: "The town centre is a building site for a while.", cy: "Mae canol y dref yn safle adeiladu am gyfnod.", cy_review: true }
+    needs:
+      - { kind: feature, feature: rail }
+    effects:
+      - { kind: measure, measure: homes, points: 0.5 }
+      - { kind: measure, measure: work, points: 0.4, jobs: true }
+      - { kind: measure, measure: health, points: 0.1 }
+      - { kind: block, spread: S2, share: 0.8 }
+      - { kind: young_adults, points: 0.1 }
+    upgrade_costs: [4, 5]
+    level_factor: [1, 2.2, 3.5]
+    tags: [homes, jobs]
+    visit: ebbw-vale
+    sources: [housing-elasticity, transport-labour]
+
+  - id: work-up-the-line
+    branch: valleys
+    tier: 3
+    keystone: true
+    site: council
+    cost: 7
+    build_turns: 3
+    name: { en: "Work comes up the line", cy: "Gwaith yn dod i fyny'r lein", cy_review: true }
+    what: { en: "Public bodies and firms take offices in valley towns on fast lines. The morning trains fill both ways.", cy: "Mae cyrff cyhoeddus a chwmnïau'n agor swyddfeydd yn nhrefi'r cymoedd ar linellau cyflym. Mae trenau'r bore'n llenwi'r ddwy ffordd.", cy_review: true }
+    example: { en: "Offices in Merthyr Tydfil, Aberdare, Ebbw Vale and Pontypool.", cy: "Swyddfeydd ym Merthyr Tudful, Aberdâr, Glynebwy a Phont-y-pŵl.", cy_review: true }
+    catch: { en: "It only works where frequent trains already run.", cy: "Dim ond lle mae trenau aml yn rhedeg yn barod y mae'n gweithio.", cy_review: true }
+    needs:
+      - { kind: feature, feature: valley }
+      - { kind: link_quality, at_least: 2 }
+    effects:
+      - { kind: measure, measure: work, points: 1.0, jobs: true }
+      - { kind: young_adults, points: 0.3 }
+      - { kind: measure, measure: welsh, points: 0.1, after_turns: 1 }
+      - { kind: special, special: reverse_commute }
+    level_factor: [1, 2.2, 3.5]
+    tags: [jobs, offices]
+    sources: [transport-labour, inward-investment]
+
+  # ---------------------------------------------------------------------------
+  # Branch 2: Made here (skills and firms that stay)
+  - id: skills-college
+    branch: made_here
+    tier: 1
+    keystone: false
+    site: council
+    cost: 3
+    build_turns: 1
+    name: { en: "Skills college and apprenticeships", cy: "Coleg sgiliau a phrentisiaethau", cy_review: true }
+    what: { en: "Courses and apprenticeships for the work nearby. People gain skills they can use locally.", cy: "Cyrsiau a phrentisiaethau ar gyfer y gwaith gerllaw. Mae pobl yn ennill sgiliau y gallan nhw eu defnyddio'n lleol.", cy_review: true }
+    example: { en: "Merthyr Tydfil, Nantgarw, Ebbw Vale or Newport.", cy: "Merthyr Tudful, Nantgarw, Glynebwy neu Gasnewydd.", cy_review: true }
+    catch: { en: "Skills need jobs within reach. Without them, young people qualify and leave.", cy: "Mae angen swyddi o fewn cyrraedd ar sgiliau. Hebddyn nhw, mae pobl ifanc yn cymhwyso ac yn gadael.", cy_review: true }
+    needs: []
+    effects:
+      - { kind: measure, measure: work, points: 0.4, after_turns: 2, ramp_turns: 2 }
+      - { kind: risk, risk: employer, steps: -1, after_turns: 2 }
+    upgrade_costs: [3, 4]
+    level_factor: [1, 2.2, 3.5]
+    tags: [college]
+    sources: [apprenticeship-outcomes, returns-qualifications]
+
+  - id: back-local-firms
+    branch: made_here
+    tier: 1
+    keystone: false
+    site: council
+    cost: 2
+    build_turns: 1
+    name: { en: "Back local firms", cy: "Cefnogi cwmnïau lleol", cy_review: true }
+    what: { en: "Councils, hospitals and schools buy more from firms nearby. Small, steady work across many firms.", cy: "Mae cynghorau, ysbytai ac ysgolion yn prynu mwy gan gwmnïau cyfagos. Gwaith bach, cyson, ar draws llawer o gwmnïau.", cy_review: true }
+    example: { en: "Public bodies in Caerphilly and Torfaen buying from local firms.", cy: "Cyrff cyhoeddus yng Nghaerffili a Thor-faen yn prynu gan gwmnïau lleol.", cy_review: true }
+    catch: { en: "It grows slowly. Nobody cuts a ribbon.", cy: "Mae'n tyfu'n araf. Does neb yn torri rhuban.", cy_review: true }
+    needs: []
+    effects:
+      - { kind: measure, measure: work, points: 0.2, jobs: true }
+      - { kind: risk, risk: employer, steps: -1 }
+    upgrade_costs: [2, 3]
+    level_factor: [1, 2.2, 3.5]
+    tags: [jobs, local_firms]
+    sources: [wg-io-2022, plant-closure]
+
+  - id: big-employer
+    branch: made_here
+    tier: 1
+    keystone: false
+    site: council
+    cost: 4
+    build_turns: 0
+    name: { en: "Land a big employer", cy: "Denu cyflogwr mawr", cy_review: true }
+    what: { en: "One large firm opens a site. The jobs come at once.", cy: "Mae un cwmni mawr yn agor safle. Daw'r swyddi ar unwaith.", cy_review: true }
+    example: { en: "A large site by the A470 or the M4.", cy: "Safle mawr wrth yr A470 neu'r M4.", cy_review: true }
+    catch: { en: "A town that leans on one firm is at risk if it leaves.", cy: "Mae tref sy'n dibynnu ar un cwmni mewn perygl os yw'n gadael.", cy_review: true }
+    needs: []
+    effects:
+      - { kind: measure, measure: work, points: 0.8, jobs: true }
+      - { kind: measure, measure: climate, points: -0.1 }
+      - { kind: risk, risk: employer, steps: 1 }
+    upgrade_costs: [4, 5]
+    level_factor: [1, 2.2, 3.5]
+    tags: [jobs, big_employer]
+    sources: [inward-investment, plant-closure]
+
+  - id: community-energy
+    branch: made_here
+    tier: 2
+    keystone: false
+    site: council
+    cost: 3
+    build_turns: 2
+    name: { en: "Community-owned energy", cy: "Ynni dan berchnogaeth gymunedol", cy_review: true }
+    what: { en: "Hill wind and small hydro, owned locally. The income stays in the valley.", cy: "Gwynt ar y bryniau a hydro bach, dan berchnogaeth leol. Mae'r incwm yn aros yn y cwm.", cy_review: true }
+    example: { en: "Above the Cynon and Rhymney valleys.", cy: "Uwchben cymoedd Cynon a Rhymni.", cy_review: true }
+    catch: { en: "It pays back only once it has grown. Raise it a level to earn coins.", cy: "Dim ond ar ôl tyfu y mae'n talu'n ôl. Codwch ei lefel i ennill darnau arian.", cy_review: true }
+    needs:
+      - { kind: flag, flag: city, not: true }
+    effects:
+      - { kind: measure, measure: climate, points: 0.5 }
+      - { kind: measure, measure: homes, points: 0.2 }
+      - { kind: measure, measure: work, points: 0.1, jobs: true }
+      - { kind: coins, coins: 1, every_turns: 2, only_if: [{ kind: project, project: community-energy, where: here, min_level: 2 }] }
+    upgrade_costs: [3, 4]
+    level_factor: [1, 2.2, 3.5]
+    tags: [energy]
+    sources: [community-energy, energy-gen-wales]
+
+  - id: cluster-roots
+    branch: made_here
+    tier: 3
+    keystone: true
+    site: council
+    cost: 7
+    build_turns: 3
+    name: { en: "A cluster that roots", cy: "Clwstwr sy'n gwreiddio", cy_review: true }
+    what: { en: "Advanced manufacturing and its supply firms grow together. Firms stay because the skills are here.", cy: "Mae gweithgynhyrchu uwch a'i gwmnïau cyflenwi'n tyfu gyda'i gilydd. Mae cwmnïau'n aros am fod y sgiliau yma.", cy_review: true }
+    example: { en: "Chip making and advanced manufacturing around Newport and Caerphilly. Steel and its supply firms around Newport.", cy: "Gwneud sglodion a gweithgynhyrchu uwch o gwmpas Casnewydd a Chaerffili. Dur a'i gwmnïau cyflenwi o gwmpas Casnewydd.", cy_review: true }
+    catch: { en: "Factories need land, power and lorries. Nature and Climate pay a price.", cy: "Mae angen tir, pŵer a lorïau ar ffatrïoedd. Mae Natur a Hinsawdd yn talu pris.", cy_review: true }
+    needs: []
+    effects:
+      - { kind: measure, measure: work, points: 1.4, jobs: true }
+      - { kind: measure, measure: nature, points: -0.2 }
+      - { kind: measure, measure: climate, points: -0.2 }
+      - { kind: risk, risk: employer, steps: -1 }
+      - { kind: special, special: cluster_roots }
+    level_factor: [1, 2.2, 3.5]
+    tags: [jobs, cluster]
+    sources: [inward-investment, wg-io-2022]
+
+  # ---------------------------------------------------------------------------
+  # Branch 3: Living landscape (tips, water and woods)
+  - id: coal-tips-safe
+    branch: landscape
+    tier: 1
+    keystone: false
+    site: council
+    cost: 4
+    build_turns: 2
+    name: { en: "Make coal tips safe", cy: "Gwneud tomenni glo yn ddiogel", cy_review: true }
+    what: { en: "Drain, reshape and watch the old tips most at risk. The homes below sleep easier.", cy: "Draenio, ail-lunio a gwylio'r hen domenni sydd fwyaf mewn perygl. Mae'r cartrefi islaw yn cysgu'n dawelach.", cy_review: true }
+    example: { en: "Tylorstown, Maerdy and Bedwas.", cy: "Pendyrus, y Maerdy a Bedwas.", cy_review: true }
+    catch: { en: "There are more tips than coins. You choose which come first.", cy: "Mae mwy o domenni nag o ddarnau arian. Chi sy'n dewis pa rai sy'n dod gyntaf.", cy_review: true }
+    needs:
+      - { kind: feature, feature: coal_tips }
+    effects:
+      - { kind: risk, risk: tip, steps: -1 }
+      - { kind: measure, measure: nature, points: 0.2 }
+      - { kind: measure, measure: work, points: 0.1, jobs: true }
+    upgrade_costs: [4, 5]
+    level_factor: [1, 2.2, 3.5]
+    tags: [nature, tips]
+    visit: rhondda
+    sources: [coal-tip-safety, bgs-landslide]
+
+  - id: slow-the-water
+    branch: landscape
+    tier: 1
+    keystone: false
+    site: council
+    cost: 2
+    build_turns: 1
+    name: { en: "Slow the water upstream", cy: "Arafu'r dŵr i fyny'r afon", cy_review: true }
+    what: { en: "Wet woodland and leaky wooden dams in the headwaters. Rain reaches the towns below more slowly.", cy: "Coetir gwlyb ac argaeau pren sy'n gollwng ym mlaenau'r afon. Mae glaw yn cyrraedd y trefi islaw yn arafach.", cy_review: true }
+    example: { en: "The Taff, Cynon and Ebbw headwaters.", cy: "Blaenau afonydd Taf, Cynon ac Ebwy.", cy_review: true }
+    catch: { en: "It helps the places downstream more than the place you pay for.", cy: "Mae'n helpu'r llefydd i lawr yr afon yn fwy na'r lle rydych chi'n talu amdano.", cy_review: true }
+    needs:
+      - { kind: feature, feature: river }
+    effects:
+      - { kind: risk, risk: flood, steps: -1, where: downstream, after_turns: 1 }
+      - { kind: measure, measure: nature, points: 0.3 }
+    upgrade_costs: [2, 3]
+    level_factor: [1, 2.2, 3.5]
+    tags: [nature, flood]
+    sources: [nfm-evidence, nrw-flood-risk]
+
+  - id: coast-wetlands
+    branch: landscape
+    tier: 1
+    keystone: false
+    site: council
+    cost: 3
+    build_turns: 1
+    name: { en: "Wetlands on the coast", cy: "Gwlyptiroedd ar yr arfordir", cy_review: true }
+    what: { en: "Let the low coast hold water and wildlife. High tides spread out before they reach homes.", cy: "Gadael i'r arfordir isel ddal dŵr a bywyd gwyllt. Mae llanw uchel yn lledu cyn cyrraedd cartrefi.", cy_review: true }
+    example: { en: "The Gwent Levels between Newport and Cardiff.", cy: "Gwastadeddau Gwent rhwng Casnewydd a Chaerdydd.", cy_review: true }
+    catch: { en: "Land kept wet cannot hold new homes or works.", cy: "Ni all tir sy'n cael ei gadw'n wlyb ddal cartrefi na gweithfeydd newydd.", cy_review: true }
+    needs:
+      - { kind: feature, feature: coast }
+    effects:
+      - { kind: measure, measure: nature, points: 0.5 }
+      - { kind: risk, risk: flood, steps: -1 }
+      - { kind: special, special: land_blocked }
+    upgrade_costs: [3, 4]
+    level_factor: [1, 2.2, 3.5]
+    tags: [nature, flood, coast]
+    visit: gwent-levels
+    sources: [nrw_sssi, nrw-flood-risk]
+
+  - id: valleys-park
+    branch: landscape
+    tier: 2
+    keystone: false
+    site: council
+    cost: 4
+    build_turns: 2
+    running: { coins: 1, every_turns: 4 }
+    name: { en: "Valleys regional park", cy: "Parc rhanbarthol y cymoedd", cy_review: true }
+    what: { en: "Linked uplands, with paths from every town. Old works and tips become places to walk.", cy: "Ucheldiroedd wedi'u cysylltu, gyda llwybrau o bob tref. Mae hen weithfeydd a thomenni'n troi'n llefydd i gerdded.", cy_review: true }
+    example: { en: "From Blaenavon to Maesteg.", cy: "O Flaenafon i Faesteg.", cy_review: true }
+    catch: { en: "Paths and rangers cost coins to keep up.", cy: "Mae llwybrau a wardeiniaid yn costio darnau arian i'w cynnal.", cy_review: true }
+    needs:
+      - { kind: flag, flag: coal_valley }
+    effects:
+      - { kind: measure, measure: health, points: 0.3, where: flagged, flag: coal_valley, only_if: [{ kind: project, branch: landscape, tier: 1, where: here }] }
+      - { kind: measure, measure: nature, points: 0.3, where: flagged, flag: coal_valley }
+      - { kind: measure, measure: work, points: 0.1, jobs: true }
+    upgrade_costs: [4, 5]
+    level_factor: [1, 2.2, 3.5]
+    tags: [nature, health, park]
+    sources: [greenspace-health, nrw_protected_landscapes]
+
+  - id: rivers-room
+    branch: landscape
+    tier: 3
+    keystone: true
+    site: council
+    cost: 7
+    build_turns: 3
+    name: { en: "Rivers given room", cy: "Rhoi lle i afonydd", cy_review: true }
+    what: { en: "Give the river space to spill where it does no harm. Storms pass the towns by.", cy: "Rhoi lle i'r afon orlifo lle nad yw'n gwneud niwed. Mae stormydd yn pasio heibio'r trefi.", cy_review: true }
+    example: { en: "The Taff from Merthyr Tydfil to Cardiff. The Usk at Newport.", cy: "Afon Taf o Ferthyr Tudful i Gaerdydd. Afon Wysg yng Nghasnewydd.", cy_review: true }
+    catch: { en: "Some fields and riverside land go back to the river.", cy: "Mae rhai caeau a thir glan yr afon yn mynd yn ôl i'r afon.", cy_review: true }
+    needs:
+      - { kind: feature, feature: river }
+    effects:
+      - { kind: special, special: storm_step_down }
+      - { kind: measure, measure: nature, points: 0.8 }
+      - { kind: measure, measure: health, points: 0.2 }
+      - { kind: risk, risk: flood, steps: -1 }
+      - { kind: risk, risk: flood, steps: -1, where: downstream, after_turns: 1 }
+    level_factor: [1, 2.2, 3.5]
+    tags: [nature, flood]
+    sources: [nfm-evidence, fcerm-appraisal, nrw-flood-risk]
+
+  # ---------------------------------------------------------------------------
+  # Branch 4: Good homes, strong communities (homes, health and Welsh)
+  - id: warm-terraces
+    branch: homes
+    tier: 1
+    keystone: false
+    site: council
+    cost: 3
+    build_turns: 1
+    name: { en: "Warm the terraces", cy: "Cynhesu'r tai teras", cy_review: true }
+    what: { en: "Insulate the old stone terraces, street by street. Warmer homes, lower bills, fewer winter illnesses.", cy: "Inswleiddio'r hen dai teras carreg, stryd wrth stryd. Cartrefi cynhesach, biliau is, llai o salwch y gaeaf.", cy_review: true }
+    example: { en: "The terraces of the Rhondda, Abertillery and Bargoed.", cy: "Tai teras y Rhondda, Abertyleri a Bargod.", cy_review: true }
+    catch: { en: "Health takes a few years to show the change.", cy: "Mae'n cymryd ychydig flynyddoedd i'r newid ddangos ar iechyd.", cy_review: true }
+    needs: []
+    effects:
+      - { kind: measure, measure: health, points: 0.3, after_turns: 2 }
+      - { kind: measure, measure: climate, points: 0.4, after_turns: 2 }
+      - { kind: measure, measure: work, points: 0.1, jobs: true }
+    upgrade_costs: [3, 4]
+    level_factor: [1, 2.2, 3.5]
+    tags: [warmth]
+    sources: [retrofit-eval, cold-homes-health]
+
+  - id: social-homes
+    branch: homes
+    tier: 1
+    keystone: false
+    site: council
+    cost: 3
+    build_turns: 2
+    name: { en: "Social homes", cy: "Cartrefi cymdeithasol", cy_review: true }
+    what: { en: "Homes for rent at a fair price, built by the council or a housing association.", cy: "Cartrefi i'w rhentu am bris teg, wedi'u hadeiladu gan y cyngor neu gymdeithas dai.", cy_review: true }
+    example: { en: "Cardiff, Newport, Barry or Cwmbran.", cy: "Caerdydd, Casnewydd, y Barri neu Gwmbrân.", cy_review: true }
+    catch: { en: "Building takes a while, and good sites are hard to find.", cy: "Mae adeiladu'n cymryd amser, ac mae'n anodd dod o hyd i safleoedd da.", cy_review: true }
+    needs: []
+    effects:
+      - { kind: measure, measure: homes, points: 0.6 }
+      - { kind: block, spread: S2, share: 0.5 }
+    upgrade_costs: [3, 4]
+    level_factor: [1, 2.2, 3.5]
+    tags: [homes, social_homes]
+    sources: [housing-elasticity, statswales_new_dwellings]
+
+  - id: welsh-school
+    branch: homes
+    tier: 1
+    keystone: false
+    site: council
+    cost: 2
+    build_turns: 3
+    name: { en: "Welsh-medium school", cy: "Ysgol cyfrwng Cymraeg", cy_review: true }
+    what: { en: "A new Welsh-medium primary where few places are offered now. Families have one more reason to stay.", cy: "Ysgol gynradd Gymraeg newydd lle nad oes llawer o lefydd nawr. Mae gan deuluoedd un rheswm arall i aros.", cy_review: true }
+    example: { en: "A new primary in Merthyr Tydfil, Torfaen or Newport.", cy: "Ysgol gynradd newydd ym Merthyr Tudful, Tor-faen neu Gasnewydd.", cy_review: true }
+    catch: { en: "Welsh grows slowly, one class at a time.", cy: "Mae'r Gymraeg yn tyfu'n araf, un dosbarth ar y tro.", cy_review: true }
+    needs: []
+    effects:
+      - { kind: measure, measure: welsh, points: 0.5, ramp_turns: 3 }
+      - { kind: young_adults, points: 0.1 }
+    upgrade_costs: [2, 3]
+    level_factor: [1, 2.2, 3.5]
+    tags: [welsh, school]
+    sources: [welsh-medium-transmission, statswales_plasc_school_language, cymraeg_2050]
+
+  - id: health-hub
+    branch: homes
+    tier: 2
+    keystone: false
+    site: council
+    cost: 4
+    build_turns: 2
+    name: { en: "Health close to home", cy: "Iechyd yn agos at adref", cy_review: true }
+    what: { en: "A health and care hub in the town. Doctors, nurses and care under one roof.", cy: "Canolfan iechyd a gofal yn y dref. Meddygon, nyrsys a gofal dan yr un to.", cy_review: true }
+    example: { en: "Hubs in Tredegar and the valley towns.", cy: "Canolfannau yn Nhredegar a threfi'r cymoedd.", cy_review: true }
+    catch: { en: "The care bill only falls once several towns have one.", cy: "Dim ond pan fydd gan sawl tref un y mae'r bil gofal yn gostwng.", cy_review: true }
+    needs: []
+    effects:
+      - { kind: measure, measure: health, points: 0.6 }
+      - { kind: backing, points: 0.3, group: older }
+      - { kind: special, special: care_bill_off }
+    upgrade_costs: [4, 5]
+    level_factor: [1, 2.2, 3.5]
+    tags: [health, services]
+    sources: [prevention-returns, early-intervention]
+
+  - id: heat-and-homes
+    branch: homes
+    tier: 3
+    keystone: true
+    site: council
+    cost: 7
+    build_turns: 3
+    name: { en: "Heat and homes for all", cy: "Gwres a chartrefi i bawb", cy_review: true }
+    what: { en: "Heat networks in the towns, and every cold home treated. Nobody has to choose between heating and eating.", cy: "Rhwydweithiau gwres yn y trefi, a phob cartref oer wedi'i drin. Does dim rhaid i neb ddewis rhwng gwresogi a bwyta.", cy_review: true }
+    example: { en: "Heat networks in Cardiff and Newport. Every cold home treated in the valleys.", cy: "Rhwydweithiau gwres yng Nghaerdydd a Chasnewydd. Pob cartref oer wedi'i drin yn y cymoedd.", cy_review: true }
+    catch: { en: "It is slow and costly. Little else gets built while it does.", cy: "Mae'n araf ac yn ddrud. Ychydig arall sy'n cael ei adeiladu tra mae'n digwydd.", cy_review: true }
+    needs: []
+    effects:
+      - { kind: measure, measure: health, points: 1.0 }
+      - { kind: measure, measure: climate, points: 1.0 }
+      - { kind: measure, measure: homes, points: 0.4 }
+      - { kind: measure, measure: health, points: 0.3, where: flagged, flag: coal_valley }
+      - { kind: measure, measure: climate, points: 0.2, where: everywhere }
+    level_factor: [1, 2.2, 3.5]
+    tags: [homes, warmth]
+    sources: [retrofit-eval, cold-homes-health, desnz-la-emissions]

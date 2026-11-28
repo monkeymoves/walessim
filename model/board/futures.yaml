@@ -1,0 +1,35 @@
+note: >
+  The four futures (docs/design/v2-board.md section 7.2). One is drawn from the game number and
+  revealed a turn at a time. Each sets three pressure tracks, one value from 0 to 1 per turn
+  (twelve turns, 2026 to 2050). Outside events are drawn from these tracks, and every game draws
+  the same weight of trouble in all (rule E1): only the kind and the timing differ.
+  Every value here is a game rule (tune), not a forecast.
+futures:
+  - id: wet-decades
+    name: { en: The wet decades, cy: Y degawdau gwlyb, cy_review: true }
+    note: { en: "Storms come often, and rivers rise.", cy: "Mae stormydd yn dod yn aml, ac mae afonydd yn codi.", cy_review: true }
+    tracks:
+      weather: [0.3, 0.6, 0.5, 0.7, 0.5, 0.8, 0.5, 0.7, 0.6, 0.8, 0.5, 0.7]
+      economy: [0.2, 0.3, 0.3, 0.2, 0.4, 0.3, 0.3, 0.2, 0.3, 0.3, 0.2, 0.3]
+      prices: [0.3, 0.3, 0.2, 0.4, 0.3, 0.3, 0.5, 0.3, 0.3, 0.4, 0.3, 0.3]
+  - id: work-rewritten
+    name: { en: Work rewritten, cy: Gwaith yn newid, cy_review: true }
+    note: { en: "Jobs change fast. Some towns lose their big employer.", cy: "Mae swyddi'n newid yn gyflym. Mae rhai trefi'n colli eu cyflogwr mawr.", cy_review: true }
+    tracks:
+      weather: [0.3, 0.3, 0.4, 0.3, 0.5, 0.4, 0.3, 0.3, 0.6, 0.3, 0.3, 0.4]
+      economy: [0.3, 0.6, 0.5, 0.7, 0.4, 0.7, 0.5, 0.6, 0.4, 0.8, 0.5, 0.6]
+      prices: [0.2, 0.3, 0.3, 0.2, 0.3, 0.4, 0.3, 0.2, 0.3, 0.3, 0.2, 0.3]
+  - id: squeeze
+    name: { en: The squeeze, cy: Y wasgfa, cy_review: true }
+    note: { en: "Energy and money are tight. Rents and bills climb.", cy: "Mae ynni ac arian yn brin. Mae rhenti a biliau'n codi.", cy_review: true }
+    tracks:
+      weather: [0.3, 0.4, 0.3, 0.5, 0.3, 0.4, 0.3, 0.6, 0.3, 0.4, 0.3, 0.4]
+      economy: [0.3, 0.4, 0.5, 0.4, 0.3, 0.5, 0.4, 0.3, 0.4, 0.5, 0.3, 0.4]
+      prices: [0.5, 0.7, 0.6, 0.8, 0.5, 0.7, 0.6, 0.7, 0.5, 0.6, 0.5, 0.6]
+  - id: quiet-years
+    name: { en: Quiet years, cy: Blynyddoedd tawel, cy_review: true }
+    note: { en: "Trouble comes, but slowly and from all sides.", cy: "Mae trafferth yn dod, ond yn araf ac o bob cyfeiriad.", cy_review: true }
+    tracks:
+      weather: [0.3, 0.5, 0.3, 0.4, 0.3, 0.6, 0.3, 0.4, 0.3, 0.6, 0.3, 0.4]
+      economy: [0.3, 0.4, 0.3, 0.6, 0.3, 0.4, 0.3, 0.5, 0.3, 0.4, 0.6, 0.5]
+      prices: [0.3, 0.4, 0.3, 0.4, 0.3, 0.5, 0.3, 0.6, 0.3, 0.4, 0.3, 0.6]

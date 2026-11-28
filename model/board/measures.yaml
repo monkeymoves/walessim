@@ -1,0 +1,31 @@
+# The six council measures of the board (docs/design/v2-board.md section 4.1) and the real
+# indicators that seed each one. A measure's 2026 score is the plain mean of its indicators'
+# scores (0 to 10, against model/board/bands.yaml). The start is real and is never adjusted.
+# Indicator ids are columns of model/data/la-indicators.json; names, units and sources are in
+# model/board/indicators.yaml. Welsh is a draft until a fluent reviewer has read it.
+note: Seeds for the six measures. Indicators are averaged with equal weight.
+measures:
+  - id: work
+    name: { en: "Work and pay", cy: "Gwaith a chyflog", cy_review: true }
+    note: { en: "Jobs, pay and skills. Jobs per resident shows a jobs centre from a commuter town.", cy: "Swyddi, cyflog a sgiliau. Mae swyddi fesul preswylydd yn gwahaniaethu canolfan swyddi oddi wrth dref gymudo.", cy_review: true }
+    indicators: [employment, earnings, jobs_density, level4]
+  - id: homes
+    name: { en: "Homes and community", cy: "Cartrefi a chymuned", cy_review: true }
+    note: { en: "Homes people can afford and keep warm, and a roof for those without one.", cy: "Cartrefi y gall pobl eu fforddio a'u cadw'n gynnes, a tho i'r rhai hebddo.", cy_review: true }
+    indicators: [affordability, poor_housing, social_housing, temp_accommodation]
+  - id: health
+    name: { en: "Health", cy: "Iechyd", cy_review: true }
+    note: { en: "How long people live in good health.", cy: "Pa mor hir mae pobl yn byw mewn iechyd da.", cy_review: true }
+    indicators: [healthy_life_exp, premature_deaths]
+  - id: nature
+    name: { en: "Nature and floods", cy: "Natur a llifogydd", cy_review: true }
+    note: { en: "Rivers, woods and how safe homes are from floods.", cy: "Afonydd, coed a pha mor ddiogel yw cartrefi rhag llifogydd.", cy_review: true }
+    indicators: [flood_exposure, river_good_status, woodland_cover]
+  - id: welsh
+    name: { en: "Welsh and culture", cy: "Y Gymraeg a diwylliant", cy_review: true }
+    note: { en: "Welsh spoken, and learned in school.", cy: "Y Gymraeg yn cael ei siarad a'i dysgu yn yr ysgol.", cy_review: true }
+    indicators: [welsh_speakers, welsh_medium_pupils]
+  - id: climate
+    name: { en: "Climate", cy: "Hinsawdd", cy_review: true }
+    note: { en: "Pollution from each person, homes that keep their heat in, and how people get to work.", cy: "Llygredd gan bob person, cartrefi sy'n cadw eu gwres a sut mae pobl yn teithio i'r gwaith.", cy_review: true }
+    indicators: [emissions_head, home_energy_efficiency, drive_to_work]

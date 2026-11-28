@@ -1,0 +1,102 @@
+# Pairs: projects worth more together, and projects that go wrong apart (docs/design/v2-board.md
+# section 5.2). Owner: package 4. Effect sizes are GAME RULES (tune). "together" pairs apply where
+# `project` stands when every partner is within reach; "apart" pairs apply when no partner is.
+note: "Effect sizes are game rules (tune)."
+pairs:
+  - id: college-reach
+    kind: together
+    project: skills-college
+    partners: [{ link_quality: 2 }]
+    within: here
+    effects:
+      - { kind: measure, measure: work, points: 0.3 }
+      - { kind: young_adults, points: 0.1 }
+    name: { en: "People here can reach the work", cy: "Gall pobl yma gyrraedd y gwaith", cy_review: true }
+    note: { en: "A college on a line with frequent trains. New skills meet jobs a short ride away.", cy: "Coleg ar lein gyda threnau aml. Mae sgiliau newydd yn cwrdd â swyddi daith fer i ffwrdd.", cy_review: true }
+
+  - id: college-no-jobs
+    kind: apart
+    project: skills-college
+    partners: [{ tag: jobs }, { link_quality: 2 }]
+    within: within_link
+    effects:
+      - { kind: young_adults, points: -0.3 }
+      - { kind: measure, measure: welsh, points: -0.1 }
+    name: { en: "Qualify and leave", cy: "Cymhwyso a gadael", cy_review: true }
+    note: { en: "A college with no work nearby and no good line out. Young people qualify, then move away.", cy: "Coleg heb waith gerllaw a heb lein dda allan. Mae pobl ifanc yn cymhwyso, yna'n symud i ffwrdd.", cy_review: true }
+
+  - id: quarter-and-homes
+    kind: together
+    project: station-quarter
+    partners: [{ project: social-homes }]
+    within: here
+    effects:
+      - { kind: measure, measure: homes, points: 0.3 }
+      - { kind: young_adults, points: 0.1 }
+    name: { en: "Homes by the line", cy: "Cartrefi wrth y lein", cy_review: true }
+    note: { en: "Homes people can afford, next to the trains. Young families stay and still reach work.", cy: "Cartrefi y gall pobl eu fforddio, wrth ymyl y trenau. Mae teuluoedd ifanc yn aros ac yn dal i gyrraedd gwaith.", cy_review: true }
+
+  - id: hub-and-buses
+    kind: together
+    project: health-hub
+    partners: [{ project: buses-meet-trains }]
+    within: here
+    effects:
+      - { kind: measure, measure: health, points: 0.3 }
+      - { kind: backing, points: 0.2, group: older }
+    name: { en: "A bus to the doctor", cy: "Bws at y meddyg", cy_review: true }
+    note: { en: "The health hub is on a bus route. Older people without a car can get there.", cy: "Mae'r ganolfan iechyd ar lwybr bws. Gall pobl hŷn heb gar gyrraedd yno.", cy_review: true }
+
+  - id: power-for-warm-homes
+    kind: together
+    project: community-energy
+    partners: [{ project: warm-terraces }]
+    within: here
+    effects:
+      - { kind: measure, measure: homes, points: 0.2 }
+      - { kind: measure, measure: climate, points: 0.2 }
+    name: { en: "Local power for warm homes", cy: "Pŵer lleol i gartrefi cynnes", cy_review: true }
+    note: { en: "Homes that hold heat, warmed by power made on the hill above.", cy: "Cartrefi sy'n dal gwres, wedi'u cynhesu gan bŵer a wnaed ar y bryn uwchben.", cy_review: true }
+
+  - id: tips-to-hills
+    kind: together
+    project: valleys-park
+    partners: [{ project: coal-tips-safe }]
+    within: here
+    effects:
+      - { kind: measure, measure: nature, points: 0.3 }
+      - { kind: measure, measure: health, points: 0.1 }
+    name: { en: "Old tips become green hills", cy: "Hen domenni'n troi'n fryniau gwyrdd", cy_review: true }
+    note: { en: "Tips made safe become part of the park. People walk where the coal waste was.", cy: "Mae tomenni diogel yn dod yn rhan o'r parc. Mae pobl yn cerdded lle'r oedd y gwastraff glo.", cy_review: true }
+
+  - id: school-and-homes
+    kind: together
+    project: welsh-school
+    partners: [{ tag: homes }]
+    within: here
+    effects:
+      - { kind: measure, measure: welsh, points: 0.2 }
+      - { kind: young_adults, points: 0.1 }
+    name: { en: "Families can stay", cy: "Gall teuluoedd aros", cy_review: true }
+    note: { en: "A Welsh-medium school and homes young families can afford, in the same place.", cy: "Ysgol Gymraeg a chartrefi y gall teuluoedd ifanc eu fforddio, yn yr un lle.", cy_review: true }
+
+  - id: cluster-and-college
+    kind: together
+    project: cluster-roots
+    partners: [{ tag: college }]
+    within: within_link
+    effects:
+      - { kind: measure, measure: work, points: 0.4 }
+      - { kind: young_adults, points: 0.2 }
+    name: { en: "Local people get the new jobs", cy: "Pobl leol sy'n cael y swyddi newydd", cy_review: true }
+    note: { en: "A college within reach trains people for the cluster. The jobs go to people who live here.", cy: "Mae coleg o fewn cyrraedd yn hyfforddi pobl ar gyfer y clwstwr. Mae'r swyddi'n mynd i bobl sy'n byw yma.", cy_review: true }
+
+  - id: employer-alone
+    kind: apart
+    project: big-employer
+    partners: [{ tag: college }, { tag: local_firms }]
+    within: within_link
+    effects:
+      - { kind: risk, risk: employer, steps: 1 }
+    name: { en: "One firm, nothing around it", cy: "Un cwmni, dim byd o'i gwmpas", cy_review: true }
+    note: { en: "No college and no local suppliers nearby. If the firm goes, nothing holds the work here.", cy: "Dim coleg a dim cyflenwyr lleol gerllaw. Os aiff y cwmni, does dim yn cadw'r gwaith yma.", cy_review: true }

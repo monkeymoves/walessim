@@ -1,0 +1,78 @@
+/**
+ * Every change of a quarter point or more in any council measure has a Why? that ends at a rule
+ * and a cause (section 12), and the reasons add up to the change.
+ */
+import { describe, expect, it } from "vitest";
+import { why } from "./explain";
+import { boardFixture, FIXTURE_COUNCILS } from "./fixture";
+import { playGame } from "./test-play";
+import { MEASURE_IDS } from "./types";
+
+const { cardiff, rct } = FIXTURE_COUNCILS;
+
+describe("Why?", () => {
+  const model = boardFixture();
+  const ruleIds = new Set(model.rules.map((r) => r.id));
+  const contentPage = /^(project|pair|law|event|place):/;
+
+  for (const [n, start] of [[3, "work-valleys"], [44, "warm-homes"], [2050, "ready-weather"]] as const) {
+    it(`explains every measure change, turn by turn (game ${n}, ${start})`, () => {
+      const { state } = playGame(model, n, start);
+      let checked = 0;
+      for (let t = 0; t < state.turn; t++) {
+        const before = state.history[t]!;
+        const after = state.history[t + 1]!;
+        for (const code of model.game.councils) {
+          for (const m of MEASURE_IDS) {
+            const change = after.councils[code]!.measures[m] - before.councils[code]!.measures[m];
+            const reasons = why(model, state, { council: code, measure: m, turn: t });
+            const total = reasons.reduce((a, w) => a + w.delta, 0);
+            expect(total, `${code} ${m} turn ${t}`).toBeCloseTo(change, 3);
+            if (Math.abs(change) < 0.25) continue;
+            checked++;
+            expect(reasons.length).toBeGreaterThan(0);
+            for (const w of reasons) {
+              expect(ruleIds.has(w.rule) || contentPage.test(w.rule), `rule ${w.rule}`).toBe(true);
+              expect(w.cause.kind).toBeTruthy();
+              expect(w.say.key).toMatch(/^board\.why\.line_(up|down)$/);
+              expect(w.say.vars?.cause).toBe(`board.cause.${w.cause.kind}`);
+              expect(w.year).toBe(model.game.first_year + (t + 1) * model.game.turn_years);
+            }
+          }
+        }
+      }
+      expect(checked).toBeGreaterThan(0);
+    });
+  }
+
+  it("follows spread back to the project and the link", () => {
+    const { state } = playGame(model, 3, "work-valleys");
+    const travelled = state.ledger.find((c) => c.rule === "S1");
+    if (!travelled) return;
+    const [w] = why(model, state, { council: travelled.council!, measure: "work", turn: travelled.turn }).filter((x) => x.rule === "S1");
+    expect(w!.via).toMatchObject({ kind: "commute" });
+    expect(w!.say.key).toBe(w!.delta >= 0 ? "board.why.line_up" : "board.why.line_down");
+    expect(w!.say.vars).toHaveProperty("link");
+    expect(w!.say.vars).toHaveProperty("from");
+  });
+
+  it("explains the coins too, as game rules", () => {
+    const { state } = playGame(model, 3, "work-valleys");
+    const coins = why(model, state, { measure: "coins", turn: 2 });
+    expect(coins.length).toBeGreaterThan(0);
+    expect(coins.every((w) => w.honesty === "game_rule" && w.council === null)).toBe(true);
+  });
+
+  it("puts reasons largest first and gives report lines from them", () => {
+    const { state, reports } = playGame(model, 3, "work-valleys");
+    const all = why(model, state, { council: cardiff, measure: "work", turn: 4 });
+    for (let i = 1; i < all.length; i++) expect(Math.abs(all[i - 1]!.delta)).toBeGreaterThanOrEqual(Math.abs(all[i]!.delta));
+    for (const r of reports) {
+      for (const l of r.lines) {
+        expect(l.say.key).toBe(l.delta >= 0 ? "board.report.up" : "board.report.down");
+        expect(l.say.vars?.council).toEqual(l.why.say.vars?.council);
+      }
+    }
+    expect(why(model, state, { council: rct, measure: "welsh", turn: 99 })).toEqual([]);
+  });
+});

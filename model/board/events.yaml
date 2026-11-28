@@ -1,0 +1,599 @@
+# Events that grow from the board (docs/design/v2-board.md section 7.1). Owner: package 4.
+#
+# 24 events: 8 from outside (drawn from the future's weather, economy and prices tracks) and 16
+# grown from the state of the board, 5 of them good news. Every event is warned a turn ahead.
+#
+# Honesty: severities, effect sizes, size factors, track thresholds and response costs are all
+# GAME RULES (tune). `sources` name the evidence that this kind of thing happens in Wales, not its
+# size. Fairness rule 3: every outside event lists two tier 1 projects in `prepared_by`, and its
+# `size` halves the effect where one of them stands (first match wins).
+# Slots: {council} the target, {councils} the target then those most at risk, {river} on river events.
+note: "Severities, sizes, thresholds and response costs are game rules (tune)."
+events:
+  # ===========================================================================
+  # From outside: weather
+  - id: storm-winter
+    name: { en: "Storm winter", cy: "Gaeaf stormus", cy_review: true }
+    origin: outside
+    good: false
+    track: weather
+    severity: 3
+    trigger:
+      - { kind: track, track: weather, at_least: 0.6 }
+      - { kind: feature, feature: river }
+    target: { pick: highest_risk, risk: flood }
+    travels: downstream
+    warning: { en: "Heavy rain is likely over the {river}. {councils} are most at risk.", cy: "Mae glaw trwm yn debygol dros {river}. {councils} sydd fwyaf mewn perygl.", cy_review: true }
+    landed: { en: "The {river} burst its banks in {council}. Homes and shops were flooded.", cy: "Gorlifodd {river} yn {council}. Cafodd cartrefi a siopau eu llifogi.", cy_review: true }
+    effects:
+      - { kind: measure, measure: homes, points: -0.4 }
+      - { kind: measure, measure: nature, points: -0.4 }
+      - { kind: measure, measure: health, points: -0.1 }
+      - { kind: backing, points: -0.2 }
+    size:
+      - when: [{ kind: project, project: rivers-room, where: within_link, links: [river] }]
+        factor: 0.3
+      - when: [{ kind: project, project: slow-the-water, where: within_link, links: [river] }]
+        factor: 0.5
+      - when: [{ kind: project, project: coal-tips-safe, where: here }]
+        factor: 0.5
+      - when: [{ kind: risk, risk: flood, at_least: 3 }]
+        factor: 1.5
+    prepared_by: [slow-the-water, coal-tips-safe]
+    responses:
+      - { id: accept, name: { en: "Clear up", cy: "Clirio", cy_review: true }, what: { en: "Clear the mud and carry on.", cy: "Clirio'r mwd a bwrw ymlaen.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: help-families, name: { en: "Help families home", cy: "Helpu teuluoedd adref", cy_review: true }, what: { en: "Pay for drying out and repairs, so families get home sooner.", cy: "Talu am sychu a thrwsio, fel bod teuluoedd yn mynd adref yn gynt.", cy_review: true }, cost: 1, effects: [{ kind: measure, measure: homes, points: 0.2 }, { kind: backing, points: 0.3 }], handled_well: true }
+      - { id: repair-defences, name: { en: "Repair and raise the defences", cy: "Trwsio a chodi'r amddiffynfeydd", cy_review: true }, what: { en: "Fix the homes and raise the river walls.", cy: "Trwsio'r cartrefi a chodi waliau'r afon.", cy_review: true }, cost: 2, effects: [{ kind: measure, measure: homes, points: 0.3 }, { kind: risk, risk: flood, steps: -1 }], handled_well: true }
+    sources: [statswales_flood, nrw-flood-risk, ukcp18]
+
+  - id: coastal-surge
+    name: { en: "A storm surge on the coast", cy: "Ymchwydd storm ar yr arfordir", cy_review: true }
+    origin: outside
+    good: false
+    track: weather
+    severity: 2
+    trigger:
+      - { kind: track, track: weather, at_least: 0.7 }
+      - { kind: feature, feature: coast }
+    target: { pick: highest_risk, risk: flood }
+    warning: { en: "A storm and very high tides are forecast. {councils} have the lowest land by the sea.", cy: "Mae storm a llanw uchel iawn ar y ffordd. {councils} sydd â'r tir isaf wrth y môr.", cy_review: true }
+    landed: { en: "The sea came over the banks in {council}.", cy: "Daeth y môr dros y cloddiau yn {council}.", cy_review: true }
+    effects:
+      - { kind: measure, measure: homes, points: -0.4 }
+      - { kind: measure, measure: nature, points: -0.2 }
+      - { kind: measure, measure: work, points: -0.2 }
+    size:
+      - when: [{ kind: project, project: coast-wetlands, where: here }]
+        factor: 0.5
+      - when: [{ kind: project, project: slow-the-water, where: within_link, links: [river] }]
+        factor: 0.5
+    prepared_by: [coast-wetlands, slow-the-water]
+    visit: gwent-levels
+    responses:
+      - { id: accept, name: { en: "Clear up", cy: "Clirio", cy_review: true }, what: { en: "Pump out the water and carry on.", cy: "Pwmpio'r dŵr allan a bwrw ymlaen.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: raise-banks, name: { en: "Raise the sea banks", cy: "Codi cloddiau'r môr", cy_review: true }, what: { en: "Build the banks higher where the sea came over.", cy: "Codi'r cloddiau'n uwch lle daeth y môr drosodd.", cy_review: true }, cost: 2, effects: [{ kind: measure, measure: homes, points: 0.2 }, { kind: risk, risk: flood, steps: -1 }], handled_well: true }
+    sources: [nrw-flood-risk, ukcp18, statswales_flood]
+
+  - id: hot-summer
+    name: { en: "A long hot summer", cy: "Haf hir a phoeth", cy_review: true }
+    origin: outside
+    good: false
+    track: weather
+    severity: 2
+    trigger:
+      - { kind: track, track: weather, at_least: 0.6 }
+      - { kind: measure, measure: health, op: below, value: 5 }
+    target: { pick: lowest_measure, measure: health }
+    warning: { en: "A long hot summer is likely. Older people in {councils} are most at risk.", cy: "Mae haf hir a phoeth yn debygol. Pobl hŷn yn {councils} sydd fwyaf mewn perygl.", cy_review: true }
+    landed: { en: "The heat made people ill in {council}. The hills dried out.", cy: "Gwnaeth y gwres bobl yn sâl yn {council}. Sychodd y bryniau.", cy_review: true }
+    effects:
+      - { kind: measure, measure: health, points: -0.4 }
+      - { kind: measure, measure: nature, points: -0.2 }
+      - { kind: backing, points: -0.3, group: older }
+    size:
+      - when: [{ kind: project, project: warm-terraces, where: here }]
+        factor: 0.5
+      - when: [{ kind: project, project: buses-meet-trains, where: here }]
+        factor: 0.5
+    prepared_by: [warm-terraces, buses-meet-trains]
+    responses:
+      - { id: accept, name: { en: "Ride it out", cy: "Dal ati", cy_review: true }, what: { en: "Wait for the heat to pass.", cy: "Aros i'r gwres basio.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: cool-rooms, name: { en: "Open cool rooms", cy: "Agor ystafelloedd oer", cy_review: true }, what: { en: "Open cool rooms in libraries and halls, and check on older neighbours.", cy: "Agor ystafelloedd oer mewn llyfrgelloedd a neuaddau, a galw ar gymdogion hŷn.", cy_review: true }, cost: 1, effects: [{ kind: measure, measure: health, points: 0.2 }, { kind: backing, points: 0.2, group: older }], handled_well: true }
+    sources: [ukcp18, greenspace-health]
+
+  # ===========================================================================
+  # From outside: the economy
+  - id: downturn
+    name: { en: "A downturn", cy: "Dirwasgiad", cy_review: true }
+    origin: outside
+    good: false
+    track: economy
+    severity: 3
+    trigger:
+      - { kind: track, track: economy, at_least: 0.6 }
+      - { kind: risk, risk: employer, at_least: 2 }
+    target: { pick: highest_risk, risk: employer }
+    warning: { en: "Trade is slowing. Towns that lean on one employer are most at risk: {councils}.", cy: "Mae masnach yn arafu. Trefi sy'n dibynnu ar un cyflogwr sydd fwyaf mewn perygl: {councils}.", cy_review: true }
+    landed: { en: "Jobs were lost in {council}. Shops on the high street felt it next.", cy: "Collwyd swyddi yn {council}. Siopau'r stryd fawr oedd nesaf i'w deimlo.", cy_review: true }
+    effects:
+      - { kind: measure, measure: work, points: -0.6, jobs: true }
+      - { kind: young_adults, points: -0.1 }
+      - { kind: backing, points: -0.2 }
+    size:
+      - when: [{ kind: project, project: back-local-firms, where: here }]
+        factor: 0.5
+      - when: [{ kind: project, project: skills-college, where: here }]
+        factor: 0.5
+      - when: [{ kind: risk, risk: employer, at_least: 3 }]
+        factor: 1.5
+    prepared_by: [back-local-firms, skills-college]
+    responses:
+      - { id: accept, name: { en: "Ride it out", cy: "Dal ati", cy_review: true }, what: { en: "Wait for trade to pick up.", cy: "Aros i fasnach wella.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: retrain, name: { en: "Help people retrain", cy: "Helpu pobl i ailhyfforddi", cy_review: true }, what: { en: "Pay for courses so people who lost work can find new work.", cy: "Talu am gyrsiau fel bod pobl a gollodd waith yn cael gwaith newydd.", cy_review: true }, cost: 2, effects: [{ kind: measure, measure: work, points: 0.3 }], handled_well: true }
+    sources: [plant-closure, nomis_claimant]
+
+  - id: work-changes
+    name: { en: "Work changes fast", cy: "Gwaith yn newid yn gyflym", cy_review: true }
+    origin: outside
+    good: false
+    track: economy
+    severity: 2
+    trigger:
+      - { kind: track, track: economy, at_least: 0.5 }
+      - { kind: measure, measure: work, op: below, value: 5 }
+    target: { pick: lowest_measure, measure: work }
+    warning: { en: "Machines and software are changing office and warehouse work. {councils} have the fewest new skills.", cy: "Mae peiriannau a meddalwedd yn newid gwaith swyddfa a warws. {councils} sydd â'r lleiaf o sgiliau newydd.", cy_review: true }
+    landed: { en: "Some kinds of work vanished in {council}.", cy: "Diflannodd rhai mathau o waith yn {council}.", cy_review: true }
+    effects:
+      - { kind: measure, measure: work, points: -0.4 }
+      - { kind: young_adults, points: -0.1 }
+    size:
+      - when: [{ kind: project, project: skills-college, where: here }]
+        factor: 0.5
+      - when: [{ kind: project, project: buses-meet-trains, where: here }]
+        factor: 0.5
+    prepared_by: [skills-college, buses-meet-trains]
+    responses:
+      - { id: accept, name: { en: "Ride it out", cy: "Dal ati", cy_review: true }, what: { en: "Let people find their own way.", cy: "Gadael i bobl ffeindio'u ffordd eu hunain.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: short-courses, name: { en: "Free short courses", cy: "Cyrsiau byr am ddim", cy_review: true }, what: { en: "Short courses for adults in the skills firms now want.", cy: "Cyrsiau byr i oedolion yn y sgiliau mae cwmnïau eu heisiau nawr.", cy_review: true }, cost: 1, effects: [{ kind: measure, measure: work, points: 0.2 }], handled_well: true }
+    sources: [returns-qualifications, sw_qualifications]
+
+  # ===========================================================================
+  # From outside: prices
+  - id: price-squeeze
+    name: { en: "Prices squeeze", cy: "Gwasgfa prisiau", cy_review: true }
+    origin: outside
+    good: false
+    track: prices
+    severity: 3
+    trigger:
+      - { kind: track, track: prices, at_least: 0.6 }
+    target: { pick: lowest_measure, measure: homes }
+    warning: { en: "Energy and rents are rising. {councils} will feel it first.", cy: "Mae ynni a rhenti'n codi. {councils} fydd yn ei deimlo gyntaf.", cy_review: true }
+    landed: { en: "Homes got colder and dearer in {council}.", cy: "Aeth cartrefi'n oerach ac yn ddrutach yn {council}.", cy_review: true }
+    effects:
+      - { kind: measure, measure: homes, points: -0.5 }
+      - { kind: measure, measure: health, points: -0.2 }
+      - { kind: backing, points: -0.3, group: low_income }
+    size:
+      - when: [{ kind: project, project: warm-terraces, where: here }]
+        factor: 0.5
+      - when: [{ kind: project, project: social-homes, where: here }]
+        factor: 0.5
+    prepared_by: [warm-terraces, social-homes]
+    responses:
+      - { id: accept, name: { en: "Hold steady", cy: "Dal yn gyson", cy_review: true }, what: { en: "Wait for prices to settle.", cy: "Aros i brisiau setlo.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: help-bills, name: { en: "Help with bills this winter", cy: "Help gyda biliau'r gaeaf hwn", cy_review: true }, what: { en: "Help the poorest homes with their energy bills.", cy: "Helpu'r cartrefi tlotaf gyda'u biliau ynni.", cy_review: true }, cost: 2, effects: [{ kind: measure, measure: homes, points: 0.3 }, { kind: measure, measure: health, points: 0.1 }], handled_well: true }
+    sources: [cold-homes-health, ons_affordability]
+
+  - id: rents-rise
+    name: { en: "Rents climb", cy: "Rhenti'n dringo", cy_review: true }
+    origin: outside
+    good: false
+    track: prices
+    severity: 2
+    trigger:
+      - { kind: track, track: prices, at_least: 0.5 }
+      - { kind: measure, measure: work, op: at_least, value: 5 }
+    target: { pick: highest_measure, measure: work }
+    warning: { en: "Rents in {councils} are climbing fast. People on low pay are being priced out.", cy: "Mae rhenti yn {councils} yn dringo'n gyflym. Mae pobl ar gyflog isel yn methu fforddio.", cy_review: true }
+    landed: { en: "Families on low pay left {council} for cheaper rents.", cy: "Gadawodd teuluoedd ar gyflog isel {council} am renti rhatach.", cy_review: true }
+    effects:
+      - { kind: measure, measure: homes, points: -0.4 }
+      - { kind: young_adults, points: -0.2 }
+    size:
+      - when: [{ kind: project, project: social-homes, where: here }]
+        factor: 0.5
+      - when: [{ kind: project, project: buses-meet-trains, where: here }]
+        factor: 0.5
+    prepared_by: [social-homes, buses-meet-trains]
+    responses:
+      - { id: accept, name: { en: "Let the market settle", cy: "Gadael i'r farchnad setlo", cy_review: true }, what: { en: "Do nothing and hope rents level off.", cy: "Gwneud dim a gobeithio bydd rhenti'n sefydlogi.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: key-worker-homes, name: { en: "Homes for key workers", cy: "Cartrefi i weithwyr allweddol", cy_review: true }, what: { en: "Rent homes at a fair price to nurses, carers and bus drivers.", cy: "Rhentu cartrefi am bris teg i nyrsys, gofalwyr a gyrwyr bysiau.", cy_review: true }, cost: 2, effects: [{ kind: measure, measure: homes, points: 0.2 }, { kind: young_adults, points: 0.1 }], handled_well: true }
+    sources: [ons_affordability, housing-elasticity]
+
+  - id: fuel-jump
+    name: { en: "Fuel costs jump", cy: "Costau tanwydd yn neidio", cy_review: true }
+    origin: outside
+    good: false
+    track: prices
+    severity: 2
+    trigger:
+      - { kind: track, track: prices, at_least: 0.6 }
+      - { kind: measure, measure: climate, op: below, value: 5 }
+    target: { pick: lowest_measure, measure: climate }
+    warning: { en: "Fuel prices are jumping. People who must drive to work in {councils} will feel it most.", cy: "Mae prisiau tanwydd yn neidio. Pobl sy'n gorfod gyrru i'r gwaith yn {councils} fydd yn ei deimlo fwyaf.", cy_review: true }
+    landed: { en: "Fuel costs hit drivers in {council}. Some gave up jobs they could not reach.", cy: "Tarodd costau tanwydd yrwyr yn {council}. Rhoddodd rhai'r gorau i swyddi na allen nhw eu cyrraedd.", cy_review: true }
+    effects:
+      - { kind: measure, measure: work, points: -0.2 }
+      - { kind: measure, measure: homes, points: -0.2 }
+      - { kind: backing, points: -0.2 }
+    size:
+      - when: [{ kind: project, project: buses-meet-trains, where: here }]
+        factor: 0.5
+      - when: [{ kind: project, project: frequent-trains, where: here }]
+        factor: 0.5
+    prepared_by: [buses-meet-trains, frequent-trains]
+    responses:
+      - { id: accept, name: { en: "Ride it out", cy: "Dal ati", cy_review: true }, what: { en: "Wait for fuel prices to fall.", cy: "Aros i brisiau tanwydd ostwng.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: cheap-fares, name: { en: "Cheap fares for a year", cy: "Prisiau rhad am flwyddyn", cy_review: true }, what: { en: "Cut bus and train fares so people can still get to work.", cy: "Torri prisiau bysiau a threnau fel bod pobl yn dal i gyrraedd y gwaith.", cy_review: true }, cost: 1, effects: [{ kind: measure, measure: climate, points: 0.1 }, { kind: backing, points: 0.2 }], handled_well: true }
+    sources: [nomis_census_ts061, desnz_la_ghg]
+
+  # ===========================================================================
+  # Grown from the board: trouble
+  - id: tip-moves
+    name: { en: "A tip moves", cy: "Tomen yn symud", cy_review: true }
+    origin: grown
+    good: false
+    severity: 0
+    once: true
+    trigger:
+      - { kind: risk, risk: tip, at_least: 3 }
+      - { kind: track, track: weather, at_least: 0.5 }
+      - { kind: project, project: coal-tips-safe, where: here, not: true }
+    target: { pick: any }
+    warning: { en: "The ground is wet above {council}. An old coal tip could slip.", cy: "Mae'r tir yn wlyb uwchben {council}. Gallai hen domen lo lithro.", cy_review: true }
+    landed: { en: "A coal tip slipped above {council}. Nobody was hurt, but people are frightened.", cy: "Llithrodd tomen lo uwchben {council}. Chafodd neb ei anafu, ond mae ofn ar bobl.", cy_review: true }
+    effects:
+      - { kind: measure, measure: nature, points: -0.5 }
+      - { kind: measure, measure: homes, points: -0.2 }
+      - { kind: backing, points: -0.5 }
+    size: []
+    prepared_by: [coal-tips-safe]
+    visit: rhondda
+    responses:
+      - { id: accept, name: { en: "Clear the slip", cy: "Clirio'r llithriad", cy_review: true }, what: { en: "Clear the road and move on.", cy: "Clirio'r ffordd a symud ymlaen.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: make-safe-now, name: { en: "Make the worst tips safe now", cy: "Gwneud y tomenni gwaethaf yn ddiogel nawr", cy_review: true }, what: { en: "Drain and watch the riskiest tips above homes, starting today.", cy: "Draenio a gwylio'r tomenni mwyaf peryglus uwchben cartrefi, o heddiw.", cy_review: true }, cost: 3, effects: [{ kind: risk, risk: tip, steps: -1 }, { kind: backing, points: 0.3 }], handled_well: true }
+    sources: [coal-tip-safety, bgs-landslide]
+
+  - id: employer-leaves
+    name: { en: "The big employer leaves", cy: "Y cyflogwr mawr yn gadael", cy_review: true }
+    origin: grown
+    good: false
+    severity: 0
+    once: true
+    trigger:
+      - { kind: project, project: big-employer, where: here }
+      - { kind: track, track: economy, at_least: 0.5 }
+      - { kind: project, tag: college, where: within_link, not: true }
+    target: { pick: any }
+    warning: { en: "The big employer in {council} is reviewing its sites.", cy: "Mae'r cyflogwr mawr yn {council} yn adolygu ei safleoedd.", cy_review: true }
+    landed: { en: "The big employer closed its site in {council}. Workers who came in by train lost out too.", cy: "Caeodd y cyflogwr mawr ei safle yn {council}. Collodd gweithwyr a ddaeth ar y trên hefyd.", cy_review: true }
+    effects:
+      - { kind: measure, measure: work, points: -1.0, jobs: true }
+      - { kind: young_adults, points: -0.2 }
+      - { kind: backing, points: -0.4 }
+    size: []
+    prepared_by: [skills-college, back-local-firms]
+    responses:
+      - { id: accept, name: { en: "Let it go", cy: "Gadael iddo fynd", cy_review: true }, what: { en: "The site stands empty for now.", cy: "Mae'r safle'n wag am y tro.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: new-use, name: { en: "Find a new use for the site", cy: "Dod o hyd i ddefnydd newydd i'r safle", cy_review: true }, what: { en: "Split the site into units for smaller local firms.", cy: "Rhannu'r safle'n unedau i gwmnïau lleol llai.", cy_review: true }, cost: 3, effects: [{ kind: measure, measure: work, points: 0.4, jobs: true }, { kind: risk, risk: employer, steps: -1 }], handled_well: true }
+    sources: [plant-closure, inward-investment]
+
+  - id: buying-rush
+    name: { en: "Buying rush up the line", cy: "Rhuthr prynu i fyny'r lein", cy_review: true }
+    origin: grown
+    good: false
+    severity: 0
+    trigger:
+      - { kind: link_quality, at_least: 2 }
+      - { kind: flag, flag: valley }
+      - { kind: project, tag: homes, where: here, not: true }
+    target: { pick: any }
+    warning: { en: "Now the trains are frequent, buyers from the city are looking at {council}.", cy: "Nawr bod y trenau'n aml, mae prynwyr o'r ddinas yn edrych ar {council}.", cy_review: true }
+    landed: { en: "Homes in {council} got dearer fast. Young locals were priced out.", cy: "Aeth cartrefi yn {council} yn ddrutach yn gyflym. Doedd pobl ifanc leol ddim yn gallu fforddio.", cy_review: true }
+    effects:
+      - { kind: measure, measure: homes, points: -0.5 }
+      - { kind: young_adults, points: -0.2 }
+    size: []
+    prepared_by: [social-homes]
+    responses:
+      - { id: accept, name: { en: "Let it run", cy: "Gadael iddo redeg", cy_review: true }, what: { en: "Rising prices bring some money into the town.", cy: "Mae prisiau'n codi yn dod â pheth arian i'r dref.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: homes-for-locals, name: { en: "Buy homes for local rent", cy: "Prynu cartrefi i'w rhentu'n lleol", cy_review: true }, what: { en: "Buy empty homes and rent them to local people at a fair price.", cy: "Prynu cartrefi gwag a'u rhentu i bobl leol am bris teg.", cy_review: true }, cost: 2, effects: [{ kind: measure, measure: homes, points: 0.3 }, { kind: young_adults, points: 0.1 }], handled_well: true }
+    sources: [housing-elasticity, ons_affordability]
+
+  - id: surgery-closes
+    name: { en: "The surgery closes", cy: "Y feddygfa'n cau", cy_review: true }
+    origin: grown
+    good: false
+    severity: 0
+    trigger:
+      - { kind: measure, measure: health, op: below, value: 4 }
+      - { kind: share, share: age65, op: at_least, value: 20 }
+      - { kind: project, tag: services, where: here, not: true }
+    target: { pick: lowest_measure, measure: health }
+    warning: { en: "A doctors' surgery in {council} may close. Its doctors are retiring.", cy: "Gall meddygfa yn {council} gau. Mae ei meddygon yn ymddeol.", cy_review: true }
+    landed: { en: "A surgery closed in {council}. Older people now travel further to see a doctor.", cy: "Caeodd meddygfa yn {council}. Mae pobl hŷn yn teithio'n bellach nawr i weld meddyg.", cy_review: true }
+    effects:
+      - { kind: measure, measure: health, points: -0.3 }
+      - { kind: backing, points: -0.5, group: older }
+    size: []
+    prepared_by: [buses-meet-trains]
+    responses:
+      - { id: accept, name: { en: "Let it close", cy: "Gadael iddi gau", cy_review: true }, what: { en: "Patients move to the next town's surgery.", cy: "Mae cleifion yn symud i feddygfa'r dref nesaf.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: keep-open, name: { en: "Keep it open for now", cy: "Ei chadw ar agor am y tro", cy_review: true }, what: { en: "Pay to keep the doors open while you find new doctors.", cy: "Talu i gadw'r drysau ar agor tra byddwch yn chwilio am feddygon newydd.", cy_review: true }, cost: 2, effects: [{ kind: measure, measure: health, points: 0.2 }, { kind: backing, points: 0.3, group: older }], handled_well: true }
+    sources: [prevention-returns, nomis_mye]
+
+  - id: young-leave
+    name: { en: "Young people leave", cy: "Pobl ifanc yn gadael", cy_review: true }
+    origin: grown
+    good: false
+    severity: 0
+    trigger:
+      - { kind: flag, flag: valley }
+      - { kind: measure, measure: work, op: falling }
+      - { kind: project, tag: college, where: within_link, not: true }
+    target: { pick: lowest_measure, measure: work }
+    warning: { en: "Young people in {council} are talking about leaving for work elsewhere.", cy: "Mae pobl ifanc yn {council} yn sôn am adael am waith yn rhywle arall.", cy_review: true }
+    landed: { en: "More young adults left {council} than came.", cy: "Gadawodd mwy o oedolion ifanc {council} nag a ddaeth.", cy_review: true }
+    effects:
+      - { kind: young_adults, points: -0.3 }
+      - { kind: measure, measure: welsh, points: -0.1 }
+    size: []
+    prepared_by: [skills-college]
+    responses:
+      - { id: accept, name: { en: "Wish them well", cy: "Dymuno'n dda iddyn nhw", cy_review: true }, what: { en: "Some will come back one day.", cy: "Bydd rhai'n dod yn ôl ryw ddydd.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: first-jobs, name: { en: "Fund first jobs", cy: "Ariannu swyddi cyntaf", cy_review: true }, what: { en: "Pay local firms to take on school leavers for their first year.", cy: "Talu cwmnïau lleol i gyflogi pobl sy'n gadael ysgol am eu blwyddyn gyntaf.", cy_review: true }, cost: 2, effects: [{ kind: young_adults, points: 0.2 }, { kind: measure, measure: work, points: 0.1 }], handled_well: true }
+    sources: [ons-internal-migration]
+
+  - id: damp-homes
+    name: { en: "Damp in old homes", cy: "Lleithder mewn hen gartrefi", cy_review: true }
+    origin: grown
+    good: false
+    severity: 0
+    trigger:
+      - { kind: measure, measure: homes, op: below, value: 4 }
+      - { kind: track, track: prices, at_least: 0.4 }
+      - { kind: project, tag: warmth, where: here, not: true }
+    target: { pick: lowest_measure, measure: homes }
+    warning: { en: "Damp and mould are spreading in old homes in {council}.", cy: "Mae lleithder a llwydni'n lledu mewn hen gartrefi yn {council}.", cy_review: true }
+    landed: { en: "Children in {council} fell ill in cold, damp homes.", cy: "Aeth plant yn {council} yn sâl mewn cartrefi oer a llaith.", cy_review: true }
+    effects:
+      - { kind: measure, measure: health, points: -0.3 }
+      - { kind: measure, measure: homes, points: -0.2 }
+    size: []
+    prepared_by: [warm-terraces]
+    responses:
+      - { id: accept, name: { en: "Leave it to landlords", cy: "Gadael i landlordiaid", cy_review: true }, what: { en: "Landlords are told to fix their homes.", cy: "Dywedir wrth landlordiaid am drwsio eu cartrefi.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: fix-worst, name: { en: "Fix the worst homes", cy: "Trwsio'r cartrefi gwaethaf", cy_review: true }, what: { en: "Fix the worst damp before winter.", cy: "Trwsio'r lleithder gwaethaf cyn y gaeaf.", cy_review: true }, cost: 1, effects: [{ kind: measure, measure: health, points: 0.2 }], handled_well: true }
+    sources: [cold-homes-health, wimd_2025]
+
+  - id: water-in-new-homes
+    name: { en: "Water in new homes", cy: "Dŵr mewn cartrefi newydd", cy_review: true }
+    origin: grown
+    good: false
+    severity: 0
+    trigger:
+      - { kind: risk, risk: flood, at_least: 3 }
+      - { kind: track, track: weather, at_least: 0.5 }
+      - { kind: law, law: flood-plain-rule, not: true }
+    target: { pick: highest_risk, risk: flood }
+    warning: { en: "New homes in {council} were built where the river spreads.", cy: "Cafodd cartrefi newydd yn {council} eu codi lle mae'r afon yn lledu.", cy_review: true }
+    landed: { en: "Water reached new homes in {council}. The people who bought them are angry.", cy: "Cyrhaeddodd dŵr gartrefi newydd yn {council}. Mae'r bobl a'u prynodd yn flin.", cy_review: true }
+    effects:
+      - { kind: measure, measure: homes, points: -0.3 }
+      - { kind: backing, points: -0.3 }
+    size: []
+    prepared_by: [slow-the-water]
+    responses:
+      - { id: accept, name: { en: "Clear up", cy: "Clirio", cy_review: true }, what: { en: "Dry out and carry on.", cy: "Sychu a bwrw ymlaen.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: flood-doors, name: { en: "Flood doors and pumps", cy: "Drysau llifogydd a phympiau", cy_review: true }, what: { en: "Pay for flood doors and pumps on the streets at risk.", cy: "Talu am ddrysau llifogydd a phympiau ar y strydoedd sydd mewn perygl.", cy_review: true }, cost: 2, effects: [{ kind: measure, measure: homes, points: 0.2 }, { kind: risk, risk: flood, steps: -1 }], handled_well: true }
+    sources: [statswales_flood, nrw-flood-risk]
+
+  - id: city-rents
+    name: { en: "The city prices people out", cy: "Y ddinas yn rhy ddrud", cy_review: true }
+    origin: grown
+    good: false
+    severity: 0
+    trigger:
+      - { kind: flag, flag: city }
+      - { kind: measure, measure: work, op: rising }
+      - { kind: project, tag: social_homes, where: here, not: true }
+    target: { pick: any }
+    warning: { en: "{council} is booming. Rents are rising faster than pay.", cy: "Mae {council} yn ffynnu. Mae rhenti'n codi'n gynt na chyflogau.", cy_review: true }
+    landed: { en: "Nurses and bus drivers can no longer afford to live in {council}.", cy: "Dydy nyrsys a gyrwyr bysiau ddim yn gallu fforddio byw yn {council} mwyach.", cy_review: true }
+    effects:
+      - { kind: measure, measure: homes, points: -0.4 }
+      - { kind: measure, measure: health, points: -0.1 }
+    size: []
+    prepared_by: [social-homes]
+    responses:
+      - { id: accept, name: { en: "Let the city grow", cy: "Gadael i'r ddinas dyfu", cy_review: true }, what: { en: "More people commute in from further away.", cy: "Mae mwy o bobl yn cymudo o bellach i ffwrdd.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: key-workers, name: { en: "Homes for key workers", cy: "Cartrefi i weithwyr allweddol", cy_review: true }, what: { en: "Build homes at a fair rent for the people the city runs on.", cy: "Codi cartrefi am rent teg i'r bobl sy'n cadw'r ddinas i fynd.", cy_review: true }, cost: 2, effects: [{ kind: measure, measure: homes, points: 0.3 }], handled_well: true }
+    sources: [ons_affordability, housing-elasticity]
+
+  - id: fewer-hear-welsh
+    name: { en: "Fewer children hear Welsh", cy: "Llai o blant yn clywed Cymraeg", cy_review: true }
+    origin: grown
+    good: false
+    severity: 0
+    trigger:
+      - { kind: measure, measure: welsh, op: below, value: 3 }
+      - { kind: project, tag: welsh, where: here, not: true }
+      - { kind: year, from: 2032 }
+    target: { pick: lowest_measure, measure: welsh }
+    warning: { en: "Few children in {council} hear Welsh outside school.", cy: "Ychydig o blant yn {council} sy'n clywed Cymraeg y tu allan i'r ysgol.", cy_review: true }
+    landed: { en: "Welsh-medium classes in {council} shrank this year.", cy: "Aeth dosbarthiadau cyfrwng Cymraeg yn {council} yn llai eleni.", cy_review: true }
+    effects:
+      - { kind: measure, measure: welsh, points: -0.2 }
+    size: []
+    prepared_by: [welsh-school]
+    responses:
+      - { id: accept, name: { en: "Leave it to schools", cy: "Gadael i'r ysgolion", cy_review: true }, what: { en: "Schools carry on as they are.", cy: "Mae ysgolion yn parhau fel y maen nhw.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: welsh-clubs, name: { en: "Welsh clubs after school", cy: "Clybiau Cymraeg ar ôl ysgol", cy_review: true }, what: { en: "Fund sport, music and youth clubs in Welsh.", cy: "Ariannu chwaraeon, cerddoriaeth a chlybiau ieuenctid yn Gymraeg.", cy_review: true }, cost: 1, effects: [{ kind: measure, measure: welsh, points: 0.2 }], handled_well: true }
+    sources: [welsh-medium-transmission, statswales_plasc_welsh_home]
+
+  - id: hill-fire
+    name: { en: "A fire on the hill", cy: "Tân ar y mynydd", cy_review: true }
+    origin: grown
+    good: false
+    severity: 0
+    trigger:
+      - { kind: flag, flag: coal_valley }
+      - { kind: track, track: weather, at_least: 0.6 }
+      - { kind: project, branch: landscape, where: here, not: true }
+    target: { pick: any }
+    warning: { en: "The grass on the hills above {council} is very dry. Fires could start.", cy: "Mae'r glaswellt ar y bryniau uwchben {council} yn sych iawn. Gallai tanau gychwyn.", cy_review: true }
+    landed: { en: "A fire burned on the hill above {council}. Smoke filled the valley.", cy: "Llosgodd tân ar y mynydd uwchben {council}. Llenwodd mwg y cwm.", cy_review: true }
+    effects:
+      - { kind: measure, measure: nature, points: -0.4 }
+      - { kind: measure, measure: health, points: -0.1 }
+    size: []
+    prepared_by: [slow-the-water]
+    responses:
+      - { id: accept, name: { en: "Leave it to the fire crews", cy: "Gadael i'r criwiau tân", cy_review: true }, what: { en: "The crews put it out. The hill recovers slowly.", cy: "Mae'r criwiau'n ei ddiffodd. Mae'r mynydd yn gwella'n araf.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: fire-breaks, name: { en: "Fire breaks and wardens", cy: "Bylchau tân a wardeiniaid", cy_review: true }, what: { en: "Cut fire breaks and pay wardens to watch the hills.", cy: "Torri bylchau tân a thalu wardeiniaid i wylio'r bryniau.", cy_review: true }, cost: 1, effects: [{ kind: measure, measure: nature, points: 0.2 }], handled_well: true }
+    sources: [ukcp18, greenspace-health]
+
+  - id: river-dirty
+    name: { en: "The river runs dirty", cy: "Mae'r afon yn fudr", cy_review: true }
+    origin: grown
+    good: false
+    severity: 0
+    trigger:
+      - { kind: feature, feature: river }
+      - { kind: measure, measure: nature, op: below, value: 4 }
+      - { kind: project, tag: nature, where: within_link, not: true }
+    target: { pick: lowest_measure, measure: nature }
+    warning: { en: "The river through {council} is getting dirtier. Fish are dying.", cy: "Mae'r afon drwy {council} yn mynd yn fudrach. Mae pysgod yn marw.", cy_review: true }
+    landed: { en: "The river in {council} failed its health check.", cy: "Methodd yr afon yn {council} ei phrawf iechyd.", cy_review: true }
+    effects:
+      - { kind: measure, measure: nature, points: -0.3 }
+      - { kind: measure, measure: health, points: -0.1 }
+    size: []
+    prepared_by: [slow-the-water]
+    responses:
+      - { id: accept, name: { en: "Wait and watch", cy: "Aros a gwylio", cy_review: true }, what: { en: "Keep testing the water.", cy: "Dal i brofi'r dŵr.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: fix-drains, name: { en: "Fix the worst drains", cy: "Trwsio'r draeniau gwaethaf", cy_review: true }, what: { en: "Fix the worst drains and stop mud washing off fields.", cy: "Trwsio'r draeniau gwaethaf ac atal mwd rhag golchi oddi ar gaeau.", cy_review: true }, cost: 2, effects: [{ kind: measure, measure: nature, points: 0.3 }], handled_well: true }
+    sources: [nrw_wfd_rivers_2021]
+
+  # ===========================================================================
+  # Grown from the board: good news
+  - id: school-full
+    name: { en: "The school is full", cy: "Mae'r ysgol yn llawn", cy_review: true }
+    origin: grown
+    good: true
+    severity: 0
+    once: true
+    trigger:
+      - { kind: project, project: welsh-school, where: here }
+      - { kind: measure, measure: welsh, op: rising }
+    target: { pick: any }
+    warning: { en: "The Welsh-medium school in {council} is filling up.", cy: "Mae'r ysgol Gymraeg yn {council} yn llenwi.", cy_review: true }
+    landed: { en: "Families in {council} want more Welsh-medium places.", cy: "Mae teuluoedd yn {council} eisiau mwy o lefydd cyfrwng Cymraeg.", cy_review: true }
+    effects:
+      - { kind: backing, points: 0.2, group: welsh_speakers }
+    size: []
+    prepared_by: []
+    responses:
+      - { id: accept, name: { en: "Not now", cy: "Ddim nawr", cy_review: true }, what: { en: "Some families are turned away.", cy: "Mae rhai teuluoedd yn cael eu troi i ffwrdd.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: second-school, name: { en: "Open a second school", cy: "Agor ail ysgol", cy_review: true }, what: { en: "Open a second Welsh-medium school in an empty building.", cy: "Agor ail ysgol Gymraeg mewn adeilad gwag.", cy_review: true }, cost: 1, effects: [{ kind: measure, measure: welsh, points: 0.4 }, { kind: young_adults, points: 0.1 }], handled_well: true }
+    sources: [welsh-medium-transmission, statswales_plasc_school_language]
+
+  - id: firm-grows
+    name: { en: "A firm wants to grow here", cy: "Mae cwmni eisiau tyfu yma", cy_review: true }
+    origin: grown
+    good: true
+    severity: 0
+    once: true
+    trigger:
+      - { kind: project, project: skills-college, where: here }
+      - { kind: link_quality, at_least: 2 }
+      - { kind: measure, measure: work, op: rising }
+    target: { pick: any }
+    warning: { en: "A firm in {council} is looking for room to grow.", cy: "Mae cwmni yn {council} yn chwilio am le i dyfu.", cy_review: true }
+    landed: { en: "A firm in {council} took on people from the college.", cy: "Cyflogodd cwmni yn {council} bobl o'r coleg.", cy_review: true }
+    effects:
+      - { kind: measure, measure: work, points: 0.2, jobs: true }
+    size: []
+    prepared_by: []
+    responses:
+      - { id: accept, name: { en: "Wish them well", cy: "Dymuno'n dda iddyn nhw", cy_review: true }, what: { en: "The firm grows at its own pace.", cy: "Mae'r cwmni'n tyfu ar ei gyflymder ei hun.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: help-grow, name: { en: "Help with land and power", cy: "Help gyda thir a phŵer", cy_review: true }, what: { en: "Find the firm land and a power supply near the station.", cy: "Dod o hyd i dir a chyflenwad pŵer i'r cwmni ger yr orsaf.", cy_review: true }, cost: 1, effects: [{ kind: measure, measure: work, points: 0.4, jobs: true }, { kind: risk, risk: employer, steps: -1 }], handled_well: true }
+    sources: [apprenticeship-outcomes, transport-labour]
+
+  - id: families-return
+    name: { en: "Young families move back", cy: "Teuluoedd ifanc yn symud yn ôl", cy_review: true }
+    origin: grown
+    good: true
+    severity: 0
+    once: true
+    trigger:
+      - { kind: project, tag: homes, where: here }
+      - { kind: link_quality, at_least: 2 }
+      - { kind: measure, measure: work, op: rising }
+    target: { pick: any }
+    warning: { en: "Young families who left {council} are looking at homes there again.", cy: "Mae teuluoedd ifanc a adawodd {council} yn edrych ar gartrefi yno eto.", cy_review: true }
+    landed: { en: "Young families moved back to {council}. The school roll went up.", cy: "Symudodd teuluoedd ifanc yn ôl i {council}. Aeth nifer y plant yn yr ysgol i fyny.", cy_review: true }
+    effects:
+      - { kind: young_adults, points: 0.3 }
+      - { kind: measure, measure: welsh, points: 0.1 }
+    size: []
+    prepared_by: []
+    responses:
+      - { id: accept, name: { en: "Welcome them", cy: "Eu croesawu", cy_review: true }, what: { en: "The town makes room as best it can.", cy: "Mae'r dref yn gwneud lle orau y gall.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: more-places, name: { en: "More nursery and school places", cy: "Mwy o lefydd meithrin ac ysgol", cy_review: true }, what: { en: "Add nursery and school places so the families stay.", cy: "Ychwanegu llefydd meithrin ac ysgol fel bod y teuluoedd yn aros.", cy_review: true }, cost: 1, effects: [{ kind: young_adults, points: 0.1 }, { kind: measure, measure: welsh, points: 0.1 }], handled_well: true }
+    sources: [ons-internal-migration, housing-elasticity]
+
+  - id: walkers-come
+    name: { en: "Walkers find the valleys", cy: "Cerddwyr yn darganfod y cymoedd", cy_review: true }
+    origin: grown
+    good: true
+    severity: 0
+    once: true
+    trigger:
+      - { kind: project, project: valleys-park, where: here }
+    target: { pick: any }
+    warning: { en: "Walkers are finding the paths above {council}.", cy: "Mae cerddwyr yn darganfod y llwybrau uwchben {council}.", cy_review: true }
+    landed: { en: "Walkers filled the cafés and paths of {council}.", cy: "Llenwodd cerddwyr gaffis a llwybrau {council}.", cy_review: true }
+    effects:
+      - { kind: measure, measure: work, points: 0.2, jobs: true }
+      - { kind: measure, measure: health, points: 0.1 }
+    size: []
+    prepared_by: []
+    responses:
+      - { id: accept, name: { en: "Enjoy it", cy: "Mwynhau", cy_review: true }, what: { en: "Let the visitors come.", cy: "Gadael i'r ymwelwyr ddod.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: visitor-centre, name: { en: "A small visitor centre", cy: "Canolfan ymwelwyr fach", cy_review: true }, what: { en: "Build a visitor centre with a café run by local people.", cy: "Codi canolfan ymwelwyr gyda chaffi wedi'i redeg gan bobl leol.", cy_review: true }, cost: 2, effects: [{ kind: measure, measure: work, points: 0.3, jobs: true }], handled_well: true }
+    sources: [greenspace-health]
+
+  - id: neighbours-share
+    name: { en: "Neighbours want a share", cy: "Cymdogion eisiau cyfran", cy_review: true }
+    origin: grown
+    good: true
+    severity: 0
+    once: true
+    trigger:
+      - { kind: project, project: community-energy, where: here }
+      - { kind: track, track: prices, at_least: 0.5 }
+    target: { pick: any }
+    warning: { en: "Energy prices are high. Villages near {council} want a share in its local power.", cy: "Mae prisiau ynni'n uchel. Mae pentrefi ger {council} eisiau cyfran yn ei bŵer lleol.", cy_review: true }
+    landed: { en: "People in {council} paid less for power this winter.", cy: "Talodd pobl yn {council} lai am bŵer y gaeaf hwn.", cy_review: true }
+    effects:
+      - { kind: measure, measure: homes, points: 0.3 }
+      - { kind: backing, points: 0.3 }
+    size: []
+    prepared_by: []
+    responses:
+      - { id: accept, name: { en: "Good for them", cy: "Da iawn nhw", cy_review: true }, what: { en: "The scheme stays as it is.", cy: "Mae'r cynllun yn aros fel y mae.", cy_review: true }, cost: 0, effects: [], handled_well: false }
+      - { id: share-out, name: { en: "Help the next village join", cy: "Helpu'r pentref nesaf i ymuno", cy_review: true }, what: { en: "Help a neighbouring village set up its own share.", cy: "Helpu pentref cyfagos i sefydlu ei gyfran ei hun.", cy_review: true }, cost: 1, effects: [{ kind: measure, measure: homes, points: 0.1, where: linked }, { kind: measure, measure: climate, points: 0.2 }], handled_well: true }
+    sources: [community-energy]

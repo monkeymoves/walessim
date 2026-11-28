@@ -1,7 +1,7 @@
 // A small hash router: #/, #/heddiw, #/heddiw/<laCode>, #/yfory, #/llyfr, #/llyfr/<page>[/<id>].
 import { createRoot, createSignal } from "solid-js";
 
-export type RouteName = "title" | "heddiw" | "yfory" | "llyfr";
+export type RouteName = "title" | "heddiw" | "yfory" | "llyfr" | "bwrdd";
 export interface Route {
   name: RouteName;
   /** Path parts after the route name. */
@@ -13,6 +13,8 @@ export function parseHash(hash: string): Route {
   const parts = path.split("/").filter(Boolean).map(decodeURIComponent);
   const head = parts.shift();
   if (head === "heddiw" || head === "yfory" || head === "llyfr") return { name: head, parts };
+  // the board (v2), beside v1: docs/design/v2-board.md
+  if (head === "bwrdd") return { name: head, parts };
   return { name: "title", parts: [] };
 }
 

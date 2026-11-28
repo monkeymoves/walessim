@@ -614,3 +614,19 @@ E. Back to A     with eight new personas. Personas are never reused.
 ### 14.4 After the prototype passes
 
 In order: the other three regions on the same engine (the rest of the 22 councils, the two further branches, Bethesda back in), a place for every council, the ensemble and "probably" wording, laws in full, the daily game, sound, and the sandbox for testing a policy against many futures. v1 stays live until the full board passes the same bar on all of Wales, then becomes "the short game".
+
+## 15. Owner's direction after the first build started (27 November 2026)
+
+Two notes from Luke, to fold into the design before phase 2:
+
+1. **Time flows.** "What about a more time game, where things are set in motion and the clock plays in
+   real time but accelerated... a timer game, or some time line." Not a card game. Direction: real time
+   with pause, in the family of Frostpunk, Mini Metro and Plague Inc. The clock runs (speeds, pause at
+   any moment, automatic pause for an event, an election or a place asking); the player acts while it
+   runs or while paused; builds take months and years and visibly progress on the map; effects travel
+   along links as you watch. The engine keeps a fixed small step (for example a quarter year) and a log
+   of actions with the step they were taken at, so a game is still deterministic and replayable.
+2. **Good stories whether you win or lose, and never doomed.** He played v1 to 2042 and felt it was a
+   doomed game with one shape. A losing game must still be a story worth having, with its own ending
+   and letter, and the baseline must not feel like a slow slide no choice can stop. Different paths
+   must produce materially different Waleses, which section 5.4 and the endings promise.

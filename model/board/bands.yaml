@@ -1,0 +1,115 @@
+# Reference bands for the board, written by pipeline/board/bands.py. Do not edit by hand.
+# origin v1: copied from model/bands.yaml. origin board: the lowest and highest of the 22 Welsh
+# councils, each pushed out by a tenth of the gap (player label: compared with the rest of Wales).
+# score = 10 * (value - floor) / (goal - floor), clamped 0 to 10.
+generated: '2026-11-26'
+note: Bands for the indicators that seed the six measures.
+bands:
+  employment:
+    floor: 63.7
+    goal: 79.1
+    higher_is_better: true
+    origin: v1
+    source: nomis_aps
+  earnings:
+    floor: 635.73
+    goal: 902.7
+    higher_is_better: true
+    origin: v1
+    source: nomis_ashe
+  jobs_density:
+    floor: 0.41
+    goal: 1.01
+    higher_is_better: true
+    origin: board
+    source: nomis_jobs_density
+  level4:
+    floor: 23.17
+    goal: 69.13
+    higher_is_better: true
+    origin: board
+    source: sw_qualifications
+  affordability:
+    floor: 11.991
+    goal: 4.94
+    higher_is_better: false
+    origin: v1
+    source: ons_affordability
+  poor_housing:
+    floor: 30.87
+    goal: 9.63
+    higher_is_better: false
+    origin: board
+    source: statswales_wimd2025_la
+  social_housing:
+    floor: 7.8692
+    goal: 25.7385
+    higher_is_better: true
+    origin: board
+    source: statswales_dwelling_stock
+  temp_accommodation:
+    floor: 85.6229
+    goal: -0.2401
+    higher_is_better: false
+    origin: board
+    source: statswales_temp_accommodation
+  healthy_life_exp:
+    floor: 49.59
+    goal: 65.31
+    higher_is_better: true
+    origin: board
+    source: ons_hle_local
+  premature_deaths:
+    floor: 522.73
+    goal: 285.97
+    higher_is_better: false
+    origin: board
+    source: statswales_wimd2025_la
+  flood_exposure:
+    floor: 53.9581
+    goal: 0.0
+    higher_is_better: false
+    origin: v1
+    source: statswales_flood
+  river_good_status:
+    floor: -7.0048
+    goal: 77.053
+    higher_is_better: true
+    origin: board
+    source: nrw_wfd_rivers_2021
+  woodland_cover:
+    floor: 1.3412
+    goal: 42.9407
+    higher_is_better: true
+    origin: board
+    source: fc_nfi_gb_2024
+  welsh_speakers:
+    floor: 3.5367
+    goal: 33.1326
+    higher_is_better: true
+    origin: v1
+    source: cymraeg_2050
+  welsh_medium_pupils:
+    floor: -4.2821
+    goal: 95.7271
+    higher_is_better: true
+    origin: board
+    source: statswales_plasc_school_language
+  emissions_head:
+    floor: 31.8613
+    goal: 0.0
+    higher_is_better: false
+    origin: v1
+    source: desnz_la_ghg
+  home_energy_efficiency:
+    floor: 53.67
+    goal: 68.43
+    higher_is_better: true
+    origin: board
+    source: statswales_wimd2025_la
+  drive_to_work:
+    floor: 82.8168
+    goal: 60.8848
+    higher_is_better: false
+    origin: board
+    source: nomis_census_ts061

@@ -47,3 +47,48 @@ Use the **Term** column in code, docs and talk between builders. Use the **Playe
 | **Seed** | The number that fixes a game's draws. | Game number / Rhif y gêm |
 | **Voice** (Llais) | A one-line, illustrative quote from a real place each term. | A made-up voice, to show how it might feel |
 | **Letter** (Llythyr) | The 2050 generation's verdict at the end. | the letter; its archetype title shows as "Ending found: The hollow years (1 of 6)" |
+
+## The board (v2, route `#/bwrdd`)
+
+Terms for the bigger game in `docs/design/v2-board.md`. Code names are in `src/board/engine/types.ts`. v1 terms above keep their meaning on the v1 route. Welsh player words are drafts for review.
+
+| Term | Meaning | Player sees (English / Welsh) |
+|---|---|---|
+| **Board** (`BoardModel`, `BoardState`) | The new game, played on the map of real councils; also its compiled model and its state. | the board (code name only); the game is still Etifeddiaeth / y bwrdd |
+| **Turn** (board) | Two years. Twelve turns, 2026 to 2050. Delays are counted in turns. | years, not counts: "Works from 2032" / tro |
+| **Council** (`CouncilCode`) | One of the 22 local authorities, the board's unit of state. Ten in the South East prototype. | council / cyngor |
+| **Measure** (`MeasureId`) | One of six council scores out of 10: `work`, `homes`, `health`, `nature`, `welsh`, `climate`. Seeded from real indicators in 2026, game estimates after. | Work and pay, Homes and community, Health, Nature and floods, Welsh and culture, Climate; "6 out of 10" / Gwaith a chyflog, Cartrefi a chymuned, Iechyd, Natur a llifogydd, Y Gymraeg a diwylliant, Hinsawdd |
+| **Fairness** (board) | The Wales level gap between the three lowest councils and the middle council, across all six measures. Not a council measure. | Fairness; "who is behind" / Tegwch; "pwy sydd ar ei hôl hi" |
+| **Seed** (board) | A measure's 2026 score: the plain mean of its indicators' scores through their bands. Never adjusted. | Real figure, 2025 / Ffigur go iawn |
+| **Board band** | A band for an indicator v1 has none for: lowest and highest of the 22 councils pushed out by a tenth. | compared with the rest of Wales / o'i gymharu â gweddill Cymru |
+| **Project** (`ProjectDef`, `ProjectState`) | Something built at a site (a council or a rail link). Costs coins, takes turns to build, then works for the rest of the game. One of each per site. | project; "Being built", "Working", "Run down" / prosiect; Yn cael ei adeiladu, Yn gweithio, Wedi dirywio |
+| **Site** | Where a project stands: a council, or a rail link between two. | here; "on the line between X and Y" / yma |
+| **Level** | A project's size, 1 to 3. Upgrading needs the next tier of its branch. | Level 2 / Lefel 2 |
+| **Branch** | One of four lines of projects: Joined-up valleys, Made here, Living landscape, Good homes and strong communities. | the same names, on the Tree sheet / Cymoedd cysylltiedig, Wedi'i wneud yma, Tirwedd fyw, Cartrefi da a chymunedau cryf |
+| **Tier** | A branch's step, 1 to 3. Tier 2 opens with three tier 1 projects of the branch working anywhere; tier 3 with two tier 2. | "Opens when 3 of these are working" / haen |
+| **Keystone** | A branch's tier 3 project. Takes three turns, so it must start by 2042. Decides most endings. | keystone / maen clo |
+| **Link** (`LinkDef`) | A real connection between two councils: commuting (who works where), rail (a line with stations) or river (upstream to downstream). | link; commuting, rail line, river / cyswllt; cymudo, rheilffordd, afon |
+| **Link quality** | A rail link's service: 1 as now, 2 frequent, 3 fast and frequent. Raised by a link project. | Trains: as now, frequent, fast and frequent / Trenau: fel nawr, aml, cyflym ac aml |
+| **Stub** | A link end off the board (another council, Bristol, England), drawn at the map edge. Cannot be built on. | the place name, faded / enw'r lle |
+| **Spread** (rule kind) | An effect that travels one hop along a link (rules S1 to S4). See ADR 0005. | "travelled along the line from X" in Why? / "teithiodd ar hyd y lein o X" |
+| **Requires** (rule kind) | A condition that must hold before a project, tier or level opens. See ADR 0005. | "Needs: ..." on a locked project / "Angen: ..." |
+| **Pair** | Two things worth more together, or a thing that goes wrong without its partner. | "Works better with", "Goes wrong without" / "Yn gweithio'n well gyda", "Yn mynd o chwith heb" |
+| **Law** (board) | A Wales wide rule. Costs Backing somewhere, never coins. One change per election term. | law / deddf |
+| **Group** | One of five kinds of people with a real share in each council (Everyone has a fixed weight, a game rule). Groups overlap. | Young adults, Older people, Families on low incomes, Welsh speakers, Everyone; "People can be in more than one group." / Oedolion ifanc, Pobl hŷn, Teuluoedd ar incwm isel, Siaradwyr Cymraeg, Pawb |
+| **Mood** | One group's feeling in one council, 0 to 10, moving slowly. Shown only in words. | unhappy, uneasy, content, pleased / anhapus, anesmwyth, bodlon, hapus |
+| **Backing** (Cefnogaeth) | A council's support for you, 0 to 10: the groups' moods weighted by real shares. Replaces Trust on the board. Always a game estimate. | "Blaenau Gwent does not back you (4 out of 10)"; never a percentage / "Nid yw Blaenau Gwent yn eich cefnogi" |
+| **Election** (board) | In 2030, 2034, 2038, 2042 and 2046. A council backs you at 5 or more; you win with councils holding more than half the people. | Strong win, Win, Lost; "6 of 10 councils back you" / Buddugoliaeth gref, Ennill, Colli |
+| **Weak hand** | Four years after a lost election: fewer coins, no law changes, and councils that did not back you refuse big builds. | "You scraped back in with help from others" / "Fe ddaethoch yn ôl gyda help eraill" |
+| **Risk step** | A council's flood, coal tip or one-employer risk, 0 to 3. A game estimate seeded from real flags. | Flood risk: high / Perygl llifogydd: uchel |
+| **Event** (board) | Data in `events.yaml`. Outside events come from the future's tracks; grown events are triggered by the board. Always warned a turn ahead, with a place. | the same as v1's slips: a warning, then what happened / digwyddiad |
+| **Forecast** | The warned events for the end of this turn, with the councils most at risk. | "Heavy rain is likely over the Taff" / rhagolwg |
+| **Future** | One of four hidden pressure patterns (weather, economy, prices) drawn from the game number. | revealed a turn at a time: "The wet decades" / dyfodol |
+| **Start** | What you were elected on: a promise, a free tier 1 project and who backs you first. | "What you were elected on" / "Beth y cawsoch eich ethol arno" |
+| **Severity budget** | Every game number draws the same outside trouble (rule E1); only kind and timing differ. | not shown; the rule book says "every game carries the same weight of trouble" |
+| **Ending** (`EndingDef`) | One of eight named Waleses picked from the shape of the 2050 board, with evidence lines. | "You built: The city and its bedrooms" / "Fe wnaethoch adeiladu: ..." |
+| **The Wales not built** | The nearest ending the player's branches could have reached, shown as a ghost map. | "This could have been The joined-up valleys" / "Gallai hyn fod wedi bod yn ..." |
+| **Frame** | The board at one moment; one per turn, for the time-lapse and then and now. | the time-lapse / treigl amser |
+| **Run code** | The game number, the start and every step, short enough to paste. Replays the same game. | Run code / Cod y gêm |
+| **Contribution** | One recorded part of a change: council, quantity, size, rule, first cause and the link it travelled. Every Why? is built from them. | Why? / Pam? |
+| **Honesty label** | Real, game estimate, game rule (and illustrative for placeholders). On every figure. | Real, Game estimate, Game rule / Go iawn, Amcangyfrif y gêm, Rheol y gêm |
+| **Fixture** | The three council test model (Merthyr Tydfil, Rhondda Cynon Taf, Cardiff). Real seeds, illustrative links and numbers. Never shown as the real board. | not shown |

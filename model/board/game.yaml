@@ -1,0 +1,28 @@
+# The board's calendar and structure (docs/design/v2-board.md sections 3, 6 and 11).
+# Structure only: every balance number is a rule card param under model/board/rules/.
+# Election years are the real Senedd calendar. Twelve two-year turns, 2026 to 2050.
+region: { en: South East Wales, cy: De Ddwyrain Cymru, cy_review: true }
+# The ten councils in play, in display order: Bridgend, Vale of Glamorgan, Cardiff,
+# Rhondda Cynon Taf, Caerphilly, Blaenau Gwent, Torfaen, Monmouthshire, Newport, Merthyr Tydfil.
+councils:
+  - W06000013
+  - W06000014
+  - W06000015
+  - W06000016
+  - W06000018
+  - W06000019
+  - W06000020
+  - W06000021
+  - W06000022
+  - W06000024
+first_year: 2026
+turn_years: 2
+turns: 12
+end_year: 2050
+election_years: [2030, 2034, 2038, 2042, 2046]
+# A keystone takes three turns (six years), so it must start by 2042 to stand in 2050.
+keystone_last_start_year: 2042
+visits_per_turn: 1
+report_lines_max: 3
+# Saves are set and removed key by key under this prefix, never cleared wholesale.
+save_key: etifeddiaeth.board.v1.

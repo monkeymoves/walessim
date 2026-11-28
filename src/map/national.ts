@@ -340,6 +340,7 @@ export class NationalSheet {
 
     // markers sit on the paper, under the names; stitches and the thread lie on top
     if (this.layers.markers) this.drawMarkers(ctx);
+    if (this.links.length) this.drawLinks(ctx);
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.drawImage(this.getLabels(), 0, 0);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -439,6 +440,91 @@ export class NationalSheet {
     }
   }
 
+  // ---------------------------------------------------------------- links (the board, v2)
+
+  /** Real links between places (commuting, rail, rivers), drawn under the names. Set by PaperMap.setLinks. */
+  links: MapLink[] = [];
+
+  private linkEnd(end: MapLinkEnd): Pt | null {
+    return "la" in end ? this.anchorOf(end.la) : this.project(end.x, end.y);
+  }
+
+  /**
+   * One link's curve in host px: a single smooth sag, bowed to one side by kind so that a rail
+   * line, a commute and a river between the same two places lie side by side, not on top.
+   */
+  linkCurve(l: MapLink): { a: Pt; c: Pt; b: Pt } | null {
+    const a = this.linkEnd(l.from), b = this.linkEnd(l.to);
+    if (!a || !b) return null;
+    const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy) || 1;
+    const bow = (l.kind === "commute" ? 0.16 : l.kind === "river" ? -0.16 : 0.04) * len;
+    // the bow is to the same side of the pair whichever end is "from", so pairs never cross over
+    const sign = a[0] < b[0] || (a[0] === b[0] && a[1] < b[1]) ? 1 : -1;
+    const c: Pt = [(a[0] + b[0]) / 2 - (dy / len) * bow * sign, (a[1] + b[1]) / 2 + (dx / len) * bow * sign];
+    return { a, c, b };
+  }
+
+  private drawLinks(ctx: Ctx): void {
+    const pal = this.pal;
+    const at = (q: { a: Pt; c: Pt; b: Pt }, t: number): Pt => {
+      const u = 1 - t;
+      return [u * u * q.a[0] + 2 * u * t * q.c[0] + t * t * q.b[0], u * u * q.a[1] + 2 * u * t * q.c[1] + t * t * q.b[1]];
+    };
+    const order = (l: MapLink) => (l.state === "lit" ? 2 : l.state === "dim" ? 0 : 1);
+    const sorted = [...this.links].sort((x, y) => order(x) - order(y));
+    ctx.save();
+    ctx.lineCap = "butt";
+    ctx.lineJoin = "round";
+    for (const l of sorted) {
+      const q = this.linkCurve(l);
+      if (!q) continue;
+      const w = Math.max(1, Math.min(3, l.weight ?? 1));
+      const p = new Path2D();
+      p.moveTo(q.a[0], q.a[1]);
+      p.quadraticCurveTo(q.c[0], q.c[1], q.b[0], q.b[1]);
+      ctx.globalAlpha = l.state === "dim" ? 0.28 : 1;
+      // a pale underlay keeps every line legible over the relief and over dark lens tints
+      ctx.setLineDash([]);
+      ctx.strokeStyle = withAlpha(pal.paper, 0.7);
+      ctx.lineWidth = 1.6 + w * 1.4;
+      ctx.stroke(p);
+      if (l.kind === "rail") {
+        // the map symbol for a railway: a line with cross ties
+        ctx.strokeStyle = pal.ink; ctx.lineWidth = 0.9 + w * 0.6; ctx.stroke(p);
+        ctx.lineWidth = 1;
+        const n = Math.max(3, Math.round(Math.hypot(q.b[0] - q.a[0], q.b[1] - q.a[1]) / 9));
+        for (let i = 1; i < n; i++) {
+          const [x0, y0] = at(q, (i - 0.02) / n), [x1, y1] = at(q, (i + 0.02) / n);
+          const dx = x1 - x0, dy = y1 - y0, d = Math.hypot(dx, dy) || 1, h = 2.2 + w;
+          const [x, y] = at(q, i / n);
+          ctx.beginPath(); ctx.moveTo(x - (dy / d) * h, y + (dx / d) * h); ctx.lineTo(x + (dy / d) * h, y - (dx / d) * h); ctx.stroke();
+        }
+      } else if (l.kind === "river") {
+        ctx.strokeStyle = "#2C5778"; ctx.lineWidth = 0.8 + w * 0.7; ctx.stroke(p);
+        ctx.strokeStyle = "rgba(195,213,223,.9)"; ctx.lineWidth = 0.6; ctx.setLineDash([5, 4]); ctx.stroke(p);
+      } else {
+        // commuting: a dotted path of people going to work, heavier for a bigger share
+        ctx.strokeStyle = pal.ink2; ctx.lineWidth = 0.9 + w * 0.5; ctx.setLineDash([1.5, 3.5 + w * 0.5]); ctx.stroke(p);
+      }
+      if (l.state === "lit") {
+        // the player's own preview: a cobalt running stitch along the line
+        ctx.globalAlpha = 1;
+        ctx.setLineDash([11, 6]);
+        ctx.strokeStyle = withAlpha(pal.paper, 0.85); ctx.lineWidth = 5; ctx.stroke(p);
+        ctx.strokeStyle = pal.threadStitch; ctx.lineWidth = 3; ctx.stroke(p);
+      }
+      if (l.pulse != null && l.pulse >= 0 && l.pulse <= 1) {
+        ctx.globalAlpha = 1;
+        ctx.setLineDash([]);
+        const t = l.reverse ? 1 - l.pulse : l.pulse;
+        const [x, y] = at(q, t), r = 3.2 + w * 0.8;
+        ctx.fillStyle = pal.paper; ctx.beginPath(); ctx.arc(x, y, r + 1.6, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = l.state === "lit" ? pal.threadStitchDark : pal.ink; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
   /** Which authority is under a px point. The lifted selection is tested at its lifted position first. */
   hit(px: number, py: number): LaCode | null {
     if (this.selected) {
@@ -452,3 +538,22 @@ export class NationalSheet {
 }
 
 const anchor = (a: string): CanvasTextAlign => (a === "middle" ? "center" : a === "end" ? "end" : "start");
+
+/** One end of a link: an authority (its label point) or a point in the km frame (a stub at the edge). */
+export type MapLinkEnd = { la: LaCode } | { x: number; y: number };
+
+/** A real connection between two places, for the board (docs/design/v2-board.md section 4.2). */
+export interface MapLink {
+  id: string;
+  from: MapLinkEnd;
+  to: MapLinkEnd;
+  /** "rail" is drawn as a line with cross ties, "river" in woad, "commute" as a dotted path. */
+  kind: "commute" | "rail" | "river" | string;
+  /** 1 to 3: line weight (rail quality, a commuting share step). */
+  weight?: number;
+  /** "rest" (default), "lit" (the player's preview, a cobalt running stitch on top) or "dim". */
+  state?: "rest" | "lit" | "dim";
+  /** 0 to 1: a bead travelling along the link, from `from` to `to` (or back with `reverse`). */
+  pulse?: number | null;
+  reverse?: boolean;
+}

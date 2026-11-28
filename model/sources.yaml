@@ -631,3 +631,51 @@ sources:
   notes: 30,110 records fetched 27 November 2026. Cadw asks for the attribution Designated Historic Asset GIS Data, The Welsh
     Historic Environment Service (Cadw), 27 November 2026, licensed under the Open Government Licence. Per head uses ONS mid-2025
     population (nomis_mye).
+- id: nomis_census_odwp01ew
+  title: Census 2021 ODWP01EW Location of usual residence and place of work (origin-destination data) via Nomis
+  publisher: Office for National Statistics, via Nomis
+  url: https://www.nomisweb.co.uk/sources/census_2021_od
+  api_url: https://www.nomisweb.co.uk/output/census/2021/odwp01ew.zip (file ODWP01EW_LTLA.csv)
+  licence: Open Government Licence v3.0 (ONS Crown copyright)
+  licence_url: https://www.nomisweb.co.uk/home/copyright.asp
+  accessed: '2026-11-27'
+  notes: Board commuting links (pipeline/board/commute.py). Workers living in one council whose fixed workplace is in another,
+    divided by all workers living there (including those at or from home). Census day 21 March 2021 fell in the pandemic and
+    ONS advises great caution using travel to work data for planning. Counts carry record swapping and small random changes.
+    Attribution to show is Source Office for National Statistics, licensed under the Open Government Licence v3.0.
+- id: osm_rail_wales
+  title: OpenStreetMap railway lines and stations in Wales (via the Overpass API), crossed with local authority outlines
+  publisher: OpenStreetMap contributors
+  url: https://www.openstreetmap.org/copyright
+  licence: Open Database Licence (ODbL) 1.0
+  licence_url: https://www.openstreetmap.org/copyright
+  accessed: '2026-11-26'
+  notes: model/data/wales-rail.json. The board derives its rail links from this at build (scripts/board/rail-links.ts). A rail
+    link means a named line with stations runs between two councils, not a timetable. Names are OSM name tags.
+- id: ons_lad_boundaries
+  title: Local authority district boundaries, December 2023 (BGC), used for the map outlines
+  publisher: Office for National Statistics, Open Geography Portal
+  url: https://geoportal.statistics.gov.uk/
+  licence: Open Government Licence v3.0 (ONS Crown copyright; contains OS data)
+  licence_url: https://www.ons.gov.uk/help/termsandconditions
+  accessed: '2026-11-26'
+  notes: Outlines in public/data/wales-geo.json (see its _note). Used by the board to find which council a stretch of railway
+    lies in.
+- id: os_open_rivers
+  title: OS Open Rivers
+  publisher: Ordnance Survey
+  url: https://www.ordnancesurvey.co.uk/products/os-open-rivers
+  licence: Open Government Licence v3.0 (OS OpenData)
+  licence_url: https://www.ordnancesurvey.co.uk/products/os-open-rivers
+  accessed: '2026-11-27'
+  notes: Basis for the river order in model/board/links.yaml (which council is upstream of which on the Taff, Rhymney, Ebbw, Afon
+    Lwyd, Usk and Ely). Authored from knowledge of the river courses and not yet checked against the file, so every river row
+    carries to_check. A river link is a direction, not a flow figure.
+- id: nrw_catchments
+  title: Natural Resources Wales river catchment maps (Water Watch Wales, Taff, Usk and Severn catchments)
+  publisher: Natural Resources Wales
+  url: https://naturalresources.wales/evidence-and-data/maps/
+  licence: Open Government Licence v3.0 (NRW open data)
+  licence_url: https://naturalresources.wales/evidence-and-data/
+  accessed: '2026-11-27'
+  notes: Second reference for the river order in model/board/links.yaml. Not yet checked against the maps (to_check).

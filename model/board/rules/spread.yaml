@@ -1,0 +1,115 @@
+note: >
+  Rule cards for effects that travel along real links (S1 to S4, docs/design/v2-board.md section
+  4.3, ADR 0005). One hop only: an effect reaches a direct neighbour on a link and stops. The links
+  themselves are real (commuting shares from the 2021 Census, rail lines, river order). How strongly
+  an effect travels is a rough guess with no evidence behind its size, so every card is a game rule
+  and its params are marked tune. The engine reads them by id (RULE_IDS in
+  src/board/engine/types-model.ts) in src/board/engine/spread.ts.
+rules:
+  - id: S1
+    theme: spread
+    kind: spread
+    name: { en: Jobs travel home, cy: Mae swyddi'n teithio adref, cy_review: true }
+    note:
+      en: New work in a place also lifts Work and pay in the places its workers come from.
+      cy: Mae gwaith newydd mewn lle yn codi Gwaith a chyflog yn llefydd ei weithwyr.
+      cy_review: true
+    params:
+      coef: { default: 1, min: 0.5, max: 2, unit: { en: times the commuting share, cy: gwaith y gyfran sy'n cymudo, cy_review: true }, adjustable: true, tune: true }
+      quality_step: { default: 0.5, min: 0, max: 1, unit: { en: extra for each step of rail quality above 1, cy: ychwanegol am bob cam o ansawdd rheilffordd uwchben 1, cy_review: true }, adjustable: true, tune: true }
+      strength_share: { default: 0.05, min: 0.01, max: 0.1, unit: { en: commuting share for each strength step where the real share is missing, cy: cyfran sy'n cymudo am bob cam cryfder lle mae'r gyfran go iawn ar goll, cy_review: true }, adjustable: true, tune: true }
+    lag: 0
+    spread:
+      links: [commute]
+      travel: to_home
+      input: work
+      output: work
+      sign: 1
+      weight: share
+      quality_multiplies: true
+      lag: 0
+      only_from_projects: true
+    sources: [nomis_census_odwp01ew]
+    confidence: low
+    evidence: placeholder
+    game_rule: true
+  - id: S2
+    theme: spread
+    kind: spread
+    name: { en: Prices travel up the line, cy: Mae prisiau'n teithio i fyny'r lein, cy_review: true }
+    note:
+      en: When a place booms, homes get dearer along the lines into it. Homes built there hold prices back.
+      cy: Pan mae lle'n ffynnu, mae cartrefi'n mynd yn ddrutach ar hyd y llinellau iddo. Mae cartrefi sydd wedi'u hadeiladu yno yn dal prisiau'n ôl.
+      cy_review: true
+    params:
+      coef: { default: 0.4, min: 0.1, max: 1, unit: { en: times the commuting share, cy: gwaith y gyfran sy'n cymudo, cy_review: true }, adjustable: true, tune: true }
+      tag_block: { default: 0.5, min: 0, max: 1, unit: { en: share blocked by each homes project in the place, cy: cyfran sy'n cael ei rhwystro gan bob prosiect cartrefi yn y lle, cy_review: true }, adjustable: true, tune: true }
+      strength_share: { default: 0.05, min: 0.01, max: 0.1, unit: { en: commuting share for each strength step where the real share is missing, cy: cyfran sy'n cymudo am bob cam cryfder lle mae'r gyfran go iawn ar goll, cy_review: true }, adjustable: true, tune: true }
+    lag: 0
+    spread:
+      links: [commute]
+      travel: to_home
+      input: work
+      output: homes
+      sign: -1
+      weight: share
+      quality_multiplies: true
+      lag: 0
+      blocked_by_tags: [homes]
+    sources: [nomis_census_odwp01ew]
+    confidence: low
+    evidence: placeholder
+    game_rule: true
+  - id: S3
+    theme: spread
+    kind: spread
+    name: { en: Young people follow work and homes, cy: Mae pobl ifanc yn dilyn gwaith a chartrefi, cy_review: true }
+    note:
+      en: Young adults move towards places with work they can reach and homes they can afford. A place that loses them loses some work and Welsh too.
+      cy: Mae oedolion ifanc yn symud at lefydd gyda gwaith o fewn cyrraedd a chartrefi fforddiadwy. Mae lle sy'n eu colli yn colli rhywfaint o waith a Chymraeg hefyd.
+      cy_review: true
+    params:
+      share: { default: 0.3, min: 0.1, max: 1, unit: { en: most percentage points that can move on one link in a turn, cy: y mwyaf o bwyntiau canran sy'n gallu symud ar un cyswllt mewn tro, cy_review: true }, adjustable: true, tune: true }
+      pull: { default: 0.1, min: 0, max: 0.5, unit: { en: percentage points for each point of gap, cy: pwyntiau canran am bob pwynt o fwlch, cy_review: true }, adjustable: true, tune: true }
+      quality_step: { default: 0.5, min: 0, max: 1, unit: { en: extra for each step of rail quality above 1, cy: ychwanegol am bob cam o ansawdd rheilffordd uwchben 1, cy_review: true }, adjustable: true, tune: true }
+      work_per_point: { default: 0.1, min: 0, max: 0.5, unit: { en: Work and pay points lost for each percentage point of young adults lost, cy: pwyntiau Gwaith a chyflog a gollir am bob pwynt canran o oedolion ifanc a gollir, cy_review: true }, adjustable: true, tune: true }
+      welsh_per_point: { default: 0.1, min: 0, max: 0.5, unit: { en: Welsh and culture points lost for each percentage point of young adults lost, cy: pwyntiau'r Gymraeg a diwylliant a gollir am bob pwynt canran o oedolion ifanc a gollir, cy_review: true }, adjustable: true, tune: true }
+    lag: 0
+    spread:
+      links: [commute, rail]
+      travel: towards_better
+      input: work
+      output: young_adults
+      sign: 1
+      weight: one
+      quality_multiplies: true
+      lag: 0
+    sources: []
+    confidence: low
+    evidence: placeholder
+    game_rule: true
+  - id: S4
+    theme: spread
+    kind: spread
+    name: { en: Water runs downhill, cy: Mae dŵr yn rhedeg i lawr y bryn, cy_review: true }
+    note:
+      en: What is done upstream is felt downstream. Slowing the water cuts flood risk below it a turn later. Storms pass down the river.
+      cy: Mae'r hyn sy'n cael ei wneud i fyny'r afon yn cael ei deimlo i lawr yr afon. Mae arafu'r dŵr yn torri'r perygl o lifogydd islaw dro yn ddiweddarach. Mae stormydd yn pasio i lawr yr afon.
+      cy_review: true
+    params:
+      steps: { default: 1, min: 0, max: 2, unit: { en: flood risk steps cut downstream, cy: camau perygl llifogydd sy'n cael eu torri i lawr yr afon, cy_review: true }, adjustable: true, tune: true }
+      storm_weaken: { default: 0.25, min: 0, max: 0.5, unit: { en: share of a storm cut by each flood project in the way, cy: cyfran o storm sy'n cael ei thorri gan bob prosiect llifogydd yn y ffordd, cy_review: true }, adjustable: true, tune: true }
+    lag: 1
+    spread:
+      links: [river]
+      travel: downstream
+      input: risk_flood
+      output: risk_flood
+      sign: 1
+      weight: one
+      quality_multiplies: false
+      lag: 1
+    sources: [os_open_rivers, nrw_catchments]
+    confidence: low
+    evidence: placeholder
+    game_rule: true
