@@ -73,11 +73,15 @@ export function App(): JSX.Element {
   );
 }
 
-/** The year slot in Heddiw: the era name is the one loud thing. */
+/** The slot in Heddiw: a small folded-map mark and two quiet lines, so the map stays the loud thing. */
 function HeddiwSlot(): JSX.Element {
   return (
     <>
-      <span class="t-year topbar-year">{t("play2.era.heddiw")}</span>
+      <span class="topbar-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22">
+          <path d="M3 6.5 9 4l6 2.5L21 4v13.5L15 20l-6-2.5L3 20Z M9 4v13.5 M15 6.5V20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" />
+        </svg>
+      </span>
       <span class="topbar-yearnote">
         <b>{t("shell.heddiw.line1")}</b>
         <span>{t("shell.heddiw.line2")}</span>
