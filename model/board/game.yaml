@@ -1,22 +1,11 @@
-# The board's calendar and structure (docs/design/v2-board.md sections 3, 6, 11 and 16.2).
-# Structure only: every balance number is a rule card param under model/board/rules/.
-# Election years are the real Senedd calendar. Time runs in steps of a quarter of a year:
-# step 0 is May 2026, the day after a Senedd election, and the game ends at step 96, May 2050.
-# An election is held on the first step of its year, so on steps 16, 32, 48, 64 and 80.
-region: { en: South East Wales, cy: De-ddwyrain Cymru, cy_review: true }
-# The ten councils in play, in display order: Bridgend, Vale of Glamorgan, Cardiff,
-# Rhondda Cynon Taf, Caerphilly, Blaenau Gwent, Torfaen, Monmouthshire, Newport, Merthyr Tydfil.
-councils:
-  - W06000013
-  - W06000014
-  - W06000015
-  - W06000016
-  - W06000018
-  - W06000019
-  - W06000020
-  - W06000021
-  - W06000022
-  - W06000024
+# The board's calendar and structure (docs/design/v2-board.md sections 3, 6, 11 and 16.2), the
+# same on every board. Structure only: every balance number is a rule card param under
+# model/board/rules/. Election years are the real Senedd calendar. Time runs in steps of a quarter
+# of a year: step 0 is May 2026, the day after a Senedd election, and the game ends at step 96,
+# May 2050. An election is held on the first step of its year, so on steps 16, 32, 48, 64 and 80.
+# The boards to build, in the order the picker shows them; the first opens at #/bwrdd. Each is a
+# folder under model/board/boards/ (ADR 0009). A folder not listed here is not built.
+boards: [southeast]
 first_year: 2026
 end_year: 2050
 years_per_step: 0.25
@@ -37,7 +26,7 @@ speeds:
   - { id: steady, ms_per_step: 4000 }
   - { id: brisk, ms_per_step: 2500 }
   - { id: fast, ms_per_step: 1500 }
-default_speed: steady
+default_speed: fast
 # What pauses the clock (section 16.2.5). Hard stops cannot be switched off; the rest are the
 # player's settings, on or off by default. The engine reports them all and never reads the settings.
 stops:
@@ -54,5 +43,6 @@ stops:
   purse_full: { on: true }
   finished: { on: false }
   year: { on: false }
-# Saves are set and removed key by key under this prefix, never cleared wholesale.
+# Saves are set and removed key by key under this prefix, never cleared wholesale. Each board saves
+# under the prefix and its own id ("etifeddiaeth.board.v2.southeast."), added by the build.
 save_key: etifeddiaeth.board.v2.

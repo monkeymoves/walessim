@@ -65,7 +65,7 @@ export default function PlaceVisit(): JSX.Element {
   });
 
   return (
-    <div class="bp-visit" role="dialog" aria-modal="true" aria-labelledby="bp-title" data-testid="bp-visit" ref={sheet} tabindex="-1">
+    <div class="bp-visit" role="dialog" aria-modal="true" aria-labelledby="bp-title" data-testid="bp-visit" data-needs-card ref={sheet} tabindex="-1">
       <Show when={place()} fallback={<Missing onLeave={leave} />}>
         {(p) => (
           <div class="bp-sheet sheet">
@@ -105,7 +105,7 @@ function Graded(props: { place: PlaceDef; grade: Grade; onDone: () => void }): J
       <p class="story">{t("boardend.place.result", { place: tx(props.place.name), grade: t(`boardend.grade.${props.grade}`) })}</p>
       <Show when={scaled()}><p class="small">{t("boardend.place.scales", { project: scaled() })}</p></Show>
       <p class="small">{t("boardend.place.honest")}</p>
-      <StampButton onClick={() => props.onDone()} data-testid="bp-done">{t("boardend.place.done")}</StampButton>
+      <StampButton onClick={() => props.onDone()} data-testid="bp-done" data-needs="visit">{t("boardend.place.done")}</StampButton>
     </div>
   );
 }
@@ -114,7 +114,7 @@ function Blocked(props: { reason: string; onLeave: () => void }): JSX.Element {
   return (
     <div class="bp-graded" data-testid="bp-blocked">
       <p class="story" role="status">{props.reason}</p>
-      <TabButton onClick={() => props.onLeave()} data-testid="bp-leave">{t("boardend.place.close")}</TabButton>
+      <TabButton onClick={() => props.onLeave()} data-testid="bp-leave" data-needs="visit">{t("boardend.place.close")}</TabButton>
     </div>
   );
 }
@@ -123,7 +123,7 @@ function Missing(props: { onLeave: () => void }): JSX.Element {
   return (
     <div class="bp-sheet sheet">
       <p class="t-3" id="bp-title">{t("boardend.place.missing")}</p>
-      <TabButton onClick={() => props.onLeave()}>{t("boardend.place.leave")}</TabButton>
+      <TabButton onClick={() => props.onLeave()} data-needs="visit">{t("boardend.place.leave")}</TabButton>
     </div>
   );
 }

@@ -4,7 +4,8 @@
  * scripts/board-balance.ts plays the games; bots.test.ts checks the measures on made-up runs.
  * Everything here is plain data, so runs can cross a process boundary as JSON.
  */
-import { flagged, keystonesStanding } from "./end-conditions";
+import { inArea } from "./areas";
+import { keystonesStanding } from "./end-conditions";
 import { pickEnding } from "./endings";
 import { frameAtYear } from "./frame";
 import { councilMean, lowestCouncils, scores } from "./score";
@@ -36,8 +37,8 @@ export interface RunResult {
   vector2034: number[];
   /** Council measures, 0 to 10, per council in game order, MEASURE_IDS order. */
   measures: number[][];
-  /** Mean young adult share (in 100) of the valley councils in 2050. */
-  valleyYoung: number;
+  /** Mean young adult share (in 100) of the edge councils (area `edge`: the valleys on the South East) in 2050. */
+  edgeYoung: number;
   /** Lowest and highest young adult share of any council in any yearly frame, as a share of its 2026 value. */
   youngRatio: { min: number; max: number };
   /** Momentum changes over the game (yearly frames, all councils). */
@@ -119,7 +120,7 @@ export function runResult(model: BoardModel, bot: string, game: number, state: B
   const records = state.election.records;
   const lostAt = records.findIndex((r) => r.result === "lost");
   const lowest = first ? lowestCouncils(model, first.councils, 1)[0] : undefined;
-  const valleys = flagged(model, "valley").filter((c) => state.councils[c]);
+  const edge = inArea(model, "edge").filter((c) => state.councils[c]);
   return {
     bot, game, start: state.start, future: state.future, ending: pickEnding(model, state).id,
     result: sc.result, life: sc.life, startScore: sc.start,
@@ -128,7 +129,7 @@ export function runResult(model: BoardModel, bot: string, game: number, state: B
     vector: vectorOf(model, state.councils),
     vector2034: vectorOf(model, frameAtYear(state, 2034)?.councils ?? state.councils),
     measures: model.game.councils.map((c) => MEASURE_IDS.map((m) => state.councils[c]!.measures[m])),
-    valleyYoung: valleys.length ? valleys.reduce((a, c) => a + state.councils[c]!.young, 0) / valleys.length : NaN,
+    edgeYoung: edge.length ? edge.reduce((a, c) => a + state.councils[c]!.young, 0) / edge.length : NaN,
     youngRatio: { min: Math.min(...ratios), max: Math.max(...ratios) },
     tips, risen,
     electionsLost: records.filter((r) => r.result === "lost").length,

@@ -1,4 +1,6 @@
 # The tree: four branches, three tiers each (docs/design/v2-board.md section 5.3). Owner: package 10.
+# The first branch is each board's own, in model/board/boards/<id>/branch.yaml (ADR 0009); the
+# three here are shared by every board and come after it.
 #
 # Tier gates are GAME RULES (tune). Tier 2 (bigger projects) opens when three tier 1 projects of the
 # branch are working anywhere on the board (the same one in two councils counts twice). Tier 3, the
@@ -22,18 +24,6 @@ gate_notes:
     cy: "Mae'r maen clo yn agor pan fydd prosiect mwy'r gangen hon yn gweithio mewn dau gyngor. Dydy'r prosiect sy'n dod ar ôl y maen clo ddim yn cyfrif."
     cy_review: true
 branches:
-  - id: valleys
-    name: { en: "Joined-up valleys", cy: "Cymoedd cysylltiedig", cy_review: true }
-    note: { en: "Rail, towns and reach. Trains carry people both ways, so what waits at the valley end matters.", cy: "Rheilffyrdd, trefi a chyrraedd. Mae trenau'n cario pobl y ddwy ffordd, felly mae pen y cwm yn bwysig.", cy_review: true }
-    tiers:
-      - { tier: 1, opens: [] }
-      - tier: 2
-        opens:
-          - { kind: project, branch: valleys, tier: 1, where: anywhere, at_least: 3 }
-      - tier: 3
-        opens:
-          - { kind: project, project: station-quarter, branch: valleys, tier: 2, where: anywhere, at_least: 2 }
-
   - id: made_here
     name: { en: "Made here", cy: "Diwydiant lleol", cy_review: true }
     note: { en: "Skills and firms that stay. Quick wins are on offer, but some of them leave.", cy: "Sgiliau a chwmnïau sy'n aros. Mae enillion cyflym ar gael, ond mae rhai ohonyn nhw'n gadael.", cy_review: true }

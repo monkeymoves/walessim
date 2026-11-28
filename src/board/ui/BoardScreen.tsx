@@ -9,6 +9,9 @@
  * unread stay pinned at the head of the lane while it is free; Escape closes one thing, the top
  * one (./clock/keys.ts `escapeTarget`); and a card that waits for an answer takes the focus
  * itself, never on one of its answers, so no key answers it by chance (must fix 10).
+ *
+ * v3 (v3-wales.md section 2): whenever the clock waits for the player, a red outline marks the
+ * one thing to act on, and the top strip names it (./clock/NeedsYou.tsx).
  */
 import { createMemo, lazy, Match, onCleanup, onMount, Show, Switch, type Component, type JSX } from "solid-js";
 import { t } from "./lang";
@@ -16,6 +19,7 @@ import { PaperSheet, TabButton } from "../../ui/parts";
 import { BuildMenu } from "./BuildMenu";
 import type { Overlay } from "./clock/hold";
 import { clockKey, clockKeyUp, escapeTarget } from "./clock/keys";
+import { createNeeds, NeedsYou } from "./clock/NeedsYou";
 import { Settings } from "./clock/Settings";
 import { CouncilPanel } from "./CouncilPanel";
 import { useGame } from "./game";
@@ -39,6 +43,8 @@ const PlaceVisit = lazy(() => import("./place/index"));
 export function BoardScreen(props: { fixture: boolean }): JSX.Element {
   const game = useGame();
   const c = game.clock;
+  // the one thing the game waits for, outlined, and named in the top strip (./clock/waiting.ts)
+  const needs = createNeeds(game);
   // an answer is asked for only while the clock is held for it: once 2050 is reached nothing more can be answered
   const respond = createMemo(() => (game.state()?.phase === "respond" ? game.state()!.pending.find((p) => p.kind === "respond") ?? null : null));
   const head = () => c.queue()[0] ?? null;
@@ -82,7 +88,7 @@ export function BoardScreen(props: { fixture: boolean }): JSX.Element {
 
   return (
     <div class="bw-board" classList={{ "bw-dimmed": busy() }}>
-      <TopStrip />
+      <TopStrip needs={needs} />
       <div class="bw-stage">
         <MapStage />
         <div class="bw-right">
@@ -125,6 +131,7 @@ export function BoardScreen(props: { fixture: boolean }): JSX.Element {
         <Guide />
       </div>
       <Timeline />
+      <NeedsYou needs={needs} />
     </div>
   );
 }

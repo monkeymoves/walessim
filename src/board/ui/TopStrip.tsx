@@ -13,6 +13,9 @@
  * it (a full purse is said on its own line, never as "About +0 a year"), and when it has moved by a
  * quarter coin or more in the last year a line under it says why, from the engine's Why? for coins
  * (./clock/coins.ts `incomeParts`, `incomeChange`). The tip lists every part.
+ *
+ * v3: while the game waits for the player, a chip after the date says what for, in the outline's
+ * words, and takes the focus there (./clock/NeedsYou.tsx).
  */
 import { createEffect, createMemo, createSignal, Match, onCleanup, Show, Switch, type JSX } from "solid-js";
 import { formatNum, t, tn } from "./lang";
@@ -26,6 +29,7 @@ import { useGame } from "./game";
 import { backersNow, p4 } from "./electionTargets";
 import { ruleParamOf } from "./rules";
 import { capFirst, incomeWords, listOf, projectName } from "./words";
+import { NeedsChip, type Needs } from "./clock/NeedsYou";
 
 const INCOME_RULES = { coins: RULE_IDS.coins, careBill: RULE_IDS.careBill, momentum: RULE_IDS.momentum, weak: "B3" };
 
@@ -45,7 +49,7 @@ function CoinRing(props: { coins: number }): JSX.Element {
   );
 }
 
-export function TopStrip(): JSX.Element {
+export function TopStrip(props: { needs: Needs }): JSX.Element {
   const game = useGame();
   const model = game.model;
   const s = () => game.state()!;
@@ -156,6 +160,7 @@ export function TopStrip(): JSX.Element {
           <span>{t("boardui.strip.left", { n: Math.max(0, model.game.end_year - year()) })}</span>
         </span>
       </div>
+      <NeedsChip needs={props.needs} />
       <Tooltip heading={t("boardclock.purse.tipTitle")} content={[purse() > 0 ? t("boardclock.purse.tip", { n: purse() }) : t("boardui.strip.coinsNote"), partsWords()].filter(Boolean).join(" ")}>
         <div class="bw-coins" classList={{ soon: note().kind === "soon", full: note().kind === "full" }} tabindex="0" data-testid="bw-coins">
           <CoinRing coins={s().coins} />

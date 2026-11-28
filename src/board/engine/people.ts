@@ -10,6 +10,7 @@
  * Read only helper for projects.ts: `fasterBuild`.
  */
 import type { StepCtx } from "./ctx";
+import { isInArea } from "./areas";
 import { allEndHold } from "./end-conditions";
 import { backingFrom, moveMoods, shiftMoods } from "./people-moods";
 import { optParam, param } from "./rules";
@@ -36,7 +37,7 @@ export function seedPeople(ctx: StepCtx): void {
     c.lastReachedStep = null;
     const def = model.councils.find((x) => x.code === code);
     const points = (start?.backing ?? [])
-      .filter((b) => (b.council ? b.council === code : b.flag ? def?.flags.includes(b.flag) : false))
+      .filter((b) => (b.council ? b.council === code : b.area ? isInArea(model, code, b.area) : b.flag ? def?.flags.includes(b.flag) : false))
       .reduce((a, b) => a + b.points, 0);
     if (points !== 0) shiftMoods(ctx, code, points * nudge, undefined, RULE_IDS.backingStart, { kind: "start", start: draft.start });
   }

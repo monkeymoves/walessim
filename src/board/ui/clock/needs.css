@@ -1,0 +1,38 @@
+/* The needs-you outline (v3-wales.md section 2, ./NeedsYou.tsx): a 3 pixel thread red ring with a
+   white keyline inside it, so it reads on paper (red, 6.6:1) and on slate (white, 11:1), and a tab
+   in words, never colour alone. Its opacity is set each frame from ./pulse.ts. */
+.bw-needs { position: fixed; z-index: 80; pointer-events: none; box-sizing: border-box; }
+.bw-needs-ring {
+  position: absolute; inset: 0; box-sizing: border-box;
+  border: 3px solid var(--thread); border-radius: var(--radius-cut);
+  box-shadow: inset 0 0 0 2px #FFFFFF;
+}
+.bw-needs-tab {
+  position: absolute; left: 0; bottom: 100%; margin-bottom: 1px;
+  padding: 2px 7px 2px; white-space: nowrap;
+  background: var(--thread); color: #FFFFFF; box-shadow: 0 0 0 1px #FFFFFF;
+  font-family: var(--font-grot); font-size: var(--size-label); line-height: var(--lh-label);
+  font-stretch: var(--wdth-label); font-weight: var(--wght-grot-strong);
+}
+.bw-needs.below .bw-needs-tab { bottom: auto; top: 100%; margin: 1px 0 0; }
+.bw-needs.end .bw-needs-tab { left: auto; right: 0; }
+.bw-needs.inside .bw-needs-tab { bottom: auto; top: 0; margin: 0; }
+/* room above each group of choices for the tab, so it never covers the card's words or the first
+   choice (Carry on gets its room from .bw-stop-row in clock.css) */
+ul[data-needs="answers"], ul[data-needs="deals"] { margin-top: 26px; }
+
+/* the chip in the top strip: the same words, a button that takes the focus to the target */
+.bw-needs-chip {
+  flex: 0 1 auto; min-width: 0; max-width: 190px; display: flex; align-items: center; gap: 8px;
+  padding: 4px 10px 4px 8px; cursor: pointer; text-align: left;
+  background: var(--paper); color: var(--ink); border: 2px solid var(--thread); border-radius: var(--radius-cut);
+  font: inherit; font-size: var(--size-label); line-height: 1.2; font-stretch: var(--wdth-label);
+}
+.bw-needs-chip:hover { background: var(--thread-tint); }
+.bw-needs-chip-words { display: grid; min-width: 0; }
+.bw-needs-chip-words > * { overflow: hidden; text-overflow: ellipsis; }
+.bw-needs-chip-words b { white-space: nowrap; }
+/* the action may take two lines, so the scores beside it keep their room (Welsh is longer) */
+.bw-needs-chip-words > span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
+.bw-needs-chip-words b { color: var(--thread-deep); font-weight: var(--wght-grot-strong); }
+.bw-needs-dot { flex: none; width: 10px; height: 10px; border-radius: var(--radius-round); background: var(--thread); box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 3px var(--thread); }

@@ -147,7 +147,7 @@ export function StopCard(props: { item: QueuedStop }): JSX.Element {
   // focus lands on the card, never on a button that answers it (cold playtest 10, must fix 10)
   onMount(() => card.focus({ preventScroll: true }));
   return (
-    <div ref={card} tabindex="-1" class={`bw-stop bw-lane bw-stop-${stop().kind}`} classList={{ "on-slate": stop().kind === "warning" }} role="alertdialog" aria-labelledby="bw-stop-title" aria-describedby="bw-stop-line" data-testid="bw-stop">
+    <div ref={card} tabindex="-1" class={`bw-stop bw-lane bw-stop-${stop().kind}`} classList={{ "on-slate": stop().kind === "warning" }} role="alertdialog" aria-labelledby="bw-stop-title" aria-describedby="bw-stop-line" data-testid="bw-stop" data-needs-card>
       <Show when={stop().kind === "warning"}><span class="bw-slip-pin" aria-hidden="true" /></Show>
       <p class="label bw-stop-when">
         {whenWords(model, props.item.step + 1, true)}. {title()}
@@ -182,14 +182,20 @@ export function StopCard(props: { item: QueuedStop }): JSX.Element {
         {(w) => <p class="small bw-stop-window" data-testid="bw-stop-window">{t("boardclock.warn.window", { from: whenWords(model, w.fromStep), to: whenWords(model, w.toStep) })}</p>}
       </Show>
       <div class="bw-stop-row">
-        <Show when={visitPlace()}>
-          <StampButton onClick={() => { c.look(); game.setVisit(visitPlace()!); }} why={visitBlock()} data-testid="bw-stop-visit">{t("boardui.stop.visitGo")}</StampButton>
-        </Show>
-        <Show when={stop().council}>
-          <TabButton onClick={look} data-testid="bw-stop-look">{t("boardui.stop.lookAt", { council: councilName(model, stop().council) })}</TabButton>
-        </Show>
-        <Show when={visitPlace()} fallback={<StampButton onClick={() => c.carryOn()} data-testid="bw-stop-on">{stop().kind === "ended" ? t("boardui.report.toEnd") : t("boardui.stop.carryOn")}</StampButton>}>
-          <TabButton onClick={() => c.carryOn()} data-testid="bw-stop-on">{t("boardui.stop.carryOn")}</TabButton>
+        {/* a visit offer is a choice, go or carry on: the needs-you outline goes round both */}
+        <Show when={visitPlace()} fallback={<>
+          <Show when={stop().council}>
+            <TabButton onClick={look} data-testid="bw-stop-look">{t("boardui.stop.lookAt", { council: councilName(model, stop().council) })}</TabButton>
+          </Show>
+          <StampButton onClick={() => c.carryOn()} data-testid="bw-stop-on" data-needs="carry-on">{stop().kind === "ended" ? t("boardui.report.toEnd") : t("boardui.stop.carryOn")}</StampButton>
+        </>}>
+          <div class="bw-stop-choose" data-needs="visit-offer">
+            <StampButton onClick={() => { c.look(); game.setVisit(visitPlace()!); }} why={visitBlock()} data-testid="bw-stop-visit">{t("boardui.stop.visitGo")}</StampButton>
+            <TabButton onClick={() => c.carryOn()} data-testid="bw-stop-on">{t("boardui.stop.carryOn")}</TabButton>
+          </div>
+          <Show when={stop().council}>
+            <TabButton onClick={look} data-testid="bw-stop-look">{t("boardui.stop.lookAt", { council: councilName(model, stop().council) })}</TabButton>
+          </Show>
         </Show>
       </div>
       <p class="small bw-stop-note" data-testid="bw-stop-note">

@@ -35,7 +35,7 @@
 import { openedNow } from "./clock-stops";
 import { eventRiver, isRiverEvent, riverAt } from "./events";
 import type { StepCtx } from "./ctx";
-import { flagged } from "./end-conditions";
+import { inArea } from "./areas";
 import { siteCouncil } from "./conditions";
 import { frameAtYear } from "./frame";
 import { regionTurnStep } from "./momentum";
@@ -171,7 +171,7 @@ export function termHolds(t: Term, c: TermCondition): boolean {
     case "tipped": return firstTips(t, c.to).length >= c.at_least;
     case "region_turn": return regionTurnedIn(t);
     case "young_adults": {
-      const codes = flagged(model, c.flag);
+      const codes = inArea(model, c.area);
       const moved = (change: number) => (c.change === "up" ? change >= c.by : -change >= c.by);
       if (c.councils_at_least !== undefined) {
         const n = codes.filter((x) => state.councils[x] && t.start?.councils[x] && moved(state.councils[x]!.young - t.start.councils[x]!.young)).length;

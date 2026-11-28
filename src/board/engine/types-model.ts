@@ -81,8 +81,9 @@ export type Honesty = "real" | "game_estimate" | "game_rule" | "illustrative";
 export type Confidence = "high" | "medium" | "low";
 export type EvidenceGrade = "assessed" | "published" | "expert" | "placeholder";
 
-/** Council flags, as v1 `model/authorities.yaml`. */
-export type CouncilFlag = "coal_valley" | "valley" | "city" | "coast" | "port" | "rural" | "heartland" | "slate" | "off_gas";
+/** Council flags, as v1 `model/authorities.yaml`: the one list the shape check and the build read. */
+export const COUNCIL_FLAGS = ["coal_valley", "valley", "city", "coast", "port", "rural", "heartland", "slate", "off_gas"] as const;
+export type CouncilFlag = (typeof COUNCIL_FLAGS)[number];
 
 /** What a council has that a project can need (derived at build from flags and links). */
 export type CouncilFeature = "rail" | "river" | "coal_tips" | "coast" | "city" | "port" | "valley";

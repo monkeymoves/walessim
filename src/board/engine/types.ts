@@ -10,6 +10,7 @@
  * - types-state.ts: `BoardState`, actions and the log, explanation records, frames, deals, the story
  * - types-views.ts: what the API returns (options, previews, reports, Why?, forecasts, views, the ending)
  * - types-clock.ts: the calendar, seasons, stops, step and term reports, the time line, momentum, deals and the story
+ * - types-board.ts: boards, areas and map groups (v3, ADR 0009)
  */
 export * from "./types-model";
 export * from "./types-content";
@@ -17,3 +18,4 @@ export * from "./types-story";
 export * from "./types-state";
 export * from "./types-views";
 export * from "./types-clock";
+export * from "./types-board";

@@ -5,16 +5,11 @@
 import { param } from "./rules";
 import { councilMean, fairnessGap, lowestCouncils } from "./score";
 import { yearOfStep } from "./time";
-import type { BoardModel, BoardState, CouncilCode, CouncilFlag, EndCondition, MeasureId } from "./types";
+import { inArea } from "./areas";
+import type { BoardModel, BoardState, CouncilCode, EndCondition, MeasureId } from "./types";
 import { RULE_IDS } from "./types";
 
 const mean = (xs: number[]): number => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
-
-/** Councils in play, or only those with the flag. */
-export function flagged(model: BoardModel, flag?: CouncilFlag): CouncilCode[] {
-  if (!flag) return [...model.game.councils];
-  return model.game.councils.filter((c) => model.councils.find((d) => d.code === c)?.flags.includes(flag));
-}
 
 /** Working keystones on the board. */
 export function keystonesStanding(model: BoardModel, state: BoardState): string[] {
@@ -57,21 +52,21 @@ export function endHolds(model: BoardModel, state: BoardState, c: EndCondition):
     }
     case "young_adults": {
       if (!then) return false;
-      const codes = flagged(model, c.flag);
+      const codes = inArea(model, c.area);
       const before = mean(codes.map((x) => then[x]?.young ?? 0));
       const after = mean(codes.map((x) => now[x]?.young ?? 0));
       return c.vs_2026 === "held" ? after >= before : after < before;
     }
     case "measure": {
       if (!then) return false;
-      const codes = flagged(model, c.flag);
+      const codes = inArea(model, c.area);
       const diff = measureMean(now, c.measure, codes) - measureMean(then, c.measure, codes);
       const by = c.by ?? 0;
       return c.vs_2026 === "up" ? diff > by || (by > 0 && diff >= by) : -diff > by || (by > 0 && -diff >= by);
     }
     case "wales": {
       if (!then) return false;
-      const codes = flagged(model);
+      const codes = inArea(model);
       const diff = mean(codes.map((x) => councilMean(now[x]!))) - mean(codes.map((x) => councilMean(then[x]!)));
       const by = c.by ?? 0;
       return c.vs_2026 === "better" ? diff > by || (by > 0 && diff >= by) : -diff > by || (by > 0 && -diff >= by);
@@ -103,7 +98,7 @@ export function endHolds(model: BoardModel, state: BoardState, c: EndCondition):
     }
     case "no_council_lower": {
       if (!then) return false;
-      return flagged(model).every((x) => !now[x] || !then[x] || councilMean(now[x]!) >= councilMean(then[x]!));
+      return inArea(model).every((x) => !now[x] || !then[x] || councilMean(now[x]!) >= councilMean(then[x]!));
     }
     case "event_landed": return state.events.some((e) => e.event === c.event);
   }

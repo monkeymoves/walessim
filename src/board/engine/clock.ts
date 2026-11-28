@@ -30,7 +30,7 @@ export function newBoard(model: BoardModel, gameNumber: number | string, start: 
   if (!startDef) throw new BoardActionError([{ kind: "not_offered" }], `No start called ${start}`);
   const seed = hashSeed(gameNumber);
   const state: BoardState = {
-    version: 2, modelHash: model.meta.hash, gameNumber, seed, start, future: drawFuture(model, seed),
+    version: 2, modelHash: model.meta.hash, board: model.game.board, gameNumber, seed, start, future: drawFuture(model, seed),
     step: 0, year: model.game.first_year, phase: "play", log: [], councils: seedCouncils(model), linkQuality: {},
     projects: [], coins: 0, freeProject: startDef.free_project, laws: [], lawChangesLeft: 1,
     election: { records: [], hungUntil: null, strongUntil: null }, promise: { byYear: startDef.promise.by_year, kept: null },

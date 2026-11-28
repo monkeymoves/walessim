@@ -30,6 +30,8 @@ const families: Record<string, readonly string[]> = {
   "income.part": ["budget", "earns", "rising", "care", "weak"],
   card: ["runs", "runsLook", "paused", "step", "count", "all", "stayPaused", "runAfter"],
   runup: ["label", "title"],
+  // the needs-you outline (./NeedsYou.tsx): the Close of each reading but a visit, which has its own words
+  "needs.what": ["build", "tree", "laws", "settings", "why", "warning", "term"],
 };
 
 describe("board clock copy", () => {

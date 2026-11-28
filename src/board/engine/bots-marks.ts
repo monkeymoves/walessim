@@ -130,7 +130,7 @@ export function balanceTable(runs: RunResult[], x: Extras = {}): Row[] {
   })) : NaN;
   row("The difference is on the map", `measures 2+ apart, ${most?.a ?? ""} v ${most?.b ?? ""}`, fmt(onMap), ">= 0.25", ok(onMap, (v) => v >= 0.25));
 
-  const valley = bots.map((b) => median(byBot(runs, b).map((r) => r.valleyYoung))).filter(Number.isFinite);
+  const valley = bots.map((b) => median(byBot(runs, b).map((r) => r.edgeYoung))).filter(Number.isFinite);
   const spreadYoung = valley.length ? Math.max(...valley) - Math.min(...valley) : NaN;
   row("People end up in different places", "valley young adults in 2050 (in 100): highest bot median less lowest", fmt(spreadYoung), ">= 3", ok(spreadYoung, (v) => v >= 3));
   const lo = Math.min(...runs.map((r) => r.youngRatio.min));

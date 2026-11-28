@@ -5,9 +5,9 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
-const KEY = "etifeddiaeth.board.v2.";
+import { BOARD_KEY as KEY } from "./board-key";
 
-interface Setup { lang: "en" | "cy"; stepByStep: boolean; speed?: string; softStops?: boolean }
+interface Setup { lang: "en" | "cy"; stepByStep: boolean; softStops?: boolean }
 
 /** A fresh board: no saved run, the guide done, the language and clock settings chosen. */
 async function fresh(page: Page, s: Setup): Promise<string[]> {
@@ -20,7 +20,7 @@ async function fresh(page: Page, s: Setup): Promise<string[]> {
     localStorage.setItem(key + "guide", "done");
     localStorage.setItem("etifeddiaeth.v1.lang", s.lang);
     const off = { warning: false, keystone: false, tier_open: false, tipping: false, chapter: false, deal_due: false, purse_full: false, finished: false, year: false };
-    localStorage.setItem(key + "prefs", JSON.stringify({ stepByStep: s.stepByStep, speed: s.speed ?? "steady", holdWhileReading: true, stops: s.softStops ? {} : off }));
+    localStorage.setItem(key + "prefs", JSON.stringify({ stepByStep: s.stepByStep, holdWhileReading: true, stops: s.softStops ? {} : off }));
   }, { key: KEY, s });
   await page.reload();
   await expect(page.getByTestId("board")).toBeVisible({ timeout: 30_000 });
@@ -99,8 +99,15 @@ async function settle(page: Page, seen: Seen): Promise<boolean> {
     return true;
   }
   if (await visible(page, "bw-stop")) {
-    if (!seen.visit && (await page.getByTestId("bw-stop-visit").count())) await activate(page, page.getByTestId("bw-stop-visit"));
-    else await activate(page, page.getByTestId("bw-stop-on").first());
+    if (!seen.visit && (await page.getByTestId("bw-stop-visit").count())) {
+      // a visit offer is a choice: the needs-you outline goes round Go and visit with Carry on
+      await expect(page.getByTestId("bw-needs")).toHaveAttribute("data-needs-on", "answers");
+      const ring = (await page.getByTestId("bw-needs").boundingBox())!;
+      const both = (await page.locator('[data-needs="visit-offer"]').boundingBox())!;
+      expect(Math.abs(ring.x + 3 - both.x) + Math.abs(ring.y + 3 - both.y)).toBeLessThan(4);
+      await page.screenshot({ path: test.info().outputPath("visit-offer.png") });
+      await activate(page, page.getByTestId("bw-stop-visit"));
+    } else await activate(page, page.getByTestId("bw-stop-on").first());
     return true;
   }
   if (await visible(page, "bw-settings")) { await page.keyboard.press("Escape"); return true; }
@@ -149,7 +156,7 @@ async function checkEnd(page: Page, lang: "en" | "cy"): Promise<void> {
   await axe(page, "end");
   // the run code: open the same code, see the same game; an old code gets the plain line
   const code = await page.getByTestId("be-code").inputValue();
-  expect(code).toMatch(/^b2\./);
+  expect(code).toMatch(/^b3\./);
   const name = await page.getByTestId("be-name").locator("h1").textContent();
   await page.getByTestId("be-paste").fill(code);
   await page.getByTestId("be-open").click();
@@ -191,7 +198,7 @@ for (const lang of ["en", "cy"] as const) {
 
 test("a board game on the clock at fast speed, with pause, resume and a hard stop", async ({ page }) => {
   test.setTimeout(480_000);
-  const errors = await fresh(page, { lang: "en", stepByStep: false, speed: "fast" });
+  const errors = await fresh(page, { lang: "en", stepByStep: false });
   await page.getByTestId("bw-go").click();
   await expect(page.getByTestId("bw-play")).toBeVisible({ timeout: 20_000 });
   const year = () => page.getByTestId("bw-year").textContent();

@@ -215,7 +215,9 @@
 .bw-stop.on-slate .bw-stop-title { color: var(--on-slate); }
 .bw-stop-when { color: var(--ink-2); }
 .bw-stop-line { font-family: var(--font-print); font-size: 15px; line-height: 1.45; max-width: 34ch; }
-.bw-stop-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 4px; }
+/* the top margin is the room the needs-you tab takes above Carry on (clock/needs.css) */
+.bw-stop-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 24px; }
+.bw-stop-choose { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .bw-stop-note { color: var(--ink-2); }
 .bw-stop-keystone { border-top: 4px solid var(--ink); }
 

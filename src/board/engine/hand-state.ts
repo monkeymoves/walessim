@@ -13,7 +13,7 @@ import type { BoardModel, BoardState, FutureId, ProjectState, StartId } from "./
 export function handState(model: BoardModel, opts: { start?: StartId; future?: FutureId; gameNumber?: number } = {}): BoardState {
   const gameNumber = opts.gameNumber ?? 7;
   const state: BoardState = {
-    version: 2, modelHash: model.meta.hash, gameNumber, seed: hashSeed(gameNumber),
+    version: 2, modelHash: model.meta.hash, board: model.game.board, gameNumber, seed: hashSeed(gameNumber),
     start: opts.start ?? model.starts[0]!.id, future: opts.future ?? model.futures[0]!.id,
     step: 0, year: model.game.first_year, phase: "play", log: [], councils: seedCouncils(model),
     linkQuality: Object.fromEntries(model.links.filter((l) => l.kind === "rail").map((l) => [l.id, l.quality ?? 1])),

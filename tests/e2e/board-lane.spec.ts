@@ -3,7 +3,7 @@
 // Space on a focused button works the clock and does not press the button too.
 import { expect, test, type Page } from "@playwright/test";
 
-const KEY = "etifeddiaeth.board.v2.";
+import { BOARD_KEY as KEY } from "./board-key";
 type Box = { x: number; y: number; width: number; height: number };
 const meets = (a: Box, b: Box) => a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
 // a slip is pinned askew (rotated about a degree), so its box may reach a few pixels past its edges
@@ -17,7 +17,7 @@ async function fresh(page: Page): Promise<void> {
     localStorage.setItem(key + "clocktaught", "done");
     localStorage.setItem("etifeddiaeth.v1.lang", "en");
     const stops = { warning: true, keystone: true, tier_open: true, tipping: true, chapter: false, deal_due: true, purse_full: true, finished: true, year: false };
-    localStorage.setItem(key + "prefs", JSON.stringify({ stepByStep: false, speed: "fast", holdWhileReading: true, stops }));
+    localStorage.setItem(key + "prefs", JSON.stringify({ stepByStep: false, holdWhileReading: true, stops }));
   }, KEY);
   await page.reload();
   await page.getByTestId("bw-go").click();

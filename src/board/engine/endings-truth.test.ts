@@ -36,7 +36,7 @@ import { readBoardInputs } from "../../../scripts/board/read-inputs";
 import { act, advance, newBoard } from "./clock";
 import { allBots, playGame, startFor } from "./bots";
 import { siteCouncil, siteCouncils } from "./conditions";
-import { flagged } from "./end-conditions";
+import { inArea } from "./areas";
 import { ending, firstRise, focusOf, gapClosed, gapTold, letterChoices, notBuildable, pickEnding } from "./endings";
 import { eventRiver, eventRiverAt, shownYear, townOf } from "./story-terms";
 import { frameAtYear } from "./frame";
@@ -97,7 +97,7 @@ beforeAll(() => {
     games.push({ label: `idle game ${n}`, state, end: ending(model, state) });
   }
   // careless gamblers in the valleys, so The gamble is judged whatever the bots do
-  const valleys = flagged(model, "valley");
+  const valleys = inArea(model, "edge");
   for (const n of [41, 43, 47, 53]) {
     const state = idleGame(model, n, valleys[n % valleys.length]);
     games.push({ label: `gambler game ${n}`, state, end: ending(model, state) });
@@ -264,7 +264,7 @@ describe("the end screen tells no contradictions (bot games on the real model)",
   });
 
   it("young people come home only in a term the valleys gained them, and leave only when they lost them", () => {
-    const valleys = flagged(model, "valley");
+    const valleys = inArea(model, "edge");
     for (const g of games) {
       for (const c of g.end.story.chapters) {
         if (c.chapter !== "coming-home" && c.chapter !== "leaving-years") continue;
@@ -277,7 +277,7 @@ describe("the end screen tells no contradictions (bot games on the real model)",
   });
 
   it("no turning point says valley young adults left in a term told as Coming home, or came in a term told as The leaving years", () => {
-    const valleys = flagged(model, "valley");
+    const valleys = inArea(model, "edge");
     for (const g of games) {
       for (const c of g.end.story.chapters) {
         const against = c.chapter === "coming-home" ? "down" : c.chapter === "leaving-years" ? "up" : null;

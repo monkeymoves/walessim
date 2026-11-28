@@ -23,7 +23,7 @@ export function LawsSheet(): JSX.Element {
   });
   const inForce = (id: string) => game.state()?.laws.includes(id) ?? false;
   return (
-    <div class="bw-laws sheet-held" role="dialog" aria-labelledby="bw-laws-title">
+    <div class="bw-laws sheet-held" role="dialog" aria-labelledby="bw-laws-title" data-needs-close="laws">
       <header class="bw-tree-head">
         <h2 class="t-1" id="bw-laws-title">{t("boardui.laws.title")}</h2>
         <p class="small">{t("boardui.laws.note", { n: game.state()?.lawChangesLeft ?? 0 })}</p>

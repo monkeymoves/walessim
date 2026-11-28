@@ -1,8 +1,13 @@
 /**
  * The player's clock settings (docs/design/v2-board.md 16.2.2 and 16.2.5): which soft stops pause
- * the clock, "hold the clock while I read", step by step mode and the speed. Saved under the
- * board's own key `<save_key>prefs`, set and removed singly. The engine never reads these: a run
- * does not depend on them.
+ * the clock, "hold the clock while I read", step by step mode, and the flashing of the needs-you
+ * outline (v3-wales.md section 2). Saved under the board's own key `<save_key>prefs`, set and
+ * removed singly. The engine never reads these: a run does not depend on them.
+ *
+ * The speed is not a setting: every game starts at game.yaml's `default_speed` (Fast, Luke's
+ * choice in v3-wales.md section 7) and the speed picked in a game is not kept. Saves from before
+ * v3 carry a `speed` field (always the old default, Steady); it is ignored, so Fast reaches
+ * everyone.
  */
 import type { BoardModel, StopKind } from "../../engine/api";
 import { STOP_KINDS } from "../../engine/api";
@@ -14,8 +19,8 @@ export interface Prefs {
   holdWhileReading: boolean;
   /** No running clock: "Next season" and "Run to the next moment" only. */
   stepByStep: boolean;
-  /** The speed a game starts at, a speed id from `game.speeds`. The speed picked during a game is not saved (cold playtest 9: it carried over to the next game). */
-  speed: string;
+  /** The needs-you outline pulses for its first seconds (./pulse.ts). Off: steady from the start. */
+  flashingOutline: boolean;
 }
 
 /** True when the stop kind can never be switched off. */
@@ -24,12 +29,15 @@ export const isHard = (model: BoardModel, kind: StopKind): boolean => !!model.ga
 /** Soft stops in the order the settings sheet lists them (16.2.5). */
 export const softStops = (model: BoardModel): StopKind[] => STOP_KINDS.filter((k) => !isHard(model, k));
 
+/** The speed every game starts at: game.yaml's `default_speed`, or the first speed. The speed picked in a game does not carry over (cold playtest 9). */
+export const startSpeed = (model: BoardModel): string =>
+  model.game.speeds.some((s) => s.id === model.game.default_speed) ? model.game.default_speed : (model.game.speeds[0]?.id ?? "fast");
+
 /** The defaults: soft stops from game.yaml, step by step when the player asked the system for reduced motion. */
 export function defaultPrefs(model: BoardModel, reducedMotion: boolean): Prefs {
   const stops: Partial<Record<StopKind, boolean>> = {};
   for (const k of softStops(model)) stops[k] = !!model.game.stops?.[k]?.on;
-  const speed = model.game.speeds.some((s) => s.id === model.game.default_speed) ? model.game.default_speed : (model.game.speeds[0]?.id ?? "steady");
-  return { stops, holdWhileReading: true, stepByStep: reducedMotion, speed };
+  return { stops, holdWhileReading: true, stepByStep: reducedMotion, flashingOutline: true };
 }
 
 /** Saved prefs over the defaults; anything unreadable or unknown falls back to the default. */
@@ -44,7 +52,7 @@ export function readPrefs(model: BoardModel, raw: string | null, reducedMotion: 
       stops,
       holdWhileReading: typeof v.holdWhileReading === "boolean" ? v.holdWhileReading : base.holdWhileReading,
       stepByStep: typeof v.stepByStep === "boolean" ? v.stepByStep : base.stepByStep,
-      speed: model.game.speeds.some((s) => s.id === v.speed) ? v.speed! : base.speed,
+      flashingOutline: typeof v.flashingOutline === "boolean" ? v.flashingOutline : base.flashingOutline,
     };
   } catch {
     return base;

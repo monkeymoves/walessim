@@ -32,7 +32,7 @@ describe("determinism", () => {
     for (const n of [5, 908, "Merthyr Tudful 2050"]) {
       const state = playGame(model, n, "work-valleys").state;
       const code = encodeRun(state);
-      expect(code).toMatch(/^b2\.[A-Za-z0-9_-]+$/);
+      expect(code).toMatch(/^b3\.[A-Za-z0-9_-]+$/);
       expect(JSON.stringify(decodeRun(model, code))).toBe(JSON.stringify(state));
     }
   });

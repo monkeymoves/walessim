@@ -138,7 +138,7 @@ describe("the bot runner", () => {
 describe("balance measures", () => {
   const run = (bot: string, game: number, result: number, ending: string, shift = 0, lost = 0, coins?: { income: number; lost: number }): RunResult => ({
     bot, game, start: "s", future: "f", ending, result, life: result, startScore: 47, keystones: [], keystoneBranches: [], projects: 6,
-    vector: [0.5 + shift, 0.5], vector2034: [0.5 + shift / 4, 0.5], measures: [[5 + 10 * shift, 5]], valleyYoung: 18 + 10 * shift,
+    vector: [0.5 + shift, 0.5], vector2034: [0.5 + shift / 4, 0.5], measures: [[5 + 10 * shift, 5]], edgeYoung: 18 + 10 * shift,
     youngRatio: { min: 0.9, max: 1.1 }, tips: 2, risen: [], electionsLost: lost, elections: 5, recovered: null, lowestChange: 0, lowestRose: false,
     chapters: ["holding-on"], ...(coins ? { coins } : {}),
   });

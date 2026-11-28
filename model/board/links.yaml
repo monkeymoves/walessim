@@ -1,4 +1,4 @@
-# Authored links of the board (docs/design/v2-board.md section 4.2).
+# Authored river links of every board (docs/design/v2-board.md section 4.2).
 # - River links: `from` is the council upstream of `to` on the named river, one hop each, in the
 #   order the river runs. A river link is a direction, not a flow figure. Each row was checked on
 #   28 November 2026 against the river's course through the towns named below (playtest 8 found
@@ -17,13 +17,10 @@
 #     not reach Barry or the Vale's coast, so the Vale is upstream of Cardiff on it, not its end.
 #   - Ogmore: from Ogmore Vale to Bridgend town, its estuary the border with the Vale of Glamorgan
 #     at Ogmore-by-Sea, so Bridgend is written upstream of the Vale (a weak case, to check first).
-# - Stubs: places off the board, shown at the map edge. Commute links to them (the real shares in
-#   model/data/board-commute.json) carry a fixed outside flow and cannot be built on.
-#   Swansea is not a stub: under 3 in 100 of any council in play work there. Centres are in the km
-#   frame of CLAUDE.md. Powys sits at the map edge north of Merthyr Tydfil; Bristol and the border
-#   are their real positions (Bristol city centre, Lydney in the Forest of Dean).
+# - Stubs, places off the board, belong to each board: model/board/boards/<id>/board.yaml. A board
+#   takes the river rows whose two ends are its councils or its stubs (ADR 0009).
 # - Rail links are derived at build from model/data/wales-rail.json, not authored here.
-note: River order, to check against the source, and the off-board stubs.
+note: River order, to check against the source.
 links:
   - id: "river:taff:merthyr-tydfil-rhondda-cynon-taf"
     kind: river
@@ -105,16 +102,3 @@ links:
     honesty: real
     sources: [os_open_rivers, nrw_catchments]
     to_check: true
-stubs:
-  - id: "stub:npt"
-    name: { en: "Neath Port Talbot", cy: "Castell-nedd Port Talbot", cy_review: true }
-    centre: [112.6, 202.2]
-  - id: "stub:powys"
-    name: { en: "Powys", cy: "Powys", cy_review: true }
-    centre: [135.8, 166.8]
-  - id: "stub:bristol"
-    name: { en: "Bristol and South Gloucestershire", cy: "Bryste a De Swydd Gaerloyw", cy_review: true }
-    centre: [191.0, 227.5]
-  - id: "stub:border"
-    name: { en: "The English border: Forest of Dean and Herefordshire", cy: "Y ffin â Lloegr: Fforest y Ddena a Swydd Henffordd", cy_review: true }
-    centre: [193.6, 189.0]

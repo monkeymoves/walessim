@@ -9,7 +9,8 @@ import type {
 } from "./types-model";
 import type { BranchDef, Condition, Effect, GroupDef, LawDef, PairDef, PlaceDef, ProjectDef, TrackId } from "./types-content";
 import type { ElectionResult } from "./types-state";
-import type { BoardGame, Momentum } from "./types-clock";
+import type { Momentum } from "./types-clock";
+import type { AreaId, BoardGame } from "./types-board";
 
 // ---------------------------------------------------------------------------
 // Events (events.yaml)
@@ -84,8 +85,8 @@ export interface StartDef {
   promise: { text: Text; by_year: number; kept_when: EndCondition[] };
   /** One free tier 1 project; the player places it (council chosen at any time). */
   free_project: ProjectId;
-  /** Which councils back you first. */
-  backing: { flag?: CouncilFlag; council?: string; points: number }[];
+  /** Which councils back you first: those with the flag, in the area, or the council named. */
+  backing: { flag?: CouncilFlag; area?: AreaId; council?: string; points: number }[];
 }
 
 // ---------------------------------------------------------------------------
@@ -99,8 +100,9 @@ export type EndCondition =
   | { kind: "gap"; vs_2026: "closed" | "wider" }
   /** The mean of the three lowest councils against their 2026 mean. */
   | { kind: "lowest_three"; vs_2026: "higher" | "lower" }
-  | { kind: "young_adults"; flag?: CouncilFlag; vs_2026: "held" | "fell" }
-  | { kind: "measure"; measure: MeasureId; flag?: CouncilFlag; vs_2026: "up" | "down"; by?: number }
+  /** Over the councils of `area`, or every council in play without it. */
+  | { kind: "young_adults"; area?: AreaId; vs_2026: "held" | "fell" }
+  | { kind: "measure"; measure: MeasureId; area?: AreaId; vs_2026: "up" | "down"; by?: number }
   /** The mean of all measures over the councils in play. */
   | { kind: "wales"; vs_2026: "better" | "worse"; by?: number }
   | { kind: "projects"; tier?: Tier; at_least?: number; at_most?: number }
@@ -126,7 +128,8 @@ export type EvidenceKind = "young_adults_change" | "measure_change" | "no_event_
 export interface EvidenceDef {
   kind: EvidenceKind;
   measure?: MeasureId;
-  flag?: CouncilFlag;
+  /** Pick from the councils of this area, or every council in play without it. */
+  area?: AreaId;
   /** The line when the change went up (more, better, still standing, no event). Slots: {council}, {town}, {year}, {project}, {river}. */
   up: Text;
   /** The line when it went down (fewer, worse, gone, the event landed). Same slots. */
@@ -177,8 +180,8 @@ export type TermCondition =
   | { kind: "tier_opened"; tier: Tier }
   | { kind: "tipped"; to: Momentum; at_least: number }
   | { kind: "region_turn" }
-  /** `councils_at_least`: that many flagged councils each moved `by` (without it, their mean moved `by`). */
-  | { kind: "young_adults"; flag?: CouncilFlag; change: "up" | "down"; by: number; councils_at_least?: number }
+  /** `councils_at_least`: that many councils of `area` each moved `by` (without it, their mean moved `by`). */
+  | { kind: "young_adults"; area?: AreaId; change: "up" | "down"; by: number; councils_at_least?: number }
   | { kind: "gap"; change: "closed" | "wider"; by: number }
   | { kind: "finished"; at_least?: number; at_most?: number }
   | { kind: "deal"; kept: boolean }

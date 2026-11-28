@@ -27,6 +27,7 @@
  * | frames      | here         | 7       |
  * | encodeRun   | runcode.ts   | 7       |
  * | decodeRun   | runcode.ts   | 7       |
+ * | runBoard    | runcode.ts   | 14      |
  */
 import * as clockMod from "./clock";
 import * as projectsMod from "./projects";
@@ -40,7 +41,7 @@ import * as storyMod from "./story";
 import * as runcodeMod from "./runcode";
 import { councilView as buildCouncilView } from "./view";
 import type {
-  Action, ActionOption, BoardModel, BoardState, CouncilCode, CouncilView, ElectionView, Ending, Forecast, Frame,
+  Action, ActionOption, BoardId, BoardModel, BoardState, CouncilCode, CouncilView, ElectionView, Ending, Forecast, Frame,
   Preview, Scores, StartId, Stop, StepReport, Story, TimelineView, Why, WhyTarget,
 } from "./types";
 import type { AdvanceOptions } from "./clock";
@@ -155,12 +156,17 @@ export function frames(_model: BoardModel, state: BoardState): Frame[] {
   return state.history;
 }
 
-/** A short code: the game number, the start, the step reached and the log. Paste to replay. */
+/** A short code: the board, the game number, the start, the step reached and the log. Paste to replay. */
 export function encodeRun(state: BoardState): string {
   return runcodeMod.encodeRun(state);
 }
 
-/** Replay a run code into a state. Throws `BoardRunError` if it cannot be read (a phase 1 code says so plainly). */
+/** The board a run code was made on, to load that board's model before `decodeRun`. Throws `BoardRunError` if it cannot be read. */
+export function runBoard(code: string): BoardId {
+  return runcodeMod.runBoard(code);
+}
+
+/** Replay a run code into a state. Throws `BoardRunError` if it cannot be read, is from an older version or another board. */
 export function decodeRun(model: BoardModel, code: string): BoardState {
   return runcodeMod.decodeRun(model, code);
 }

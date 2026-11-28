@@ -70,17 +70,17 @@ export const fixtureFutures: FutureDef[] = [
 
 export const fixtureStarts: StartDef[] = [
   { id: "work-valleys", name: tx("Work in the valleys", "Gwaith yn y cymoedd"), pitch: tx("You promised jobs people can reach.", "Fe wnaethoch addo swyddi y gall pobl eu cyrraedd."),
-    promise: { text: tx("Work and pay up in the valleys by 2034.", "Gwaith a chyflog i fyny yn y cymoedd erbyn 2034."), by_year: 2034, kept_when: [{ kind: "measure", measure: "work", flag: "valley", vs_2026: "up" }] },
-    free_project: "skills-college", backing: [{ flag: "valley", points: 1 }] },
+    promise: { text: tx("Work and pay up in the valleys by 2034.", "Gwaith a chyflog i fyny yn y cymoedd erbyn 2034."), by_year: 2034, kept_when: [{ kind: "measure", measure: "work", area: "edge", vs_2026: "up" }] },
+    free_project: "skills-college", backing: [{ area: "edge", points: 1 }] },
   { id: "warm-homes", name: tx("Warm, safe homes", "Cartrefi cynnes, diogel"), pitch: tx("You promised warm homes people can afford.", "Fe wnaethoch addo cartrefi cynnes y gall pobl eu fforddio."),
     promise: { text: tx("Homes and community up by 2034.", "Cartrefi a chymuned i fyny erbyn 2034."), by_year: 2034, kept_when: [{ kind: "measure", measure: "homes", vs_2026: "up" }] },
-    free_project: "warm-terraces", backing: [{ flag: "city", points: 1 }] },
+    free_project: "warm-terraces", backing: [{ area: "core", points: 1 }] },
   { id: "ready-weather", name: tx("Ready for the weather", "Yn barod am y tywydd"), pitch: tx("You promised to keep homes safe from floods.", "Fe wnaethoch addo cadw cartrefi'n ddiogel rhag llifogydd."),
     promise: { text: tx("Nature and floods up by 2034.", "Natur a llifogydd i fyny erbyn 2034."), by_year: 2034, kept_when: [{ kind: "measure", measure: "nature", vs_2026: "up" }] },
     free_project: "slow-the-water", backing: [{ flag: "coal_valley", points: 0.5 }, { flag: "coast", points: 0.5 }] },
 ];
 
-const young: EvidenceDef = { kind: "young_adults_change", flag: "valley",
+const young: EvidenceDef = { kind: "young_adults_change", area: "edge",
   up: tx("{council} has more young adults than in 2026.", "Mae gan {council} fwy o oedolion ifanc nag yn 2026."),
   down: tx("{council} has fewer young adults than in 2026.", "Mae gan {council} lai o oedolion ifanc nag yn 2026.") };
 const homes: EvidenceDef = { kind: "measure_change", measure: "homes",
@@ -99,7 +99,7 @@ export const fixtureEndings: EndingDef[] = [
   ending("workshop", 3, "The workshop", "Y gweithdy", tx("A cluster rooted. Nature fell behind.", "Gwreiddiodd clwstwr. Syrthiodd natur ar ôl."), [{ kind: "keystone", project: "cluster-roots" }]),
   ending("green-valleys", 4, "The green valleys", "Y cymoedd gwyrdd", tx("Rivers got room. Storms passed.", "Cafodd afonydd le. Pasiodd stormydd."), [{ kind: "keystone", project: "rivers-room" }]),
   ending("warm-country", 5, "The warm country", "Y wlad gynnes", tx("Every home warm. The gap smallest.", "Pob cartref yn gynnes. Y bwlch lleiaf."), [{ kind: "keystone", project: "heat-and-homes" }]),
-  ending("city-bedrooms", 6, "The city and its bedrooms", "Y ddinas a'i hystafelloedd gwely", tx("Lines upgraded, valleys emptied.", "Llinellau wedi'u gwella, cymoedd wedi gwagio."), [{ kind: "keystones", at_most: 0 }, { kind: "links_upgraded", at_least: 1 }, { kind: "young_adults", flag: "valley", vs_2026: "fell" }]),
+  ending("city-bedrooms", 6, "The city and its bedrooms", "Y ddinas a'i hystafelloedd gwely", tx("Lines upgraded, valleys emptied.", "Llinellau wedi'u gwella, cymoedd wedi gwagio."), [{ kind: "keystones", at_most: 0 }, { kind: "links_upgraded", at_least: 1 }, { kind: "young_adults", area: "edge", vs_2026: "fell" }]),
   ending("patchwork", 7, "The patchwork", "Y clytwaith", tx("A little better everywhere.", "Ychydig yn well ym mhobman."), [{ kind: "keystones", at_most: 0 }, { kind: "projects", tier: 1, at_least: 4 }, { kind: "wales", vs_2026: "better" }]),
   ending("drift", 8, "The drift", "Y drifft", tx("Little built. Risks landed.", "Ychydig wedi'i adeiladu. Daeth y peryglon."), []),
 ];

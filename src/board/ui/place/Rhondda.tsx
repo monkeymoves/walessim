@@ -50,7 +50,7 @@ export function RhonddaPlace(props: { model: BoardModel; place: PlaceDef; onChoo
         </CouncilClose>
         <div class="bp-light-side">
           <p class="small" role="status">{t("boardend.rhondda.picked", { n: picks().length, max: max() })}</p>
-          <ol class="bp-tips" aria-label={t("boardend.rhondda.list")}>
+          <ol class="bp-tips" aria-label={t("boardend.rhondda.list")} data-needs="visit">
             <For each={tips()}>
               {(tip) => (
                 <li>
@@ -96,7 +96,7 @@ function NoBoard(props: { onChoose: () => void; onLeave: () => void }): JSX.Elem
   return (
     <div class="bp-light-side">
       <p class="story-small">{t("boardend.rhondda.noBoard")}</p>
-      <div class="bp-actions">
+      <div class="bp-actions" data-needs="visit">
         <StampButton onClick={() => props.onChoose()} data-testid="bp-choose">{t("boardend.rhondda.goAnyway")}</StampButton>
         <TabButton onClick={() => props.onLeave()} data-testid="bp-leave">{t("boardend.place.leave")}</TabButton>
       </div>

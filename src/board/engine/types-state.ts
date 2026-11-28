@@ -10,6 +10,7 @@ import type {
 } from "./types-model";
 import type { ProjectStatus } from "./types-content";
 import type { Deal, Momentum, StoryState } from "./types-clock";
+import type { BoardId } from "./types-board";
 
 /**
  * A sentence for the UI: an i18n key in model/i18n/{en,cy}/board.json plus slot values.
@@ -225,6 +226,8 @@ export interface BoardState {
   version: 2;
   /** `BoardModel.meta.hash` it was made with. A save from another model replays or is refused. */
   modelHash: string;
+  /** The board it is played on (`game.board`), so a save and a run code name their board. */
+  board: BoardId;
   /** As the player typed it. */
   gameNumber: number | string;
   /** `hashSeed(gameNumber)` from src/engine/rng.ts. */

@@ -13,3 +13,5 @@ public/data/
 design/shots-build/
 .claude/
 public/board-model.json
+public/board-model.*.json
+public/boards.json

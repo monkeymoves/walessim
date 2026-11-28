@@ -32,12 +32,12 @@ export function Respond(props: { event: string; councils: string[] }): JSX.Eleme
   // focus lands on the card, never on an answer: Enter or Space then answers nothing by chance (playtest 10 must-fix 10)
   onMount(() => slip.focus({ preventScroll: true }));
   return (
-    <div ref={slip} tabindex="-1" class="bw-respond on-slate" role="alertdialog" aria-labelledby="bw-respond-title" data-testid="bw-respond">
+    <div ref={slip} tabindex="-1" class="bw-respond on-slate" role="alertdialog" aria-labelledby="bw-respond-title" data-testid="bw-respond" data-needs-card>
       <span class="bw-slip-pin" aria-hidden="true" />
       <p class="label bw-slip-from">{t("boardui.respond.from", { when: whenWords(model, game.state()?.step ?? 0) })}</p>
       <Pair single={lang() === "cy"} text={ev()?.name} class="t-2 bw-slip-title" id="bw-respond-title" />
       <p class="bw-slip-say">{fill(model, tx(ev()?.landed), props.councils, river())}</p>
-      <ul class="bw-respond-list">
+      <ul class="bw-respond-list" data-needs="answers">
         <For each={opts()}>
           {(o) => {
             const r = respOf(o.action.kind === "respond" ? o.action.response : "");

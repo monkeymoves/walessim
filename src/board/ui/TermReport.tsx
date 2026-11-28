@@ -75,7 +75,7 @@ function TermSheet(props: TermProps): JSX.Element {
     onCleanup(() => watch?.disconnect());
   });
   return (
-    <div ref={sheet} tabindex="-1" class="bw-term bw-term-wide sheet-held" role="dialog" aria-labelledby="bw-term-name" data-testid="bw-term">
+    <div ref={sheet} tabindex="-1" class="bw-term bw-term-wide sheet-held" role="dialog" aria-labelledby="bw-term-name" data-testid="bw-term" data-needs-card data-needs-close={props.asStop ? undefined : "term"}>
       <header class="bw-term-head">
         <p class="label">{t("boardui.term.label", { n: r().term, from: r().fromYear, to: r().toYear })}</p>
         <h2 class="t-1 bw-term-name" id="bw-term-name" tabindex="-1">{chapterName(model, r().chapter)}</h2>
@@ -120,7 +120,7 @@ function TermSheet(props: TermProps): JSX.Element {
       <footer class="bw-term-foot">
         <Show when={props.asStop}><AfterCard /></Show>
         <Show when={props.asStop} fallback={<StampButton onClick={close}>{t("boardui.term.close")}</StampButton>}>
-          <StampButton onClick={close} why={mustDeal() ? t("boardui.deal.first") : null} data-testid="bw-term-on">
+          <StampButton onClick={close} why={mustDeal() ? t("boardui.deal.first") : null} data-testid="bw-term-on" data-needs="carry-on">
             {props.ended ? t("boardui.report.toEnd") : t("boardui.stop.carryOn")}
           </StampButton>
         </Show>

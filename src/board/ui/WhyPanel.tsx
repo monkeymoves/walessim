@@ -49,7 +49,7 @@ export function WhyPanel(): JSX.Element {
   const labels = (w: Why) => sourceLabels(w.sources.map((id) => sourceOf(model, id)), sourceShort)
     .map((label, i) => (isRoughSource(model, w.sources[i]!) ? `${t("boardui.source.roughLabel")}: ${label}` : label));
   return (
-    <div class="bw-why-panel sheet-held" role="dialog" aria-labelledby="bw-why-title" data-testid="bw-why">
+    <div class="bw-why-panel sheet-held" role="dialog" aria-labelledby="bw-why-title" data-testid="bw-why" data-needs-close="why">
       <header class="bw-tree-head">
         <h2 class="t-2" id="bw-why-title">{t("boardui.why.title", { measure: measureName(model, target().measure), council: councilName(model, target().council) })}</h2>
         <CloseButton label={t("boardui.close")} onClick={() => game.setWhyAt(null)} />

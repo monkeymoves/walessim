@@ -32,7 +32,7 @@ import type { Accessor } from "solid-js";
 import type { BoardModel, BoardState, CoinsReport, CouncilCode, StepReport, TermReport } from "../../engine/api";
 import { advance, tick } from "../../engine/api";
 import { holdOf, overlays, type HoldReason, type Overlay, type Screenful } from "./hold";
-import { msPerStep, readPrefs, stopOnList, type Prefs } from "./prefs";
+import { msPerStep, readPrefs, startSpeed, stopOnList, type Prefs } from "./prefs";
 import { ruleParamOf } from "../rules";
 import { ClockRunner } from "./runner";
 import { keepHard, liveQueue, newsTrue, passedWarnings, perYearOf, purseOnce, purseSoon, runUpStops, stopsToShow, tickerLines, type QueuedStop, type TickerLine } from "./stops";
@@ -57,8 +57,8 @@ export function createClock(model: BoardModel, deps: ClockDeps) {
   const reduced = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
   const [prefs, setPrefsSignal] = createSignal<Prefs>(readPrefs(model, deps.store.get(prefsKey), reduced));
   const [playing, setPlaying] = createSignal(false);
-  /** The speed in this game. It starts at the saved starting speed (game.yaml's default) and is never saved: it does not carry over. */
-  const [speed, setSpeedSignal] = createSignal(prefs().speed);
+  /** The speed in this game. It starts at game.yaml's default and is never saved: it does not carry over. */
+  const [speed, setSpeedSignal] = createSignal(startSpeed(model));
   const [hidden, setHidden] = createSignal(false);
   /** Stops raised, in order; `queue` is those still true now, which is what the screen shows. */
   const [raised, setQueue] = createSignal<QueuedStop[]>([]);
@@ -247,8 +247,8 @@ export function createClock(model: BoardModel, deps: ClockDeps) {
 
   /** A new game: nothing waiting, and the starting speed again (a speed is picked for one game, not kept for the next). */
   function freshGame(): void {
-    batch(() => { setSpeedSignal(prefs().speed); restore([]); });
-    runner.setSpeed(msPerStep(model, prefs().speed));
+    batch(() => { setSpeedSignal(startSpeed(model)); restore([]); });
+    runner.setSpeed(msPerStep(model, startSpeed(model)));
   }
 
   /** "Look": stay paused with the stop's council selected. Soft stops still waiting are dropped (they are in the ticker). */
@@ -280,7 +280,7 @@ export function createClock(model: BoardModel, deps: ClockDeps) {
   }
 
   return {
-    prefs, setPrefs, speed, playing, running, heldBy, phaseHolds, progress, queue, ticker, terms, last, coinLog,
+    prefs, setPrefs, speed, playing, running, heldBy, screenful, phaseHolds, progress, queue, ticker, terms, last, coinLog,
     started, taught, markTaught, shown, unread, read, lessonShows,
     play, pause, toggle, setSpeed, step, runToNext, carryOn, carryOnAll, look, restore, freshGame,
   };

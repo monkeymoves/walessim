@@ -52,7 +52,7 @@ export function LightPlace(props: { model: BoardModel; place: PlaceDef; onChoose
       <CouncilClose model={props.model} code={props.place.council} label={t("boardend.place.mapAria", { council: councilName(props.model, props.place.council) })} />
       <div class="bp-light-side">
         <h3 class="t-3" id="bp-options">{t("boardend.place.pickOne")}</h3>
-        <div class="bp-options" role="radiogroup" aria-labelledby="bp-options">
+        <div class="bp-options" role="radiogroup" aria-labelledby="bp-options" data-needs="visit">
           <For each={options()}>
             {(o) => (
               <button

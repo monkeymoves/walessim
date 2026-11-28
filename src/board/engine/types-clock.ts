@@ -3,7 +3,7 @@
  * seasons, stops, what a step reports, the time line, momentum, deals and the story. Owned by
  * package 7. Import through `./types` (engine) or `./api` (UI).
  */
-import type { CouncilCode, EventId, MeasureId, ProjectId, Text } from "./types-model";
+import type { CouncilCode, EventId, MeasureId, ProjectId } from "./types-model";
 import type { ChapterId } from "./types-story";
 import type { ElectionResult, EventRecord, Flow, Say, SayVar, Site } from "./types-state";
 import type { CoinsReport, ElectionView, ReportLine } from "./types-views";
@@ -140,12 +140,11 @@ export interface Story {
 // ---------------------------------------------------------------------------
 // The calendar (model/board/game.yaml)
 
-/** Structure and calendar only. All balance numbers are rule params. See 16.2.1 and ADR 0007. */
-export interface BoardGame {
-  /** The region in play, e.g. South East Wales. */
-  region: Text;
-  /** Councils in play, in display order. */
-  councils: CouncilCode[];
+/**
+ * Structure and calendar only, the same on every board. All balance numbers are rule params. See
+ * 16.2.1 and ADR 0007. The compiled model's `game` adds the board in play (`BoardGame`, types-board.ts).
+ */
+export interface BoardCalendar {
   first_year: number;
   end_year: number;
   /** The length of one step in years: 0.25 in play. The equivalence test sets 2. */
@@ -171,6 +170,9 @@ export interface BoardGame {
   default_speed: string;
   /** Which stops are hard (the clock must stop) and which are on by default (16.2.5). The engine reports, the UI decides. */
   stops: Record<StopKind, { hard?: boolean; on?: boolean }>;
-  /** localStorage key prefix. Keys are set and removed singly, never cleared. */
+  /**
+   * localStorage key prefix. Keys are set and removed singly, never cleared. In game.yaml the
+   * prefix every board shares; in a compiled model the board's own, with its id and a dot added.
+   */
   save_key: string;
 }

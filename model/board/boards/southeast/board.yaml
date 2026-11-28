@@ -1,0 +1,44 @@
+# The South East board (docs/design/v3-wales.md section 1, ADR 0009): its name, its councils, its
+# areas and its stubs. Its own branch is branch.yaml, its starts starts.yaml. Everything else is
+# shared, in model/board/.
+note: The South East board. Councils and flags are real (model/authorities.yaml); stub centres are real positions.
+name: { en: South East Wales, cy: De-ddwyrain Cymru, cy_review: true }
+# The ten councils in play, in display order: Bridgend, Vale of Glamorgan, Cardiff,
+# Rhondda Cynon Taf, Caerphilly, Blaenau Gwent, Torfaen, Monmouthshire, Newport, Merthyr Tydfil.
+councils:
+  - W06000013
+  - W06000014
+  - W06000015
+  - W06000016
+  - W06000018
+  - W06000019
+  - W06000020
+  - W06000021
+  - W06000022
+  - W06000024
+# The areas shared content names, each as the flags that put a council in it (any one of them).
+# core: the cities, Cardiff and Newport. edge: the valley councils the cities can leave behind.
+# Monmouthshire is rural but not a valley, so on this board it is in neither.
+areas:
+  core: [city]
+  edge: [valley]
+# Ten councils read whole on the map, so this board has no map groups.
+map_groups: []
+# Places off the board, shown at the map edge. Commute links to them (the real shares in
+# model/data/board-commute.json) carry a fixed outside flow and cannot be built on.
+# Swansea is not a stub: under 3 in 100 of any council in play work there. Centres are in the km
+# frame of CLAUDE.md. Powys sits at the map edge north of Merthyr Tydfil; Bristol and the border
+# are their real positions (Bristol city centre, Lydney in the Forest of Dean).
+stubs:
+  - id: "stub:npt"
+    name: { en: "Neath Port Talbot", cy: "Castell-nedd Port Talbot", cy_review: true }
+    centre: [112.6, 202.2]
+  - id: "stub:powys"
+    name: { en: "Powys", cy: "Powys", cy_review: true }
+    centre: [135.8, 166.8]
+  - id: "stub:bristol"
+    name: { en: "Bristol and South Gloucestershire", cy: "Bryste a De Swydd Gaerloyw", cy_review: true }
+    centre: [191.0, 227.5]
+  - id: "stub:border"
+    name: { en: "The English border: Forest of Dean and Herefordshire", cy: "Y ffin â Lloegr: Fforest y Ddena a Swydd Henffordd", cy_review: true }
+    centre: [193.6, 189.0]

@@ -6,7 +6,7 @@
 // band of the map must be land and paper, not the plain sea fill the ease leaves around a frame.
 import { expect, test, type Page } from "@playwright/test";
 
-const KEY = "etifeddiaeth.board.v2.";
+import { BOARD_KEY as KEY } from "./board-key";
 
 async function fresh(page: Page): Promise<void> {
   await page.goto("/#/bwrdd");
@@ -15,7 +15,7 @@ async function fresh(page: Page): Promise<void> {
     localStorage.setItem(key + "guide", "done");
     localStorage.setItem(key + "clocktaught", "done");
     localStorage.setItem("etifeddiaeth.v1.lang", "en");
-    localStorage.setItem(key + "prefs", JSON.stringify({ stepByStep: true, speed: "steady", holdWhileReading: true, stops: {} }));
+    localStorage.setItem(key + "prefs", JSON.stringify({ stepByStep: true, holdWhileReading: true, stops: {} }));
   }, KEY);
   await page.reload();
   await page.getByTestId("bw-go").click();

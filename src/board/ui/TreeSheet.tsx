@@ -39,7 +39,7 @@ export function TreeSheet(): JSX.Element {
     </li>
   );
   return (
-    <div class="bw-tree sheet-held" role="dialog" aria-labelledby="bw-tree-title" data-testid="bw-tree">
+    <div class="bw-tree sheet-held" role="dialog" aria-labelledby="bw-tree-title" data-testid="bw-tree" data-needs-close="tree">
       <header class="bw-tree-head">
         <h2 class="t-1" id="bw-tree-title">{t("boardui.tree.title")}</h2>
         <p class="small">{t("boardui.tree.note")}</p>

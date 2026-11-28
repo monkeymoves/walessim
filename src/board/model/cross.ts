@@ -4,6 +4,7 @@
  * data conditions hold (section 7.3). Shape checks run first, in check.ts.
  */
 import { MEASURE_IDS, REQUIRED_RULE_IDS, type BoardModel, type Condition, type Effect, type EndCondition } from "../engine/types";
+import { crossCheckAreas } from "./cross-areas";
 import type { Issue } from "./shape";
 
 const DASHES = /[\u2013\u2014]/;
@@ -88,6 +89,7 @@ export function crossCheck(m: BoardModel): Issue[] {
   if ((g.end_year - g.first_year) % g.track_years !== 0) bad("game.track_years", "must divide the years of the game");
   if (!g.speeds.some((s) => s.id === g.default_speed)) bad("game.default_speed", `no speed ${g.default_speed}`);
   for (const k of ["respond", "election", "ended"] as const) if (!g.stops[k]?.hard) bad(`game.stops.${k}`, "must be a hard stop");
+  out.push(...crossCheckAreas(m));
 
   // Councils, measures and seeds: the build fails if a seeded indicator lacks a source or a value.
   m.game.councils.forEach((c, i) => need(councils, c, `game.councils[${i}]`, "council"));

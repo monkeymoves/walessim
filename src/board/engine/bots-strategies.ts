@@ -13,6 +13,7 @@ import { param } from "./rules";
 import { stepsOf } from "./time";
 import type { ActionOption, BoardModel, BranchId, CouncilCode } from "./types";
 import { RULE_IDS } from "./types";
+import { inArea } from "./areas";
 
 export interface Bot {
   id: string;
@@ -150,11 +151,11 @@ export function secondBranch(model: BoardModel, primary: BranchId): BranchId {
   return ids[pairs[i] ?? 0] ?? ids[0]!;
 }
 
-/** Cardiff first: builds only in the cities (councils flagged "city"), the most valuable first. */
+/** Cardiff first: builds only in the board's core (its cities), the most valuable first. */
 export const cardiffFirst: Bot = {
   id: "cardiff-first", careful: false,
   next(v) {
-    const cities = new Set(v.model.councils.filter((c) => c.flags.includes("city")).map((c) => c.code));
+    const cities = new Set(inArea(v.model, "core"));
     const opts = buildOptions(v).filter((o) => optionCouncils(v.model, o).some((c) => cities.has(c)));
     const value = valuesOf(v.model, v.state, opts, false);
     return opts.sort((a, b) => value.get(b)! / Math.max(1, b.cost) - value.get(a)! / Math.max(1, a.cost))[0] ?? null;

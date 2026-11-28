@@ -77,7 +77,7 @@ export function BuildMenu(props: { code: string }): JSX.Element {
   );
 
   return (
-    <aside class="bw-build sheet-held" aria-labelledby="bw-build-title" data-testid="bw-build" onPointerMove={onMove} onPointerDown={onMove} onPointerLeave={() => !open() && game.setHover(null)}>
+    <aside class="bw-build sheet-held" aria-labelledby="bw-build-title" data-testid="bw-build" data-needs-close="build" onPointerMove={onMove} onPointerDown={onMove} onPointerLeave={() => !open() && game.setHover(null)}>
       <header class="bw-build-head">
         <h2 class="t-2" id="bw-build-title">{t("boardui.build.title", { name: councilName(model, props.code) })}</h2>
         <CloseButton label={t("boardui.close")} onClick={() => { game.setSheet(null); game.setHover(null); }} />

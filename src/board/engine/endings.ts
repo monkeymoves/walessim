@@ -11,7 +11,8 @@
 import { autopilot, branchBot, playGame } from "./bots";
 import { secondBranch } from "./bots-strategies";
 import { siteCouncil, siteCouncils } from "./conditions";
-import { allEndHold, endHolds, flagged } from "./end-conditions";
+import { inArea } from "./areas";
+import { allEndHold, endHolds } from "./end-conditions";
 import { councilMean, fairnessGap, lowestCouncils, scores } from "./score";
 import { story } from "./story";
 import { riverAt } from "./events";
@@ -128,7 +129,7 @@ export function letterFrom(model: BoardModel, state: BoardState, built: EndingDe
       if (at) return at;
     }
     if (c.kind === "young_adults" && then) {
-      const at = most(flagged(model, c.flag), (x) => (c.vs_2026 === "held" ? 1 : -1) * (state.councils[x]!.young - (then[x]?.young ?? state.councils[x]!.young)));
+      const at = most(inArea(model, c.area), (x) => (c.vs_2026 === "held" ? 1 : -1) * (state.councils[x]!.young - (then[x]?.young ?? state.councils[x]!.young)));
       if (at) return at;
     }
   }
@@ -173,7 +174,7 @@ const floodsAt = (model: BoardModel, state: BoardState, code: CouncilCode) =>
  */
 export function evidenceLine(model: BoardModel, state: BoardState, ev: EvidenceDef, about: (d: ProjectDef) => boolean = () => false, focus: CouncilCode | null = null): EvidenceLine {
   const then = state.history[0]?.councils;
-  const codes = flagged(model, ev.flag).filter((c) => state.councils[c]);
+  const codes = inArea(model, ev.area).filter((c) => state.councils[c]);
   const pick = (change: (c: CouncilCode) => number) => {
     const best = (focus && codes.includes(focus) ? focus : undefined)
       ?? [...codes].sort((a, b) => Math.abs(change(b)) - Math.abs(change(a)) || a.localeCompare(b))[0] ?? model.game.councils[0]!;

@@ -3,8 +3,9 @@
  * selected, the clock (./clock/session.ts) and the save. Created once per mount of the route and
  * shared through `useGame()`.
  *
- * The save is the run code (the game number, the start, the step reached and the log) under the
- * model's own key prefix (`etifeddiaeth.board.v2.`), set and removed singly, never cleared.
+ * The save is the run code (the board, the game number, the start, the step reached and the log)
+ * under the board's own key prefix (`etifeddiaeth.board.v2.southeast.`), set and removed singly,
+ * never cleared. Keys saved before boards move under it first (saves.ts).
  * Replaying it gives the same state, and the reports for the time line and the ticker.
  *
  * Leaving the board for another page saves the step you are at (cold playtest 10, must fix 14:
@@ -16,6 +17,7 @@ import type { Action, BoardModel, BoardState, CouncilCode, MeasureId, StartId, W
 import * as eng from "../engine/api";
 import { createClock } from "./clock/session";
 import { replayWithReports } from "./clock/replay";
+import { moveOldSaves } from "./saves";
 
 export type Screen = "start" | "board" | "end";
 export type ColourBy = MeasureId | "backing" | "behind" | "none";
@@ -31,6 +33,7 @@ export const store = {
 };
 
 export function createGame(model: BoardModel) {
+  moveOldSaves(model.game.save_key);
   const runKey = `${model.game.save_key}run`;
   const guideKey = `${model.game.save_key}guide`;
 

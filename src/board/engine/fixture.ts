@@ -64,8 +64,11 @@ export function boardFixture(): BoardModel {
   const model: BoardModel = {
     meta: { version: 2, generated: "2026-11-28", hash: "fixture-2", cy_review: [], to_check: ["links: illustrative shares"], fixture: true },
     game: {
+      board: "fixture",
       region: tx("South East Wales (three council fixture)", "De Ddwyrain Cymru (gosodiad tri chyngor)"),
       councils: [MERTHYR, RCT, CARDIFF],
+      areas: { core: [CARDIFF], edge: [MERTHYR, RCT] },
+      map_groups: [],
       first_year: 2026, end_year: 2050, years_per_step: 0.25, steps: 96,
       seasons: ["summer", "autumn", "winter", "spring"],
       election_years: [2030, 2034, 2038, 2042, 2046], track_years: 2,
@@ -73,7 +76,7 @@ export function boardFixture(): BoardModel {
       speeds: [{ id: "steady", ms_per_step: 3000 }, { id: "brisk", ms_per_step: 1500 }, { id: "fast", ms_per_step: 750 }],
       default_speed: "steady",
       stops: FIXTURE_STOPS,
-      save_key: "etifeddiaeth.board.v2.",
+      save_key: "etifeddiaeth.board.v2.fixture.",
     },
     sources: fixtureSources,
     indicators: fixtureIndicators,

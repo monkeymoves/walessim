@@ -58,7 +58,7 @@ export function Clock(): JSX.Element {
     <div class="bw-clock" classList={{ fresh: face() === "start", held: face() === "held" }} data-testid="bw-clock">
       <Switch>
         <Match when={c.prefs().stepByStep}>
-          <button type="button" class="bw-clock-step" onClick={() => c.step()} disabled={c.phaseHolds() || !!c.queue().length} data-testid="bw-next-season">
+          <button type="button" class="bw-clock-step" onClick={() => c.step()} disabled={c.phaseHolds() || !!c.queue().length} data-testid="bw-next-season" data-needs="next">
             {t("boardui.clock.nextSeason")}
           </button>
           <button type="button" class="bw-clock-run" onClick={() => c.runToNext()} disabled={c.phaseHolds() || !!c.queue().length} data-testid="bw-run-next">
@@ -76,6 +76,7 @@ export function Clock(): JSX.Element {
             onClick={() => c.toggle()}
             disabled={ended()}
             data-testid="bw-play"
+            data-needs="play"
             data-face={face()}
           >
             <Switch fallback={<svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M2 1 11 6 2 11Z" fill="currentColor" /></svg>}>

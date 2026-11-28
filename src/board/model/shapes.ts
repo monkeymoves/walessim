@@ -3,7 +3,7 @@
  * If a type changes, change its shape here; `check.test.ts` runs the typed fixture through
  * every shape, so a drift between the two fails a test.
  */
-import { GRADES, LINK_KINDS, MEASURE_IDS, RISK_KINDS, STOP_KINDS } from "../engine/types";
+import { COUNCIL_FLAGS, GRADES, LINK_KINDS, MEASURE_IDS, RISK_KINDS, STOP_KINDS } from "../engine/types";
 import { anyOf, arr, bool, int, lit, nullable, num, obj, openObj, range, rec, str, tuple, variant, type Shape } from "./shape";
 
 const strs = arr(str);
@@ -15,7 +15,7 @@ const risk = lit(...RISK_KINDS);
 const grade = lit(...GRADES);
 const tier = int(1, 3);
 const step = int(0, 3);
-const flag = lit("coal_valley", "valley", "city", "coast", "port", "rural", "heartland", "slate", "off_gas");
+const flag = lit(...COUNCIL_FLAGS);
 const feature = lit("rail", "river", "coal_tips", "coast", "city", "port", "valley");
 const track = lit("weather", "economy", "prices");
 const quantity = lit(...MEASURE_IDS, "young_adults", "backing", "risk_flood", "risk_tip", "risk_employer");
@@ -79,8 +79,8 @@ export const endCondition: Shape = variant("kind", {
   keystone: [{ project: str }],
   gap: [{ vs_2026: lit("closed", "wider") }],
   lowest_three: [{ vs_2026: lit("higher", "lower") }],
-  young_adults: [{ vs_2026: lit("held", "fell") }, { flag }],
-  measure: [{ measure, vs_2026: lit("up", "down") }, { flag, by: num }],
+  young_adults: [{ vs_2026: lit("held", "fell") }, { area: str }],
+  measure: [{ measure, vs_2026: lit("up", "down") }, { area: str, by: num }],
   wales: [{ vs_2026: lit("better", "worse") }, { by: num }],
   projects: [{}, { tier, at_least: int(0), at_most: int(0) }],
   links_upgraded: [{}, { at_least: int(0), at_most: int(0) }],
@@ -101,7 +101,7 @@ export const termCondition: Shape = variant("kind", {
   tier_opened: [{ tier }],
   tipped: [{ to: momentum, at_least: int(1) }],
   region_turn: [{}],
-  young_adults: [{ change: lit("up", "down"), by: num }, { flag, councils_at_least: int(1) }],
+  young_adults: [{ change: lit("up", "down"), by: num }, { area: str, councils_at_least: int(1) }],
   gap: [{ change: lit("closed", "wider"), by: num }],
   finished: [{}, { at_least: int(0), at_most: int(0) }],
   deal: [{ kept: bool }],
@@ -109,13 +109,26 @@ export const termCondition: Shape = variant("kind", {
   level: [{ change: lit("up", "down"), by: num }],
 });
 
+/** Which stops are hard and which are on by default; a board's board.yaml may set some of them over game.yaml's. */
+const stops = obj({}, Object.fromEntries(STOP_KINDS.map((k) => [k, obj({}, { hard: bool, on: bool })])));
+/** The calendar's fields (types-clock.ts `BoardCalendar`), shared by game.yaml and the compiled `game`. */
+const calendar = {
+  first_year: int(2000, 2100), end_year: int(2000, 2100),
+  years_per_step: range(0.0625, 4), steps: int(1, 400), seasons: tuple(season, season, season, season),
+  election_years: arr(int(2000, 2100)), track_years: int(1, 5), keystone_last_start_year: int(2000, 2100),
+  visit_open_years: range(0.25, 4), term_report_lines_max: int(1, 10), year_lines_max: int(0, 10),
+  speeds: arr(obj({ id: str, ms_per_step: int(50, 60000) }), { min: 1 }), default_speed: str,
+  stops, save_key: str,
+};
+const stub = obj({ id: str, name: text, centre: xy });
+
 export const shapes = {
   source: obj({ id: str, title: textOrStr }, { publisher: str, url: str, licence: str, year: anyOf(str, num), note: textOrStr }),
   indicator: obj({ id: str, name: text, unit: text, year: str, source: str, higher_is_better: nullable(bool) }),
   measure: obj({ id: measure, name: text, note: text, indicators: arr(str, { min: 1 }) }),
   band: obj({ floor: num, goal: num, higher_is_better: bool, origin: lit("v1", "board"), source: str }),
   council: obj({ code: str, name: text, flags: arr(flag), features: arr(feature), towns: arr(text), real: rec(num), centre: xy }),
-  stub: obj({ id: str, name: text, centre: xy }),
+  stub,
   link: obj({ id: str, kind: linkKind, from: str, to: str, honesty, sources: strs }, {
     share: range(0, 1), strength: int(1, 3), name: text, quality: int(1, 3), outside: bool, to_check: bool,
   }),
@@ -149,11 +162,11 @@ export const shapes = {
   start: obj({
     id: str, name: text, pitch: text, free_project: str,
     promise: obj({ text, by_year: int(2026, 2050), kept_when: arr(endCondition) }),
-    backing: arr(obj({ points: num }, { flag, council: str })),
+    backing: arr(obj({ points: num }, { flag, area: str, council: str })),
   }),
   ending: obj({
     id: str, name: text, summary: text, route: text, priority: int(0), when: arr(endCondition), not_built: text,
-    evidence: arr(obj({ kind: lit("young_adults_change", "measure_change", "no_event_since", "project_standing", "gap_change"), up: text, down: text }, { measure, flag })),
+    evidence: arr(obj({ kind: lit("young_adults_change", "measure_change", "no_event_since", "project_standing", "gap_change"), up: text, down: text }, { measure, area: str })),
   }),
   letter: obj({ id: str, ending: str, lower: lit("life", "left", "either"), salutation: text, body: text, named: text, signoff: text }),
   place: obj({
@@ -163,15 +176,18 @@ export const shapes = {
     scales: str, v1_place: lit("rhondda", "bethesda"), board: openObj,
     options: arr(obj({ id: str, name: text, gain: text, loss: text, effects, grades: arr(obj({ when: conditions, grade })), default_grade: grade }, { branch: str }), { min: 2, max: 3 }),
   }),
+  /** model/board/game.yaml: the calendar every board shares, and the boards to build (the first is the default). */
+  gameFile: obj({ ...calendar, boards: arr(str, { min: 1 }) }, { note: str }),
+  /** The compiled `game`: the calendar and the board in play. */
   game: obj({
-    region: text, councils: arr(str, { min: 1 }), first_year: int(2000, 2100), end_year: int(2000, 2100),
-    years_per_step: range(0.0625, 4), steps: int(1, 400), seasons: tuple(season, season, season, season),
-    election_years: arr(int(2000, 2100)), track_years: int(1, 5), keystone_last_start_year: int(2000, 2100),
-    visit_open_years: range(0.25, 4), term_report_lines_max: int(1, 10), year_lines_max: int(0, 10),
-    speeds: arr(obj({ id: str, ms_per_step: int(50, 60000) }), { min: 1 }), default_speed: str,
-    stops: obj({}, Object.fromEntries(STOP_KINDS.map((k) => [k, obj({}, { hard: bool, on: bool })]))),
-    save_key: str,
+    ...calendar, board: str, region: text, councils: arr(str, { min: 1 }), areas: rec(strs),
+    map_groups: arr(obj({ id: str, name: text })),
   }, { note: str }),
+  /** model/board/boards/<id>/board.yaml. */
+  board: obj({
+    name: text, councils: arr(str, { min: 1 }), areas: rec(arr(flag)),
+    map_groups: arr(obj({ id: str, name: text, councils: arr(str, { min: 1 }) })), stubs: arr(stub),
+  }, { note: str, stops }),
   chapter: obj({ id: str, name: text, line: text, priority: int(0), when: arr(termCondition) }),
   meta: obj({ version: int(1), generated: str, hash: str, cy_review: strs, to_check: arr(str) }, { fixture: bool }),
 };

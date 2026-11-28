@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import type { Stop, StepReport, StopKind } from "../../engine/api";
 import { act, boardFixture, newBoard, options, STOP_KINDS, tick } from "../../engine/api";
-import { defaultPrefs, pausesOn, readPrefs, stopOnList } from "./prefs";
+import { defaultPrefs, pausesOn, readPrefs, startSpeed, stopOnList } from "./prefs";
 import { keepHard, liveQueue, newsTrue, passedWarnings, perYearOf, purseOnce, purseSoon, runUpStops, stopsToShow, tickerLines, type QueuedStop, type TickerLine } from "./stops";
 import { opensRunUp } from "./runup";
 
@@ -27,9 +27,17 @@ describe("prefs", () => {
     expect(p.stops.year).toBe(true);
     expect(pausesOn(model, p, "election")).toBe(true);
     expect(p.stepByStep).toBe(true);
-    expect(p.speed).toBe(model.game.default_speed);
+    expect(p.flashingOutline).toBe(true);
+    expect(readPrefs(model, JSON.stringify({ flashingOutline: false }), false).flashingOutline).toBe(false);
     expect(readPrefs(model, "{not json", false)).toEqual(defaultPrefs(model, false));
     expect(stopOnList(model, p)).toContain("year");
+  });
+});
+
+describe("the starting speed (v3-wales.md section 7: Fast for everyone)", () => {
+  it("is game.yaml's default, and a speed saved by an older version is ignored", () => {
+    expect(startSpeed(model)).toBe(model.game.default_speed);
+    expect(readPrefs(model, JSON.stringify({ speed: "steady" }), false)).toEqual(defaultPrefs(model, false));
   });
 });
 

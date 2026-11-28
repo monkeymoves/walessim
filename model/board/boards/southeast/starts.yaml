@@ -1,4 +1,7 @@
-# What you were elected on (docs/design/v2-board.md section 7.2). Owner: package 10.
+# The South East's starts: what you were elected on (docs/design/v2-board.md section 7.2, v3-wales.md
+# section 3). Owner: content (package 17). A start every board offers goes in model/board/starts.yaml;
+# one here with the same id takes its place on this board (ADR 0009).
+# `area: core` and `area: edge` are this board's (board.yaml): the cities, and the valleys.
 # The start is always the real South East Wales of 2026. A start sets one promise to keep by 2034,
 # one free tier 1 project (the player places it at any time) and which councils back you first.
 # Backing nudges and the promise year are GAME RULES (tune).
@@ -11,11 +14,11 @@ starts:
       text: { en: "Work and pay goes up in the valley councils by 2034.", cy: "Gwaith a chyflog yn codi yng nghynghorau'r cymoedd erbyn 2034.", cy_review: true }
       by_year: 2034
       kept_when:
-        - { kind: measure, measure: work, flag: valley, vs_2026: up }
+        - { kind: measure, measure: work, area: edge, vs_2026: up }
     free_project: skills-college
     backing:
-      - { flag: valley, points: 1 }
-      - { flag: city, points: -0.5 }
+      - { area: edge, points: 1 }
+      - { area: core, points: -0.5 }
 
   - id: warm-homes
     name: { en: "Warm, safe homes", cy: "Cartrefi cynnes, diogel", cy_review: true }
@@ -27,7 +30,7 @@ starts:
         - { kind: measure, measure: homes, vs_2026: up }
     free_project: warm-terraces
     backing:
-      - { flag: city, points: 1 }
+      - { area: core, points: 1 }
       - { flag: coal_valley, points: 0.5 }
       - { flag: rural, points: -0.5 }
 
@@ -44,4 +47,4 @@ starts:
       - { flag: coal_valley, points: 0.5 }
       - { flag: coast, points: 0.5 }
       - { flag: rural, points: 0.5 }
-      - { flag: city, points: -0.5 }
+      - { area: core, points: -0.5 }

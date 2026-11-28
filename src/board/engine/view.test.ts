@@ -19,7 +19,7 @@ function handState(model: BoardModel): BoardState {
     councils: Object.fromEntries(Object.entries(councils).map(([k, c]) => [k, { measures: flat(c.measures.work - shift), young: 18, backing: 5, risks: c.risks, momentum: "steady" as const }])),
   });
   return {
-    version: 2, modelHash: model.meta.hash, gameNumber: 7, seed: 7, start: "warm-homes", future: "quiet-years", step: 17, year: 2030, phase: "play",
+    version: 2, modelHash: model.meta.hash, board: model.game.board, gameNumber: 7, seed: 7, start: "warm-homes", future: "quiet-years", step: 17, year: 2030, phase: "play",
     log: [], councils, linkQuality: { "rail:merthyr-rct": 2, "rail:rct-cardiff": 1 },
     projects: [
       { id: "frequent-trains@rail:merthyr-rct", project: "frequent-trains", site: { link: "rail:merthyr-rct" }, level: 1, status: "working", startedStep: 0, readyStep: 0, roots: 1, joined: false },

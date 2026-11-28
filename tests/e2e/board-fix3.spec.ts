@@ -9,7 +9,7 @@
 // - should fix 9: Escape closes one thing at a time.
 import { expect, test, type Page } from "@playwright/test";
 
-const KEY = "etifeddiaeth.board.v2.";
+import { BOARD_KEY as KEY } from "./board-key";
 type Box = { x: number; y: number; width: number; height: number };
 const meets = (a: Box | null, b: Box | null) => !!a && !!b && a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
 
@@ -20,7 +20,7 @@ async function fresh(page: Page, holdWhileReading = true): Promise<void> {
     localStorage.setItem(key + "guide", "done");
     localStorage.setItem("etifeddiaeth.v1.lang", "en");
     const stops = { warning: true, keystone: true, tier_open: true, tipping: true, visit: true, chapter: false, deal_due: true, purse_full: true, finished: false, year: false };
-    localStorage.setItem(key + "prefs", JSON.stringify({ stepByStep: false, speed: "fast", holdWhileReading: hold, stops }));
+    localStorage.setItem(key + "prefs", JSON.stringify({ stepByStep: false, holdWhileReading: hold, stops }));
   }, [KEY, holdWhileReading] as const);
   await page.reload();
   await page.getByTestId("bw-go").click();

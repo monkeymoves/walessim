@@ -1,6 +1,6 @@
 /**
  * Clock settings (16.2.2 and 16.2.5): which moments stop the clock, holding it while you read,
- * and step by step. The stops that can never be switched off are listed as such. Each setting is
+ * step by step, and whether the needs-you outline flashes (v3-wales.md section 2). The stops that can never be switched off are listed as such. Each setting is
  * saved under the board's own key, never shared with another app's storage.
  */
 import { For, type JSX } from "solid-js";
@@ -17,7 +17,7 @@ export function Settings(): JSX.Element {
   const hard = (["respond", "election", "ended"] as StopKind[]).filter((k) => isHard(model, k));
   const setStop = (k: StopKind, on: boolean) => c.setPrefs({ ...c.prefs(), stops: { ...c.prefs().stops, [k]: on } });
   return (
-    <div class="bw-settings sheet-held" role="dialog" aria-labelledby="bw-settings-title" data-testid="bw-settings">
+    <div class="bw-settings sheet-held" role="dialog" aria-labelledby="bw-settings-title" data-testid="bw-settings" data-needs-close="settings">
       <header class="bw-tree-head">
         <h2 class="t-2" id="bw-settings-title">{t("boardui.settings.title")}</h2>
         <CloseButton label={t("boardui.close")} onClick={() => game.setSheet(null)} />
@@ -32,6 +32,10 @@ export function Settings(): JSX.Element {
           <label class="bw-check">
             <input type="checkbox" checked={c.prefs().holdWhileReading} onChange={(e) => c.setPrefs({ ...c.prefs(), holdWhileReading: e.currentTarget.checked })} />
             <span><b>{t("boardui.settings.hold")}</b> <span class="small">{t("boardui.settings.holdNote")}</span></span>
+          </label>
+          <label class="bw-check">
+            <input type="checkbox" checked={c.prefs().flashingOutline} onChange={(e) => c.setPrefs({ ...c.prefs(), flashingOutline: e.currentTarget.checked })} data-testid="bw-pref-flashing" />
+            <span><b>{t("boardclock.needs.setting")}</b> <span class="small">{t("boardclock.needs.settingNote")}</span></span>
           </label>
           <p class="small">{t("boardui.settings.hidden")}</p>
         </fieldset>

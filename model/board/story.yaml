@@ -8,6 +8,7 @@
 # Honesty: the thresholds below (1 in 100 young adults, 0.3 points of gap, four projects) and the
 # priorities are GAME RULES (tune with the bots: "Stories differ" in section 16.6 points here).
 # Chapters are the game's own telling of a run, from what happened on the board. Not a forecast.
+# `area: edge` is each board's (boards/<id>/board.yaml, ADR 0009): on the South East, the valleys.
 # Slots the engine fills: {river}, {council}, {town}, {project}. A chapter about an event names the
 # council it landed on; one that names a {river} counts river floods only. A chapter about a keystone
 # names the keystone's own council; one about a council tipping names that council. {town} is always
@@ -99,8 +100,8 @@ chapters:
     name: { en: "The leaving years", cy: "Y blynyddoedd gadael", cy_review: true }
     line: { en: "Young people left the valleys for work and homes somewhere else.", cy: "Gadawodd pobl ifanc y cymoedd am waith a chartrefi yn rhywle arall.", cy_review: true }
     when:
-      - { kind: young_adults, flag: valley, change: down, by: 1, councils_at_least: 3 }
-      - { kind: young_adults, flag: valley, change: down, by: 0.3 }
+      - { kind: young_adults, area: edge, change: down, by: 1, councils_at_least: 3 }
+      - { kind: young_adults, area: edge, change: down, by: 0.3 }
 
   - id: coming-home
     priority: 11
@@ -108,8 +109,8 @@ chapters:
     line: { en: "Young people came back to the valleys, and some stayed to raise a family.", cy: "Daeth pobl ifanc yn ôl i'r cymoedd, ac arhosodd rhai i fagu teulu.", cy_review: true }
     # The valleys as a whole must have gained young adults too, not two towns while the rest emptied.
     when:
-      - { kind: young_adults, flag: valley, change: up, by: 0.5, councils_at_least: 2 }
-      - { kind: young_adults, flag: valley, change: up, by: 0.2 }
+      - { kind: young_adults, area: edge, change: up, by: 0.5, councils_at_least: 2 }
+      - { kind: young_adults, area: edge, change: up, by: 0.2 }
 
   - id: big-build
     priority: 12

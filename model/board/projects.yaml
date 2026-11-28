@@ -15,105 +15,9 @@
 # projects and keystones 1.3 times), all logged in docs/design/board-balance-log.md. Each keystone
 # unlocks one legacy project (`legacy_of`, 5 coins, three years, 16.3.5). Running costs are coins a
 # year, charged a little every step.
+# Branch 1 is each board's own, with its projects, in model/board/boards/<id>/branch.yaml (ADR 0009).
+# The build puts each branch's projects together in tree order, legacy projects last.
 projects:
-  # ---------------------------------------------------------------------------
-  # Branch 1: Joined-up valleys (rail, towns and reach)
-  - id: frequent-trains
-    branch: valleys
-    tier: 1
-    keystone: false
-    site: link
-    cost: 3
-    build_years: 2
-    name: { en: "Frequent trains on a valley line", cy: "Trenau aml ar lein y cwm", cy_review: true }
-    what: { en: "More trains, more often, on one stretch of line. Work and college get easier to reach.", cy: "Mwy o drenau, yn amlach, ar un darn o'r lein. Mae'n haws cyrraedd gwaith a choleg.", cy_review: true }
-    example: { en: "The Treherbert, Aberdare and Merthyr lines into Pontypridd and Cardiff. The Ebbw Vale line through Newbridge to Newport.", cy: "Llinellau Treherbert, Aberdâr a Merthyr i Bontypridd a Chaerdydd. Llinell Glynebwy drwy Drecelyn i Gasnewydd.", cy_review: true }
-    catch: { en: "It works both ways. Without homes and work at the valley end, young people ride out and stay out.", cy: "Mae'n gweithio'r ddwy ffordd. Heb gartrefi a gwaith ym mhen y cwm, mae pobl ifanc yn teithio allan ac yn aros allan.", cy_review: true }
-    needs:
-      - { kind: feature, feature: rail }
-    effects:
-      - { kind: link_quality, steps: 1 }
-      - { kind: measure, measure: climate, points: 0.25, where: link_ends }
-    upgrade_costs: [4, 5]
-    level_factor: [1, 2.2, 3.5]
-    tags: [rail]
-    visit: ebbw-vale
-    sources: [transport-labour, ons-internal-migration]
-
-  - id: buses-meet-trains
-    branch: valleys
-    tier: 1
-    keystone: false
-    site: council
-    cost: 2
-    build_years: 0.5
-    quick: true
-    running: { coins_per_year: 0.125 }
-    name: { en: "Buses that meet the trains", cy: "Bysiau sy'n cwrdd â'r trenau", cy_review: true }
-    what: { en: "Buses timed to the trains, from the top of the valley to the station.", cy: "Bysiau wedi'u hamseru gyda'r trenau, o ben y cwm i'r orsaf.", cy_review: true }
-    example: { en: "Maerdy to Porth. Blaenavon to Pontypool.", cy: "Y Maerdy i'r Porth. Blaenafon i Bont-y-pŵl.", cy_review: true }
-    catch: { en: "Buses cost coins to keep running, for as long as they run.", cy: "Mae bysiau'n costio darnau arian i'w cadw i redeg, cyhyd ag y maen nhw'n rhedeg.", cy_review: true }
-    needs:
-      - { kind: feature, feature: rail }
-    effects:
-      - { kind: measure, measure: health, points: 0.656 }
-      - { kind: measure, measure: work, points: 0.438 }
-      - { kind: measure, measure: climate, points: 0.219 }
-    upgrade_costs: [2, 3]
-    level_factor: [1, 2.2, 3.5]
-    tags: [bus, services]
-    # Health: buses to the station help people reach care (transport-health-access); work: transport-labour.
-    sources: [transport-labour, transport-health-access]
-
-  - id: station-quarter
-    branch: valleys
-    tier: 2
-    keystone: false
-    site: council
-    cost: 4
-    build_years: 3
-    name: { en: "Station quarter", cy: "Ardal yr orsaf", cy_review: true }
-    what: { en: "Homes, a health centre and workspace beside the station. Homes stay affordable when the line gets busy.", cy: "Cartrefi, canolfan iechyd a gweithle wrth ymyl yr orsaf. Mae cartrefi'n aros yn fforddiadwy pan fydd y lein yn brysur.", cy_review: true }
-    example: { en: "Pontypridd, Bargoed or Ebbw Vale.", cy: "Pontypridd, Bargod neu Lynebwy.", cy_review: true }
-    catch: { en: "The town centre is a building site for a while.", cy: "Mae canol y dref yn safle adeiladu am gyfnod.", cy_review: true }
-    needs:
-      - { kind: feature, feature: rail }
-    effects:
-      - { kind: measure, measure: homes, points: 0.975 }
-      - { kind: measure, measure: work, points: 0.78, jobs: true }
-      - { kind: measure, measure: health, points: 0.195 }
-      - { kind: block, spread: S2, share: 0.8 }
-      - { kind: young_adults, points: 0.1 }
-    upgrade_costs: [4, 5]
-    level_factor: [1, 2.2, 3.5]
-    tags: [homes, jobs]
-    visit: ebbw-vale
-    sources: [housing-elasticity, transport-labour]
-
-  - id: work-up-the-line
-    branch: valleys
-    tier: 3
-    keystone: true
-    site: council
-    cost: 8
-    build_years: 6
-    name: { en: "Work comes up the line", cy: "Gwaith yn dod i fyny'r lein", cy_review: true }
-    what: { en: "Public bodies and firms take offices in valley towns on fast lines. The morning trains fill both ways.", cy: "Mae cyrff cyhoeddus a chwmnïau'n agor swyddfeydd yn nhrefi'r cymoedd ar linellau cyflym. Mae trenau'r bore'n llenwi'r ddwy ffordd.", cy_review: true }
-    example: { en: "Offices in Merthyr Tydfil, Aberdare, Ebbw Vale and Pontypool.", cy: "Swyddfeydd ym Merthyr Tudful, Aberdâr, Glynebwy a Phont-y-pŵl.", cy_review: true }
-    catch: { en: "It only works where frequent trains already run.", cy: "Dim ond lle mae trenau aml yn rhedeg yn barod y mae'n gweithio.", cy_review: true }
-    needs:
-      - { kind: feature, feature: valley }
-      - { kind: link_quality, at_least: 2 }
-    effects:
-      - { kind: measure, measure: work, points: 2.6, jobs: true }
-      - { kind: young_adults, points: 0.3 }
-      - { kind: measure, measure: welsh, points: 0.26, after_years: 2 }
-      - { kind: special, special: reverse_commute }
-      - { kind: special, special: branch_joined }
-    level_factor: [1, 2.2, 3.5]
-    tags: [jobs, offices]
-    sources: [transport-labour, inward-investment]
-
   # ---------------------------------------------------------------------------
   # Branch 2: Made here (skills and firms that stay)
   - id: skills-college
@@ -479,27 +383,6 @@ projects:
   # Each region wide part is a special the engine acts on: links_up (every upgraded link rises a
   # step), colleges_up (every skills college works a level higher), storm_no_coins (answers to
   # storms cost nothing) and running_halved (running costs cut, B1 running_share).
-  - id: evening-trains
-    branch: valleys
-    tier: 2
-    keystone: false
-    legacy_of: work-up-the-line
-    site: council
-    cost: 5
-    build_years: 3
-    running: { coins_per_year: 0.25 }
-    name: { en: "Trains all evening and on Sundays", cy: "Trenau gyda'r nos ac ar y Sul", cy_review: true }
-    what: { en: "Late trains and Sunday trains on every line you made frequent. Every town on those lines can reach more.", cy: "Trenau hwyr a threnau dydd Sul ar bob lein a wnaethoch yn aml. Gall pob tref ar y llinellau hynny gyrraedd mwy.", cy_review: true }
-    example: { en: "The last train home from Cardiff to Treherbert, Merthyr Tydfil and Ebbw Vale runs near midnight.", cy: "Mae'r trên olaf o Gaerdydd i Dreherbert, Merthyr Tudful a Glynebwy yn gadael tua hanner nos.", cy_review: true }
-    catch: { en: "Staff for late and Sunday trains cost coins every year.", cy: "Mae staff ar gyfer trenau hwyr a threnau'r Sul yn costio darnau arian bob blwyddyn.", cy_review: true }
-    needs:
-      - { kind: keystone, project: work-up-the-line }
-    effects:
-      - { kind: special, special: links_up }
-    level_factor: [1, 2.2, 3.5]
-    tags: [rail]
-    sources: [transport-labour]
-
   - id: firms-train-own
     branch: made_here
     tier: 2

@@ -20,7 +20,7 @@ export function WarningSlip(): JSX.Element {
   return (
     <Show when={w()}>
       {(x) => (
-        <aside class="bw-slip bw-lane bw-warn on-slate" role="dialog" aria-labelledby="bw-warn-title" data-testid="bw-warning">
+        <aside class="bw-slip bw-lane bw-warn on-slate" role="dialog" aria-labelledby="bw-warn-title" data-testid="bw-warning" data-needs-close="warning">
           <span class="bw-slip-pin" aria-hidden="true" />
           <CloseButton class="bw-slip-close" label={t("boardui.close")} onClick={() => game.setWarning(null)} />
           <p class="label bw-slip-from">{t("boardui.forecast.window", { from: whenWords(model, x().fromStep), to: whenWords(model, x().toStep) })}</p>

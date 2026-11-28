@@ -30,10 +30,10 @@ export function DealChoice(): JSX.Element {
   const dueStep = () => (game.state()?.step ?? 0) + stepsOf(model, years());
   return (
     <Show when={deals().length}>
-      <section class="bw-deals" aria-labelledby="bw-deals-title" data-testid="bw-deals">
+      <section class="bw-deals" aria-labelledby="bw-deals-title" data-testid="bw-deals" data-needs-card>
         <h3 class="t-3" id="bw-deals-title">{t("boardui.deal.title")}</h3>
         <p class="story-small">{t("boardui.deal.ask", { off: dealNoteVars(model).off })}</p>
-        <ul class="bw-deal-list">
+        <ul class="bw-deal-list" data-needs="deals">
           <For each={deals()}>
             {(o) => {
               const a = o.action.kind === "deal" ? o.action : null;

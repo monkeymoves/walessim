@@ -7,7 +7,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { englishOnly, welshFaults } from "../../design/scripts/board-cy-lib.mjs";
 
-const KEY = "etifeddiaeth.board.v2.";
+import { BOARD_KEY as KEY } from "./board-key";
 const eng = englishOnly(process.cwd());
 
 async function scan(page: Page, where: string, found: Map<string, string>): Promise<void> {
@@ -47,7 +47,7 @@ test("no Welsh board screen shows English where Welsh exists, or a broken mutati
     for (const k of ["run", "endings", "prefs"]) localStorage.removeItem(key + k);
     localStorage.setItem(key + "guide", "done");
     localStorage.setItem("etifeddiaeth.v1.lang", "cy");
-    localStorage.setItem(key + "prefs", JSON.stringify({ stepByStep: true, speed: "steady", holdWhileReading: true, stops: {} }));
+    localStorage.setItem(key + "prefs", JSON.stringify({ stepByStep: true, holdWhileReading: true, stops: {} }));
   }, KEY);
   await page.reload();
   await expect(page.getByTestId("bw-go")).toBeVisible({ timeout: 30_000 });

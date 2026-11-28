@@ -3,19 +3,21 @@
  * enough to paste (section 8 item 7, 16.2.8). Decoding replays the log from the game number, so
  * a code is also a save and a proof that the engine is deterministic.
  *
- * Format: "b2." then base64url of a JSON array
- * `[version, hash8, gameNumber, start, stepReached, dictionary, actions]`. Ids are written once in
+ * Format: "b3." then base64url of a JSON array
+ * `[version, board, hash8, gameNumber, start, stepReached, dictionary, actions]`. The board id
+ * comes first after the version, so a screen can read which board a code is for (`runBoard`) and
+ * load that board before replaying it (ADR 0009). Ids are written once in
  * the dictionary; `actions` is a comma list of `<at>@<action>`, the step in base 36, and the
  * action as `b<p>:<site>`, `u<p>:<site>` (site `c<i>` or `l<i>`), `l<i>+` or `l<i>-` (law),
  * `r<e>:<r>` (respond), `v<p>:<i>/<i>` (visit picks), `d<c>:<m>` (deal), ids by base 36 index.
- * A phase 1 code ("B1") is refused with a plain message.
+ * A code from an older version ("B1", or "b2" from before boards) is refused with a plain message.
  */
 import { BoardRunError } from "./errors";
 import { replay } from "./clock";
-import type { Action, BoardModel, BoardState, LoggedAction, Site } from "./types";
+import type { Action, BoardId, BoardModel, BoardState, LoggedAction, Site } from "./types";
 
-const PREFIX = "b2.";
-const VERSION = 2;
+const PREFIX = "b3.";
+const VERSION = 3;
 const hash8 = (h: string): string => h.slice(0, 8);
 
 const B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
@@ -107,17 +109,17 @@ function decodeLog(text: string, dict: string[]): LoggedAction[] {
   });
 }
 
-/** A short code: the game number, the start, the step reached and the log. Paste to replay. */
+/** A short code: the board, the game number, the start, the step reached and the log. Paste to replay. */
 export function encodeRun(state: BoardState): string {
   const dict: string[] = [];
   const log = encodeLog(state.log, dict);
-  return PREFIX + toBase64Url(JSON.stringify([VERSION, hash8(state.modelHash), state.gameNumber, state.start, state.step, dict, log]));
+  return PREFIX + toBase64Url(JSON.stringify([VERSION, state.board, hash8(state.modelHash), state.gameNumber, state.start, state.step, dict, log]));
 }
 
-/** Replay a run code into a state. Throws `BoardRunError` if it cannot be read, is from phase 1, or was made with another model. */
-export function decodeRun(model: BoardModel, code: string): BoardState {
+/** The parsed array of a run code. Throws `BoardRunError` if it cannot be read or is from an older version. */
+function readRun(code: string): unknown[] {
   const trimmed = code.trim();
-  if (/^b1/i.test(trimmed)) throw new BoardRunError("This code is from an older version of the game.");
+  if (/^b[12]/i.test(trimmed)) throw new BoardRunError("This code is from an older version of the game.");
   if (!trimmed.startsWith(PREFIX)) throw new BoardRunError("That is not a board run code");
   let parsed: unknown;
   try {
@@ -125,9 +127,20 @@ export function decodeRun(model: BoardModel, code: string): BoardState {
   } catch (e) {
     throw e instanceof BoardRunError ? e : new BoardRunError("The run code could not be read");
   }
-  if (!Array.isArray(parsed) || parsed.length !== 7) throw new BoardRunError("The run code could not be read");
-  const [version, hash, gameNumber, start, reached, dict, log] = parsed as unknown[];
-  if (version !== VERSION) throw new BoardRunError(`Run code version ${String(version)} is not supported`);
+  if (!Array.isArray(parsed) || parsed.length !== 8 || typeof parsed[1] !== "string") throw new BoardRunError("The run code could not be read");
+  if (parsed[0] !== VERSION) throw new BoardRunError(`Run code version ${String(parsed[0])} is not supported`);
+  return parsed;
+}
+
+/** The board a run code was made on, to load before replaying it. Throws `BoardRunError` as `decodeRun` does. */
+export function runBoard(code: string): BoardId {
+  return readRun(code)[1] as BoardId;
+}
+
+/** Replay a run code into a state. Throws `BoardRunError` if it cannot be read, is from an older version, or was made on another board or model. */
+export function decodeRun(model: BoardModel, code: string): BoardState {
+  const [, board, hash, gameNumber, start, reached, dict, log] = readRun(code);
+  if (board !== model.game.board) throw new BoardRunError(`The run code is for another board (${String(board)})`);
   if (hash !== hash8(model.meta.hash)) throw new BoardRunError("The run code was made with a different version of the board");
   if ((typeof gameNumber !== "number" && typeof gameNumber !== "string") || typeof start !== "string" || typeof log !== "string"
     || typeof reached !== "number" || !Number.isInteger(reached) || reached < 0 || reached > model.game.steps

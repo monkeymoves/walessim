@@ -5,6 +5,8 @@
 # keystone, so a game with a keystone never falls through to The drift or The patchwork.
 # The joined-up valleys also needs young adults held in the valleys; without that, upgraded lines
 # fall through to The city and its bedrooms, which is the honest story.
+# `area: edge` and `area: core` are each board's (boards/<id>/board.yaml, ADR 0009): on the South
+# East the valleys and the cities. A board renames an ending in its own words.yaml.
 # Four endings tell a hard game (16.5.3): The comeback, The long game, Holding the line and The
 # gamble. The drift is kept for a game with fewer than six projects. The patchwork is the
 # fallback: many small things and no keystone, better or worse.
@@ -47,7 +49,7 @@ endings:
         down: { en: "The gap between the best and worst off places is wider than in 2026.", cy: "Mae'r bwlch rhwng y llefydd gorau a gwaethaf eu byd yn lletach nag yn 2026.", cy_review: true }
       - kind: measure_change
         measure: work
-        flag: valley
+        area: edge
         up: { en: "Work and pay in {council} rose a little.", cy: "Cododd Gwaith a chyflog yn {council} ychydig.", cy_review: true }
         down: { en: "Work and pay in {council} is lower than in 2026.", cy: "Mae Gwaith a chyflog yn {council} yn is nag yn 2026.", cy_review: true }
       - kind: project_standing
@@ -62,10 +64,10 @@ endings:
     route: { en: "Joined-up valleys, with Good homes or with Made here.", cy: "Cymoedd cysylltiedig, gyda Chartrefi da neu gyda Diwydiant lleol.", cy_review: true }
     when:
       - { kind: keystone, project: work-up-the-line }
-      - { kind: young_adults, flag: valley, vs_2026: held }
+      - { kind: young_adults, area: edge, vs_2026: held }
     evidence:
       - kind: young_adults_change
-        flag: valley
+        area: edge
         up: { en: "{council} has more young adults than in 2026.", cy: "Mae gan {council} fwy o oedolion ifanc nag yn 2026.", cy_review: true }
         down: { en: "{council} still lost some young adults.", cy: "Collodd {council} rai oedolion ifanc o hyd.", cy_review: true }
       - kind: project_standing
@@ -146,15 +148,15 @@ endings:
     route: { en: "Faster trains, with no homes or work at the valley end.", cy: "Trenau cyflymach, heb gartrefi na gwaith ym mhen y cwm.", cy_review: true }
     when:
       - { kind: links_upgraded, at_least: 1 }
-      - { kind: young_adults, flag: valley, vs_2026: fell }
+      - { kind: young_adults, area: edge, vs_2026: fell }
     evidence:
       - kind: young_adults_change
-        flag: valley
+        area: edge
         up: { en: "{council} kept its young adults, against the tide.", cy: "Cadwodd {council} ei oedolion ifanc, yn erbyn y llif.", cy_review: true }
         down: { en: "{council} has fewer young adults than in 2026.", cy: "Mae gan {council} lai o oedolion ifanc nag yn 2026.", cy_review: true }
       - kind: measure_change
         measure: homes
-        flag: city
+        area: core
         up: { en: "Homes in {council} are easier to find than in 2026.", cy: "Mae'n haws dod o hyd i gartref yn {council} nag yn 2026.", cy_review: true }
         down: { en: "Homes in {council} are dearer and harder to find than in 2026.", cy: "Mae cartrefi yn {council} yn ddrutach ac yn anoddach dod o hyd iddyn nhw nag yn 2026.", cy_review: true }
       - kind: gap_change
