@@ -1,13 +1,15 @@
 /**
- * Events on the board: choosing the council an event lands on, warning it a turn ahead, how big
+ * Events on the board: choosing the council an event lands on, warning it ahead, how big
  * it is when it lands, and the responses (docs/design/v2-board.md section 7.1).
  */
 import { uniform } from "../../engine/rng";
 import { allHold, countProjects, holds, siteCouncils } from "./conditions";
-import type { TurnCtx } from "./ctx";
+import type { StepCtx } from "./ctx";
 import { applyOnce } from "./effects";
 import { param } from "./rules";
+import { specialCouncils, specialStands } from "./specials";
 import { ruleParam } from "./rule-defaults";
+import { stepsOf } from "./time";
 import type {
   BoardModel, BoardState, Condition, CouncilCode, EventDef, EventRecord, Flow, ForecastedEvent,
 } from "./types";
@@ -41,15 +43,27 @@ export function rankTargets(model: BoardModel, state: BoardState, e: EventDef, c
     if (t.pick === "highest_measure") return c.measures[t.measure];
     return 0;
   };
-  const draw = (code: CouncilCode) => uniform(state.seed, "target", state.turn, e.id, code);
+  const draw = (code: CouncilCode) => uniform(state.seed, "target", state.step, e.id, code);
   return [...cands].sort((a, b) => value(b) - value(a) || draw(b) - draw(a));
 }
 
 /**
- * Plan an event for the end of the current turn: its councils (target first, then those most at
- * risk) and its base severity. Null when no council fits a grown event.
+ * The warned window around a landing step: two steps (one at a two year step), the landing step
+ * drawn inside it by the seed, never before `now`.
  */
-export function planEvent(model: BoardModel, state: BoardState, e: EventDef): ForecastedEvent | null {
+export function warnWindow(model: BoardModel, state: BoardState, event: string, landing: number, now: number): { fromStep: number; toStep: number } {
+  const width = Math.min(2, Math.max(1, stepsOf(model, 1) / 2));
+  const offset = width > 1 ? Math.floor(uniform(state.seed, "window", landing, event) * width) : 0;
+  const fromStep = Math.max(now, landing - offset);
+  return { fromStep, toStep: Math.max(landing, fromStep + width - 1) };
+}
+
+/**
+ * Plan an event to land in step `landing`: its councils (target first, then those most at risk),
+ * judged on the board now, its warned window and its base severity. Null when no council fits a
+ * grown event.
+ */
+export function planEvent(model: BoardModel, state: BoardState, e: EventDef, landing: number = state.step): ForecastedEvent | null {
   let cands = candidates(model, state, e);
   if (cands.length === 0) {
     if (e.origin === "grown") return null;
@@ -60,7 +74,7 @@ export function planEvent(model: BoardModel, state: BoardState, e: EventDef): Fo
   if (e.target.pick === "all") councils = ranked;
   else if (e.travels === "downstream") councils = [ranked[0]!, ...downstream(model, ranked[0]!)];
   else councils = ranked.slice(0, 1);
-  return { event: e.id, turn: state.turn, councils, severity: e.severity };
+  return { event: e.id, ...warnWindow(model, state, e.id, landing, state.step), step: landing, councils, severity: e.severity };
 }
 
 /** Which councils an event hits when it lands: all its councils (single target events list one). */
@@ -86,11 +100,14 @@ export function preparedHere(model: BoardModel, state: BoardState, e: EventDef, 
 
 /** Rivers given room on this river: a working `storm_step_down` project at any council the storm reaches. */
 function stormStepped(model: BoardModel, state: BoardState, councils: CouncilCode[]): boolean {
-  return state.projects.some((p) => {
-    if (p.status !== "working") return false;
-    const def = model.projects.find((d) => d.id === p.project);
-    return !!def?.effects.some((x) => x.kind === "special" && x.special === "storm_step_down") && siteCouncils(model, p).some((s) => councils.includes(s));
-  });
+  const at = specialCouncils(model, state, "storm_step_down");
+  return councils.some((c) => at.has(c));
+}
+
+/** A cluster that roots (a working `cluster_roots` keystone): a downturn takes less where a skills college stands. */
+function clusterHolds(model: BoardModel, state: BoardState, e: EventDef, code: CouncilCode): boolean {
+  return e.track === "economy" && specialStands(model, state, "cluster_roots")
+    && countProjects(model, state, code, { kind: "project", tag: "college", where: "here" }) > 0;
 }
 
 /** How strongly an event hits one council, 0 and up: its size, preparation, and S4 for storms passing downstream. */
@@ -98,6 +115,7 @@ export function hitFactor(model: BoardModel, state: BoardState, e: EventDef, f: 
   let factor = sizeFactor(model, state, e, code);
   if (e.good) return factor;
   factor *= Math.pow(ruleParam(model, RULE_IDS.severity, "prepared_cut"), preparedHere(model, state, e, code).length);
+  if (clusterHolds(model, state, e, code)) factor *= ruleParam(model, RULE_IDS.severity, "downturn_cut");
   if (e.travels === "downstream") {
     if (stormStepped(model, state, f.councils)) factor *= ruleParam(model, RULE_IDS.severity, "storm_step");
     if (code !== f.councils[0]) {
@@ -109,7 +127,7 @@ export function hitFactor(model: BoardModel, state: BoardState, e: EventDef, f: 
 }
 
 /** Land one forecasted event: effects scaled at each council, the record, and any flows down the river. */
-export function landOne(ctx: TurnCtx, f: ForecastedEvent): { record: EventRecord; flows: Flow[] } {
+export function landOne(ctx: StepCtx, f: ForecastedEvent): { record: EventRecord; flows: Flow[] } {
   const { model, state: draft } = ctx;
   const e = model.events.find((d) => d.id === f.event)!;
   // Sizes are judged on the board before any of it lands, so the order of councils does not matter.
@@ -126,7 +144,8 @@ export function landOne(ctx: TurnCtx, f: ForecastedEvent): { record: EventRecord
     }
   }
   const severity = Math.round(f.severity * (factors[f.councils[0]!] ?? 1) * 1e4) / 1e4;
-  return { record: { event: e.id, turn: draft.turn, councils: [...f.councils], severity }, flows };
+  const prepared = !e.good && preparedHere(model, draft, e, f.councils[0]!).length > 0;
+  return { record: { event: e.id, step: draft.step, councils: [...f.councils], severity, ...(e.origin === "outside" ? { prepared } : {}) }, flows };
 }
 
 /** Is the event's trigger holding anywhere now (for tests and hints)? */

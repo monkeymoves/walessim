@@ -4,14 +4,15 @@
  * the UI and bots, `act` refuses with the same list. Preview is in preview.ts.
  */
 import { holds, neighbours, siteCouncils } from "./conditions";
-import { respondBlockers } from "./events";
-import { fasterBuild, refusesBuild } from "./people";
-import { param } from "./rules";
+import { dealBlockers, dealDiscount } from "./deals";
+import { rebuildShare, respondBlockers, responseCost } from "./events";
+import { fasterBuild } from "./people";
+import { freshStartDiscount } from "./roots";
+import { stepsOf, yearOfStep } from "./time";
 import type {
   Action, ActionOption, Blocker, BoardModel, BoardState, Condition, CouncilCode, LinkDef, ProjectDef, ProjectState, RuleId,
   Site, Tier,
 } from "./types";
-import { RULE_IDS } from "./types";
 
 export { preview } from "./preview";
 
@@ -49,28 +50,50 @@ function needBlockers(model: BoardModel, state: BoardState, def: ProjectDef, cou
   return failing.map((condition) => ({ kind: "needs", condition, rule }));
 }
 
-/** Turns to build here: the project's build time, one less after a strong win where the council backed you. */
-export function buildTurns(model: BoardModel, state: BoardState, def: ProjectDef, site: Site): number {
-  const faster = Math.max(...siteOf(model, site).map((c) => fasterBuild(model, state, c)), 0);
-  return Math.max(0, def.build_turns - faster);
+/**
+ * Years to build here: the project's build time, less after a strong win where the council backed
+ * you, then shortened after trouble landed here (rule E2; for a link, the end that gains least).
+ */
+export function buildYears(model: BoardModel, state: BoardState, def: ProjectDef, site: Site): number {
+  const councils = siteOf(model, site);
+  const faster = Math.max(...councils.map((c) => fasterBuild(model, state, c)), 0);
+  const share = Math.max(...councils.map((c) => rebuildShare(model, state, c)), 0) || 1;
+  return Math.max(0, def.build_years - faster) * share;
 }
 
-/** The turn at whose end a build started now starts working. */
-export const readyTurnOf = (state: BoardState, turns: number): number => state.turn + Math.max(1, turns) - 1;
-const yearAfter = (model: BoardModel, turn: number): number => model.game.first_year + (turn + 1) * model.game.turn_years;
+/** Steps to build here (0 opens at once). */
+export const buildSteps = (model: BoardModel, state: BoardState, def: ProjectDef, site: Site): number => stepsOf(model, buildYears(model, state, def, site));
 
-/** Coins an action costs now. */
+/** The step at whose end a build started now starts working. */
+export const readyStepOf = (state: BoardState, steps: number): number => state.step + Math.max(1, steps) - 1;
+/** The year a project ready at the end of `step` is first felt (the year of the step after). */
+export const yearAfter = (model: BoardModel, step: number): number => yearOfStep(model, step + 1);
+
+/**
+ * Coins off a build: a fresh start (rule R3, roots.ts) and an open deal it serves (rule P6,
+ * deals.ts). The deal never takes a build below 1 coin, as the fresh start does not.
+ */
+export function buildDiscounts(model: BoardModel, state: BoardState, def: ProjectDef, site: Site): { fresh: number; deal: number } {
+  if (state.freeProject === def.id) return { fresh: 0, deal: 0 };
+  const fresh = freshStartDiscount(model, state, def.cost, site);
+  const deal = Math.max(0, Math.min(dealDiscount(model, state, siteOf(model, site), def.id), def.cost - fresh - 1));
+  return { fresh, deal };
+}
+
+/** Coins an action costs now: a build less its discounts. */
 export function costOf(model: BoardModel, state: BoardState, action: Action): number {
   if (action.kind === "build") {
     const def = projectDef(model, action.project);
-    return !def || state.freeProject === action.project ? 0 : def.cost;
+    if (!def || state.freeProject === action.project) return 0;
+    const off = buildDiscounts(model, state, def, action.site);
+    return def.cost - off.fresh - off.deal;
   }
   if (action.kind === "upgrade") {
     const p = state.projects.find((x) => x.id === projectStateId(action.project, action.site));
     const costs = projectDef(model, action.project)?.upgrade_costs;
     return p && costs ? costs[p.level - 1] ?? 0 : 0;
   }
-  if (action.kind === "respond") return model.events.find((e) => e.id === action.event)?.responses.find((r) => r.id === action.response)?.cost ?? 0;
+  if (action.kind === "respond") return responseCost(model, state, action.event, action.response);
   return 0;
 }
 
@@ -83,14 +106,14 @@ function buildBlockers(model: BoardModel, state: BoardState, def: ProjectDef, si
   const out: Blocker[] = [];
   const councils = siteOf(model, site);
   if (state.projects.some((p) => p.id === projectStateId(def.id, site))) out.push({ kind: "already_here" });
-  const cost = state.freeProject === def.id ? 0 : def.cost;
+  else if (def.keystone && state.projects.some((p) => p.project === def.id)) out.push({ kind: "one_keystone" });
+  const cost = costOf(model, state, { kind: "build", project: def.id, site });
   if (cost > state.coins) out.push({ kind: "coins", need: cost, have: state.coins });
   out.push(...gateBlockers(model, state, def.branch, def.tier, councils[0]!));
   out.push(...needBlockers(model, state, def, councils));
-  for (const c of councils) if (refusesBuild(model, state, c, cost)) out.push({ kind: "refused", council: c, minCost: param(model, RULE_IDS.election, "refuse_cost") });
-  const bt = buildTurns(model, state, def, site);
+  const bs = buildSteps(model, state, def, site);
   if (def.keystone && state.year > model.game.keystone_last_start_year) out.push({ kind: "too_late", lastYear: model.game.keystone_last_start_year });
-  else if (readyTurnOf(state, bt) >= model.game.turns) out.push({ kind: "too_late", lastYear: model.game.end_year - Math.max(1, bt) * model.game.turn_years });
+  else if (readyStepOf(state, bs) >= model.game.steps) out.push({ kind: "too_late", lastYear: yearOfStep(model, model.game.steps - Math.max(1, bs)) });
   return out;
 }
 
@@ -102,7 +125,6 @@ function upgradeBlockers(model: BoardModel, state: BoardState, def: ProjectDef, 
   if (cost > state.coins) out.push({ kind: "coins", need: cost, have: state.coins });
   const councils = siteCouncils(model, p);
   out.push(...gateBlockers(model, state, def.branch, (p.level + 1) as Tier, councils[0]!));
-  for (const c of councils) if (refusesBuild(model, state, c, cost)) out.push({ kind: "refused", council: c, minCost: param(model, RULE_IDS.election, "refuse_cost") });
   return out;
 }
 
@@ -125,8 +147,10 @@ export function blockers(model: BoardModel, state: BoardState, action: Action): 
     case "respond": return respondBlockers(model, state, action.event, action.response);
     case "visit": {
       if (!state.pending.some((p) => p.kind === "visit" && p.place === action.place)) return [{ kind: "not_offered" }];
-      return state.visitsThisTurn >= model.game.visits_per_turn ? [{ kind: "visit_used" }] : [];
+      const wait = Math.max(1, stepsOf(model, model.game.visit_open_years));
+      return state.openVisitSince !== null && state.step - state.openVisitSince < wait ? [{ kind: "visit_used" }] : [];
     }
+    case "deal": return dealBlockers(model, state, action);
   }
 }
 
@@ -135,8 +159,9 @@ function option(model: BoardModel, state: BoardState, action: Action): ActionOpt
   const out: ActionOption = { action, allowed: b.length === 0, blockers: b, cost: costOf(model, state, action) };
   if (action.kind === "build" || action.kind === "upgrade") {
     const def = projectDef(model, action.project)!;
-    const bt = action.kind === "build" ? buildTurns(model, state, def, action.site) : 0;
-    Object.assign(out, { project: def.id, branch: def.branch, tier: def.tier, buildTurns: bt, readyYear: yearAfter(model, readyTurnOf(state, bt)) });
+    const years = action.kind === "build" ? buildYears(model, state, def, action.site) : 0;
+    const readyStep = readyStepOf(state, stepsOf(model, years));
+    Object.assign(out, { project: def.id, branch: def.branch, tier: def.tier, buildYears: years, readyStep, readyYear: yearAfter(model, readyStep) });
   }
   return out;
 }
@@ -156,9 +181,12 @@ export function options(model: BoardModel, state: BoardState, council?: CouncilC
   }
   if (!council) for (const law of model.laws) out.push(option(model, state, { kind: "law", law: law.id, pass: !state.laws.includes(law.id) }));
   for (const p of state.pending) {
-    if (council && !(p.kind === "respond" ? p.councils.includes(council) : p.council === council)) continue;
+    if (council && p.kind !== "deal" && !(p.kind === "respond" ? p.councils.includes(council) : p.council === council)) continue;
     if (p.kind === "respond") {
       for (const r of model.events.find((e) => e.id === p.event)?.responses ?? []) out.push(option(model, state, { kind: "respond", event: p.event, response: r.id }));
+    } else if (p.kind === "deal") {
+      if (council && !p.choices.some((c) => c.council === council)) continue;
+      for (const c of p.choices) out.push(option(model, state, { kind: "deal", council: c.council, measure: c.measure }));
     } else {
       const place = model.places.find((x) => x.id === p.place);
       const picks = place?.template === "T3" ? (place.options ?? []).map((o) => [o.id]) : [[]];

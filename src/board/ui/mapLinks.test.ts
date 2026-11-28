@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { boardFixture, FIXTURE_COUNCILS } from "../engine/api";
+import { boardFixture, FIXTURE_COUNCILS, newBoard } from "../engine/api";
 import { lensFor, linksFor, linkWeight, walesMean } from "./mapLinks";
-import { newBoard } from "./standin/build";
 
 describe("the board's links on the map", () => {
   const model = boardFixture();

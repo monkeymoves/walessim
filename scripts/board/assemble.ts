@@ -13,7 +13,7 @@
  */
 import { checkBoardFile, checkBoardModel, formatIssues, type Issue } from "../../src/board/model";
 import { boardFixture, gateRules } from "../../src/board/engine/fixture";
-import { RULE_IDS, type BoardGame, type BoardModel, type BoardRule, type CouncilDef, type CouncilFlag, type IndicatorDef, type LinkDef, type PlaceDef, type StubDef } from "../../src/board/engine/types";
+import { REQUIRED_RULE_IDS, type BoardGame, type ChapterDef, type BoardModel, type BoardRule, type CouncilDef, type CouncilFlag, type IndicatorDef, type LinkDef, type PlaceDef, type StubDef } from "../../src/board/engine/types";
 import { arr, bool, check, nullable, obj, str } from "../../src/board/model/shape";
 import { text } from "../../src/board/model/shapes";
 import { borders, centreOf, outlines, type Geo, type Outline } from "./geo";
@@ -182,6 +182,14 @@ function buildData(inp: BoardInputs, game: BoardGame): Data {
   return { indicators, councils, stubs, links, commute: mode, warnings, toCheck };
 }
 
+/** Chapters from story.yaml (16.5.1). Until it is written there are none, every term is "Holding on", and the build says so. */
+function chaptersOf(f: BoardInputs["files"], useFixtureFor: (section: string) => boolean, toCheck: string[]): ChapterDef[] {
+  const real = list<ChapterDef>(f["story.yaml"], "chapters");
+  if (real && !useFixtureFor("chapters")) return real;
+  toCheck.push(`content: chapters (model/board/story.yaml ${real ? "does not join up yet" : "not written yet"})`);
+  return [];
+}
+
 /** The content sections other packages own, from real files where they exist. */
 function content(inp: BoardInputs, fixture: BoardModel, useFixtureFor: (section: string) => boolean, toCheck: string[]) {
   const f = inp.files;
@@ -191,9 +199,9 @@ function content(inp: BoardInputs, fixture: BoardModel, useFixtureFor: (section:
     toCheck.push(`content: ${section} from the three council fixture (model/board/${file} ${real ? "does not join up yet" : "not written yet"})`);
     return fix;
   };
-  const realRules = ["rules/spread.yaml", "rules/budget.yaml", "rules/people.yaml"].flatMap((n) => (useFixtureFor("rules") ? [] : list<BoardRule>(f[n], "rules") ?? []));
+  const realRules = ["rules/spread.yaml", "rules/budget.yaml", "rules/people.yaml", "rules/growth.yaml"].flatMap((n) => (useFixtureFor("rules") ? [] : list<BoardRule>(f[n], "rules") ?? []));
   const have = new Set(realRules.map((r) => r.id));
-  const fromFixture: string[] = Object.values(RULE_IDS).filter((id) => !have.has(id));
+  const fromFixture: string[] = REQUIRED_RULE_IDS.filter((id) => !have.has(id));
   if (fromFixture.length > 0) toCheck.push(`content: rule cards ${fromFixture.join(", ")} from the fixture (model/board/rules not complete yet)`);
   const rules = [...realRules, ...fixture.rules.filter((r) => fromFixture.includes(r.id))];
   const placeFiles = Object.values(inp.places) as PlaceDef[];
@@ -211,6 +219,7 @@ function content(inp: BoardInputs, fixture: BoardModel, useFixtureFor: (section:
     endings: pick("endings", "endings.yaml", "endings", fixture.endings),
     letters: pick("letters", "letters.yaml", "letters", fixture.letters),
     places,
+    chapters: chaptersOf(f, useFixtureFor, toCheck),
   };
 }
 
@@ -244,7 +253,7 @@ function assembleOnce(inp: BoardInputs, data: Data, game: BoardGame, allFixture:
   }
   const rest = { ...body, sources } as Omit<BoardModel, "meta">;
   return {
-    meta: { version: 1, generated: inp.laIndicators.generated, hash: contentHash(rest), cy_review: cyReviewPaths(rest), to_check: toCheck },
+    meta: { version: 2, generated: inp.laIndicators.generated, hash: contentHash(rest), cy_review: cyReviewPaths(rest), to_check: toCheck },
     ...rest,
   };
 }

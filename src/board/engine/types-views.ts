@@ -7,9 +7,8 @@ import type {
   LinkKind, LinkQuality, MeasureId, NodeId, PlaceId, ProjectId, RiskKind, RiskStep, RuleId, SourceId, Text, Tier,
 } from "./types-model";
 import type { Condition } from "./types-content";
-import type {
-  Action, Cause, Contribution, ElectionResult, EventRecord, Flow, Frame, Pending, ProjectState, Say, WhyQuantity,
-} from "./types-state";
+import type { Action, Cause, Contribution, ElectionResult, Frame, ProjectState, Say, WhyQuantity } from "./types-state";
+import type { Deal, Momentum, Story } from "./types-clock";
 
 // ---------------------------------------------------------------------------
 // Options and previews
@@ -19,9 +18,9 @@ export type Blocker =
   | { kind: "coins"; need: number; have: number }
   /** A condition that does not hold, and the `requires` (or other) rule card that sets it. */
   | { kind: "needs"; condition: Condition; rule: RuleId }
-  /** The council did not back you at the last lost election and refuses builds this dear. */
-  | { kind: "refused"; council: CouncilCode; minCost: number }
   | { kind: "already_here" }
+  /** One of each keystone a game (sections 5.3 and 16.3.5): this one stands or is being built somewhere. */
+  | { kind: "one_keystone" }
   | { kind: "max_level" }
   /** A keystone started now would not be finished by 2050. */
   | { kind: "too_late"; lastYear: number }
@@ -36,8 +35,9 @@ export interface ActionOption {
   blockers: Blocker[];
   /** Coins it costs now (0 for laws, free projects and visits). */
   cost: number;
-  /** Turns to build, and the year it starts working, for builds and upgrades. */
-  buildTurns?: number;
+  /** For builds and upgrades: years to build, the step at whose end it starts working, and that year. */
+  buildYears?: number;
+  readyStep?: number;
   readyYear?: number;
   project?: ProjectId;
   branch?: BranchId;
@@ -74,13 +74,15 @@ export interface Preview {
 // Why?
 
 /**
- * One reason behind a change: a council, a quantity, a turn, the size, the first cause, the link
+ * One reason behind a change: a council, a quantity, when, the size, the first cause, the link
  * it travelled, and the rule card it ends at. `why()` returns them largest first.
  */
 export interface Why {
   council: CouncilCode | null;
   quantity: WhyQuantity;
-  turn: number;
+  /** The first step in the span it happened in. */
+  step: number;
+  /** The calendar year of that step. */
   year: number;
   delta: number;
   cause: Cause;
@@ -94,16 +96,18 @@ export interface Why {
   parts: Contribution[];
 }
 
+/** A Why? asks about a span of steps, inclusive: the UI offers this year, this term and since 2026. */
 export interface WhyTarget {
   council?: CouncilCode;
   measure: WhyQuantity;
-  turn: number;
+  fromStep: number;
+  toStep: number;
 }
 
 // ---------------------------------------------------------------------------
-// Turn report and forecast
+// Steps, stops, reports and the forecast
 
-/** One line of the report: a council and a cause, with its Why?. */
+/** One line of a year or term report: a council and a cause, with its Why?. */
 export interface ReportLine {
   council: CouncilCode | null;
   quantity: WhyQuantity;
@@ -112,41 +116,22 @@ export interface ReportLine {
   why: Why;
 }
 
+/** Coins in one step. `income` includes coin effects; `charges` the care bill and other charges. */
 export interface CoinsReport {
   before: number;
   income: number;
   running: number;
-  /** Coins lost to a weak hand, or other charges (care bill). */
   charges: number;
-  carried: number;
   after: number;
-}
-
-export interface TurnReport {
-  /** The turn that just ended (0 based) and its years. */
-  turn: number;
-  fromYear: number;
-  toYear: number;
-  /** At most `game.report_lines_max`, biggest first. */
-  lines: ReportLine[];
-  /** Projects that started working this turn (ProjectState ids). */
-  finished: string[];
-  /** For the "two years pass" animation. */
-  flows: Flow[];
-  events: EventRecord[];
-  /** Set when an election was held at the end of this turn. */
-  election?: ElectionView;
-  coins: CoinsReport;
-  /** Responses and visits now open. */
-  pending: Pending[];
-  /** True if the game is over (2050 reached). */
-  ended: boolean;
 }
 
 export interface ForecastWarning {
   event: EventId;
   name: Text;
   say: Say;
+  /** The warned window, inclusive. */
+  fromStep: number;
+  toStep: number;
   /** Target first, then the others most at risk. */
   councils: CouncilCode[];
   good: boolean;
@@ -157,10 +142,11 @@ export interface ForecastWarning {
 }
 
 export interface Forecast {
-  turn: number;
+  step: number;
   year: number;
+  /** Every event warned and not yet landed, soonest first. */
   warnings: ForecastWarning[];
-  /** A hint at the future, revealed a turn at a time, or null. */
+  /** A hint at the future, sharper as the game goes, or null at the start. */
   future: Say | null;
 }
 
@@ -178,7 +164,7 @@ export interface CouncilView {
     score: number;
     /** The 2026 seed score (real data turned to 0 to 10). */
     seed: number;
-    /** Change since the last board (the turn before). */
+    /** Change since the last yearly frame. */
     change: number;
     honesty: Honesty;
   }[];
@@ -193,8 +179,12 @@ export interface CouncilView {
   projects: ProjectState[];
   /** The two weakest measures, as "what it is asking for". */
   asking: MeasureId[];
-  /** True while a lost election makes it refuse big builds. */
-  refusesBigBuilds: boolean;
+  /** Rising, steady or slipping (rule R2). */
+  momentum: Momentum;
+  /** The first project placed here now gets the fresh start (rule R3). */
+  freshStart: boolean;
+  /** The open deal with this council, if any (rule P6). */
+  deal: Deal | null;
   /** A place visit offered here now, if any. */
   visit: PlaceId | null;
 }
@@ -221,12 +211,12 @@ export interface ElectionView {
 export type ResultBand = "much_worse" | "little_worse" | "same" | "little_better" | "much_better";
 
 export interface Scores {
-  /** Life in your years, 0 to 100. */
+  /** Life in your years, 0 to 100: the mean over the yearly frames played. */
   life: number;
   /** Left for 2050, 0 to 100. */
   left: number;
   lower: "life" | "left";
-  /** The lower of the two. */
+  /** The result. 16.3.6: the result is Left for 2050 (score.ts, package 9, switches it from the lower of the two). */
   result: number;
   /** The 2026 board on the same scale, for "than you found it". */
   start: number;
@@ -254,4 +244,6 @@ export interface Ending {
   notBuilt: { id: EndingId; name: Text; say: Say; frame: Frame | null };
   /** Place visits made, for the end screen. */
   visits: { place: PlaceId; grade: Grade }[];
+  /** The chapters and turning points (16.5). */
+  story: Story;
 }

@@ -1,7 +1,7 @@
 /** Why an action cannot be taken, in plain words (v2-board.md section 5.1). */
 import { t } from "../../i18n";
 import type { Blocker, BoardModel, Condition } from "../engine/api";
-import { branchName, councilName, projectName } from "./words";
+import { branchName, projectName } from "./words";
 
 export function conditionWords(model: BoardModel, c: Condition): string {
   switch (c.kind) {
@@ -23,8 +23,8 @@ export function blockerWords(model: BoardModel, b: Blocker): string {
   switch (b.kind) {
     case "coins": return t("boardui.block.coins", { need: b.need, have: b.have });
     case "needs": return conditionWords(model, b.condition);
-    case "refused": return t("boardui.block.refused", { council: councilName(model, b.council), n: b.minCost });
     case "already_here": return t("boardui.block.already");
+    case "one_keystone": return t("boardui.block.oneKeystone");
     case "max_level": return t("boardui.block.maxLevel");
     case "too_late": return t("boardui.block.tooLate", { year: b.lastYear });
     case "law_changes_used": return t("boardui.block.lawUsed");

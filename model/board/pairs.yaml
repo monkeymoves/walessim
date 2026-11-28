@@ -1,6 +1,7 @@
 # Pairs: projects worth more together, and projects that go wrong apart (docs/design/v2-board.md
-# section 5.2). Owner: package 4. Effect sizes are GAME RULES (tune). "together" pairs apply where
+# section 5.2). Owner: package 10. Effect sizes are GAME RULES (tune). "together" pairs apply where
 # `project` stands when every partner is within reach; "apart" pairs apply when no partner is.
+# A live "together" pair also counts as company for rule R1 (roots grow faster, section 16.3.2).
 note: "Effect sizes are game rules (tune)."
 pairs:
   - id: college-reach
@@ -100,3 +101,14 @@ pairs:
       - { kind: risk, risk: employer, steps: 1 }
     name: { en: "One firm, nothing around it", cy: "Un cwmni, dim byd o'i gwmpas", cy_review: true }
     note: { en: "No college and no local suppliers nearby. If the firm goes, nothing holds the work here.", cy: "Dim coleg a dim cyflenwyr lleol gerllaw. Os aiff y cwmni, does dim yn cadw'r gwaith yma.", cy_review: true }
+
+  - id: repairs-and-hub
+    kind: together
+    project: repairs-team
+    partners: [{ project: health-hub }]
+    within: here
+    effects:
+      - { kind: measure, measure: health, points: 0.2 }
+      - { kind: backing, points: 0.2, group: low_income }
+    name: { en: "Damp found early", cy: "Dod o hyd i leithder yn gynnar", cy_review: true }
+    note: { en: "Nurses at the health hub send the repairs team to homes that make people ill.", cy: "Mae nyrsys yn y ganolfan iechyd yn anfon y tîm trwsio i gartrefi sy'n gwneud pobl yn sâl.", cy_review: true }

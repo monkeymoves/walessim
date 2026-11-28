@@ -1,7 +1,10 @@
-# Events that grow from the board (docs/design/v2-board.md section 7.1). Owner: package 4.
+# Events that grow from the board (docs/design/v2-board.md section 7.1). Owner: package 10.
 #
 # 24 events: 8 from outside (drawn from the future's weather, economy and prices tracks) and 16
-# grown from the state of the board, 5 of them good news. Every event is warned a turn ahead.
+# grown from the state of the board, 5 of them good news. Every event is warned ahead on the time
+# line (rule E1 `warn_years`): an outside event about a year and a half ahead, a grown one about a
+# year. The warning names a window of two seasons, and the event lands inside it. Grown triggers are
+# checked when a year closes.
 #
 # Honesty: severities, effect sizes, size factors, track thresholds and response costs are all
 # GAME RULES (tune). `sources` name the evidence that this kind of thing happens in Wales, not its
@@ -26,9 +29,9 @@ events:
     warning: { en: "Heavy rain is likely over the {river}. {councils} are most at risk.", cy: "Mae glaw trwm yn debygol dros {river}. {councils} sydd fwyaf mewn perygl.", cy_review: true }
     landed: { en: "The {river} burst its banks in {council}. Homes and shops were flooded.", cy: "Gorlifodd {river} yn {council}. Cafodd cartrefi a siopau eu llifogi.", cy_review: true }
     effects:
-      - { kind: measure, measure: homes, points: -0.4 }
-      - { kind: measure, measure: nature, points: -0.4 }
-      - { kind: measure, measure: health, points: -0.1 }
+      - { kind: measure, measure: homes, points: -0.8 }
+      - { kind: measure, measure: nature, points: -0.8 }
+      - { kind: measure, measure: health, points: -0.2 }
       - { kind: backing, points: -0.2 }
     size:
       - when: [{ kind: project, project: rivers-room, where: within_link, links: [river] }]
@@ -59,9 +62,9 @@ events:
     warning: { en: "A storm and very high tides are forecast. {councils} have the lowest land by the sea.", cy: "Mae storm a llanw uchel iawn ar y ffordd. {councils} sydd â'r tir isaf wrth y môr.", cy_review: true }
     landed: { en: "The sea came over the banks in {council}.", cy: "Daeth y môr dros y cloddiau yn {council}.", cy_review: true }
     effects:
-      - { kind: measure, measure: homes, points: -0.4 }
-      - { kind: measure, measure: nature, points: -0.2 }
-      - { kind: measure, measure: work, points: -0.2 }
+      - { kind: measure, measure: homes, points: -0.8 }
+      - { kind: measure, measure: nature, points: -0.4 }
+      - { kind: measure, measure: work, points: -0.4 }
     size:
       - when: [{ kind: project, project: coast-wetlands, where: here }]
         factor: 0.5
@@ -87,8 +90,8 @@ events:
     warning: { en: "A long hot summer is likely. Older people in {councils} are most at risk.", cy: "Mae haf hir a phoeth yn debygol. Pobl hŷn yn {councils} sydd fwyaf mewn perygl.", cy_review: true }
     landed: { en: "The heat made people ill in {council}. The hills dried out.", cy: "Gwnaeth y gwres bobl yn sâl yn {council}. Sychodd y bryniau.", cy_review: true }
     effects:
-      - { kind: measure, measure: health, points: -0.4 }
-      - { kind: measure, measure: nature, points: -0.2 }
+      - { kind: measure, measure: health, points: -0.8 }
+      - { kind: measure, measure: nature, points: -0.4 }
       - { kind: backing, points: -0.3, group: older }
     size:
       - when: [{ kind: project, project: warm-terraces, where: here }]
@@ -116,7 +119,7 @@ events:
     warning: { en: "Trade is slowing. Towns that lean on one employer are most at risk: {councils}.", cy: "Mae masnach yn arafu. Trefi sy'n dibynnu ar un cyflogwr sydd fwyaf mewn perygl: {councils}.", cy_review: true }
     landed: { en: "Jobs were lost in {council}. Shops on the high street felt it next.", cy: "Collwyd swyddi yn {council}. Siopau'r stryd fawr oedd nesaf i'w deimlo.", cy_review: true }
     effects:
-      - { kind: measure, measure: work, points: -0.6, jobs: true }
+      - { kind: measure, measure: work, points: -1.2, jobs: true }
       - { kind: young_adults, points: -0.1 }
       - { kind: backing, points: -0.2 }
     size:
@@ -145,7 +148,7 @@ events:
     warning: { en: "Machines and software are changing office and warehouse work. {councils} have the fewest new skills.", cy: "Mae peiriannau a meddalwedd yn newid gwaith swyddfa a warws. {councils} sydd â'r lleiaf o sgiliau newydd.", cy_review: true }
     landed: { en: "Some kinds of work vanished in {council}.", cy: "Diflannodd rhai mathau o waith yn {council}.", cy_review: true }
     effects:
-      - { kind: measure, measure: work, points: -0.4 }
+      - { kind: measure, measure: work, points: -0.8 }
       - { kind: young_adults, points: -0.1 }
     size:
       - when: [{ kind: project, project: skills-college, where: here }]
@@ -172,15 +175,17 @@ events:
     warning: { en: "Energy and rents are rising. {councils} will feel it first.", cy: "Mae ynni a rhenti'n codi. {councils} fydd yn ei deimlo gyntaf.", cy_review: true }
     landed: { en: "Homes got colder and dearer in {council}.", cy: "Aeth cartrefi'n oerach ac yn ddrutach yn {council}.", cy_review: true }
     effects:
-      - { kind: measure, measure: homes, points: -0.5 }
-      - { kind: measure, measure: health, points: -0.2 }
+      - { kind: measure, measure: homes, points: -1 }
+      - { kind: measure, measure: health, points: -0.4 }
       - { kind: backing, points: -0.3, group: low_income }
     size:
       - when: [{ kind: project, project: warm-terraces, where: here }]
         factor: 0.5
       - when: [{ kind: project, project: social-homes, where: here }]
         factor: 0.5
-    prepared_by: [warm-terraces, social-homes]
+      - when: [{ kind: project, project: repairs-team, where: here }]
+        factor: 0.5
+    prepared_by: [warm-terraces, social-homes, repairs-team]
     responses:
       - { id: accept, name: { en: "Hold steady", cy: "Dal yn gyson", cy_review: true }, what: { en: "Wait for prices to settle.", cy: "Aros i brisiau setlo.", cy_review: true }, cost: 0, effects: [], handled_well: false }
       - { id: help-bills, name: { en: "Help with bills this winter", cy: "Help gyda biliau'r gaeaf hwn", cy_review: true }, what: { en: "Help the poorest homes with their energy bills.", cy: "Helpu'r cartrefi tlotaf gyda'u biliau ynni.", cy_review: true }, cost: 2, effects: [{ kind: measure, measure: homes, points: 0.3 }, { kind: measure, measure: health, points: 0.1 }], handled_well: true }
@@ -199,7 +204,7 @@ events:
     warning: { en: "Rents in {councils} are climbing fast. People on low pay are being priced out.", cy: "Mae rhenti yn {councils} yn dringo'n gyflym. Mae pobl ar gyflog isel yn methu fforddio.", cy_review: true }
     landed: { en: "Families on low pay left {council} for cheaper rents.", cy: "Gadawodd teuluoedd ar gyflog isel {council} am renti rhatach.", cy_review: true }
     effects:
-      - { kind: measure, measure: homes, points: -0.4 }
+      - { kind: measure, measure: homes, points: -0.8 }
       - { kind: young_adults, points: -0.2 }
     size:
       - when: [{ kind: project, project: social-homes, where: here }]
@@ -225,8 +230,8 @@ events:
     warning: { en: "Fuel prices are jumping. People who must drive to work in {councils} will feel it most.", cy: "Mae prisiau tanwydd yn neidio. Pobl sy'n gorfod gyrru i'r gwaith yn {councils} fydd yn ei deimlo fwyaf.", cy_review: true }
     landed: { en: "Fuel costs hit drivers in {council}. Some gave up jobs they could not reach.", cy: "Tarodd costau tanwydd yrwyr yn {council}. Rhoddodd rhai'r gorau i swyddi na allen nhw eu cyrraedd.", cy_review: true }
     effects:
-      - { kind: measure, measure: work, points: -0.2 }
-      - { kind: measure, measure: homes, points: -0.2 }
+      - { kind: measure, measure: work, points: -0.4 }
+      - { kind: measure, measure: homes, points: -0.4 }
       - { kind: backing, points: -0.2 }
     size:
       - when: [{ kind: project, project: buses-meet-trains, where: here }]
@@ -372,7 +377,7 @@ events:
       - { kind: measure, measure: health, points: -0.3 }
       - { kind: measure, measure: homes, points: -0.2 }
     size: []
-    prepared_by: [warm-terraces]
+    prepared_by: [warm-terraces, repairs-team]
     responses:
       - { id: accept, name: { en: "Leave it to landlords", cy: "Gadael i landlordiaid", cy_review: true }, what: { en: "Landlords are told to fix their homes.", cy: "Dywedir wrth landlordiaid am drwsio eu cartrefi.", cy_review: true }, cost: 0, effects: [], handled_well: false }
       - { id: fix-worst, name: { en: "Fix the worst homes", cy: "Trwsio'r cartrefi gwaethaf", cy_review: true }, what: { en: "Fix the worst damp before winter.", cy: "Trwsio'r lleithder gwaethaf cyn y gaeaf.", cy_review: true }, cost: 1, effects: [{ kind: measure, measure: health, points: 0.2 }], handled_well: true }

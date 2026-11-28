@@ -1,21 +1,27 @@
 note: >
-  Rule cards for coins (B1 to B3, docs/design/v2-board.md section 5.1). Coins are a game rule, not
-  money: no pound figure stands behind any of these numbers. Params marked tune are set by the
-  balance bots (section 13.2). The engine reads them by id (RULE_IDS in
-  src/board/engine/types-model.ts) in src/board/engine/budget.ts.
+  Rule cards for coins (B1 and B2, docs/design/v2-board.md sections 5.1 and 16.2.4). Coins are a game
+  rule, not money: no pound figure stands behind any of these numbers. Rates are per year and are
+  paid a step's share at a time. Params marked tune are set by the balance bots (section 13.2).
+  The engine reads them by id (RULE_IDS in src/board/engine/types-model.ts) in
+  src/board/engine/budget.ts. The purse (B1 purse_max, section 16.2.4) replaces phase 1's carry
+  over: coins above it are not paid. Councils on the rise pay coins too (rule R2 in growth.yaml).
+  Phase 1's weak hand (B3) is gone: a lost election is a deal now (rule P6 in people.yaml, section 16.4).
 rules:
   - id: B1
     theme: budget
     kind: linear
-    name: { en: Coins each turn, cy: Darnau arian bob tro, cy_review: true }
+    name: { en: Coins each year, cy: Darnau arian bob blwyddyn, cy_review: true }
     note:
-      en: You get coins every two years, and more as Work and pay grows across the region. You can keep up to 2 unspent coins.
-      cy: Rydych chi'n cael darnau arian bob dwy flynedd. Rydych chi'n cael mwy wrth i Waith a chyflog dyfu. Gallwch gadw hyd at 2 ddarn arian heb eu gwario.
+      en: Coins come in all through the year, and more as Work and pay grows. Your purse holds 16 coins at most.
+      cy: Mae darnau arian yn dod i mewn drwy'r flwyddyn, a mwy wrth i Waith a chyflog dyfu. Mae eich pwrs yn dal 16 darn arian ar y mwyaf.
       cy_review: true
     params:
-      base: { default: 6, min: 4, max: 8, unit: { en: coins a turn, cy: darnau arian y tro, cy_review: true }, adjustable: true, tune: true }
-      per_work_points: { default: 4, min: 2, max: 8, unit: { en: points of Work and pay gained for 1 more coin a turn, cy: pwyntiau Gwaith a chyflog a enillwyd am 1 darn arian arall y tro, cy_review: true }, adjustable: true, tune: true }
-      carry_max: { default: 2, min: 0, max: 4, unit: { en: coins, cy: darnau arian, cy_review: true }, adjustable: false }
+      base_per_year: { default: 3.75, min: 2, max: 4, unit: { en: coins a year, cy: darnau arian y flwyddyn, cy_review: true }, adjustable: true, tune: true }
+      growth_per_year: { default: 0.5, min: 0.25, max: 1, unit: { en: more coins a year for each step of Work and pay gained, cy: mwy o ddarnau arian y flwyddyn am bob cam o Waith a chyflog a enillwyd, cy_review: true }, adjustable: true, tune: true }
+      per_work_points: { default: 4, min: 2, max: 8, unit: { en: points of Work and pay gained for each step of growth, cy: pwyntiau Gwaith a chyflog a enillwyd am bob cam o dwf, cy_review: true }, adjustable: true, tune: true }
+      purse_max: { default: 16, min: 8, max: 16, unit: { en: coins you can hold at most, cy: darnau arian y gallwch eu dal ar y mwyaf, cy_review: true }, adjustable: true, tune: true }
+      running_share: { default: 0.5, min: 0.25, max: 0.75, unit: { en: share of running costs paid once homes pay their own bills, cy: cyfran o gostau rhedeg a delir unwaith mae cartrefi'n talu eu biliau eu hunain, cy_review: true }, adjustable: true, tune: true }
+      opening: { default: 6, min: 4, max: 8, unit: { en: coins in May 2026, cy: darnau arian ym mis Mai 2026, cy_review: true }, adjustable: true, tune: true }
     sources: []
     confidence: high
     evidence: placeholder
@@ -25,27 +31,13 @@ rules:
     kind: stock
     name: { en: The care bill, cy: Y bil gofal, cy_review: true }
     note:
-      en: From 2038 care costs a coin every two years, unless health hubs stand in enough places.
-      cy: O 2038 mae gofal yn costio darn arian bob dwy flynedd. Nid felly os oes canolfannau iechyd mewn digon o lefydd.
+      en: From 2038 care costs half a coin a year, unless health hubs stand in enough places.
+      cy: O 2038 mae gofal yn costio hanner darn arian y flwyddyn. Nid felly os oes canolfannau iechyd mewn digon o lefydd.
       cy_review: true
     params:
-      care_bill: { default: 1, min: 0, max: 2, unit: { en: coins a turn, cy: darnau arian y tro, cy_review: true }, adjustable: true, tune: true }
+      care_bill_per_year: { default: 0.5, min: 0, max: 1, unit: { en: coins a year, cy: darnau arian y flwyddyn, cy_review: true }, adjustable: true, tune: true }
       from_year: { default: 2038, min: 2034, max: 2042, unit: { en: year, cy: blwyddyn, cy_review: true }, adjustable: false }
       hubs_needed: { default: 4, min: 1, max: 6, unit: { en: councils with a health hub, cy: cynghorau gyda chanolfan iechyd, cy_review: true }, adjustable: true, tune: true }
-    sources: []
-    confidence: high
-    evidence: placeholder
-    game_rule: true
-  - id: B3
-    theme: budget
-    kind: threshold
-    name: { en: A weak hand, cy: Llaw wan, cy_review: true }
-    note:
-      en: After a lost election you have fewer coins for four years.
-      cy: Ar ôl colli etholiad mae gennych lai o ddarnau arian am bedair blynedd.
-      cy_review: true
-    params:
-      lost_coins: { default: 2, min: 1, max: 3, unit: { en: coins a turn, cy: darnau arian y tro, cy_review: true }, adjustable: true, tune: true }
     sources: []
     confidence: high
     evidence: placeholder

@@ -1,6 +1,6 @@
 # Board NEEDS
 
-When a package needs a change in a file it does not own (docs/design/v2-board.md section 14.1), it appends an entry here and carries on with a stub. The owner or the coordinator makes the change and marks the entry done. Append only; do not edit another package's entry.
+When a package needs a change in a file it does not own (docs/design/v2-board.md section 14.1, and 16.7 for phase 2), it appends an entry here and carries on with a stub. The owner or the coordinator makes the change and marks the entry done. Append only; do not edit another package's entry.
 
 Format:
 
@@ -27,12 +27,12 @@ Need: `turn.ts` calls package 3 by name with typed imports (no fallbacks): `draw
 Stub meanwhile: none needed, package 3 already exports them.
 
 
-## [P1] Ignore the compiled board model in git  (open)
+## [P1] Ignore the compiled board model in git  (done by P7: .gitignore already lists public/board-model.json)
 File: .gitignore (owner: coordinator)
 Need: add the line `public/board-model.json`, as `public/model.json` already is. It is written by `npm run board:build`, which `model:build` now runs.
 Stub meanwhile: none; the file is rebuilt on every `npm run dev` and `npm run build`.
 
-## [P1] Licence row for the Census commuting data  (open)
+## [P1] Licence row for the Census commuting data  (done by P7: two rows in docs/data-licences.md; OS Open Rivers is marked NOT YET CHECKED there)
 File: docs/data-licences.md (owner: coordinator)
 Need: one row. Dataset: Census 2021 origin-destination ODWP01EW via Nomis (ONS). Licence: OGL v3.0 (Crown copyright, per https://www.nomisweb.co.uk/home/copyright.asp, checked 2026-11-27). Attribution: "Source: Office for National Statistics, licensed under the Open Government Licence v3.0." Evidence: https://www.nomisweb.co.uk/sources/census_2021_od . Also add OpenStreetMap rail (already a row) and OS Open Rivers (OGL v3.0, https://www.ordnancesurvey.co.uk/products/os-open-rivers, not yet checked).
 Stub meanwhile: the source cards in model/sources.yaml (nomis_census_odwp01ew, osm_rail_wales, ons_lad_boundaries, os_open_rivers, nrw_catchments) carry the licence text.
@@ -42,7 +42,7 @@ File: model/board/game.yaml (owner: package 3)
 Need: `councils` must be the ten South East codes, in this order: W06000013, W06000014, W06000015, W06000016, W06000018, W06000019, W06000020, W06000021, W06000022, W06000024 (Bridgend, Vale of Glamorgan, Cardiff, Rhondda Cynon Taf, Caerphilly, Blaenau Gwent, Torfaen, Monmouthshire, Newport, Merthyr Tydfil). The build reads the council list from it.
 Stub meanwhile: with no game.yaml the build uses the fixture's calendar with these ten councils (`SOUTH_EAST` in scripts/board/assemble.ts).
 
-## [P1] Content ids that must exist for the real model to join up  (open)
+## [P1] Content ids that must exist for the real model to join up  (done by P7: the real content joins up; `npm run board:build -- --strict` now fails only on story.yaml, package 10)
 File: model/board/*.yaml (owner: package 4)
 Need: while any content file fails the cross checks (for example `projects[0].visit: unknown place ebbw-vale` before the places exist), `npm run board:build` warns and uses the fixture for ALL content, and lists it in `meta.to_check` as `content: ...`. Run `npm run board:build -- --strict` to see the real errors instead. Council and indicator data are real either way.
 Stub meanwhile: none needed; this is the build's own fallback.
@@ -52,32 +52,32 @@ File: model/board/futures.yaml (owner: package 3)
 Need: `futures[0].note` and `futures[3].note` are written as flow maps with an unquoted comma inside the English and Welsh text, so YAML reads the text after the comma as extra keys ("and rivers rise.", "but slowly and from all sides."). Quote the strings, or use block style.
 Stub meanwhile: the build leaves the file out with a warning and uses the fixture's four futures. `npm run board:build -- --strict` fails on it.
 
-## [P4] Board rule notes over 18 words  (open)
+## [P4] Board rule notes over 18 words  (done: the copy test passes on rules/spread.yaml and budget.yaml)
 File: model/board/rules/spread.yaml, model/board/rules/budget.yaml (owner: package 2)
 Need: the copy test now reads every model/board YAML file. Six rule `note` sentences are over 18 words (spread S1 cy, S3 cy, S4 en and cy; budget rules[0] and rules[1] cy). Split each into two sentences.
 Stub meanwhile: none. `src/ui/game/copy-rules.test.ts` "keeps every sentence to 18 words or fewer" fails until they are split.
 
-## [P4] Copy evidence sources into the board model  (open)
+## [P4] Copy evidence sources into the board model  (done: scripts/board/read-inputs.ts reads sources-extra.yaml and assemble.ts picks every cited id; content.test.ts passes)
 File: scripts/build-board-model.ts (owner: package 1)
 Need: projects, events and places cite evidence ids from model/sources-extra.yaml (for example transport-labour, nfm-evidence, coal-tip-safety, retrofit-eval, ukcp18) as well as model/sources.yaml. Copy every cited id from either file into `sources`. `src/board/content/content.test.ts` checks each cited id exists in one of the two files.
 Stub meanwhile: none needed; the ids are real entries.
 
-## [P4] Group ids the content uses  (open)
+## [P4] Group ids the content uses  (done by P9: groups.yaml keeps young, older, low_income and welsh_speakers, plus everyone)
 File: model/board/groups.yaml (owner: package 3)
 Need: laws, events and one project name groups `young`, `older`, `low_income` and `welsh_speakers` (the fixture's ids). Keep those ids, or tell package 4 the new ones.
 Stub meanwhile: the content test cross-checks against the fixture's groups.
 
-## [P4] Say keys for the engine  (open)
+## [P4] Say keys for the engine  (done by P7: see the P2 entry above, one convention, full keys)
 File: src/board/engine/*.ts (owners: packages 2 and 3)
 Need: model/i18n/{en,cy}/board.json holds every board string. A `Say.key` is the full i18n key, `board.<key>` (for example `board.report.up`, `board.spread.S1`, `board.reason.passed_over`, `board.blocker.coins`, `board.need.project.here`, `board.election.lost.means`, `board.future.hint.weather`). Plurals use `.one` and `.other` with `{n}`. If a key you need is missing, add a NEEDS entry for package 4 rather than writing English in code.
 Stub meanwhile: none.
 
-## [P2] Say keys the engine emits, for board.json  (open, check only)
+## [P2] Say keys the engine emits, for board.json  (done by P7: settled, every Say key is the full `board.<key>`; people.ts, people-moods.ts, events.ts and endings.ts now emit `board.election.*`, `board.mood.*`, `board.forecast.*`, `board.ending.*`)
 File: model/i18n/{en,cy}/board.json (owner: package 4)
 Need: the engine now uses keys already in board.json, as full keys: a Why? is `board.why.line_up` or `board.why.line_down` with slots `cause` (the key `board.cause.<kind>`, to be filled from the same slots), `quantity` (measure name), `council`, `n`, plus `project`, `site`, `pair`, `event`, `response`, `law`, `place`, `grade`, `start`, `group`, `year`, `rule`, `note`, and on a link `link` and `from` (for `board.why.via`). A report line is `board.report.up` or `board.report.down` with `measure`, `council`, `n`. Preview notes are `board.build.preview_pair`, `board.build.preview_apart` (slot `pair`) and `board.build.catch` (slot `catch`). Please keep these keys and slots, or tell package 2. Package 3 uses short keys (`election.count`, `forecast.warning`) without `board.`: the coordinator should settle one convention.
 Stub meanwhile: none.
 
-## [P3] Player strings the people, events and ending code says  (open)
+## [P3] Player strings the people, events and ending code says  (done by P10: the `mood.*`, `election.*` with `.projected`, `forecast.*` and `ending.*` keys are in board.json; `src/board/content/words.test.ts` checks every key the engine says)
 File: model/i18n/{en,cy}/board.json (owner: package 4)
 Need: these `Say` keys, English and Welsh (`cy_review`). Slots in braces.
 - Moods (council panel): `mood.measure.up`, `mood.measure.down` {measure}; `mood.fell_most.down`, `mood.fell_most.none` {measure}; `mood.promises.waiting`, `mood.promises.kept`, `mood.promises.broken` {year}; `mood.crises.handled`, `mood.crises.left`, `mood.crises.none`; `mood.services.close`, `mood.services.none`; `mood.young_adults.stay`, `mood.young_adults.leave`; `mood.passed_over` {years}.
@@ -87,12 +87,12 @@ Need: these `Say` keys, English and Welsh (`cy_review`). Slots in braces.
 For `forecast.warning`, `ending.evidence` and `ending.not_built` the template is just "{line}": `line` is the model's own Text (an event warning, an evidence line, a `not_built` line) whose slots are filled from the same vars. See the next entry.
 Stub meanwhile: none; the engine returns keys only.
 
-## [P3] Nested slots in Say vars  (open)
+## [P3] Nested slots in Say vars  (done by P11: words.ts `say()` fills slots inside a value from the same vars; src/board/ui/words.test.ts checks every sentence of a real game reads whole in both languages)
 File: src/board/ui/ (owner: packages 5 and 6)
 Need: when a `Say` var is a `Text` that itself has slots (`line` in `forecast.warning`, `ending.evidence`, `ending.not_built`), fill its slots from the same `vars` before filling the template. Letter slots (`Ending.letter.slots`) are council, town, project, year, place (and river when there is one).
 Stub meanwhile: none.
 
-## [P3] Package 3 rule cards and params beyond RULE_IDS  (open)
+## [P3] Package 3 rule cards and params beyond RULE_IDS  (done: the build takes every card in rules/*.yaml, rules/growth.yaml too; `ruleParam` defaults cover the fixture, checked against people.yaml and budget.yaml)
 File: scripts/build-board-model.ts (owner: package 1); src/board/engine/fixture-rules.ts (owner: package 0 or coordinator)
 Need: model/board/rules/people.yaml holds P1 to P5 and, because there is no other rules file for them, G1 (scores), E1 (severity) and a new card V1 (place visits). The build must take every card in it. Extra params package 3 reads: P1 promise_points, crisis_points, presence_points; G1 band_little, band_much, risk_left_points; E1 first_turn, grown_per_turn, prepared_cut, storm_step; V1 factor_* and backing_* per grade, wet_track. The fixture lacks these.
 Stub meanwhile: `ruleParam` in src/board/engine/rule-defaults.ts falls back to the same starting values when a model lacks them; rule-defaults.test.ts checks they equal the YAML.
@@ -102,37 +102,210 @@ File: src/board/engine/projects.ts, actions.ts, held.ts (owner: package 2)
 Need: if not already used: `refusesBuild(model, state, council, cost)` (blocker `refused` after a lost election, rule P4 refuse_cost) and `fasterBuild(model, state, council)` (one turn off after a strong win where backed) in people.ts; `gradeFactor(model, grade)` in places.ts scales the visited project's held effects by its grade (rule V1). `respondBlockers` in events.ts gives the blockers for a `respond` action. `conditions.ts` (package 3) is shared: `holds`, `allHold`, `countProjects`, `neighbours`.
 Stub meanwhile: none needed by package 3.
 
-## [P3] Balance: the score barely moves on the real board  (open)
+## [P3] Balance: the score barely moves on the real board  (done: superseded by docs/design/v2-board.md section 16.3 and the marks of 16.6, packages 8 to 10)
 File: model/board/*.yaml (owners: packages 2 and 4; coordinator to decide)
 Need: on public/board-model.json (quick run, 20 game numbers) every bot ends between 46 and 49 out of 100, so "Skill beats autopilot by 15" and "Place matters by 8" cannot pass by bot play alone. Project lifts of 0.2 to 1.4 points in one of ten councils move a people weighted score by a fraction of a point, and held effects do not grow with time (built in turn 1 or turn 7 gives the same 2050 effect, ratio 1.0, mark 2). The balance phase needs bigger or compounding effects (levels, pairs, payback, spread strength), or the coordinator should revisit the 15 and 8 point marks. `npx tsx scripts/board-balance.ts` prints the full table.
 Stub meanwhile: none.
 
-## [P5] A document title for the board route  (open)
+## [P5] A document title for the board route  (done by P7: `doc.bwrdd` in model/i18n/{en,cy}/shell.json)
 File: model/i18n/{en,cy}/shell.json (owner: coordinator)
 Need: add `doc.bwrdd` ("The board: South East Wales. Etifeddiaeth" / "Y bwrdd: De Ddwyrain Cymru. Etifeddiaeth"). App.tsx looks up `shell.doc.<route>` for every route and warns once in the console without it.
 Stub meanwhile: the board route sets `document.title` itself from `boardui.doc.title`.
 
-## [P5] Board screen words live in their own file  (open, coordinator to decide)
+## [P5] Board screen words live in their own file  (done by P7, decided: keep both. board.json holds the engine's Say sentences (package 10), boardui.json the screens' own words (package 11))
 File: model/i18n/{en,cy}/boardui.json (new, written by package 5)
 Need: the screens' own copy (buttons, labels, notes, the guide) is in `boardui.json` so it does not collide with package 4's `board.json`, which holds the engine's Say sentences. Keep both, or merge `boardui.*` into `board.json` and rename the keys in `src/board/ui/`. The v1 copy test already reads every file in the folder; `src/board/ui/copy.test.ts` checks every `boardui.*` key the screens use exists in both languages.
 Stub meanwhile: none needed.
 
-## [P5] Say slots that do not match board.json  (open)
+## [P5] Say slots that do not match board.json  (done by P10: `election.count` is {backers} {councils} {people}; `forecast.warning`, `ending.evidence`, `ending.not_built` are "{line}"; `build.catch` is "The catch: {catch}")
 File: src/board/engine/people.ts (package 3) and model/i18n/{en,cy}/board.json (package 4)
 Need: `election.count` is sent with `{backers, councils, people}` but board.json writes `{backers}`, `{total}`, `{share}`. `forecast.warning` and `ending.evidence` have no key in board.json (the UI shows their `line` value filled from the other values). `board.build.catch` is a bare label with no `{catch}` slot. The UI drops any sentence left with an empty `{slot}` and logs a warning, so these show nothing or a fallback until they agree.
 Stub meanwhile: src/board/ui/words.ts `say()` names ids it is given (councils, measures, projects, events) and falls back to model text.
 
-## [P5] Running scores during play  (open)
+## [P5] Running scores during play  (done by P7: `scores(model, state)` in api.ts)
 File: src/board/engine/api.ts and score.ts (owner: package 3, api.ts by coordinator)
 Need: the top strip should show Life in your years and Left for 2050 as they stand (section 11.4), but the API only gives scores at the end (`ending`). An additive `scores(model, state): Scores` would let the strip show them every turn.
 Stub meanwhile: the strip shows the six region bars (people weighted), Fairness and how many councils back you.
 
-## [P5] What package 6's end and place screens plug into  (open, for package 6)
+## [P5] What package 6's end and place screens plug into  (done by P12; the join loads both with a plain `lazy(import())` and deleted FallbackEnd.tsx and the "not built yet" visit sheet)
 File: src/board/ui/end/index.tsx and src/board/ui/place/index.tsx (owner: package 6)
 Need: both are loaded lazily by package 5 when they exist (`import.meta.glob`), as default exports with no props. Read the game with `useGame()` from `src/board/ui/game.ts`: `state()`, `model`, `act(action)`, `newGame()`. A place visit is open while `game.visit()` holds a place id; send `{ kind: "visit", place, picks }` with `game.act`, then `game.setVisit(null)`.
 Stub meanwhile: `FallbackEnd.tsx` (the ending's name, a 2026 and 2050 table, Play again) and a "not built yet" sheet for visits.
 
-## [P5] Remove the practice stand-in once the engine is settled  (open)
+## [P5] Remove the practice stand-in once the engine is settled  (done: standin/ deleted by P11; the join removed `BoardNotBuiltError` and the fallbacks that caught it)
 File: src/board/ui/standin/ and src/board/ui/engine.ts (owner: package 5)
 Need: the stand-in plays any API function that throws `BoardNotBuiltError`. Every function is built now, so it is unused; delete the folder and the fallbacks when the coordinator is happy the engine will not regress.
 Stub meanwhile: n/a.
+
+## [P7] Phase 1 screens against the clock contract  (done by P11: the whole repo typechecks)
+File: src/board/ui/ (owner: package 11)
+Need: the phase 1 UI does not typecheck against the package 7 types (about 55 errors outside standin/; `npx tsc --noEmit -p . | grep -v "^src/board/ui/"` shows the rest of the repo is clean). What changed, by field:
+- `endTurn`, `TurnReport`, `RunStep`, `state.steps`, `state.turn`, `game.turns`, `game.turn_years`, `game.visits_per_turn`, `game.report_lines_max`: gone. Use `tick`, `advance(model, state, { maxSteps, stopOn, light })`, `StepReport` (with `stops`, `yearLines`, `term`), `state.log` (`{ at, action }`), `state.step`, `game.steps`, `game.years_per_step`, and the calendar helpers api.ts re-exports (`yearOfStep`, `seasonOf`, `stepOfYear`, `stepsOf`, `isElectionStep`). Phase is "play", not "build"; `tick` and `advance` throw while it is "respond".
+- `ProjectState.readyTurn`, `startedTurn` are `readyStep`, `startedStep` (the step at whose end it opens; the year it is felt is `yearOfStep(readyStep + 1)`). `ProjectDef.build_turns` is `build_years`; `RunningCost` is `{ coins_per_year }`; `ActionOption.buildTurns` is `buildYears` plus `readyStep`.
+- `Why.turn` is `step` (and `year`); `WhyTarget` is `{ council?, measure, fromStep, toStep }`. `EventRecord.turn`, `ElectionRecord.turn` are `step`. `Forecast.turn` is `step`; warnings carry `fromStep`, `toStep`.
+- `Blocker` "refused" and `CouncilView.refusesBigBuilds` are gone; `CouncilView` has `momentum`, `freshStart`, `deal`. Coins hold four decimal places: show whole coins and a ring.
+- New API: `timeline`, `scores`, `story`. Run codes are `b2.`; `decodeRun` refuses a phase 1 code with a plain message. `game.save_key` is `etifeddiaeth.board.v2.`; old saves will not replay.
+- Pending visits carry `since`; a `deal` pending (rule P6) offers `{ kind: "deal", council, measure }` actions.
+- src/board/ui/standin/ fails its tests against the new types; 16.7 says package 11 deletes it.
+Stub meanwhile: none. Package 7 added no shims in src/board/ui/engine.ts (it cannot fix the other files).
+
+## [P7] Words the clock emits  (done by P10: every `board.stop.<kind>`, plus `stop.tipping.rising` and `.slipping`, `timeline.warning` and `election.weak_hand` {coins} are in board.json)
+File: model/i18n/{en,cy}/board.json (owner: package 10)
+Need: stop lines `board.stop.<kind>` for respond, election, ended, warning, keystone, tier_open, visit, tipping, chapter, deal_due, purse_full, finished, year. Slots as they apply: `council`, `project`, `event`, `place`, `year`, `result` (election), `to` (tipping: rising or slipping), `n` (purse_full). Time line: `board.timeline.warning` {event}. `board.election.weak_hand` now has only {coins}, a year, while the B3 card stands. All engine keys are full keys now (see the P2 entry).
+Stub meanwhile: none; the UI's `say()` drops a sentence whose key is missing.
+
+## [P7] Hooks and phase 1 leftovers for package 8  (done by P8: roots, momentum, the purse and the 16.3 values are in)
+File: src/board/engine/roots.ts, momentum.ts, budget.ts, held.ts, model/board/rules/budget.yaml, rules/growth.yaml (owner: package 8)
+Need: fill `growRoots` (called each step before held effects) and `freshStartHere` in roots.ts, and `updateMomentum(ctx, years)` in momentum.ts (called when a year closes, before moods; the clock raises `tipping` stops and facts from any change of `CouncilState.momentum`). held.ts does not yet multiply by `ProjectState.roots`. B1's carry over cap is still judged every two years (`carry_years`); at a quarter step it is a cliff, so the purse (`purse_max`, read by the `purse_full` stop through `optParam`) should replace it first. B1 `opening: 6` is the coins in May 2026. The rules YAML params were renamed to per year rates with no change of size (S3 `max_per_year` 0.15, `pull_per_year` 0.05; B1 `base_per_year` 3, `growth_per_year` 0.5; B2 `care_bill_per_year` 0.5; B3 `lost_coins_per_year` 1); the 16.3 values are yours to set.
+Stub meanwhile: empty-safe bodies; the fixture has no R1 to R4 card.
+
+## [P7] Hooks and phase 1 leftovers for package 9  (done by P9: deals, story, timeline, the result, storms in autumn and winter and yearly bots are in; E1 warn years and G1 bands wait on the P9 rule defaults entry; B3 removal is in the P9 entry for package 8)
+File: src/board/engine/deals.ts, story.ts, timeline.ts, bots.ts, events.ts, score.ts, model/board/rules/people.yaml (owner: package 9)
+Need: fill `offerDeals` (after an election, P6) and `judgeDeals` (each year close) in deals.ts (`dealBlockers` and `takeDeal` already work); `noteStep(ctx, facts)` and `nameChapter` in story.ts (the clock pushes the chapter into `state.story.chapters` on each election step and at the end, six in all); timeline.ts is a working default you own. Bots decide in the last step of each two year block (`DECIDE_YEARS`) so B1's cap does not starve them; move them to year closes with the purse. B3 (weak hand) still applies while the card exists; P4 `refuse_cost` is now unused. E1 params are `first_year: 2028`, `warn_years: 2`, `grown_warn_years: 2`, `grown_at_once: 1`, `grown_gap_years: 2` (phase 1 sizes; 16.2.4 asks 1.5 and 1). Storms in autumn or winter are not done. score.ts still returns the lower of the two scores; 16.3.6 makes the result Left for 2050.
+Stub meanwhile: empty-safe defaults; every term is "holding-on" until story.yaml and story.ts land.
+
+
+## [P8] momentum.ts API is stable  (done, for package 9)
+File: src/board/engine/momentum.ts (owner: package 8)
+Need: none; a notice. Rule R2 is in `model/board/rules/growth.yaml`. Stable exports: `momentumOn(model)`, `councilMean(measures)`, `momentumChange(model, state, code, arriving)`, `nextMomentum(model, current, change)`, `updateMomentum(ctx, years)`, `risingCount(model, state)`, `regionTurnCouncils(model)`, `regionTurnStep(model, state)` (the yearly frame step the region first turned, or null; read from `state.history`, no new state field), `regionTurned(model, state)`, `momentumPull(model, m)`, `momentumRootsBonus(model, m)`, `momentumCoinsPerYear(model, state)`, `slipStartStep(state, code)`. Everything returns 0, false or null without the R2 card.
+Stub meanwhile: none.
+
+## [P8] Drop B1 carry_years from the engine's fallback params  (done by the join: `RULE_DEFAULTS.B1` is `{ opening, running_share }`)
+File: src/board/engine/rule-defaults.ts (owner: package 7)
+Need: the purse (B1 `purse_max: 12`) replaces phase 1's carry over, so `model/board/rules/budget.yaml` no longer has `carry_max` or `carry_years`. Delete `carry_years: 2` from `RULE_DEFAULTS.B1` (keep `opening: 6`), and the comment's mention of it. Until then `rule-defaults.test.ts` fails one assertion ("B1.carry_years: expected undefined to be 2"). budget.ts no longer reads `carry_years` through `ruleParam`: a model with `carry_max` and no purse (the fixture) uses phase 1's two years, so the equivalence test is unchanged.
+Stub meanwhile: none; that one assertion is red.
+
+## [P8] Words for growth and spread  (done by P10: `build.preview_fresh_start`, `build.preview_need_more`, `build.preview_need_less` and `cause.momentum` are in board.json)
+File: model/i18n/{en,cy}/board.json (owner: package 10)
+Need: preview notes `board.build.preview_fresh_start` {n} ("A fresh start here: {n} coin off, and it counts as having company for eight years."), `board.build.preview_need_more` {measure, council, n} ("{measure} is low in {council}, so this does more."), `board.build.preview_need_less` {measure, council, n} ("{measure} is already good in {council}, so this does less."). Why? lines now end at R1 (roots, cause the project), R4 (need, cause the project or pair), R2 (Backing and coins, cause `board.cause.momentum`) and R3 (coins, cause the project). Rule card words are in `model/board/rules/growth.yaml`.
+Stub meanwhile: none; the UI drops a sentence whose key is missing.
+
+## [P8] The region turn as a stop and a moment  (done by the join: clock-stops raises `tipping` with `ref: "region"` and `board.stop.tipping.region` {n} once the region turns; story.ts already notes the moment)
+File: src/board/engine/clock-stops.ts (owner: package 7), src/board/engine/story.ts (owner: package 9)
+Need: 16.2.5 says `tipping` also fires when the region turns. `regionTurnStep(model, state)` in momentum.ts gives the step of the yearly frame where it first turned (null before). In clock-stops, raise `tipping` with `ref: "region"` when `regionTurnStep(model, after) === step + 1` and it was null before; package 9 can use the same test for the `region_turn` moment and the `region_turn` chapter condition.
+Stub meanwhile: council tips already raise `tipping`; the region turn pays its coins (budget.ts) but raises no stop of its own.
+
+## [P8] costOf is where build discounts live  (done by the join: see the P9 discount entry)
+File: src/board/engine/projects.ts (owner: package 8)
+Need: none yet. A build's cost is `costOf` in projects.ts; `buildBlockers` and `options` use it. R3's fresh start is taken off there. If P6's `deal_discount` should come off too, add an entry here naming the helper in deals.ts (for example `dealDiscount(model, state, def, site)`) and package 8 will call it from `costOf`.
+Stub meanwhile: none.
+
+## [P10] Specials for the keystones and the legacy projects  (done by the join: new specials `no_care_bill`, `links_up`, `colleges_up`, `storm_no_coins`, `running_halved` in types-content.ts and shapes.ts, read through src/board/engine/specials.ts; `cluster_roots` now cuts a downturn to E1 `downturn_cut` where a skills college stands; `running_halved` pays B1 `running_share`. projects.yaml: the four legacy projects carry their special in place of the stand-in lifts, Heat and homes for all carries `no_care_bill`. Tested in specials.test.ts)
+File: src/board/engine/types-content.ts (owner: package 7); effects.ts, held.ts, budget.ts, spread.ts, events-land.ts (owner: package 8 or 9)
+Need: 16.3.5 gives each keystone a region wide change and a legacy project whose effect has no Effect kind yet. Please add `EffectSpecial` values and switch them on: `links_up` (Trains all evening and on Sundays: every upgraded link rises one more quality step), `colleges_up` (Firms that train their own: every skills college rises one level, free), `storm_no_coins` (Farms paid to hold water: storms cost no coins), `running_halved` (Homes that pay their own bills: running costs of every project halve). The keystones' own region wide parts also need checking against their specials: `reverse_commute` (the valley end of upgraded links counts 2.0 better for S3), `cluster_roots` (a downturn takes half as much from any council with a college), `storm_step_down` (one severity step on that river), and Heat and homes for all ("the care bill never starts, or stops": today `care_bill_off` only counts health hubs, so the keystone does not switch it off). Tell package 10 the names and it adds them to projects.yaml.
+Stub meanwhile: each legacy project is written with effects the engine has: `where: everywhere` lifts gated by `only_if` (upgraded link, a skills college here, a river), a flood risk step in every river council, and 0.5 coins a year for running costs. Every keystone carries `branch_joined`.
+
+## [P10] Chapter conditions the TermCondition type cannot say yet  (done by the join: `young_adults.councils_at_least` and `event_landed.at_most` are in the type and the shape check; story.yaml uses them for The leaving years (3 councils), Coming home (2) and The quiet years (no event landed). "When the work went" stays an unprepared economy event, as P9 advised)
+File: src/board/engine/types-story.ts, src/board/model/shapes.ts (owner: package 7); src/board/engine/story.ts (owner: package 9)
+Need: four rows of the 16.5.1 table need more than the type allows. "The leaving years" is three or more valley councils down 1 in 100, and "Coming home" two or more up: `young_adults` has no council count (for example `councils_at_least`). "The quiet years" is "no event landed": `event_landed` cannot be negated (for example `at_most: 0`). "When the work went" also wants Work and pay to fall (for example a `measure` term condition). Say which you add and package 10 writes them in.
+Stub meanwhile: story.yaml writes `young_adults` with `flag: valley` and `by` (story.ts decides how a flag is judged), "The quiet years" as `finished at_most: 2`, and "When the work went" as an unprepared economy event. Priority order does the rest: storms, elections and keystones are tried first.
+
+## [P10] Ending conditions story and endings code should judge  (done: P9 judges all four; the join made `events_prepared` false when no outside event landed)
+File: src/board/engine/end-conditions.ts (owner: package 7), endings.ts (owner: package 9)
+Need: the twelve endings use `keystones at_most: 0` (The gamble, Holding the line), `projects at_most: 5` (The drift, fewer than six projects), `events_prepared share: 1` (Holding the line: every outside event prepared for; please count a game with no outside event as not prepared, so the ending is earned) and `keystone_finished_after year: 2044 at_least: 2` (The long game). The patchwork is now the fallback ending (priority 12) and The drift is priority 11, so `notBuilt` never offers The patchwork.
+Stub meanwhile: none; the content test pins the conditions.
+
+## [P10] The stop for tipping names its direction  (done by the join: the key is `board.stop.tipping.rising` or `.slipping`; a council settling back to steady raises no stop)
+File: src/board/engine/clock-stops.ts (owner: package 7)
+Need: a tipping stop sends `board.stop.tipping` with `to` set to the raw momentum id ("rising", "slipping"), which would show in English in Cymraeg. Please send the key `board.stop.tipping.${to}` instead (both are in board.json; `board.stop.tipping` stays as the generic line, with no `{to}` slot).
+Stub meanwhile: `board.stop.tipping` reads well without `{to}`.
+
+## [P10] Words for the screens and the end, in board.json  (done: superseded by the P11 entry below; screen words live in boardui.json and boardend.json)
+File: model/i18n/{en,cy}/board.json (owner: package 10)
+Need: none; a notice. board.json now holds, besides the engine's Say keys: `season.*`, `date` {season} {year}, `clock.paused`, `strip.result_rule`, `strip.income` {n}, `coins.purse` {n}, `stop.look`, `stop.carry_on`, `timeline.*` (now, promise, deal, keystone_last_start, care_bill, end), `momentum.*` (labels, notes, `momentum.label` saying they are a game estimate, fresh start, region turn), `council.young_gone` {n} {total}, `deal.*` (title, offer, discount, kept, broken, pick), `forecast.window` {season} {year}, `story.*` (label, title, term, turning_points, other_choice {chosen} {other}), `moment.*` (as story.ts sends them), `build.quick`, `build.legacy` {project}, `build.ready` {season} {year}, `build.joined`, `build.alone`, `build.deal` {council}, `build.rebuild` {event} {year}, `build.running.one/.other` {n} (coins a year), `build.running_every` {years}, `blocker.hung_term`, `blocker.legacy` {project}, `election.hung` {years}, `end.result`, `end.life_note`. Removed as untrue on the clock: `strip.turn`, `strip.lower_rule`, `turn.*`, `report.continue`, `council.refuses`, `blocker.refused`, `election.lost.refuse`, `election.lost.coins.*`, `place.one_per_turn`, `end.lower.*`, `coins.carry`. Chapter names and lines are in model/board/story.yaml.
+Stub meanwhile: n/a.
+
+## [P9] Deal discount and rebuild time in costOf and the build time  (done by the join: `buildDiscounts` in projects.ts takes R3 and P6 off, never below 1 coin, each written as its own coins record; `buildYears` multiplies by E2 `rebuildShare` (the end that gains least on a link); the preview notes a deal kept and a faster rebuild; the B3 card is gone from budget.yaml (the fixture keeps it for the equivalence test))
+File: src/board/engine/projects.ts (owner: package 8); model/board/rules/budget.yaml (owner: package 8)
+Need: (1) take `dealDiscount(model, state, councils, project)` from deals.ts off the cost in `costOf` (councils: the site's councils, `siteCouncils`), never below 1, as R3's fresh start is. (2) Multiply a new build's `build_years` by `rebuildShare(model, state, council)` from events.ts (rule E2; for a link, the smaller of its two ends) before turning years into steps. Both return 0 and 1 when the model has no P6 or E2 card, so the fixture is unchanged. (3) P6 replaces B3: please remove the B3 card from budget.yaml (people.ts stops saying `election.weak_hand` once it is gone; `WEAK_HAND` in budget.ts is then dead).
+Stub meanwhile: the P6 and E2 cards are in model/board/rules/people.yaml; deals are offered, kept and broken, and the bots keep them, but at full price and full build time.
+
+## [P9] Rule defaults and two spec values  (done by the join: G1 bands 3 and 10, E1 warn years 1.5 and 1, in RULE_DEFAULTS and people.yaml together)
+File: src/board/engine/rule-defaults.ts (owner: package 7, finished); model/board/rules/people.yaml (owner: package 9, you may edit these four values)
+Need: 16.3.6 sets G1 `band_little: 3`, `band_much: 10`, and 16.2.4 sets E1 `warn_years: 1.5`, `grown_warn_years: 1`. All four are in `RULE_DEFAULTS`, and rule-defaults.test.ts checks they equal people.yaml, so change both in one go (with the P8 B1 `carry_years` entry). I left people.yaml at 2, 6, 2 and 2 so the test does not gain failures. The equivalence test is unaffected (warnings round to one step at a two year step; bands change no state).
+Stub meanwhile: the old values.
+
+## [P9] Term and end conditions the content asks for  (done by the join: both fields typed and checked; `events_prepared` is false with no outside event)
+File: src/board/engine/types-story.ts, src/board/model/shapes.ts, src/board/engine/end-conditions.ts (owner: package 7, finished)
+Need: (1) add `councils_at_least?: number` to the `young_adults` TermCondition and `at_most?: number` to `event_landed` (and let the shape check accept them). story-terms.ts already judges both: `councils_at_least` counts flagged councils that each moved `by` or more (without it, the mean of the flagged councils moved `by`); `event_landed` with `at_most: 0` means none such landed. A `measure` term condition is not added: "When the work went" reads fine as an unprepared economy event. (2) `events_prepared` in end-conditions.ts returns true when no outside event landed; package 10 asks for false so Holding the line is earned.
+Stub meanwhile: story-terms.ts reads the two fields through a widened type, so package 10 can write them as soon as the shape check allows.
+
+## [P9] Chapter and moment words, and what the story sends  (done: notice read; a chapter about an event now takes {town} and {river} from that event, so "The winter the Taff rose" never floods a town on another river)
+File: model/i18n/{en,cy}/board.json (owner: package 10); src/board/ui/ (packages 11 and 12)
+Need: none new; the keys in board.json match. Slots sent: `moment.tier_open` {branch} {tier}; `moment.legacy_open` and `moment.keystone` {project} ({council}); `moment.tipped.*`, `moment.people.*` {council} (people also {n}); `moment.region_turn` {n}; `moment.election.*` {year}; `moment.event` {event} {council}; `moment.promise.*` {year}; `moment.deal.*` {council} {measure}. `timeline.promise` {year} {promise}; `timeline.deal` {council} {measure} {year}; `timeline.keystone_last_start`, `timeline.care_bill`, `timeline.end` {year}; `election.hung` {years}. A turning point that is an event carries `chosen` and `other` (response names) in its vars when it was answered: show `story.other_choice` with them. Chapters: priority 1 is tried first (as story.yaml says); a name is not used twice unless nothing else fits, where "name" is the id plus the slots its name uses, so "{project}" can name two terms with two keystones. Term condition meanings are at the top of src/board/engine/story-terms.ts (`level` is the score out of 100, `gap` points out of 10).
+Stub meanwhile: n/a.
+
+## [P9] A keystone can be built in every council  (done by the join, decided: one of each keystone a game, as 5.3 and 16.3.5 read. New blocker `one_keystone`, words `boardui.block.oneKeystone`)
+File: src/board/engine/projects.ts (owner: package 8) or model/board/projects.yaml (owner: package 10)
+Need: on the real model the branch bots stand the same keystone in up to four councils (branch-made_here: `cluster-roots` in four), so "You cannot have it all: never four keystones" is only met by the random bots. 5.3 and 16.3.5 read as one of each keystone a game. Please block a second of the same keystone (a blocker, or a `once` flag in projects.yaml), or say if several are meant.
+Stub meanwhile: the balance table counts each standing keystone; story moments are one per keystone and council.
+
+## [P12] A time line mark fails axe: its name does not hold its words  (done: axe on the board and term report passes in the full e2e run)
+File: src/board/ui/Timeline.tsx (owner: package 11)
+Need: axe (wcag21a, serious) flags `label-content-name-mismatch` on `.bw-tl-mark-keystone_last_start`: the button's `aria-label` does not contain the words it shows. Start the aria-label with the visible short words, or drop the aria-label and put the long words in a visually hidden span. tests/e2e/board.spec.ts checks axe on the board and the term report, so these two checks fail until it is fixed.
+Stub meanwhile: none. The test is left honest; it fails on this one rule.
+
+## [P12] Why? should end at the rule's page in the board's book  (done by P11)
+File: src/board/ui/WhyPanel.tsx (owner: package 11)
+Need: the board's rule pages now exist at `#/llyfr/bwrdd/<rule id>` (encode the id: `need:valleys:2` has colons). Link "Read this rule in the rule book" to the rule the Why? ends at, not to `#/llyfr`.
+Stub meanwhile: the link opens the v1 contents, which now has a "The board" tab.
+
+## [P12] The ghost map of the Wales you did not build has no board  (done by the join: `ghostFrame` in endings.ts plays the same game number with the branch bot of that ending's keystone; null for an ending with no keystone of its own, where the screen shows the line only)
+File: src/board/engine/endings.ts (owner: package 9)
+Need: `Ending.notBuilt.frame` is always null, so the end screen can only say the line. 16.5.3 item 6 wants a ghost map: a final frame from the same game number played towards that ending (a branch bot, light), honestly labelled. The end screen draws it as soon as `frame` is set, with the note "a game estimate of another route".
+Stub meanwhile: src/board/ui/end/NotBuilt.tsx shows the line only.
+
+## [P12] The end and place screens are in  (done: notice read. A `#/bwrdd/run/<code>` link is not added; pasting a code on the end screen works)
+File: src/board/ui/end/, src/board/ui/place/ (owner: package 12)
+Need: none; answers the P5 entry "What package 6's end and place screens plug into". Both are default exports with no props and read `useGame()` (`model`, `state()`, `act()`, `visit()`, `setVisit()`, `newGame()`); please keep those names. The end screen uses `TimelineStrip` with `at`, `onScrub` and `onPick` (kind "moment"). Run codes open from a paste box on the end screen; a `#/bwrdd/run/<code>` link that opens straight to the end would be a small addition in index.tsx if wanted (the coordinator decides). The rule book's board section lives in src/ui/book/board/ and reads public/board-model.json with its own loose types, because v1 may not import src/board/ (boundaries.test.ts); Book.tsx gained three added lines only.
+Stub meanwhile: n/a.
+
+## [P12] The event answer slip can sit under the top strip and the clock  (done: the slip is above both (clock.css z-index 23); the join's full game clicked every answer, and the e2e no longer falls back to Enter)
+File: src/board/ui/Respond.tsx, board.css (owner: package 11)
+Need: at 1440 by 900, late in a game (Summer 2036 in the e2e clock game), Playwright could not click "Wait and watch" on `bw-respond`: the year in the top strip and the clock at the foot intercept the pointer. The slip should sit above both (z-index) and inside the stage. Keyboard still works.
+Stub meanwhile: tests/e2e/board.spec.ts presses Enter on a covered button after a 3 second click attempt.
+
+## [P11] The clock screens are in  (done, a notice for packages 7, 12 and the coordinator)
+File: src/board/ui/ (owner: package 11)
+Need: none; closes, from the UI side, the P7 entry "Phase 1 screens against the clock contract", the P5 entries "Remove the practice stand-in" (standin/ is deleted and engine.ts only re-exports api.ts) and "Nested slots in Say vars" (words.ts `say()` fills slots inside a `line` value from the same vars), and the P12 entries on the time line's axe name (each piece's name now starts with the words it shows, then the long words in a hidden span) and Why? (each reason links to `#/llyfr/bwrdd/<encoded rule id>`). For package 12: `TimelineStrip` (Timeline.tsx) takes `model`, `state`, `view`, `at`, `lead`, `onPick` and `onScrub`; `layoutTimeline` and `TimelineItem` are exported from Timeline.tsx and timelineLayout.ts. `useGame()` keeps `model`, `state()`, `act()`, `visit()`, `setVisit()`, `newGame()`, and adds `clock` (play, pause, step, runToNext, prefs). Prefs are one key, `<save_key>prefs`: `{ stops, holdWhileReading, stepByStep, speed }`.
+Stub meanwhile: n/a.
+
+## [P11] A finished build on a rail link has no council in its stop  (done by the join: `finished` and `keystone` stops, and the keystone moment, name the link's first end in play through `siteCouncil` in conditions.ts)
+File: src/board/engine/clock-stops.ts (owner: package 7)
+Need: `finished` and `keystone` stops pass `council` only for a council site, but board.json's `stop.finished` and `stop.keystone` say `{council}`. For a build on a rail link the engine's line has an empty slot, so the screen falls back to its own words ("... in Wales"). Please pass the link's first council (or its name as `council`), and the same for `Stop.council` so "Look" can select it.
+Stub meanwhile: StopCard.tsx shows its own line when the engine's has an empty slot.
+
+## [P11] Screen words in board.json that the screens do not read  (done by the join, decided: board.json holds only what the engine says. 409 keys nothing read are gone from both languages; 112 remain, checked by src/board/content/words.test.ts)
+File: model/i18n/{en,cy}/board.json (owner: package 10)
+Need: the P10 notice lists screen words now in board.json (`season.*`, `date`, `clock.paused`, `strip.income`, `coins.purse`, `stop.look`, `stop.carry_on`, `timeline.now`, `deal.*`, `forecast.window`, `build.ready`, `build.running.*` and more). Under the P5 decision the screens' own words are in boardui.json, so the board screens read their own copies and use board.json only for the engine's Say keys (and chapter names from story.yaml). Either drop the duplicates from board.json, or tell package 11 which to switch to; the wording is kept the same where both exist ("Left for 2050", the result line).
+Stub meanwhile: none needed.
+
+## [P12] An event can land in the last season and never be answered  (done by the join: no event lands on the final step (`lastLandingStep` in time.ts, used by the outside schedule and grown warnings); the e2e reload workaround is gone)
+File: src/board/engine/clock.ts or events-schedule.ts (owners: packages 7 and 9); src/board/ui/BoardScreen.tsx, Respond.tsx (owner: package 11)
+Need: every e2e game, and 40 of 40 games of `playGame` in test-play.ts (game numbers 1000 to 1039), end with a grown event landing on step 95 (for example "The river runs dirty", Newport); the state reached May 2050 (phase "ended") with a `respond` still pending. The board then shows the answer slip with both answers blocked ("Answer the event first") and never shows the ended stop, so the end screen is unreachable without a reload. Engine: do not land an event that needs an answer on the last step (or hold the end until it is answered). UI: when phase is "ended", drop pending answers and show the end.
+Stub meanwhile: tests/e2e/board.spec.ts reloads and resumes (which opens the end) and fails softly on it, so the rest of the end screen is still checked.
+
+## [P11] Why? lines are sent without their cause  (done: explain.ts sends `cause` as the key `board.cause.<kind>` and say() fills its slots; a visit's grade is now the key `board.grade.<grade>` so it reads in Welsh too)
+File: src/board/engine/explain.ts (owner: package 8)
+Need: a `Why.say` of `board.why.line_up` or `board.why.line_down` arrives with `n`, `delta`, `quantity`, `year`, `council` but no `cause`, and board.json's sentence starts with `{cause}`. The screen drops a sentence with an empty slot, so the Why? panel shows its own "Because" row only. Please send `cause` (the key `board.cause.<kind>`, filled from the same vars), as the P2 entry agreed.
+Stub meanwhile: WhyPanel.tsx shows the sentence only when every slot is filled.
+
+## [JOIN] Phase 2 joined  (done, a notice for the coordinator)
+File: src/board/ (the join may edit any board file)
+Need: none. Every entry above is closed. Still open, for tuning and review, not for code: the balance marks of 16.6 (package 9's table), Welsh review of all new words (cy_review), and the chapter, ending and special sizes, which are game rules. New in the join: src/board/engine/specials.ts, specials.test.ts, src/board/ui/words.test.ts, src/board/ui/testPlay.ts (one test player for the UI tests, moved from ui/clock), design/scripts/board-join-play.mjs. Removed: growth-testkit.ts (merged into test-cards.ts), FallbackEnd.tsx, `BoardNotBuiltError`.
+Stub meanwhile: n/a.
+
+## [P9 balance] Test files changed to keep green while numbers moved  (a notice for packages 7 and 8)
+File: src/board/engine/test-cards.ts (owner: package 7); roots.test.ts, momentum.test.ts, budget.test.ts, growth.test.ts, spread-young.test.ts (owner: package 8)
+Need: none. The balance rounds moved R1, R2, R3, R4, B1 and S3 numbers on disk (docs/design/board-balance-log.md). Mechanism tests that read the cards from disk now pin the 16.3 starting sizes through `pinStart` and `DESIGN_START` in test-cards.ts, so they test the rule, not the tuning. growth.test.ts reads the purse and S3 floor it checks. spread-young.test.ts pins `floor_share: 0.6` for its bounds test. Please keep `DESIGN_START` when you add a mechanism test of a tuned card.
+Stub meanwhile: n/a.
+
+## [P9 balance] The made here branch cannot have its day  (for package 10 and the coordinator)
+File: model/board/projects.yaml (owner: package 10)
+Need: a decision. Every made here project lifts only Work and pay and Climate. With roots, those two reach 10 (the ceiling) in most councils by about 2040, so more building there does nothing, and branch-made_here ends 6 to 9 points below the other branch bots in every start and future ("Each branch has its day" fails, and the bot loses most elections). Raising its sizes does not help: the lifts are cut at 10. It needs some lift on Health, Nature or Welsh and culture (for example a college that teaches in Welsh, or firms that fund health checks), which is content, not tuning.
+Stub meanwhile: sizes raised (skills college 1.5 times, community energy 1.2, the cluster keystone 1.5); the mark still fails.
+
+## [P9 balance] Design numbers in v2-board.md 16 now differ from the model  (for the coordinator)
+File: docs/design/v2-board.md (owner: the designer)
+Need: section 16 quotes starting sizes the balance rounds changed: the purse (12, now 16), base coins (3 a year, now 3.75), the S3 floor (0.6, now 0.85) and pull, R1 cap (5, now 7) and alone growth (0.03, now 0.01), R2 edges (0.3, now 0.6) and coins (0.5, now 1), R3 (1 coin and 8 years, now 2 and 12), R4 (now 1.6 less 0.15 a point, between 0.25 and 1.5), chapter priorities, outside event sizes (doubled) and bus running costs (halved). All are game rules. The log has the reasons. Please update 16 or mark its numbers "starting values, see the balance log".
+Stub meanwhile: the model is the truth; the rule book reads the model.

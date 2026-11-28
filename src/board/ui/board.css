@@ -52,7 +52,7 @@
 .bw-map { position: absolute; inset: 0; }
 .bw-maptip { pointer-events: none; }
 
-/* ---------- top strip ---------- */
+/* ---------- top strip: the date, coins, the two scores ---------- */
 .bw-strip { display: flex; align-items: center; gap: 18px; min-height: 66px; padding: 8px var(--margin) 8px; }
 .bw-home { display: grid; place-items: center; width: 34px; height: 34px; color: var(--ink-2); flex: none; }
 .bw-home:hover { color: var(--ink); background: rgba(245, 243, 234, 0.45); }
@@ -60,16 +60,9 @@
 .bw-yearnote { display: grid; line-height: 1.3; color: var(--ink-2); white-space: nowrap; }
 .bw-yearnote b { color: var(--ink); font-weight: var(--wght-grot-strong); }
 .bw-coins { display: flex; align-items: center; gap: 8px; flex: none; padding: 5px 12px 5px 10px; background: var(--paper) var(--grain); box-shadow: var(--lit-edge), var(--shadow-flat); }
-.bw-coins-figure { width: 34px; height: 34px; display: grid; place-items: center; border-radius: var(--radius-round); background: var(--brass); color: var(--ink); font-size: 20px; box-shadow: inset -2px -2px 0 rgba(0, 0, 0, 0.22), inset 1px 1px 0 rgba(255, 255, 255, 0.4), 1px 2px 0 rgba(40, 46, 42, 0.35); }
 .bw-coins-word { display: grid; line-height: 1.2; }
 .bw-coins-word b { font-weight: var(--wght-grot-strong); }
 .bw-coins-after { color: var(--stitch-deep); }
-.bw-walesbars { flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
-.bw-walesbars > li { min-width: 0; }
-.bw-walesbars .tip-host { display: block; }
-.bw-wb { display: grid; gap: 3px; padding: 4px 8px 6px; background: var(--paper) var(--grain); box-shadow: var(--lit-edge), var(--shadow-flat); min-height: 44px; }
-.bw-wb-name { font-size: var(--size-label); line-height: 1.1; font-stretch: var(--wdth-ticket); font-weight: var(--wght-grot-strong); min-height: 2.2em; display: flex; align-items: flex-end; }
-.bw-gap { font-size: var(--size-small); font-stretch: var(--wdth-label); color: var(--ink-2); white-space: nowrap; }
 .bw-backers { display: flex; align-items: center; gap: 8px; flex: none; border: 0; background: var(--slate) var(--grain); background-blend-mode: overlay; color: var(--on-slate); padding: 6px 12px 6px 10px; box-shadow: var(--shadow-slate); text-align: left; }
 .bw-backers .figure-big { color: var(--on-slate); font-size: 24px; }
 .bw-backers-word { font-size: var(--size-label); font-stretch: var(--wdth-label); line-height: 1.2; max-width: 92px; color: var(--on-slate-2); }
@@ -114,7 +107,6 @@
 }
 .bw-offcuts li { grid-template-columns: 52px auto; height: 18px; }
 .bw-colour-note { color: var(--ink-2); }
-.bw-status { position: absolute; left: 262px; bottom: 14px; z-index: 7; max-width: calc(100% - 262px - 400px); background: var(--paper) var(--grain); box-shadow: var(--shadow-flat); padding: 5px 10px; color: var(--ink); }
 
 /* ---------- council and region panels ---------- */
 .bw-right { position: absolute; right: 14px; top: 14px; bottom: 14px; width: 372px; z-index: 10; display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
@@ -163,13 +155,6 @@
 .bw-league-backs { min-width: 70px; text-align: right; }
 .bw-league-backs.yes { color: var(--ink); font-weight: var(--wght-grot-strong); }
 
-/* ---------- dock: the end of the turn ---------- */
-.bw-dock { flex: none; padding: 10px 14px 12px; display: grid; gap: 6px; }
-.bw-dock > .btn-stamp, .bw-dock-row .btn-stamp { font-size: 16px; padding: 9px 16px 8px; }
-.bw-dock-note { color: var(--ink-2); }
-.bw-dock-ask { display: grid; gap: 6px; }
-.bw-dock-row { display: flex; gap: 10px; flex-wrap: wrap; }
-
 /* ---------- build menu: tickets by branch ---------- */
 .bw-build {
   position: absolute; left: 14px; top: 14px; bottom: 14px; width: 432px; z-index: 14;
@@ -207,7 +192,7 @@
 .bw-preview-links { color: var(--stitch-deep); }
 
 /* ---------- sheets over the stage ---------- */
-.bw-tree, .bw-laws, .bw-why-panel, .bw-election, .bw-novisit {
+.bw-tree, .bw-laws, .bw-why-panel, .bw-novisit, .bw-settings {
   position: absolute; z-index: 20;
   animation: bw-in var(--dur-slide) var(--ease-paper);
 }
@@ -239,31 +224,6 @@
 .bw-why-panel > .threadlink { margin: 0 18px; }
 .bw-novisit { left: 50%; top: 30%; transform: translateX(-50%); padding: 18px 20px; display: grid; gap: 10px; justify-items: start; max-width: 420px; }
 
-/* ---------- two years pass, the report, the election ---------- */
-.bw-board.bw-dimmed .bw-mapstage::after { content: ""; position: absolute; inset: 0; background: rgba(30, 36, 34, 0.12); pointer-events: none; }
-.bw-passing { position: absolute; left: 50%; top: 18px; transform: translateX(-50%); z-index: 20; padding: 12px 20px 14px; display: grid; gap: 6px; justify-items: start; min-width: 360px; max-width: 560px; animation: bw-in var(--dur-slide) var(--ease-paper); }
-.bw-passing-year { line-height: 0.95; }
-.bw-passing-lines { display: grid; gap: 3px; }
-.bw-passing-lines li { padding-left: 16px; position: relative; }
-.bw-passing-lines li::before { content: ""; position: absolute; left: 0; top: 0.6em; width: 9px; height: 2px; background: var(--ink); }
-.bw-report { position: absolute; right: 14px; top: 14px; bottom: 14px; width: 440px; z-index: 20; display: flex; flex-direction: column; gap: 10px; overflow: auto; padding: 2px 8px 8px 2px; }
-.bw-report-head { padding: 12px 16px; display: grid; gap: 3px; }
-.bw-slips { display: grid; gap: 6px; }
-.bw-slip-line { padding: 11px 14px 12px; display: grid; gap: 5px; justify-items: start; animation: bw-in var(--dur-slide) var(--ease-paper) both; }
-.bw-slip-line:nth-child(2) { margin-left: 6px; animation-delay: 80ms; }
-.bw-slip-line:nth-child(3) { margin-left: 12px; animation-delay: 160ms; }
-.bw-report .bw-respond { position: relative; left: auto; top: auto; width: auto; margin: 6px 4px 4px; }
-.bw-respond-list { display: grid; gap: 8px; margin-top: 8px; }
-.bw-respond-list li { display: grid; gap: 3px; justify-items: start; }
-.bw-report-foot { margin-top: auto; padding-top: 4px; }
-.bw-report-foot .btn-stamp { width: 100%; font-size: 16px; }
-.bw-election { right: 14px; top: 14px; width: 400px; max-height: calc(100% - 28px); overflow: auto; padding: 16px 18px; display: grid; gap: 8px; justify-items: start; }
-.bw-election-count { display: flex; align-items: baseline; gap: 8px; }
-.bw-election-list { width: 100%; display: grid; }
-.bw-election-list li { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid var(--rule); }
-.bw-election-list li.yes span:first-child { font-weight: var(--wght-grot-strong); }
-.bw-election .btn-stamp { width: 100%; }
-
 /* ---------- the guide: one note at a time ---------- */
 .bw-note { position: absolute; z-index: 26; width: 290px; padding: 11px 14px 12px; display: grid; gap: 6px; box-shadow: var(--lit-edge), var(--shadow-lifted); animation: bw-in var(--dur-slide) var(--ease-paper); }
 .bw-note::before { content: ""; position: absolute; top: -5px; left: 22px; width: 10px; height: 10px; border-radius: var(--radius-round); background: var(--brass); box-shadow: inset -2px -2px 0 rgba(0, 0, 0, 0.28), 1px 2px 0 rgba(20, 24, 26, 0.45); }
@@ -273,38 +233,12 @@
 .bw-note-map { right: 400px; top: 22px; }
 .bw-note-council { right: 400px; top: 120px; }
 .bw-note-build { left: 462px; bottom: 22px; }
-.bw-note-end { right: 400px; bottom: 22px; }
+.bw-note-play, .bw-note-speed { left: 14px; bottom: 14px; z-index: 27; }
+.bw-note-play::before, .bw-note-speed::before { top: auto; bottom: -5px; }
 
-/* ---------- timeline ---------- */
-.bw-timeline { margin: 10px var(--margin) 10px; height: 46px; position: relative; padding: 0 44px 0 12px; background: var(--paper-yfory) var(--grain); }
-.bw-tl-track { position: relative; height: 100%; }
-.bw-tl-turn { position: absolute; top: 0; bottom: 0; border-left: 1px solid var(--rule-strong); }
-.bw-tl-turn.past { background: rgba(27, 34, 38, 0.06); }
-.bw-tl-turn.now { background: var(--paper) var(--grain); }
-.bw-tl-year { position: absolute; left: 5px; bottom: 4px; color: var(--ink-2); }
-.bw-tl-turn.now .bw-tl-year { color: var(--ink); font-weight: var(--wght-grot-strong); }
-.bw-tl-election { position: absolute; top: 3px; transform: translateX(-50%); display: grid; justify-items: center; gap: 1px; z-index: 2; }
-.bw-tl-election i { width: 11px; height: 11px; background: var(--slate); transform: rotate(45deg); box-shadow: 1px 1px 0 var(--slate-deep); }
-.bw-tl-election span { font-size: 11.5px; color: var(--ink); background: var(--paper-yfory); padding: 0 3px; white-space: nowrap; }
-.bw-tl-stub { position: absolute; top: calc(4px + var(--i) * 9px); transform: translateX(-100%); color: var(--ink); background: var(--paper); box-shadow: var(--shadow-flat), inset 0 0 0 1px var(--stitch); padding: 1px 2px; z-index: 3; }
-.bw-tl-event { position: absolute; top: 4px; transform: translateX(calc(-100% - 10px)); color: #2C5778; z-index: 2; }
-.bw-tl-now { position: absolute; top: -8px; bottom: 0; width: 2px; margin-left: -1px; background: var(--thread); z-index: 4; }
-.bw-tl-now::before { content: ""; position: absolute; left: -4.5px; top: -4px; width: 11px; height: 11px; border-radius: var(--radius-round); background: var(--thread); box-shadow: 1px 2px 0 rgba(20, 24, 26, 0.35); }
-.bw-tl-end { position: absolute; top: 50%; transform: translate(6px, -50%); color: var(--ink); font-weight: var(--wght-grot-strong); }
-
-/* ---------- notes on what is not built yet ---------- */
+/* ---------- the fixture note: the three council stand-in board is never shown as real ---------- */
 .bw-standin { position: absolute; left: 50%; top: 10px; transform: translateX(-50%); z-index: 9; max-width: 520px; background: var(--warn-paper); color: var(--ink); padding: 4px 10px 4px 26px; box-shadow: var(--shadow-flat); }
 .bw-standin::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 16px; background: var(--warn-hatch); }
-
-/* ---------- end (until package 6's screen lands) ---------- */
-.bw-end { min-height: 100vh; display: grid; place-items: start center; padding: 32px; }
-.bw-end-sheet { width: min(720px, 100%); padding: 22px 30px 26px; display: grid; gap: 12px; justify-items: start; }
-.bw-end-evidence { display: grid; gap: 4px; }
-.bw-end-sheet > .bw-start-top { width: 100%; }
-.bw-end-table { border-collapse: collapse; width: 100%; }
-.bw-end-table th { text-align: left; font-size: var(--size-label); font-stretch: var(--wdth-ticket); color: var(--ink-2); border-bottom: 1.5px solid var(--ink); padding: 4px 6px; }
-.bw-end-table td { padding: 4px 6px; border-bottom: 1px solid var(--rule); }
-.bw-end-table td.data, .bw-end-table th:not(:first-child) { text-align: right; }
 
 /* ---------- 1280 x 800 ---------- */
 @media (max-width: 1360px) {
@@ -312,17 +246,14 @@
   .bw-right { width: 336px; }
   .bw-build { width: 392px; }
   .bw-slip, .bw-respond { width: 262px; }
-  .bw-report { width: 400px; }
-  .bw-status { max-width: calc(100% - 262px - 360px); }
-  .bw-note-map, .bw-note-council, .bw-note-end { right: 360px; }
+  .bw-note-map, .bw-note-council { right: 360px; }
   .bw-note-build { left: 420px; }
   .bw-start-top { gap: 12px; }
-  .bw-coins-word .small { display: none; }
   .bw-backers-word { max-width: 74px; }
   .bw-start-sheet { width: 540px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bw-slip, .bw-respond, .bw-build, .bw-note, .bw-passing, .bw-slip-line, .bw-tree, .bw-laws, .bw-why-panel, .bw-election { animation: none; }
+  .bw-slip, .bw-respond, .bw-build, .bw-note, .bw-slip-line, .bw-tree, .bw-laws, .bw-why-panel, .bw-settings { animation: none; }
 }
 @keyframes bw-in { from { translate: 0 -24px; opacity: 0; } to { translate: 0 0; opacity: 1; } }

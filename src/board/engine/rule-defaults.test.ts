@@ -30,8 +30,9 @@ describe("package 3 model files", () => {
   });
 
   it("the engine's fallback params equal the YAML defaults", () => {
+    const all = [...rules, ...(read("rules/budget.yaml") as { rules: BoardRule[] }).rules];
     for (const [id, params] of Object.entries(RULE_DEFAULTS)) {
-      const card = rules.find((r) => r.id === id);
+      const card = all.find((r) => r.id === id);
       expect(card, id).toBeDefined();
       for (const [name, value] of Object.entries(params)) expect(card!.params[name]?.default, `${id}.${name}`).toBe(value);
     }
@@ -47,12 +48,12 @@ describe("package 3 model files", () => {
     }
   });
 
-  it("every future has one value a turn on every track", () => {
+  it("every future has one value each two years on every track, and the game has whole steps", () => {
     const game = read("game.yaml") as BoardGame;
     for (const f of (read("futures.yaml") as { futures: FutureDef[] }).futures) {
-      for (const v of Object.values(f.tracks)) expect(v).toHaveLength(game.turns);
+      for (const v of Object.values(f.tracks)) expect(v).toHaveLength((game.end_year - game.first_year) / game.track_years);
     }
-    expect(game.end_year).toBe(game.first_year + game.turns * game.turn_years);
+    expect(game.end_year).toBe(game.first_year + game.steps * game.years_per_step);
   });
 
   it("every group but Everyone takes a real share; Everyone has a base weight", () => {

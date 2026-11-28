@@ -5,15 +5,15 @@
  * stock of its branch, so a glance says which branch it feeds.
  */
 import { createMemo, createSignal, For, Show, type JSX } from "solid-js";
-import { Pair, t, tn } from "../../i18n";
+import { formatNum, Pair, t, tn } from "../../i18n";
 import { CloseButton, Icon, StampButton } from "../../ui/parts";
 import type { Action, ActionOption, BoardModel, ProjectDef } from "../engine/api";
 import { blockerWords } from "./blockers";
-import * as eng from "./engine";
+import { options } from "./engine";
 import { useGame } from "./game";
 import { iconFor } from "./icons";
 import { PreviewLines } from "./PreviewLines";
-import { councilName, tx } from "./words";
+import { councilName, tx, whenWords } from "./words";
 
 const key = (a: Action) => JSON.stringify(a);
 const BRANCH_STOCK = ["buff", "green", "pink", "blue"];
@@ -35,7 +35,7 @@ export function BuildMenu(props: { code: string }): JSX.Element {
   const opts = createMemo(() => {
     const s = game.state();
     if (!s) return [];
-    try { return eng.options(model, s, props.code).filter((o) => o.action.kind === "build" || o.action.kind === "upgrade"); } catch (e) { console.warn(e); return []; }
+    try { return options(model, s, props.code).filter((o) => o.action.kind === "build" || o.action.kind === "upgrade"); } catch (e) { console.warn(e); return []; }
   });
   const byBranch = (branch: string, tier: number) => opts().filter((o) => o.branch === branch && o.tier === tier);
   const def = (o: ActionOption): ProjectDef | undefined => model.projects.find((p) => p.id === o.project);
@@ -51,7 +51,7 @@ export function BuildMenu(props: { code: string }): JSX.Element {
         <h2 class="t-2" id="bw-build-title">{t("boardui.build.title", { name: councilName(model, props.code) })}</h2>
         <CloseButton label={t("boardui.close")} onClick={() => { game.setSheet(null); game.setHover(null); }} />
       </header>
-      <p class="small bw-build-coins">{tn("boardui.build.coins", game.state()?.coins ?? 0)}</p>
+      <p class="small bw-build-coins">{tn("boardui.build.coins", Math.floor((game.state()?.coins ?? 0) + 1e-6))} {t("boardui.build.anyTime")}</p>
       <div class="bw-build-scroll">
         <For each={model.branches}>
           {(b, bi) => (
@@ -82,6 +82,7 @@ export function BuildMenu(props: { code: string }): JSX.Element {
                                   <span class="bw-ticket-name">
                                     {o.action.kind === "upgrade" ? t("boardui.build.upgrade", { name: tx(d?.name) }) : tx(d?.name)}
                                     <Show when={d?.keystone}><span class="small bw-keystone">{t("boardui.build.keystone")}</span></Show>
+                                    <Show when={d?.quick}><span class="small bw-keystone">{t("boardui.build.quick")}</span></Show>
                                   </span>
                                   <span class="small bw-ticket-site">{siteWords(model, o, props.code)}</span>
                                   <Show when={!o.allowed}>
@@ -91,7 +92,7 @@ export function BuildMenu(props: { code: string }): JSX.Element {
                                 <span class="bw-ticket-fare">
                                   <span class="furniture">{t("boardui.build.cost")}</span>
                                   <span class="bw-fare-n" classList={{ short: o.blockers.some((x) => x.kind === "coins") }}>{free(o) ? t("boardui.build.free") : o.cost}</span>
-                                  <Show when={o.readyYear}><span class="small">{t("boardui.build.works", { year: o.readyYear! })}</span></Show>
+                                  <Show when={o.readyStep !== undefined}><span class="small">{t("boardui.build.works", { when: whenWords(model, o.readyStep! + 1) })}</span></Show>
                                 </span>
                               </button>
                               <Show when={open() === id}>
@@ -99,7 +100,8 @@ export function BuildMenu(props: { code: string }): JSX.Element {
                                   <p class="story-small">{tx(d?.what)}</p>
                                   <p class="small"><i>{t("boardui.build.example", { text: tx(d?.example) })}</i></p>
                                   <Show when={d?.catch}><p class="small bw-catch">{t("boardui.build.catch", { text: tx(d?.catch) })}</p></Show>
-                                  <Show when={d?.running}><p class="small">{t("boardui.build.running", { n: d!.running!.coins, years: d!.running!.every_turns * model.game.turn_years })}</p></Show>
+                                  <Show when={o.buildYears !== undefined}><p class="small">{t("boardui.build.takes", { n: formatNum(o.buildYears!, { maximumFractionDigits: 1 }) })}</p></Show>
+                                  <Show when={d?.running}><p class="small">{t("boardui.build.running", { n: formatNum(d!.running!.coins_per_year, { maximumFractionDigits: 2 }) })}</p></Show>
                                   <PreviewLines />
                                   <Show when={o.allowed} fallback={<p class="small bw-ticket-why">{o.blockers.map((x) => blockerWords(model, x)).join(" ")}</p>}>
                                     <StampButton onClick={() => build(o)} data-testid="bw-build-it">

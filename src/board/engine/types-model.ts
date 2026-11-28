@@ -7,7 +7,9 @@
  * - Plain data only, so the whole model and every state are JSON.
  * - Every player string is a `Text`; machine Welsh carries `cy_review: true`.
  * - Measures are scores 0 to 10, higher is better. Shares are percentages (0 to 100).
- * - A turn is two years. Turn 0 starts in 2026; turn 11 ends in 2050.
+ * - Time runs in steps of `game.years_per_step` (a quarter of a year). Step 0 is May 2026 and
+ *   the game ends on arriving at step `game.steps` (May 2050). Only time.ts turns years into steps.
+ * - Rates are per year (`*_per_year`), durations are in years (`*_years`): never per turn.
  * - Rule numbers that change balance are rule card params (`BoardRule.params`), never code.
  */
 import type { Condition } from "./types-content";
@@ -31,7 +33,7 @@ export type NodeId = CouncilCode | StubId;
 export type IndicatorId = string;
 /** Id of a source in model/sources.yaml. */
 export type SourceId = string;
-/** Rule card id: "S1" to "S4" spread, "B" budget, "P" people, "G" score, "need:" requires cards. */
+/** Rule card id: "S1" to "S4" spread, "B" budget, "P" people, "G" score, "E" events, "R" growth, "need:" requires cards. */
 export type RuleId = string;
 export type LinkId = string;
 export type ProjectId = string;
@@ -189,7 +191,7 @@ export interface LinkDef {
 
 /** ADR 0002 kinds the board uses, plus `spread` and `requires` from ADR 0005. */
 export type BoardRuleKind = "linear" | "saturating" | "stock" | "threshold" | "spread" | "requires";
-export type RuleTheme = "spread" | "budget" | "people" | "projects" | "events" | "score";
+export type RuleTheme = "spread" | "budget" | "people" | "projects" | "events" | "score" | "growth";
 
 export interface BoardParam {
   default: number;
@@ -207,7 +209,7 @@ export type CouncilQuantity = MeasureId | "young_adults" | "backing" | "risk_flo
 
 /**
  * A `spread` rule (ADR 0005): a change at one end of a link moves a quantity at the other end,
- * one hop only, `lag` turns later.
+ * one hop only, `lag_years` later.
  * - `travel`: "to_home" runs from the work end to the home end of a commute link (S1, S2);
  *   "towards_better" moves people from the lower to the higher end (S3); "downstream" (S4).
  * - `weight`: what each link contributes: the commute share, the fallback strength step, or 1.
@@ -222,7 +224,8 @@ export interface SpreadSpec {
   sign: 1 | -1;
   weight: "share" | "strength" | "one";
   quality_multiplies: boolean;
-  lag: number;
+  /** Years between the change and its echo (S4: 2). Informational: S4 lands through effects' `after_years`. */
+  lag_years: number;
   blocked_by_tags?: string[];
   only_from_projects?: boolean;
 }
@@ -243,8 +246,8 @@ export interface BoardRule {
   note: Text;
   kind: BoardRuleKind;
   params: Record<string, BoardParam>;
-  /** Turns between cause and effect. */
-  lag?: number;
+  /** Years between cause and effect, shown in the rule book. */
+  lag_years?: number;
   sources: SourceId[];
   confidence: Confidence;
   evidence: EvidenceGrade;
@@ -255,59 +258,60 @@ export interface BoardRule {
 }
 
 /**
- * Rule ids the engine reads by name, and their params. Content may add rules; these must exist.
- * Params named here are the contract between model/board/rules/*.yaml and the engine.
+ * Rule ids the engine reads by name, and their params. Content may add rules; the phase 1 ids must
+ * exist. Params named here are the contract between model/board/rules/*.yaml and the engine.
+ * Every rate is per year and every span is in years (ADR 0007); time.ts turns them into steps.
+ *
+ * The phase 2 cards (R1 to R4, E2, P6) are switched on one card at a time (docs/design/v2-board.md
+ * section 16.7): a model without the card behaves as before. Read them with `optParam` or
+ * `ruleParam`, never `param`, until the card is in every model.
  */
 export const RULE_IDS = {
   /** spread: coef (share multiplier), quality_step (extra per quality step above 1). */
   jobsTravelHome: "S1",
   /** spread: coef. */
   pricesUpTheLine: "S2",
-  /** spread: share (percentage points of young adults that can move per turn), pull (per point of gap). */
+  /** spread: max_per_year (percentage points of young adults that can move on one link a year), pull_per_year (per point of gap). */
   youngFollowWork: "S3",
   /** spread: steps (flood steps cut downstream), storm_weaken (severity cut per project upstream). */
   waterRunsDownhill: "S4",
-  /** linear: base (coins a turn), per_work_points (Work points gained for +1 coin), carry_max. */
+  /** linear: base_per_year, growth_per_year (for each per_work_points of Work and pay gained), per_work_points, carry_max. */
   coins: "B1",
-  /** stock: care_bill (coins a turn), from_year, hubs_needed. */
+  /** stock: care_bill_per_year, from_year, hubs_needed. */
   careBill: "B2",
-  /** threshold: lost_coins (coins lost a turn after a lost election). */
-  weakHand: "B3",
-  /** stock: memory (0 to 1), compare_years, pull (per point better or worse). */
+  /** stock: memory_per_year (0 to 1, the share of a mood kept over a year), compare_years, pull. */
   moods: "P1",
   /** linear: start (backing in 2026), start_nudge. */
   backingStart: "P2",
-  /** threshold: years (passed over after), loss (backing lost a turn). */
+  /** threshold: years (passed over after), loss_per_year (backing lost a year). */
   passedOver: "P3",
-  /** threshold: backs_at, win_share, strong_share, refuse_cost (lost: refuse builds this dear or more). */
+  /** threshold: backs_at, win_share, strong_share. */
   election: "P4",
   /** linear: base_weight (the Everyone group, a game rule). */
   everyone: "P5",
   /** linear: fairness_share (part of each score from the lowest councils), lowest_count, future_years. */
   score: "G1",
-  /** threshold: min, max (outside event severity points per game). */
+  /** threshold: min, max (outside event severity points per game), first_year, warn_years. */
   severity: "E1",
+  /** Phase 2 (16.3.2), package 8: grow_alone_per_year, grow_joined_per_year, max_factor. */
+  roots: "R1",
+  /** Phase 2 (16.3.3), package 8: rise_at, slip_at, settle_band, pull_points, roots_bonus, backing_per_year, coins_per_year. */
+  momentum: "R2",
+  /** Phase 2 (16.4), package 8: discount, joined_years. */
+  freshStart: "R3",
+  /** Phase 2 (16.3.2), package 8: the need factor from the real 2026 seed. */
+  need: "R4",
+  /** Phase 2 (16.4), package 9: after an event of severity 2 or more, builds there take half the time for `years`. */
+  rebuild: "E2",
+  /** Phase 2 (16.4), package 9: a lost election is a deal (deal_years, deal_discount, kept_here, kept_near, broken). Replaces B3. */
+  hungTerm: "P6",
 } as const;
 
-// ---------------------------------------------------------------------------
-// The calendar (model/board/game.yaml)
+/** The phase 2 cards: optional until they are in every model. Every other id in RULE_IDS must exist. */
+export const OPTIONAL_RULE_IDS: readonly RuleId[] = [
+  RULE_IDS.roots, RULE_IDS.momentum, RULE_IDS.freshStart, RULE_IDS.need, RULE_IDS.rebuild, RULE_IDS.hungTerm,
+];
 
-/** Structure and calendar only. All balance numbers are rule params. */
-export interface BoardGame {
-  /** The region in play, e.g. South East Wales. */
-  region: Text;
-  /** Councils in play, in display order. */
-  councils: CouncilCode[];
-  first_year: number;
-  turn_years: number;
-  turns: number;
-  end_year: number;
-  /** Years an election is held at the end of the turn that reaches them (2030 to 2046). */
-  election_years: number[];
-  /** The last year a keystone can be started and still finish. */
-  keystone_last_start_year: number;
-  visits_per_turn: number;
-  report_lines_max: number;
-  /** localStorage key prefix. Keys are set and removed singly, never cleared. */
-  save_key: string;
-}
+/** Rule ids every board model must carry. */
+export const REQUIRED_RULE_IDS: readonly RuleId[] = Object.values(RULE_IDS).filter((id) => !OPTIONAL_RULE_IDS.includes(id));
+

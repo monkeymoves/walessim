@@ -6,29 +6,27 @@
  *   commuting share times `coef` times the rail quality factor. Jobs lost travel home too.
  * - S2 Prices travel up the line: a rise in Work and pay in B lowers Homes and community where
  *   its workers live, less what homes there block.
- * - S3 Young people follow work and homes: along commute and rail links, young adults move from
- *   the lower to the higher (Work and pay plus Homes and community): `pull` per point of the gap,
- *   at most `share` percentage points, counted on the smaller of the two councils.
+ * - S3 Young people follow work and homes: bounded and two sided, in spread-young.ts.
  * - S4 Water runs downhill: carried by project effects with `where: downstream` (held.ts), and
  *   the helpers here for storms passing down a river (events.ts).
  *
- * One hop only: what arrives along a link never travels on in the same turn.
+ * One hop only: what arrives along a link never travels on in the same step. S1 and S2 read the
+ * change in the step, so small steps add up to the same as one big one.
  */
 import { siteCouncils } from "./conditions";
 import { BoardModelError } from "./errors";
-import type { TurnCtx } from "./ctx";
+import type { StepCtx } from "./ctx";
 import { causeKey } from "./held";
 import { riverDown } from "./effects";
-import { param, rule } from "./rules";
+import { optParam, param, rule } from "./rules";
+import { youngFollowWork } from "./spread-young";
 import type {
   BoardModel, BoardState, Cause, CouncilCode, LinkDef, RuleId, SpreadSpec,
 } from "./types";
 import { RULE_IDS } from "./types";
 
-/** A rule param if the card has it, else undefined. For optional params added after package 0. */
-export function optParam(model: BoardModel, id: RuleId, name: string): number | undefined {
-  return model.rules.find((r) => r.id === id)?.params[name]?.default;
-}
+export { optParam } from "./rules";
+export { youngFollowWork, youngLinks, youngPull } from "./spread-young";
 
 function spec(model: BoardModel, id: RuleId): SpreadSpec {
   const s = rule(model, id).spread;
@@ -127,12 +125,12 @@ function grouped(items: Input[]): Input[] {
   return [...out.values()];
 }
 
-/** The inputs of a link rule this turn: jobs (both signs) or, for other rules, rises not made by spread. */
-function inputs(ctx: TurnCtx, id: RuleId, s: SpreadSpec): Input[] {
+/** The inputs of a link rule in this step: jobs (both signs) or, for other rules, rises not made by spread. */
+function inputs(ctx: StepCtx, id: RuleId, s: SpreadSpec): Input[] {
   if (s.only_from_projects) return grouped(ctx.jobs);
   const runRules = new Set<RuleId>([RULE_IDS.jobsTravelHome, RULE_IDS.pricesUpTheLine, RULE_IDS.youngFollowWork, id]);
   return grouped(ctx.state.ledger
-    .filter((c) => c.turn === ctx.turn && c.quantity === s.input && !c.via && c.delta > 0 && c.council && !runRules.has(c.rule))
+    .filter((c) => c.step === ctx.step && c.quantity === s.input && !c.via && c.delta > 0 && c.council && !runRules.has(c.rule))
     .map((c) => ({ council: c.council!, delta: c.delta, cause: c.cause })));
 }
 
@@ -156,7 +154,7 @@ export function echoes(model: BoardModel, state: BoardState, id: RuleId, source:
 }
 
 /** S1 and S2: a change at one end of a link moves a quantity at the other end. */
-export function spreadAlongLinks(ctx: TurnCtx, id: RuleId): void {
+export function spreadAlongLinks(ctx: StepCtx, id: RuleId): void {
   const s = spec(ctx.model, id);
   for (const input of inputs(ctx, id, s)) {
     for (const e of echoes(ctx.model, ctx.state, id, input.council, input.delta)) {
@@ -165,45 +163,8 @@ export function spreadAlongLinks(ctx: TurnCtx, id: RuleId): void {
   }
 }
 
-/** S3: young adults move one hop from the lower to the higher (Work and pay plus Homes and community). */
-export function youngFollowWork(ctx: TurnCtx): void {
-  const { model, state } = ctx;
-  const id = RULE_IDS.youngFollowWork;
-  const s = spec(model, id);
-  const most = param(model, id, "share");
-  const pull = param(model, id, "pull");
-  const workLoss = optParam(model, id, "work_per_point") ?? 0;
-  const welshLoss = optParam(model, id, "welsh_per_point") ?? 0;
-  const seen = new Set<string>();
-  const links = model.links.filter((l) => s.links.includes(l.kind)).sort((a, b) => (a.id < b.id ? -1 : 1));
-  for (const l of links) {
-    const a = state.councils[l.from];
-    const b = state.councils[l.to];
-    if (!a || !b) continue;
-    const pairKey = [l.from, l.to].sort().join("|");
-    if (seen.has(pairKey)) continue;
-    seen.add(pairKey);
-    const att = (c: typeof a) => c.measures.work + c.measures.homes;
-    const [lo, hi] = att(a) < att(b) ? [a, b] : [b, a];
-    const gap = att(hi) - att(lo);
-    if (gap <= 0) continue;
-    const q = s.quality_multiplies ? qualityFactor(model, id, railQualityBetween(model, state, lo.code, hi.code)) : 1;
-    // The share moves as people, sized on the smaller council so a big place cannot swamp a small one.
-    const people = (Math.min(most, pull * gap) * q / 100) * Math.min(lo.pop, hi.pop);
-    const cause: Cause = { kind: "people", group: "young" };
-    const left = -ctx.change({ council: lo.code, quantity: "young_adults", delta: -(people / lo.pop) * 100, rule: id, cause, via: { link: l.id, from: hi.code } });
-    if (left <= 0) continue;
-    const moved = (left / 100) * lo.pop;
-    ctx.change({ council: hi.code, quantity: "young_adults", delta: (moved / hi.pop) * 100, rule: id, cause, via: { link: l.id, from: lo.code } });
-    lo.pop = Math.round(lo.pop - moved);
-    hi.pop = Math.round(hi.pop + moved);
-    if (workLoss) ctx.change({ council: lo.code, quantity: "work", delta: -left * workLoss, rule: id, cause });
-    if (welshLoss) ctx.change({ council: lo.code, quantity: "welsh", delta: -left * welshLoss, rule: id, cause });
-  }
-}
-
 /** Every link rule in order: S1, S2, then S3 on the board they leave. */
-export function runSpread(ctx: TurnCtx): void {
+export function runSpread(ctx: StepCtx): void {
   spreadAlongLinks(ctx, RULE_IDS.jobsTravelHome);
   spreadAlongLinks(ctx, RULE_IDS.pricesUpTheLine);
   youngFollowWork(ctx);

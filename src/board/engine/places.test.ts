@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { boardFixture, FIXTURE_COUNCILS } from "./fixture";
 import { ctxOf, handState, standing } from "./hand-state";
 import { seedPeople } from "./people";
-import { gradeFactor, gradeVisit, visitGrade, wetTurn } from "./places";
+import { gradeFactor, gradeVisit, visitGrade, wetNow } from "./places";
 import { pickVisit } from "./bots-common";
 import type { BoardModel, PlaceDef, V1PlaceBoard } from "./types";
 
@@ -36,7 +36,7 @@ describe("T3 places: one hard choice", () => {
     s.councils[merthyr]!.measures.homes = 4;
     const backing = s.councils[merthyr]!.backing;
     const grade = gradeVisit(ctxOf(model, s), { kind: "visit", place: "merthyr-station", picks: ["homes"] },
-      { kind: "visit", place: "merthyr-station", council: merthyr, offeredBy: { project: "frequent-trains" } });
+      { kind: "visit", place: "merthyr-station", council: merthyr, offeredBy: { project: "frequent-trains" }, since: 0 });
     expect(grade).toBe("very_well");
     expect(s.councils[merthyr]!.measures.homes).toBeCloseTo(4.4, 4);
     expect(s.councils[merthyr]!.backing).toBeCloseTo(backing + 0.5, 4);
@@ -65,12 +65,12 @@ describe("T1 places: the Rhondda through v1's gradeRhondda", () => {
     expect(pickVisit(model, s, "rhondda", true)).toHaveLength(board.threads);
   });
 
-  it("a wet turn follows the future's weather track", () => {
+  it("a wet time follows the future's weather track", () => {
     const { model, s } = setup();
     s.future = "wet-decades";
-    s.turn = 5;
-    expect(wetTurn(model, s)).toBe(true);
-    s.turn = 0;
-    expect(wetTurn(model, s)).toBe(false);
+    s.step = 40;
+    expect(wetNow(model, s)).toBe(true);
+    s.step = 0;
+    expect(wetNow(model, s)).toBe(false);
   });
 });

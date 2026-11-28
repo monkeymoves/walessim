@@ -19,6 +19,7 @@ describe("board model checks", () => {
       "rules/spread.yaml": { rules: m.rules.filter((r) => r.theme === "spread") },
       "rules/budget.yaml": { rules: m.rules.filter((r) => r.theme === "budget") },
       "rules/people.yaml": { rules: m.rules.filter((r) => r.theme === "people") },
+      "rules/growth.yaml": { rules: m.rules.filter((r) => r.theme === "growth") },
       "projects.yaml": { projects: m.projects },
       "tree.yaml": { branches: m.branches },
       "pairs.yaml": { pairs: m.pairs },
@@ -29,6 +30,7 @@ describe("board model checks", () => {
       "starts.yaml": { starts: m.starts },
       "endings.yaml": { endings: m.endings },
       "letters.yaml": { letters: m.letters },
+      "story.yaml": { chapters: [{ id: "holding-on", name: { en: "Holding on", cy: "Dal ati" }, line: { en: "You held on.", cy: "Fe wnaethoch chi ddal ati." }, priority: 99, when: [] }] },
       "data/board-commute.json": { links: m.links.filter((l) => l.kind === "commute") },
     };
     expect(Object.keys(files).sort()).toEqual(Object.keys(BOARD_FILES).sort());
@@ -76,7 +78,7 @@ describe("board model checks", () => {
 
   it("the loader checks the version and the contents", async () => {
     const m = boardFixture();
-    expect(acceptBoardModel(structuredClone(m)).game.turns).toBe(12);
+    expect(acceptBoardModel(structuredClone(m)).game.steps).toBe(96);
     expect(() => acceptBoardModel({ ...m, meta: { ...m.meta, version: 99 } })).toThrow(BoardModelLoadError);
     expect(() => acceptBoardModel({ ...m, endings: [] })).toThrow(/problem/);
     const fakeFetch = (async () => new Response(JSON.stringify(m))) as typeof fetch;

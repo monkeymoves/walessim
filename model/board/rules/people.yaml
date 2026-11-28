@@ -1,6 +1,6 @@
 note: >
-  Rule cards for people, backing and elections (P1 to P5), and, because the board has no other
-  file for them, the two scores (G1), the weight of outside trouble (E1) and place visits (V1).
+  Rule cards for people, backing, elections and deals (P1 to P6), and, because the board has no other
+  file for them, the two scores (G1), the weight of outside trouble (E1), rebuilding after it (E2) and place visits (V1).
   The engine reads them by id (RULE_IDS in src/board/engine/types-model.ts, and
   src/board/engine/rule-defaults.ts for the extra params). Every size here is a design choice
   with no evidence behind it, so every card is a game rule. Params marked tune are set by the
@@ -11,13 +11,14 @@ rules:
     kind: stock
     name: { en: Moods move slowly, cy: Mae hwyliau'n symud yn araf, cy_review: true }
     note:
-      en: Each group compares what it cares about with four years ago and with how the middle council did. Moods remember where they were.
-      cy: Mae pob grŵp yn cymharu'r hyn sy'n bwysig iddo â phedair blynedd yn ôl ac â'r cyngor canol. Mae hwyliau'n cofio lle'r oedden nhw.
+      en: Each group compares what it cares about with four years ago, in its own council. Moods remember where they were.
+      cy: Mae pob grŵp yn cymharu'r hyn sy'n bwysig iddo yn ei gyngor â phedair blynedd yn ôl. Mae hwyliau'n cofio lle'r oedden nhw.
       cy_review: true
     params:
-      memory: { default: 0.6, min: 0.3, max: 0.9, unit: { en: share kept each turn, cy: cyfran sy'n aros bob tro, cy_review: true }, adjustable: true, tune: true }
+      memory_per_year: { default: 0.7746, min: 0.5, max: 0.95, unit: { en: share kept each year, cy: cyfran sy'n aros bob blwyddyn, cy_review: true }, adjustable: true, tune: true }
       compare_years: { default: 4, min: 2, max: 8, unit: { en: years, cy: blynyddoedd, cy_review: true }, adjustable: false }
       pull: { default: 0.8, min: 0.2, max: 2, unit: { en: points of mood per point better or worse, cy: pwyntiau o hwyliau am bob pwynt yn well neu'n waeth, cy_review: true }, adjustable: true, tune: true }
+      middle_share: { default: 0, min: 0, max: 0.5, unit: { en: share of the judgement made against the middle council, cy: cyfran o'r farn sy'n cymharu â'r cyngor canol, cy_review: true }, adjustable: false }
       promise_points: { default: 1, min: 0, max: 3, unit: { en: points, cy: pwyntiau, cy_review: true }, adjustable: true, tune: true }
       crisis_points: { default: 0.5, min: 0, max: 2, unit: { en: points for each crisis, cy: pwyntiau am bob argyfwng, cy_review: true }, adjustable: true, tune: true }
       presence_points: { default: 0.5, min: 0, max: 2, unit: { en: points, cy: pwyntiau, cy_review: true }, adjustable: true, tune: true }
@@ -45,12 +46,13 @@ rules:
     kind: threshold
     name: { en: Passed over, cy: Wedi'u hanwybyddu, cy_review: true }
     note:
-      en: A place with nothing built in it or next to it for 8 years backs you less.
-      cy: Mae lle heb ddim wedi'i adeiladu ynddo nac wrth ei ymyl am 8 mlynedd yn eich cefnogi llai.
+      en: A place with nothing built in or near it for 8 years backs you a little less. The loss stops at 1 point.
+      cy: Mae lle heb ddim wedi'i adeiladu gerllaw am 8 mlynedd yn eich cefnogi llai. Mae'r golled yn stopio ar 1 pwynt.
       cy_review: true
     params:
       years: { default: 8, min: 4, max: 12, unit: { en: years, cy: blynyddoedd, cy_review: true }, adjustable: true, tune: true }
-      loss: { default: 0.5, min: 0.1, max: 1, unit: { en: points a turn, cy: pwyntiau y tro, cy_review: true }, adjustable: true, tune: true }
+      loss_per_year: { default: 0.1, min: 0.05, max: 0.5, unit: { en: points a year, cy: pwyntiau y flwyddyn, cy_review: true }, adjustable: true, tune: true }
+      max_loss: { default: 1, min: 0, max: 3, unit: { en: points in all, cy: pwyntiau i gyd, cy_review: true }, adjustable: true, tune: true }
     sources: []
     confidence: low
     evidence: placeholder
@@ -67,7 +69,6 @@ rules:
       backs_at: { default: 5, min: 5, max: 5, unit: { en: points out of 10, cy: pwyntiau allan o 10, cy_review: true }, adjustable: false }
       win_share: { default: 0.5, min: 0.5, max: 0.5, unit: { en: share of people, cy: cyfran o'r bobl, cy_review: true }, adjustable: false }
       strong_share: { default: 0.667, min: 0.6, max: 0.75, unit: { en: share of people, cy: cyfran o'r bobl, cy_review: true }, adjustable: true, tune: true }
-      refuse_cost: { default: 4, min: 3, max: 7, unit: { en: coins, cy: darnau arian, cy_review: true }, adjustable: true, tune: true }
     sources: []
     confidence: high
     evidence: placeholder
@@ -86,20 +87,55 @@ rules:
     confidence: low
     evidence: placeholder
     game_rule: true
+  - id: P6
+    theme: people
+    kind: threshold
+    name: { en: Governing with others, cy: Llywodraethu gydag eraill, cy_review: true }
+    note:
+      en: After a lost election you make a deal with a council that backs you least. Keep it and that place warms to you.
+      cy: Ar ôl colli etholiad rydych chi'n gwneud cytundeb â chyngor sy'n eich cefnogi leiaf. Cadwch ef ac mae'r lle hwnnw'n closio atoch chi.
+      cy_review: true
+    params:
+      choices: { default: 2, min: 1, max: 3, unit: { en: deals on offer, cy: cytundebau ar gael, cy_review: true }, adjustable: false }
+      deal_years: { default: 4, min: 2, max: 6, unit: { en: years to keep it, cy: blynyddoedd i'w gadw, cy_review: true }, adjustable: true, tune: true }
+      deal_discount: { default: 1, min: 0, max: 2, unit: { en: coins off the project that keeps it, cy: darnau arian oddi ar y prosiect sy'n ei gadw, cy_review: true }, adjustable: true, tune: true }
+      kept_here: { default: 1.5, min: 0, max: 3, unit: { en: points of backing in that council, cy: pwyntiau o gefnogaeth yn y cyngor hwnnw, cy_review: true }, adjustable: true, tune: true }
+      kept_near: { default: 0.5, min: 0, max: 1.5, unit: { en: points of backing one link away, cy: pwyntiau o gefnogaeth un cyswllt i ffwrdd, cy_review: true }, adjustable: true, tune: true }
+      broken: { default: 0.5, min: 0, max: 1.5, unit: { en: points of backing lost everywhere, cy: pwyntiau o gefnogaeth a gollir ym mhobman, cy_review: true }, adjustable: true, tune: true }
+    sources: []
+    confidence: low
+    evidence: placeholder
+    game_rule: true
+  - id: E2
+    theme: events
+    kind: threshold
+    name: { en: Rebuild better, cy: Ailadeiladu'n well, cy_review: true }
+    note:
+      en: After hard trouble lands on a place, new builds there take half the time for two years.
+      cy: Ar ôl i drafferth galed daro lle, mae adeiladau newydd yno'n cymryd hanner yr amser am ddwy flynedd.
+      cy_review: true
+    params:
+      severity_at_least: { default: 2, min: 1, max: 3, unit: { en: severity points, cy: pwyntiau difrifoldeb, cy_review: true }, adjustable: true, tune: true }
+      years: { default: 2, min: 1, max: 4, unit: { en: years, cy: blynyddoedd, cy_review: true }, adjustable: true, tune: true }
+      time_share: { default: 0.5, min: 0.25, max: 1, unit: { en: share of the build time, cy: cyfran o'r amser adeiladu, cy_review: true }, adjustable: true, tune: true }
+    sources: []
+    confidence: low
+    evidence: placeholder
+    game_rule: true
   - id: G1
     theme: score
     kind: linear
     name: { en: The two scores, cy: Y ddwy sgôr, cy_review: true }
     note:
-      en: Both scores weigh councils by their people. A quarter of each comes from the three lowest councils alone.
-      cy: Mae'r ddwy sgôr yn pwyso cynghorau yn ôl eu pobl. Daw chwarter pob un o'r tri chyngor isaf yn unig.
+      en: Both scores weigh councils by their people. Two fifths of each comes from the three lowest councils alone. Your result is the Wales you leave in 2050.
+      cy: Mae'r ddwy sgôr yn pwyso cynghorau yn ôl eu pobl. Daw dwy ran o bump o bob un o'r tri chyngor isaf yn unig. Eich canlyniad yw'r Gymru rydych chi'n ei gadael yn 2050.
       cy_review: true
     params:
-      fairness_share: { default: 0.25, min: 0.1, max: 0.4, unit: { en: share of each score, cy: cyfran o bob sgôr, cy_review: true }, adjustable: true, tune: true }
+      fairness_share: { default: 0.4, min: 0.1, max: 0.5, unit: { en: share of each score, cy: cyfran o bob sgôr, cy_review: true }, adjustable: true, tune: true }
       lowest_count: { default: 3, min: 1, max: 3, unit: { en: councils, cy: cynghorau, cy_review: true }, adjustable: false }
       future_years: { default: 8, min: 0, max: 8, unit: { en: years after 2050, cy: blynyddoedd ar ôl 2050, cy_review: true }, adjustable: false }
-      band_little: { default: 2, min: 1, max: 4, unit: { en: points out of 100, cy: pwyntiau allan o 100, cy_review: true }, adjustable: true, tune: true }
-      band_much: { default: 6, min: 4, max: 12, unit: { en: points out of 100, cy: pwyntiau allan o 100, cy_review: true }, adjustable: true, tune: true }
+      band_little: { default: 3, min: 1, max: 4, unit: { en: points out of 100, cy: pwyntiau allan o 100, cy_review: true }, adjustable: true, tune: true }
+      band_much: { default: 10, min: 4, max: 12, unit: { en: points out of 100, cy: pwyntiau allan o 100, cy_review: true }, adjustable: true, tune: true }
       risk_left_points: { default: 0.3, min: 0, max: 1, unit: { en: points out of 10 for each risk left high, cy: pwyntiau allan o 10 am bob perygl sy'n uchel, cy_review: true }, adjustable: true, tune: true }
     sources: []
     confidence: medium
@@ -116,9 +152,13 @@ rules:
     params:
       min: { default: 9, min: 9, max: 9, unit: { en: severity points, cy: pwyntiau difrifoldeb, cy_review: true }, adjustable: false }
       max: { default: 11, min: 11, max: 11, unit: { en: severity points, cy: pwyntiau difrifoldeb, cy_review: true }, adjustable: false }
-      first_turn: { default: 1, min: 0, max: 3, unit: { en: turns, cy: troeon, cy_review: true }, adjustable: false }
-      grown_per_turn: { default: 1, min: 0, max: 2, unit: { en: events a turn, cy: digwyddiadau y tro, cy_review: true }, adjustable: true, tune: true }
+      first_year: { default: 2028, min: 2026, max: 2032, unit: { en: year, cy: blwyddyn, cy_review: true }, adjustable: false }
+      warn_years: { default: 1.5, min: 1, max: 3, unit: { en: years of warning before outside trouble lands, cy: blynyddoedd o rybudd cyn i drafferth o'r tu allan gyrraedd, cy_review: true }, adjustable: true, tune: true }
+      grown_warn_years: { default: 1, min: 1, max: 3, unit: { en: years of warning before trouble the board grows lands, cy: blynyddoedd o rybudd cyn i drafferth y bwrdd gyrraedd, cy_review: true }, adjustable: true, tune: true }
+      grown_at_once: { default: 1, min: 0, max: 2, unit: { en: events at once, cy: digwyddiadau ar unwaith, cy_review: true }, adjustable: true, tune: true }
+      grown_gap_years: { default: 2, min: 1, max: 4, unit: { en: years between them, cy: blynyddoedd rhyngddynt, cy_review: true }, adjustable: true, tune: true }
       prepared_cut: { default: 0.5, min: 0.25, max: 0.5, unit: { en: share left for each project ready for it, cy: cyfran sy'n weddill am bob prosiect sy'n barod amdano, cy_review: true }, adjustable: true, tune: true }
+      downturn_cut: { default: 0.5, min: 0.25, max: 0.75, unit: { en: share of a downturn left where a college stands once a cluster has roots, cy: cyfran o ddirwasgiad sy'n weddill lle mae coleg unwaith mae gan glwstwr wreiddiau, cy_review: true }, adjustable: true, tune: true }
       storm_step: { default: 0.5, min: 0.25, max: 0.75, unit: { en: share of a storm left when rivers have room, cy: cyfran o storm sy'n weddill pan fo lle i afonydd, cy_review: true }, adjustable: true, tune: true }
     sources: []
     confidence: high

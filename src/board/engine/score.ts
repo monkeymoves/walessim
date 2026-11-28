@@ -2,10 +2,12 @@
  * The two scores (docs/design/v2-board.md section 8): Life in your years and Left for 2050, both
  * out of 100, built from council measures weighted by people, with a share (rule G1) from the
  * lowest councils alone so a Wales that leaves places behind cannot score as well. The result is
- * the lower of the two. Also the Fairness gap of section 4.1.
+ * Left for 2050 alone (16.3.6): Life in your years is still worked out, picks the letter and
+ * shapes the story, but is not the result. Also the Fairness gap of section 4.1.
  */
 import { param } from "./rules";
 import { ruleParam } from "./rule-defaults";
+import { stepsOf } from "./time";
 import type {
   BoardModel, BoardState, CouncilCode, MeasureId, ResultBand, RiskKind, Scores,
 } from "./types";
@@ -90,9 +92,9 @@ export function leftBoard(model: BoardModel, state: BoardState): MeasureBoard {
     if (c) out[code] = { measures: { ...c.measures } };
   }
   const years = param(model, RULE_IDS.score, "future_years");
-  const lastTurn = model.game.turns + Math.floor(years / model.game.turn_years);
+  const lastStep = model.game.steps + stepsOf(model, years);
   for (const p of state.projects) {
-    if (p.status !== "building" || p.readyTurn > lastTurn || p.site.council === undefined) continue;
+    if (p.status !== "building" || p.readyStep > lastStep || p.site.council === undefined) continue;
     const def = model.projects.find((d) => d.id === p.project);
     const target = out[p.site.council];
     if (!def || !target) continue;
@@ -102,13 +104,35 @@ export function leftBoard(model: BoardModel, state: BoardState): MeasureBoard {
       target.measures[e.measure] = clamp10(target.measures[e.measure] + e.points * factor);
     }
   }
+  priceRisks(model, out, (code) => state.councils[code]?.risks);
+  return out;
+}
+
+/** Each risk at step 3 takes `risk_left_points` from the measure it threatens, in place. */
+function priceRisks(model: BoardModel, board: MeasureBoard, risksOf: (code: CouncilCode) => Record<RiskKind, number> | undefined): void {
   const riskPoints = ruleParam(model, RULE_IDS.score, "risk_left_points");
-  for (const code of Object.keys(out)) {
-    const risks = state.councils[code]!.risks;
+  for (const code of Object.keys(board)) {
+    const risks = risksOf(code);
+    if (!risks) continue;
     for (const r of Object.keys(RISK_MEASURE) as RiskKind[]) {
-      if (risks[r] >= 3) out[code]!.measures[RISK_MEASURE[r]] = clamp10(out[code]!.measures[RISK_MEASURE[r]] - riskPoints);
+      if (risks[r] >= 3) board[code]!.measures[RISK_MEASURE[r]] = clamp10(board[code]!.measures[RISK_MEASURE[r]] - riskPoints);
     }
   }
+}
+
+/**
+ * The 2026 board judged the way Left for 2050 is: the first frame (or the state before it), with
+ * its own high risks priced in. So a game where nothing happens ends where it began, and the top
+ * strip never shows Left for 2050 below its own start before anything has happened.
+ */
+export function startBoard(model: BoardModel, state: BoardState): MeasureBoard {
+  const first = state.history[0]?.councils ?? state.councils;
+  const out: MeasureBoard = {};
+  for (const code of model.game.councils) {
+    const c = first[code];
+    if (c) out[code] = { measures: { ...c.measures } };
+  }
+  priceRisks(model, out, (code) => first[code]?.risks);
   return out;
 }
 
@@ -124,16 +148,17 @@ export function resultBand(model: BoardModel, change: number): ResultBand {
 }
 
 /**
- * Both scores for a state. Life in your years is the mean over the turns played (the boards at
- * the end of each turn, or the 2026 board before the first turn ends). Left for 2050 is the
- * board carried forward (`leftBoard`).
+ * Both scores for a state. Life in your years is the mean over the years played (the yearly
+ * frames, or the 2026 board before the first year closes). Left for 2050 is the board carried
+ * forward (`leftBoard`), and it is the result (16.3.6). `start` is the 2026 board judged the same
+ * way (`startBoard`). `lower` still says which was lower: it picks the letter.
  */
 export function scores(model: BoardModel, state: BoardState): Scores {
-  const start = state.history[0] ? boardScore(model, state.history[0].councils) : boardScore(model, state.councils);
+  const start = boardScore(model, startBoard(model, state));
   const played = state.history.slice(1);
-  const life = played.length > 0 ? mean(played.map((f) => boardScore(model, f.councils))) : start;
+  const life = played.length > 0 ? mean(played.map((f) => boardScore(model, f.councils))) : boardScore(model, state.history[0]?.councils ?? state.councils);
   const left = boardScore(model, leftBoard(model, state));
   const lower = life <= left ? "life" : "left";
-  const result = Math.min(life, left);
+  const result = left;
   return { life, left, lower, result, start, band: resultBand(model, result - start) };
 }

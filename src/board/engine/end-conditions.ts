@@ -4,6 +4,7 @@
  */
 import { param } from "./rules";
 import { councilMean, fairnessGap, lowestCouncils } from "./score";
+import { yearOfStep } from "./time";
 import type { BoardModel, BoardState, CouncilCode, CouncilFlag, EndCondition, MeasureId } from "./types";
 import { RULE_IDS } from "./types";
 
@@ -84,6 +85,27 @@ export function endHolds(model: BoardModel, state: BoardState, c: EndCondition):
       const bad = state.events.filter((e) => !model.events.find((d) => d.id === e.event)?.good).length;
       return bad >= c.at_least;
     }
+    case "elections_lost": return state.election.records.filter((r) => r.result === "lost").length >= c.at_least;
+    case "deals_kept": return state.deals.filter((d) => d.kept === true).length >= c.at_least;
+    case "keystone_finished_after": {
+      const late = state.projects.filter((p) => p.status === "working" && model.projects.find((d) => d.id === p.project)?.keystone
+        && yearOfStep(model, p.readyStep + 1) > c.year);
+      return late.length >= c.at_least;
+    }
+    case "events_prepared": {
+      const outside = state.events.filter((e) => {
+        const def = model.events.find((d) => d.id === e.event);
+        return def?.origin === "outside" && !def.good;
+      });
+      // A game with no outside trouble prepared for nothing: the ending is not earned.
+      if (outside.length === 0) return false;
+      return outside.filter((e) => e.prepared).length / outside.length >= c.share;
+    }
+    case "no_council_lower": {
+      if (!then) return false;
+      return flagged(model).every((x) => !now[x] || !then[x] || councilMean(now[x]!) >= councilMean(then[x]!));
+    }
+    case "event_landed": return state.events.some((e) => e.event === c.event);
   }
 }
 

@@ -1,0 +1,47 @@
+/* A place visit on the board: a held sheet over the map, the council drawn close on the left and
+   the choice on the right. Options are card stock; the picked one carries the player's stitch. */
+
+.bp-visit { position: absolute; inset: 12px; z-index: 40; display: grid; place-items: center; background: color-mix(in srgb, var(--board-deep) 45%, transparent); outline: none; }
+.bp-sheet { width: min(1040px, 100%); max-height: 100%; overflow-y: auto; padding: 20px 24px 22px; display: grid; gap: 14px; box-shadow: var(--shadow-held); background: var(--paper); }
+.bp-head { display: grid; gap: 4px; border-bottom: 1.5px solid var(--ink); padding-bottom: 10px; }
+.bp-head .t-1 { margin: 0; }
+.bp-hard { color: var(--ink-2); }
+.bp-error { color: var(--warn); }
+
+.bp-light, .bp-rhondda { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 20px; align-items: start; }
+.bp-light-side { display: grid; gap: 10px; align-content: start; }
+.bp-close { width: 100%; max-height: 520px; background: var(--paper-2); box-shadow: var(--shadow-well); }
+.bp-close-la { fill: var(--paper); stroke: var(--ink); stroke-width: 0.25; }
+.bp-close-town rect { fill: var(--ink); }
+.bp-close-town text { fill: var(--ink-2); font-family: var(--font-grot); }
+
+.bp-options { display: grid; gap: 10px; }
+.bp-option { text-align: left; display: grid; gap: 4px; padding: 12px 14px; background: var(--ticket-buff); border: 1.5px solid var(--ink); box-shadow: var(--shadow-flat); cursor: pointer; font: inherit; color: var(--ink); }
+.bp-option:hover { background: var(--paper-2); }
+.bp-option.chosen { outline: 2px dashed var(--stitch-deep); outline-offset: -6px; background: var(--paper); }
+.bp-option-name { margin: 0; }
+.bp-mark { display: inline-block; width: 1ch; font-weight: 700; }
+.bp-gain .bp-mark { color: var(--ink); }
+.bp-loss .bp-mark { color: var(--warn); }
+.bp-branch { color: var(--ink-2); }
+.bp-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+.bp-tip circle { fill: var(--paper-2); stroke: var(--ink); stroke-width: 0.18; cursor: pointer; }
+.bp-tip.risk-2 circle { fill: var(--ink-3); }
+.bp-tip.risk-3 circle { fill: var(--ink); }
+.bp-tip.picked circle { stroke: var(--stitch-deep); stroke-width: 0.35; stroke-dasharray: 0.5 0.3; }
+.bp-tip text { fill: var(--ink); font-family: var(--font-grot); font-weight: 600; pointer-events: none; }
+.bp-tips { list-style: none; margin: 0; padding: 0; max-height: 300px; overflow-y: auto; border-top: 1px solid var(--rule); }
+.bp-tiprow { display: grid; grid-template-columns: auto 2.2ch 1fr; gap: 8px; align-items: start; padding: 6px 4px; border-bottom: 1px solid var(--rule); cursor: pointer; }
+.bp-tiprow.picked { background: var(--paper-2); box-shadow: inset 3px 0 0 var(--stitch-deep); }
+.bp-tip-text { display: grid; gap: 2px; }
+.bp-tip-facts { color: var(--ink-2); }
+.bp-tests { display: grid; gap: 4px; padding-left: 18px; }
+
+.bp-graded { display: grid; gap: 8px; justify-items: start; }
+.bp-stamp { font-size: 22px; padding: 8px 14px 6px; }
+
+@media (max-width: 900px) {
+  .bp-light, .bp-rhondda { grid-template-columns: 1fr; }
+  .bp-close { max-height: 260px; }
+}

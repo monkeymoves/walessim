@@ -1,7 +1,8 @@
 note: >
   Rule cards for effects that travel along real links (S1 to S4, docs/design/v2-board.md section
   4.3, ADR 0005). One hop only: an effect reaches a direct neighbour on a link and stops. The links
-  themselves are real (commuting shares from the 2021 Census, rail lines, river order). How strongly
+  themselves are real (commuting shares from the 2021 Census, rail lines, river order), and S3's
+  floor and ceiling are set against the real 2026 young adult share. How strongly
   an effect travels is a rough guess with no evidence behind its size, so every card is a game rule
   and its params are marked tune. The engine reads them by id (RULE_IDS in
   src/board/engine/types-model.ts) in src/board/engine/spread.ts.
@@ -18,7 +19,7 @@ rules:
       coef: { default: 1, min: 0.5, max: 2, unit: { en: times the commuting share, cy: gwaith y gyfran sy'n cymudo, cy_review: true }, adjustable: true, tune: true }
       quality_step: { default: 0.5, min: 0, max: 1, unit: { en: extra for each step of rail quality above 1, cy: ychwanegol am bob cam o ansawdd rheilffordd uwchben 1, cy_review: true }, adjustable: true, tune: true }
       strength_share: { default: 0.05, min: 0.01, max: 0.1, unit: { en: commuting share for each strength step where the real share is missing, cy: cyfran sy'n cymudo am bob cam cryfder lle mae'r gyfran go iawn ar goll, cy_review: true }, adjustable: true, tune: true }
-    lag: 0
+    lag_years: 0
     spread:
       links: [commute]
       travel: to_home
@@ -27,7 +28,7 @@ rules:
       sign: 1
       weight: share
       quality_multiplies: true
-      lag: 0
+      lag_years: 0
       only_from_projects: true
     sources: [nomis_census_odwp01ew]
     confidence: low
@@ -45,7 +46,7 @@ rules:
       coef: { default: 0.4, min: 0.1, max: 1, unit: { en: times the commuting share, cy: gwaith y gyfran sy'n cymudo, cy_review: true }, adjustable: true, tune: true }
       tag_block: { default: 0.5, min: 0, max: 1, unit: { en: share blocked by each homes project in the place, cy: cyfran sy'n cael ei rhwystro gan bob prosiect cartrefi yn y lle, cy_review: true }, adjustable: true, tune: true }
       strength_share: { default: 0.05, min: 0.01, max: 0.1, unit: { en: commuting share for each strength step where the real share is missing, cy: cyfran sy'n cymudo am bob cam cryfder lle mae'r gyfran go iawn ar goll, cy_review: true }, adjustable: true, tune: true }
-    lag: 0
+    lag_years: 0
     spread:
       links: [commute]
       travel: to_home
@@ -54,7 +55,7 @@ rules:
       sign: -1
       weight: share
       quality_multiplies: true
-      lag: 0
+      lag_years: 0
       blocked_by_tags: [homes]
     sources: [nomis_census_odwp01ew]
     confidence: low
@@ -65,16 +66,24 @@ rules:
     kind: spread
     name: { en: Young people follow work and homes, cy: Mae pobl ifanc yn dilyn gwaith a chartrefi, cy_review: true }
     note:
-      en: Young adults move towards places with work they can reach and homes they can afford. A place that loses them loses some work and Welsh too.
-      cy: Mae oedolion ifanc yn symud at lefydd gyda gwaith o fewn cyrraedd a chartrefi fforddiadwy. Mae lle sy'n eu colli yn colli rhywfaint o waith a Chymraeg hefyd.
+      en: Young adults move towards places with work and homes they can afford. What one place loses, another gains.
+      cy: Mae oedolion ifanc yn symud at lefydd gyda gwaith a chartrefi fforddiadwy. Mae'r hyn y mae un lle yn ei golli, lle arall yn ei ennill.
       cy_review: true
     params:
-      share: { default: 0.3, min: 0.1, max: 1, unit: { en: most percentage points that can move on one link in a turn, cy: y mwyaf o bwyntiau canran sy'n gallu symud ar un cyswllt mewn tro, cy_review: true }, adjustable: true, tune: true }
-      pull: { default: 0.1, min: 0, max: 0.5, unit: { en: percentage points for each point of gap, cy: pwyntiau canran am bob pwynt o fwlch, cy_review: true }, adjustable: true, tune: true }
+      max_per_year: { default: 0.3, min: 0.05, max: 0.5, unit: { en: most percentage points that can move on one link in a year, cy: y mwyaf o bwyntiau canran sy'n gallu symud ar un cyswllt mewn blwyddyn, cy_review: true }, adjustable: true, tune: true }
+      pull_per_year: { default: 0.06, min: 0, max: 0.25, unit: { en: percentage points a year for each point of gap, cy: pwyntiau canran y flwyddyn am bob pwynt o fwlch, cy_review: true }, adjustable: true, tune: true }
       quality_step: { default: 0.5, min: 0, max: 1, unit: { en: extra for each step of rail quality above 1, cy: ychwanegol am bob cam o ansawdd rheilffordd uwchben 1, cy_review: true }, adjustable: true, tune: true }
-      work_per_point: { default: 0.1, min: 0, max: 0.5, unit: { en: Work and pay points lost for each percentage point of young adults lost, cy: pwyntiau Gwaith a chyflog a gollir am bob pwynt canran o oedolion ifanc a gollir, cy_review: true }, adjustable: true, tune: true }
+      links_per_council: { default: 3, min: 1, max: 6, unit: { en: strongest commuting links from each council that people move along, cy: cysylltiadau cymudo cryfaf o bob cyngor y mae pobl yn symud ar eu hyd, cy_review: true }, adjustable: false }
+      floor_share: { default: 0.85, min: 0.3, max: 0.9, unit: { en: times the real 2026 young adult share at least, cy: gwaith cyfran go iawn oedolion ifanc 2026 o leiaf, cy_review: true }, adjustable: true, tune: true }
+      ceiling_share: { default: 1.5, min: 1.1, max: 2, unit: { en: times the real 2026 young adult share at most, cy: gwaith cyfran go iawn oedolion ifanc 2026 ar y mwyaf, cy_review: true }, adjustable: true, tune: true }
+      work_per_point: { default: 0.15, min: 0, max: 0.5, unit: { en: Work and pay points lost for each percentage point of young adults lost, cy: pwyntiau Gwaith a chyflog a gollir am bob pwynt canran o oedolion ifanc a gollir, cy_review: true }, adjustable: true, tune: true }
+      work_gain_per_point: { default: 0.15, min: 0, max: 0.5, unit: { en: Work and pay points gained for each percentage point of young adults gained, cy: pwyntiau Gwaith a chyflog a enillir am bob pwynt canran o oedolion ifanc a enillir, cy_review: true }, adjustable: true, tune: true }
       welsh_per_point: { default: 0.1, min: 0, max: 0.5, unit: { en: Welsh and culture points lost for each percentage point of young adults lost, cy: pwyntiau'r Gymraeg a diwylliant a gollir am bob pwynt canran o oedolion ifanc a gollir, cy_review: true }, adjustable: true, tune: true }
-    lag: 0
+      welsh_gain_per_point: { default: 0.1, min: 0, max: 0.5, unit: { en: Welsh and culture points gained for each percentage point of young adults gained, cy: pwyntiau'r Gymraeg a diwylliant a enillir am bob pwynt canran o oedolion ifanc a enillir, cy_review: true }, adjustable: true, tune: true }
+      homes_per_point: { default: 0.05, min: 0, max: 0.5, unit: { en: Homes and community points lost for each percentage point of young adults gained, cy: pwyntiau Cartrefi a chymuned a gollir am bob pwynt canran o oedolion ifanc a enillir, cy_review: true }, adjustable: true, tune: true }
+      tag_block: { default: 0.5, min: 0, max: 1, unit: { en: share of that loss blocked by each homes project in the place, cy: cyfran o'r golled honno sy'n cael ei rhwystro gan bob prosiect cartrefi yn y lle, cy_review: true }, adjustable: true, tune: true }
+      reverse_pull_points: { default: 2, min: 0, max: 4, unit: { en: points better at the valley end of an upgraded line once work comes up the line, cy: pwyntiau yn well ym mhen y cwm o lein wedi'i huwchraddio unwaith y daw gwaith i fyny'r lein, cy_review: true }, adjustable: true, tune: true }
+    lag_years: 0
     spread:
       links: [commute, rail]
       travel: towards_better
@@ -83,8 +92,9 @@ rules:
       sign: 1
       weight: one
       quality_multiplies: true
-      lag: 0
-    sources: []
+      lag_years: 0
+      blocked_by_tags: [homes]
+    sources: [nomis_census_odwp01ew, nomis_mye]
     confidence: low
     evidence: placeholder
     game_rule: true
@@ -93,13 +103,13 @@ rules:
     kind: spread
     name: { en: Water runs downhill, cy: Mae dŵr yn rhedeg i lawr y bryn, cy_review: true }
     note:
-      en: What is done upstream is felt downstream. Slowing the water cuts flood risk below it a turn later. Storms pass down the river.
-      cy: Mae'r hyn sy'n cael ei wneud i fyny'r afon yn cael ei deimlo i lawr yr afon. Mae arafu'r dŵr yn torri'r perygl o lifogydd islaw dro yn ddiweddarach. Mae stormydd yn pasio i lawr yr afon.
+      en: What is done upstream is felt downstream. Slowing the water cuts flood risk below it a year or two later. Storms pass down the river.
+      cy: Mae'r hyn sy'n cael ei wneud i fyny'r afon yn cael ei deimlo i lawr yr afon. Mae arafu'r dŵr yn torri'r perygl o lifogydd islaw flwyddyn neu ddwy yn ddiweddarach. Mae stormydd yn pasio i lawr yr afon.
       cy_review: true
     params:
       steps: { default: 1, min: 0, max: 2, unit: { en: flood risk steps cut downstream, cy: camau perygl llifogydd sy'n cael eu torri i lawr yr afon, cy_review: true }, adjustable: true, tune: true }
       storm_weaken: { default: 0.25, min: 0, max: 0.5, unit: { en: share of a storm cut by each flood project in the way, cy: cyfran o storm sy'n cael ei thorri gan bob prosiect llifogydd yn y ffordd, cy_review: true }, adjustable: true, tune: true }
-    lag: 1
+    lag_years: 2
     spread:
       links: [river]
       travel: downstream
@@ -108,7 +118,7 @@ rules:
       sign: 1
       weight: one
       quality_multiplies: false
-      lag: 1
+      lag_years: 2
     sources: [os_open_rivers, nrw_catchments]
     confidence: low
     evidence: placeholder

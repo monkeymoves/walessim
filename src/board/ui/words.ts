@@ -4,7 +4,8 @@
  * here: every string comes from model/i18n through t(), or from a `{en, cy}` field in the model.
  */
 import { formatNum, hasKey, lang, pick, t } from "../../i18n";
-import type { BoardModel, CouncilCode, MeasureId, NodeId, Say, SayVar, Text, WhyQuantity } from "../engine/api";
+import type { BoardModel, ChapterRecord, CouncilCode, MeasureId, NodeId, Say, SayVar, Text, WhyQuantity } from "../engine/api";
+import { seasonOf, yearOfStep } from "../engine/api";
 
 const isText = (v: unknown): v is Text => !!v && typeof v === "object" && "en" in (v as object);
 
@@ -14,7 +15,8 @@ export function nameIdsFrom(model: BoardModel | null): void { named = model; }
 
 /** A Say value as words: a Text in the active language, a number, an i18n key, or an id given its name. */
 function varText(v: SayVar): string {
-  if (typeof v === "number") return formatNum(v, { maximumFractionDigits: 1 });
+  // no thousands commas: the board's numbers are small, and a year must read 2035, not 2,035
+  if (typeof v === "number") return formatNum(v, { maximumFractionDigits: 1, useGrouping: false });
   if (isText(v)) return pick(v, lang());
   if (/^[a-z][\w-]*(\.[\w-]+)+$/.test(v) && (hasKey(v) || hasKey(`board.${v}`))) return t(hasKey(v) ? v : `board.${v}`);
   const m = named;
@@ -39,7 +41,8 @@ export function say(s: Say | null | undefined): string {
   const vars = Object.fromEntries(Object.entries(s.vars ?? {}).map(([k, v]) => [k, varText(v)]));
   // a sentence the engine carries whole from the model (an event warning, an evidence line), with
   // its slots filled from the other values, when there is no wrapping key for it yet
-  const out = key ? t(key, vars) : vars["line"] ? vars["line"].replace(/\{(\w+)\}/g, (all, k: string) => vars[k] ?? all) : "";
+  // a value may itself be a model sentence with slots (an event warning in `line`): fill those from the same values
+  const out = (key ? t(key, vars) : vars["line"] ?? "").replace(/\{(\w+)\}/g, (all, k: string) => vars[k] ?? all);
   if (!out) return "";
   if (/\{\w+\}/.test(out)) { console.warn(`board: ${key} has a slot the engine did not fill`, s.vars); return ""; }
   return out;
@@ -88,11 +91,35 @@ export function signed(n: number): string {
   return (r > 0 ? "+" : r < 0 ? "−" : "") + formatNum(Math.abs(r), { maximumFractionDigits: 1 });
 }
 
-/** Years of a turn: turn 0 is 2026 to 2028. */
-export const turnYears = (model: BoardModel, turn: number): [number, number] => {
-  const from = model.game.first_year + turn * model.game.turn_years;
-  return [from, from + model.game.turn_years];
-};
+/** The first letter in capitals, for words that open a line ("yr haf" opens as "Yr haf"). */
+export const capFirst = (s: string): string => s.charAt(0).toLocaleUpperCase() + s.slice(1);
+
+/**
+ * "Autumn 2031": a step as the screen says it, never as a step number. Spring falls in the next
+ * calendar year. Welsh seasons are lower case inside a sentence; `lead` capitalises one that opens a line.
+ */
+export function whenWords(model: BoardModel, step: number, lead = false): string {
+  const season = seasonOf(model, step);
+  const year = yearOfStep(model, step) + (season === "spring" ? 1 : 0);
+  const out = t("boardui.when", { season: t(`boardui.season.${season}`), year });
+  return lead ? capFirst(out) : out;
+}
+
+/** The year a project starts working: the year of the step after its ready step. */
+export const readyYearOf = (model: BoardModel, readyStep: number): number => yearOfStep(model, readyStep + 1);
+
+function fillChapter(model: BoardModel, rec: ChapterRecord, field: "name" | "line"): string | null {
+  const def = model.chapters?.find((c) => c.id === rec.chapter);
+  if (!def) return null;
+  const vars = Object.fromEntries(Object.entries(rec.slots ?? {}).map(([k, v]) => [k, varText(v)]));
+  return tx(def[field]).replace(/\{(\w+)\}/g, (all, k: string) => vars[k] ?? all);
+}
+
+/** A chapter's name with its slots filled, or the fallback name while the chapters are not written. */
+export const chapterName = (model: BoardModel, rec: ChapterRecord): string => fillChapter(model, rec, "name") ?? t("boardui.chapter.fallback");
+
+/** A chapter's one line, filled the same way, or "". */
+export const chapterLine = (model: BoardModel, rec: ChapterRecord): string => fillChapter(model, rec, "line") ?? "";
 
 /** Councils in play, in display order. */
 export const inPlay = (model: BoardModel): CouncilCode[] => model.game.councils;

@@ -1,5 +1,5 @@
-# Laws for the whole region (docs/design/v2-board.md section 5.1). Owner: package 4.
-# Generic policy levers only: no current named schemes. One law change per election term.
+# Laws for the whole region (docs/design/v2-board.md section 5.1). Owner: package 10.
+# Generic policy levers only: no current named schemes. One law change per election term, and none in a hung term (rule P6).
 # Laws cost backing somewhere, never coins. All sizes are GAME RULES (tune).
 # Group ids (young, older, low_income, welsh_speakers, everyone) are package 3's groups.yaml.
 note: "Effect and backing sizes are game rules (tune). Generic levers, not real schemes."
@@ -21,7 +21,7 @@ laws:
     what: { en: "No new homes or works where rivers and the sea flood. Fewer people move into harm's way.", cy: "Dim cartrefi na gweithfeydd newydd lle mae afonydd a'r môr yn gorlifo. Llai o bobl yn symud i ffordd niwed.", cy_review: true }
     catch: { en: "Valley floors are flat and handy. Fewer places to build means slower building.", cy: "Mae gwaelod y cwm yn wastad ac yn gyfleus. Llai o lefydd i adeiladu, felly adeiladu arafach.", cy_review: true }
     effects:
-      - { kind: risk, risk: flood, steps: -1, where: everywhere, after_turns: 2 }
+      - { kind: risk, risk: flood, steps: -1, where: everywhere, after_years: 4 }
       - { kind: measure, measure: homes, points: -0.1, where: flagged, flag: valley }
     backing:
       - { flag: valley, points: -0.3 }
@@ -32,7 +32,7 @@ laws:
     what: { en: "Visitors pay a little for each night they stay. The money goes back into paths, parks and towns.", cy: "Mae ymwelwyr yn talu ychydig am bob noson maen nhw'n aros. Mae'r arian yn mynd yn ôl i lwybrau, parciau a threfi.", cy_review: true }
     catch: { en: "Hotels, campsites and guest houses do not like it.", cy: "Dydy gwestai, gwersylloedd a thai llety ddim yn ei hoffi.", cy_review: true }
     effects:
-      - { kind: coins, coins: 1, every_turns: 2 }
+      - { kind: coins, coins_per_year: 0.25 }
       - { kind: measure, measure: nature, points: 0.1, where: flagged, flag: coast }
     backing:
       - { flag: coast, points: -0.4 }

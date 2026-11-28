@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { boardFixture, FIXTURE_COUNCILS } from "./fixture";
-import { handState, nextTurn, standing } from "./hand-state";
+import { handState, nextYears, standing } from "./hand-state";
 import { boardLevel, boardScore, fairnessGap, leftBoard, resultBand, scores } from "./score";
 import { MEASURE_IDS, type MeasureId } from "./types";
 
@@ -38,20 +38,32 @@ describe("the board's level and score", () => {
 });
 
 describe("the two scores", () => {
-  it("Life is the mean over the turns played; Left carries building projects and high risks", () => {
+  it("Life is the mean over the years played; Left carries building projects and high risks, and is the result (16.3.6)", () => {
     const s = handState(model);
     const start = boardScore(model, s.councils);
+    const startPriced = boardScore(model, leftBoard(model, s));
     for (const c of Object.values(s.councils)) for (const m of MEASURE_IDS) c.measures[m] += 1;
-    nextTurn(model, s);
+    nextYears(model, s, 2);
     const sc = scores(model, s);
-    expect(sc.start).toBeCloseTo(start, 6);
+    expect(sc.start).toBeCloseTo(startPriced, 6);
     expect(sc.life).toBeCloseTo(start + 10, 4);
-    expect(sc.result).toBe(Math.min(sc.life, sc.left));
-    s.projects.push(standing("social-homes", { council: merthyr }, 1, "building"));
-    s.projects[0]!.readyTurn = 12;
+    expect(sc.result).toBe(sc.left);
+    expect(sc.lower).toBe(sc.life <= sc.left ? "life" : "left");
+    s.projects.push(standing("social-homes", { council: merthyr }, 8, "building"));
+    s.projects[0]!.readyStep = 96;
     expect(leftBoard(model, s)[merthyr]!.measures.homes).toBeCloseTo(s.councils[merthyr]!.measures.homes + 0.6, 4);
     s.councils[cardiff]!.risks.flood = 3;
     expect(leftBoard(model, s)[cardiff]!.measures.nature).toBeCloseTo(s.councils[cardiff]!.measures.nature - 0.3, 4);
+  });
+
+  it("judges the 2026 board as Left for 2050 is, so a high risk already there in 2026 is not a slide", () => {
+    const s = handState(model);
+    s.councils[cardiff]!.risks.flood = 3;
+    s.history = [];
+    const sc = scores(model, s);
+    expect(sc.start).toBeCloseTo(boardScore(model, leftBoard(model, s)), 6);
+    expect(sc.result - sc.start).toBeCloseTo(0, 6);
+    expect(sc.start).toBeLessThan(boardScore(model, s.councils));
   });
 
   it("puts the change in one of five plain bands", () => {

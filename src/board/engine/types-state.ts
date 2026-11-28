@@ -1,13 +1,15 @@
 /**
  * The board state: plain data, JSON safe. `BoardState` holds the game number, the start and the
- * list of steps, and replaying the steps from the game number must give a byte equal state
- * (the save format, the run code and the determinism test in one, section 12).
+ * log of actions with the step each was taken at; replaying the log from the game number must
+ * give a byte equal state (the save format, the run code and the determinism test in one,
+ * section 12 and ADR 0007). Speed and pauses are never in the state.
  */
 import type {
   CouncilCode, CouncilQuantity, EventId, FutureId, Grade, GroupId, LawId, Level, LinkId, LinkQuality,
   MeasureId, NodeId, PairId, PlaceId, ProjectId, RiskKind, RiskStep, RuleId, StartId, Text,
 } from "./types-model";
 import type { ProjectStatus } from "./types-content";
+import type { Deal, Momentum, StoryState } from "./types-clock";
 
 /**
  * A sentence for the UI: an i18n key in model/i18n/{en,cy}/board.json plus slot values.
@@ -25,7 +27,7 @@ export type Site = { council: CouncilCode; link?: never } | { link: LinkId; coun
 // ---------------------------------------------------------------------------
 // Actions
 
-/** Something the player does inside a turn (section 5.1). */
+/** Something the player does, running or paused (section 5.1, 16.2.3). It takes effect in the current step. */
 export type Action =
   /** Build a project at a site. The start's free project costs nothing the first time. */
   | { kind: "build"; project: ProjectId; site: Site }
@@ -36,10 +38,15 @@ export type Action =
   /** Answer a landed event. */
   | { kind: "respond"; event: EventId; response: string }
   /** The result of a place visit: T1 tip ids picked, or the one T3 option id. The engine grades it. */
-  | { kind: "visit"; place: PlaceId; picks: string[] };
+  | { kind: "visit"; place: PlaceId; picks: string[] }
+  /** After a lost election (rule P6, 16.4): take one of the deals on offer (a `deal` pending). */
+  | { kind: "deal"; council: CouncilCode; measure: MeasureId };
 
-/** One entry in the run: an action, or the end of a turn. */
-export type RunStep = Action | { kind: "end_turn" };
+/** One entry in the log: an action and the step it was taken at. Replaces phase 1's `RunStep`. */
+export interface LoggedAction {
+  at: number;
+  action: Action;
+}
 
 // ---------------------------------------------------------------------------
 // Explanation records
@@ -62,12 +69,23 @@ export type Cause =
   /** Running costs, income and carry over. */
   | { kind: "budget" }
   /** No action: the board left alone. */
-  | { kind: "drift" };
+  | { kind: "drift" }
+  /** A council on the rise or slipping (rule R2). */
+  | { kind: "momentum" }
+  /** A deal with a council, kept or broken (rule P6). */
+  | { kind: "deal"; council: CouncilCode };
 
-/** One recorded contribution to a change. Every change is the sum of its contributions. */
+/**
+ * One recorded contribution to a change. Every change is the sum of its contributions. When a
+ * year closes the ledger folds: records of that year sharing a council, quantity, rule, cause and
+ * link merge into one, keeping the first step (ADR 0007). Within the current year, records are
+ * one per change.
+ */
 export interface Contribution {
-  /** The turn in which it happened (0 based). */
-  turn: number;
+  /** The step it happened in (after a fold, the first step of its year that it happened in). */
+  step: number;
+  /** The calendar year of that step. */
+  year: number;
   /** null for Wales level quantities (coins, fairness). */
   council: CouncilCode | null;
   quantity: WhyQuantity;
@@ -99,8 +117,10 @@ export interface CouncilState {
   backing: number;
   moods: Record<GroupId, GroupMood>;
   risks: Record<RiskKind, RiskStep>;
-  /** The last turn a project was built in or within one link of here (for being passed over). */
-  lastReachedTurn: number | null;
+  /** The last step a project was started here or within one link (for being passed over). */
+  lastReachedStep: number | null;
+  /** Rising, steady or slipping (rule R2). Starts "steady". */
+  momentum: Momentum;
 }
 
 export interface ProjectState {
@@ -110,19 +130,29 @@ export interface ProjectState {
   site: Site;
   level: Level;
   status: ProjectStatus;
-  startedTurn: number;
-  /** The turn at whose end it starts working. */
-  readyTurn: number;
+  startedStep: number;
+  /** The step at whose end it starts working (in the clock's tick of that step). */
+  readyStep: number;
+  /** Rule R1 (16.3.2): multiplies its measure and young adult effects. Starts at 1; grows while working. */
+  roots: number;
+  /** Rule R1: another working project of its branch stands here or one link away, or a pair is live. */
+  joined: boolean;
   /** Set by a place visit that scales it. */
   grade?: Grade;
   /** Placed free from the start's head start. */
   free?: boolean;
 }
 
-/** An event warned on the forecast, to land at the end of `turn`. */
+/**
+ * An event on the time line before it lands. The player sees the window `fromStep` to `toStep`
+ * ("the winter of 2031"); it lands in the clock's tick of `step`, a seeded step inside the window.
+ */
 export interface ForecastedEvent {
   event: EventId;
-  turn: number;
+  fromStep: number;
+  toStep: number;
+  /** The landing step. Not shown to the player. */
+  step: number;
   /** Target first, then councils most at risk (downstream). */
   councils: CouncilCode[];
   severity: number;
@@ -131,23 +161,32 @@ export interface ForecastedEvent {
 /** An event that has landed. */
 export interface EventRecord {
   event: EventId;
-  turn: number;
+  /** The step it landed in. */
+  step: number;
   councils: CouncilCode[];
   /** Severity after preparation cut it. */
   severity: number;
+  /** True when a project that cuts it stood at its target when it landed (outside events). */
+  prepared?: boolean;
   response?: string;
 }
 
-/** Something the player must or may settle before the next turn ends. */
+/**
+ * Something the player must or may settle. A `respond` holds the clock (phase "respond") until
+ * answered. A visit offered by a build lapses `game.visit_open_years` after `since`; one offered by
+ * an event lapses when the next events land. A `deal` is on offer after a lost election (rule P6).
+ */
 export type Pending =
   | { kind: "respond"; event: EventId; councils: CouncilCode[] }
-  | { kind: "visit"; place: PlaceId; council: CouncilCode; offeredBy: { project: ProjectId } | { event: EventId } };
+  | { kind: "visit"; place: PlaceId; council: CouncilCode; offeredBy: { project: ProjectId } | { event: EventId }; since: number }
+  | { kind: "deal"; choices: { council: CouncilCode; measure: MeasureId }[]; since: number };
 
 export type ElectionResult = "strong_win" | "win" | "lost";
 
 export interface ElectionRecord {
   year: number;
-  turn: number;
+  /** The step it was held on: the first step of its year. */
+  step: number;
   result: ElectionResult;
   /** Councils that backed you. */
   backers: CouncilCode[];
@@ -157,9 +196,9 @@ export interface ElectionRecord {
 
 export interface ElectionState {
   records: ElectionRecord[];
-  /** After a loss: the weak hand lasts until the end of this turn (inclusive), else null. */
-  weakUntil: number | null;
-  /** After a strong win: the bonus lasts until the end of this turn (inclusive), else null. */
+  /** After a loss: you govern with others until this step (inclusive, the last step of the term), else null. */
+  hungUntil: number | null;
+  /** After a strong win: the bonus lasts until this step (inclusive), else null. */
   strongUntil: number | null;
 }
 
@@ -169,11 +208,12 @@ export interface PromiseState {
   kept: boolean | null;
 }
 
-export type Phase = "build" | "respond" | "ended";
+/** "play": the clock can run and the player can act. "respond": an event waits for an answer and the clock is held. */
+export type Phase = "play" | "respond" | "ended";
 
 export interface BoardState {
-  /** Version of this state shape. */
-  version: 1;
+  /** Version of this state shape: 2 since the clock. */
+  version: 2;
   /** `BoardModel.meta.hash` it was made with. A save from another model replays or is refused. */
   modelHash: string;
   /** As the player typed it. */
@@ -183,16 +223,18 @@ export interface BoardState {
   start: StartId;
   /** Drawn from the seed. Hidden from the player until the forecast reveals it. */
   future: FutureId;
-  /** 0 based. Equal to `game.turns` when the game is over. */
-  turn: number;
-  /** First year of the current turn (2026, 2028, ...). */
+  /** 0 based. Equal to `game.steps` when the game is over (May 2050). */
+  step: number;
+  /** The calendar year of the step (yearOfStep). */
   year: number;
   phase: Phase;
-  steps: RunStep[];
+  /** Every action, with the step it was taken at, in order. */
+  log: LoggedAction[];
   councils: Record<CouncilCode, CouncilState>;
   /** Rail link quality now, for every rail link. */
   linkQuality: Record<LinkId, LinkQuality>;
   projects: ProjectState[];
+  /** Coins, held to four decimal places. The screen shows whole coins and a ring towards the next. */
   coins: number;
   /** The start's free tier 1 project, until placed. */
   freeProject: ProjectId | null;
@@ -203,12 +245,17 @@ export interface BoardState {
   forecast: ForecastedEvent[];
   pending: Pending[];
   events: EventRecord[];
-  /** Outside event severity points drawn so far (rule E1). */
+  /** Outside event severity points warned or landed so far (rule E1). */
   severityUsed: number;
-  visitsThisTurn: number;
-  /** One frame per board: index 0 is 2026, index n is the end of turn n - 1. */
+  /** The step the last place visit was made, or null. Another visit waits `game.visit_open_years`. */
+  openVisitSince: number | null;
+  /** Yearly frames: index 0 is May 2026 (step 0), then one each time a year closes, to May 2050. */
   history: Frame[];
   ledger: Contribution[];
+  /** Chapters and moments (16.5). Written by story.ts (package 9). */
+  story: StoryState;
+  /** Deals made after lost elections (rule P6). */
+  deals: Deal[];
 }
 
 // ---------------------------------------------------------------------------
@@ -219,9 +266,10 @@ export interface FrameCouncil {
   young: number;
   backing: number;
   risks: Record<RiskKind, RiskStep>;
+  momentum: Momentum;
 }
 
-/** Something that travelled along a link in a turn, for pulses and flowing dots. */
+/** Something that travelled along a link, for pulses and flowing dots. */
 export interface Flow {
   link: LinkId;
   from: NodeId;
@@ -231,16 +279,16 @@ export interface Flow {
   rule: RuleId;
 }
 
-/** The board at one moment. */
+/** The board at one moment: May of a year, when the year before it closed. */
 export interface Frame {
-  turn: number;
+  step: number;
   year: number;
   councils: Record<CouncilCode, FrameCouncil>;
   projects: Pick<ProjectState, "id" | "project" | "site" | "level" | "status">[];
   linkQuality: Record<LinkId, LinkQuality>;
-  /** Events that landed in the turn that ended here. */
+  /** Events that landed in the year that ended here. */
   events: { event: EventId; councils: CouncilCode[] }[];
-  /** What travelled in the turn that ended here. */
+  /** What travelled along links in the year that ended here (from the ledger). */
   flows: Flow[];
   coins: number;
   /** Fairness gap (section 4.1) in points out of 10. */

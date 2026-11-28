@@ -1,8 +1,9 @@
-# The tree: four branches, three tiers each (docs/design/v2-board.md section 5.3). Owner: package 4.
+# The tree: four branches, three tiers each (docs/design/v2-board.md section 5.3). Owner: package 10.
 #
 # Tier gates are GAME RULES (tune): tier 2 opens when three tier 1 projects of the branch are
 # working anywhere on the board; tier 3 (the keystone) opens when two tier 2 projects of the branch
-# are working. The build turns each gate into a `requires` rule card `need:<branch>:<tier>` and sets
+# are working. A keystone takes six years, so it must start by 2044 (game.yaml). Each working
+# keystone also opens one legacy project of its branch (projects.yaml `legacy_of`). The build turns each gate into a `requires` rule card `need:<branch>:<tier>` and sets
 # `rule` (src/board/NEEDS.md, package 1), so `rule` is left out here.
 note: "Tier gates are game rules (tune). The build compiles each gate to a requires card."
 branches:

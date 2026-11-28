@@ -18,6 +18,8 @@ export function causeWords(model: BoardModel, c: Cause, year: number): string {
     case "election": return t("boardui.cause.election", { year: c.year });
     case "people": return t("boardui.cause.people");
     case "budget": return t("boardui.cause.budget");
+    case "momentum": return t("boardui.cause.momentum");
+    case "deal": return t("boardui.cause.deal", { council: councilName(model, c.council) });
     default: return t("boardui.cause.drift");
   }
 }

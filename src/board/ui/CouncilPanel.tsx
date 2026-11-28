@@ -8,12 +8,12 @@ import { formatNum, Pair, t } from "../../i18n";
 import { CloseButton, SourceTag, StampButton, TabButton, ThreadButton } from "../../ui/parts";
 import type { Source } from "../../model/schema";
 import type { BoardModel, CouncilView, MeasureId, PreviewChange } from "../engine/api";
-import { RISK_KINDS } from "../engine/api";
+import { RISK_KINDS, stepsOf } from "../engine/api";
 import { Bar } from "./Bar";
 import * as eng from "./engine";
 import { useGame } from "./game";
 import { CouncilLinks } from "./CouncilLinks";
-import { councilName, measureName, outOf10, projectName, signed, tx } from "./words";
+import { councilName, measureName, outOf10, projectName, signed, tx, whenWords } from "./words";
 
 export const sourceOf = (model: BoardModel, id: string): Source | null => (model.sources.find((s) => s.id === id) as unknown as Source) ?? null;
 
@@ -25,13 +25,19 @@ export function CouncilPanel(props: { code: string }): JSX.Element {
     try { return s ? eng.councilView(model, s, props.code) : null; } catch (e) { console.warn(e); return null; }
   });
   const ghost = (m: MeasureId) => (game.preview()?.changes ?? []).filter((c: PreviewChange) => c.council === props.code && c.quantity === m).reduce((a, c) => a + c.delta, 0);
-  const estimate = () => (game.state()?.turn ?? 0) > 0;
+  const estimate = () => (game.state()?.step ?? 0) > 0;
+  const step = () => game.state()?.step ?? 0;
+  /** Young adults now against 2026, in whole numbers of 100 (a game estimate). */
+  const youngChange = () => {
+    const was = game.state()?.history[0]?.councils[props.code]?.young;
+    const v = view();
+    return was && v ? Math.round(((v.people.young - was) / was) * 100) : 0;
+  };
   const shownMeasure = (): MeasureId | null => {
     const by = game.colourBy();
     return by === "backing" || by === "behind" || by === "none" ? null : by;
   };
   const real = () => (view()?.real ?? []).filter((r) => (shownMeasure() ? r.measure === shownMeasure() : r.measure === view()?.asking[0]));
-  const lastTurn = () => Math.max(0, (game.state()?.turn ?? 1) - 1);
 
   return (
     <Show when={view()}>
@@ -46,8 +52,14 @@ export function CouncilPanel(props: { code: string }): JSX.Element {
             <span class="data">{t("boardui.council.backing", { n: formatNum(v().backing, { maximumFractionDigits: 1 }) })}</span>
             <span class="small bw-honest">{t("boardui.honesty.game_estimate")}</span>
           </p>
-          <Show when={v().refusesBigBuilds}>
-            <p class="warnstrip small"><span>{t("boardui.council.refuses")}</span></p>
+          <Show when={v().momentum !== "steady"}>
+            <p class={`bw-momentum small ${v().momentum}`}><i aria-hidden="true" /><span><b>{t(`boardui.council.momentum.${v().momentum}`)}</b> {t("boardui.council.momentumNote")}</span></p>
+          </Show>
+          <Show when={v().deal && v().deal!.kept === null}>
+            <p class="warnstrip small"><span>{t("boardui.council.deal", { measure: measureName(model, v().deal!.measure), when: whenWords(model, v().deal!.dueStep) })}</span></p>
+          </Show>
+          <Show when={v().freshStart}>
+            <p class="bw-fresh small">{t("boardui.council.freshStart")}</p>
           </Show>
 
           <div class="bw-council-scroll">
@@ -61,7 +73,7 @@ export function CouncilPanel(props: { code: string }): JSX.Element {
                     <span class="bw-m-change small data">
                       <Show when={Math.abs(ghost(m.id)) >= 0.05} fallback={
                         <Show when={Math.abs(m.change) >= 0.05}>
-                          <ThreadButton class="bw-why" onClick={() => game.setWhyAt({ council: props.code, measure: m.id, turn: lastTurn() })}>
+                          <ThreadButton class="bw-why" onClick={() => game.setWhyAt({ council: props.code, measure: m.id, fromStep: Math.max(0, step() - stepsOf(model, 1)), toStep: step() })}>
                             {t("boardui.why.button")} {signed(m.change)}
                           </ThreadButton>
                         </Show>
@@ -106,6 +118,9 @@ export function CouncilPanel(props: { code: string }): JSX.Element {
                 </For>
               </ul>
               <p class="small">{t("boardui.council.groupsNote")}</p>
+              <Show when={Math.abs(youngChange()) >= 1}>
+                <p class="small bw-young">{t(youngChange() < 0 ? "boardui.council.youngGone" : "boardui.council.youngCome", { n: Math.abs(youngChange()) })} <span class="bw-honest">{t("boardui.honesty.game_estimate")}</span></p>
+              </Show>
             </section>
 
             <section class="bw-sec">
@@ -127,7 +142,7 @@ export function CouncilPanel(props: { code: string }): JSX.Element {
                         <span>{projectName(model, p.project)}</span>
                         <span class="small">
                           {p.status === "building"
-                            ? t("boardui.project.building", { year: model.game.first_year + (p.readyTurn + 1) * model.game.turn_years })
+                            ? t("boardui.project.building", { when: whenWords(model, p.readyStep + 1) })
                             : t(`boardui.project.${p.status}`, { level: p.level })}
                         </span>
                       </li>
@@ -139,7 +154,7 @@ export function CouncilPanel(props: { code: string }): JSX.Element {
           </div>
 
           <footer class="bw-council-foot">
-            <Show when={game.screen() === "board" && game.state()?.phase === "build"}>
+            <Show when={game.screen() === "board" && game.state()?.phase !== "ended"}>
               <StampButton onClick={() => game.setSheet(game.sheet() === "build" ? null : "build")} aria-expanded={game.sheet() === "build"} data-testid="bw-build-here">
                 {game.sheet() === "build" ? t("boardui.council.closeBuild") : t("boardui.council.build", { name: councilName(model, props.code) })}
               </StampButton>

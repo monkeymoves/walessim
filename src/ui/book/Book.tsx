@@ -11,6 +11,8 @@ import { clearOverride, isModified, overrides, paramOf, resetOverrides } from ".
 import { AttributionsPage } from "./Attributions";
 import { RulePage } from "./RulePage";
 import { CardsPage, CurveballsPage, IndicatorsPage, SourcesPage, StrandsPage } from "./Sections";
+// the board (v2): its own section, read from public/board-model.json (docs/design/v2-board.md 10)
+import { BoardBook } from "./board/BoardBook";
 import "./book.css";
 
 export function Book(props: { model: CompiledModel; parts: string[] }): JSX.Element {
@@ -49,6 +51,7 @@ export function Book(props: { model: CompiledModel; parts: string[] }): JSX.Elem
         <For each={SECTIONS}>
           {(s) => <a class="bookindex-tab" href={`#/llyfr/${s}`} aria-current={page() === s ? "page" : undefined}>{t(`book.${s}.title`)}</a>}
         </For>
+        <a class="bookindex-tab" href="#/llyfr/bwrdd" aria-current={page() === "bwrdd" ? "page" : undefined} data-testid="book-board-tab">{t("boardend.book.tab")}</a>
         <Show when={isModified()}>
           <a class="bookindex-tab changed" href="#/llyfr/changed" aria-current={page() === "changed" ? "page" : undefined}>{t("book.changed.title")}</a>
         </Show>
@@ -70,6 +73,7 @@ export function Book(props: { model: CompiledModel; parts: string[] }): JSX.Elem
           <Match when={section() === "curveballs"}><CurveballsPage model={props.model} {...nav("curveballs")} /></Match>
           <Match when={section() === "sources"}><SourcesPage model={props.model} focus={props.parts[1]} {...nav("sources")} /></Match>
           <Match when={section() === "attributions"}><AttributionsPage {...nav("attributions")} /></Match>
+          <Match when={page() === "bwrdd"}><BoardBook parts={props.parts.slice(1)} /></Match>
         </Switch>
       </div>
     </div>

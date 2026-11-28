@@ -2,21 +2,27 @@
  * Futures, forecast, triggers, targets, responses and the severity budget
  * (docs/design/v2-board.md section 7).
  *
- * Hooks for turn.ts (package 2, through hooks.ts), each working on the turn context's draft:
+ * Hooks for the clock (clock.ts and clock-step.ts), each working on the step context's draft:
  * - `drawFuture` in `newBoard`, to set `state.future` from the seed.
- * - `forecastNext` at the start of every turn: in `newBoard` for turn 0, and at the end of
- *   `endTurn` after the turn and year move on. Every event is warned here a turn ahead (fairness
- *   rule 1), and `severityUsed` counts the outside trouble drawn so far.
- * - `landEvents` at the end of every turn, after held project effects and before spread.
- * - `respond` (with `respondBlockers`) is ready for `act` on `{ kind: "respond" }` if wanted.
+ * - `forecastNext` at the start of every step: in `newBoard` for step 0, and at the end of each
+ *   step after the clock moves on. Outside events are warned E1 `warn_years` ahead (fairness rule
+ *   1); grown events are judged when a year closes, at most E1 `grown_at_once` every
+ *   `grown_gap_years`, and warned `grown_warn_years` ahead. `severityUsed` counts the outside
+ *   trouble warned so far.
+ * - `landEvents` in every step, after held project effects and before spread.
+ * - `respond` (with `respondBlockers`) for `act` on `{ kind: "respond" }`.
+ * Read only helper for projects.ts: `rebuildShare` (rule E2).
  */
 import { uniform } from "../../engine/rng";
 import { trackValue } from "./conditions";
-import type { TurnCtx } from "./ctx";
+import type { StepCtx } from "./ctx";
 import { applyOnce } from "./effects";
 import { landOne, planEvent, preparedHere } from "./events-land";
 import { outsideSchedule } from "./events-schedule";
+import { optParam } from "./rules";
+import { specialStands } from "./specials";
 import { ruleParam } from "./rule-defaults";
+import { closesSpan, lastLandingStep, stepOfYear, stepsOf } from "./time";
 import type {
   Blocker, BoardModel, BoardState, CouncilCode, EventId, EventRecord, Flow, Forecast, ForecastWarning, Text, TrackId,
 } from "./types";
@@ -24,46 +30,72 @@ import { RULE_IDS } from "./types";
 
 export { drawFuture, outsideSchedule, scheduledSeverity } from "./events-schedule";
 
-/** Grown events that may be warned now: not `once` and already seen, and not on a council hit in the last two turns. */
-function grownChoices(model: BoardModel, draft: BoardState) {
+/** Steps ahead an event is on the time line before the step it lands in (at least 1: warned in its own step). */
+const lead = (model: BoardModel, param: "warn_years" | "grown_warn_years"): number =>
+  Math.max(1, stepsOf(model, ruleParam(model, RULE_IDS.severity, param)));
+
+/**
+ * Grown events that may be warned now: not `once` and already seen, not already warned, and not
+ * on a council hit in the last four years.
+ */
+function grownChoices(model: BoardModel, draft: BoardState, landing: number) {
   const seen = new Set(draft.events.map((r) => r.event));
+  const recent = draft.step - stepsOf(model, 4);
   return model.events
-    .filter((e) => e.origin === "grown" && !(e.once && seen.has(e.id)))
-    .map((e) => planEvent(model, draft, e))
+    .filter((e) => e.origin === "grown" && !(e.once && seen.has(e.id)) && !draft.forecast.some((f) => f.event === e.id))
+    .map((e) => planEvent(model, draft, e, landing))
     .filter((f): f is NonNullable<typeof f> => !!f)
-    .filter((f) => !draft.events.some((r) => r.event === f.event && r.turn >= draft.turn - 2 && r.councils.includes(f.councils[0]!)));
+    .filter((f) => !draft.events.some((r) => r.event === f.event && r.step >= recent && r.councils.includes(f.councils[0]!)));
 }
 
-/** Warn this turn's events: the scheduled outside event, and up to E1 `grown_per_turn` grown ones. */
-export function forecastNext(ctx: TurnCtx): void {
+/** The step the last grown event was warned (landing step less its lead), or null. */
+function lastGrownWarned(model: BoardModel, draft: BoardState): number | null {
+  const grown = new Set(model.events.filter((e) => e.origin === "grown").map((e) => e.id));
+  const steps = [...draft.events, ...draft.forecast].filter((x) => grown.has(x.event)).map((x) => x.step - lead(model, "grown_warn_years") + 1);
+  return steps.length ? Math.max(...steps) : null;
+}
+
+/** Warn what is coming: scheduled outside events within their lead, and, when a year closes, grown ones. */
+export function forecastNext(ctx: StepCtx): void {
   const { model, state: draft } = ctx;
+  const now = draft.step;
   const schedule = outsideSchedule(model, draft.seed, draft.future);
-  draft.severityUsed = schedule.filter((s) => s.turn <= draft.turn).reduce((a, s) => a + s.severity, 0);
-  const kept = draft.forecast.filter((f) => f.turn > draft.turn);
-  const now = [];
-  for (const s of schedule.filter((x) => x.turn === draft.turn)) {
+  const outsideLead = lead(model, "warn_years");
+  draft.severityUsed = schedule.filter((s) => s.step - outsideLead + 1 <= now).reduce((a, s) => a + s.severity, 0);
+  const kept = draft.forecast.filter((f) => f.step >= now);
+  const warned = new Set(kept.map((f) => `${f.event}@${f.step}`));
+  const fresh = [];
+  for (const s of schedule.filter((x) => x.step >= now && x.step - outsideLead + 1 <= now && !warned.has(`${x.event}@${x.step}`))) {
     const e = model.events.find((d) => d.id === s.event);
-    const f = e && planEvent(model, draft, e);
-    if (f) now.push(f);
+    const f = e && planEvent(model, draft, e, s.step);
+    if (f) fresh.push(f);
   }
-  const perTurn = ruleParam(model, RULE_IDS.severity, "grown_per_turn");
-  const grown = grownChoices(model, draft)
-    .sort((a, b) => uniform(draft.seed, "grown", draft.turn, b.event) - uniform(draft.seed, "grown", draft.turn, a.event))
-    .slice(0, perTurn);
-  draft.forecast = [...kept, ...now, ...grown];
+  draft.forecast = [...kept, ...fresh];
+  const gap = Math.max(1, stepsOf(model, ruleParam(model, RULE_IDS.severity, "grown_gap_years")));
+  const last = lastGrownWarned(model, draft);
+  const judged = now === 0 || closesSpan(model, now, 1);
+  const landing = now + lead(model, "grown_warn_years") - 1;
+  if (judged && (last === null || now - last >= gap) && landing <= lastLandingStep(model)) {
+    const grown = grownChoices(model, draft, landing)
+      .sort((a, b) => uniform(draft.seed, "grown", now, b.event) - uniform(draft.seed, "grown", now, a.event))
+      .slice(0, ruleParam(model, RULE_IDS.severity, "grown_at_once"));
+    draft.forecast = [...draft.forecast, ...grown];
+  }
 }
 
 /**
- * Land this turn's warned events. Responses and visits left from earlier turns lapse first.
- * Each landed event may offer a response and a place visit until the end of the next turn.
+ * Land the warned events whose landing step is this step. Responses left from earlier steps lapse
+ * first (a response holds the clock, so in play none is left open). Each landed event may offer a
+ * response, and a place visit open from the next step for `game.visit_open_years`.
  */
-export function landEvents(ctx: TurnCtx): { records: EventRecord[]; flows: Flow[] } {
+export function landEvents(ctx: StepCtx): { records: EventRecord[]; flows: Flow[] } {
   const { model, state: draft } = ctx;
-  // Every response and event visit open now was offered by an earlier turn's event: they lapse.
-  draft.pending = draft.pending.filter((p) => p.kind === "visit" && !("event" in p.offeredBy));
+  // Every response and event visit open now was offered by an earlier event: they lapse.
   const records: EventRecord[] = [];
   const flows: Flow[] = [];
-  for (const f of draft.forecast.filter((x) => x.turn === draft.turn)) {
+  draft.pending = draft.pending.filter((p) => p.kind !== "respond");
+  const due = draft.forecast.filter((x) => x.step === draft.step);
+  for (const f of due) {
     const e = model.events.find((d) => d.id === f.event);
     if (!e) continue;
     const out = landOne(ctx, f);
@@ -72,11 +104,18 @@ export function landEvents(ctx: TurnCtx): { records: EventRecord[]; flows: Flow[
     ctx.flows.push(...out.flows);
     if (e.responses.length > 0) draft.pending.push({ kind: "respond", event: e.id, councils: [...f.councils] });
     const place = e.visit ? model.places.find((p) => p.id === e.visit) : undefined;
-    if (place && f.councils.includes(place.council)) draft.pending.push({ kind: "visit", place: place.id, council: place.council, offeredBy: { event: e.id } });
+    if (place && f.councils.includes(place.council)) draft.pending.push({ kind: "visit", place: place.id, council: place.council, offeredBy: { event: e.id }, since: draft.step + 1 });
   }
   draft.events = [...draft.events, ...records];
-  draft.forecast = draft.forecast.filter((x) => x.turn !== draft.turn);
+  draft.forecast = draft.forecast.filter((x) => x.step !== draft.step);
   return { records, flows };
+}
+
+/** Coins an answer costs now: nothing for a storm once Farms paid to hold water is working (`storm_no_coins`). */
+export function responseCost(model: BoardModel, state: BoardState, event: EventId, response: string): number {
+  const e = model.events.find((d) => d.id === event);
+  const cost = e?.responses.find((x) => x.id === response)?.cost ?? 0;
+  return e?.track === "weather" && specialStands(model, state, "storm_no_coins") ? 0 : cost;
 }
 
 /** Why a response cannot be made now. Empty when it can. */
@@ -84,11 +123,12 @@ export function respondBlockers(model: BoardModel, state: BoardState, event: Eve
   const pending = state.pending.some((p) => p.kind === "respond" && p.event === event);
   const r = model.events.find((e) => e.id === event)?.responses.find((x) => x.id === response);
   if (!pending || !r) return [{ kind: "not_offered" }];
-  return r.cost > state.coins ? [{ kind: "coins", need: r.cost, have: state.coins }] : [];
+  const cost = responseCost(model, state, event, response);
+  return cost > state.coins ? [{ kind: "coins", need: cost, have: state.coins }] : [];
 }
 
 /** Answer a landed event: pay its cost, apply its effects where it landed, and close the pending response. */
-export function respond(ctx: TurnCtx, event: EventId, response: string): void {
+export function respond(ctx: StepCtx, event: EventId, response: string): void {
   const { model, state: draft } = ctx;
   const r = model.events.find((e) => e.id === event)?.responses.find((x) => x.id === response);
   const idx = [...draft.events].reverse().findIndex((x) => x.event === event && !x.response);
@@ -96,7 +136,8 @@ export function respond(ctx: TurnCtx, event: EventId, response: string): void {
   const at = draft.events.length - 1 - idx;
   const rec = draft.events[at]!;
   const cause = { kind: "response", event, response } as const;
-  if (r.cost > 0) ctx.change({ council: null, quantity: "coins", delta: -r.cost, rule: RULE_IDS.coins, cause });
+  const cost = responseCost(model, draft, event, response);
+  if (cost > 0) ctx.change({ council: null, quantity: "coins", delta: -cost, rule: RULE_IDS.coins, cause });
   applyOnce(ctx, r.effects, { councils: rec.councils }, cause, { rule: RULE_IDS.severity });
   draft.events = draft.events.map((x, i) => (i === at ? { ...x, response } : x));
   draft.pending = draft.pending.filter((p) => !(p.kind === "respond" && p.event === event));
@@ -112,30 +153,50 @@ export function joinNames(names: Text[]): Text {
 
 const councilName = (model: BoardModel, code: CouncilCode): Text => model.councils.find((c) => c.code === code)?.name ?? { en: code, cy: code };
 
-/** The first turn whose end is an election year: when the future is named on the forecast. */
-function revealTurn(model: BoardModel): number {
+/** When the future is named on the forecast: two years (one track block) before the first election. */
+function revealStep(model: BoardModel): number {
   const first = model.game.election_years[0] ?? model.game.end_year;
-  return Math.max(1, Math.round((first - model.game.first_year) / model.game.turn_years) - 1);
+  return Math.max(1, stepOfYear(model, first - model.game.track_years));
 }
 
-/** API: the warned events for the end of this turn, with their places, and a hint at the future. */
+/** API: every warned event, soonest first, with its window and places, and a hint at the future. */
 export function forecast(model: BoardModel, state: BoardState): Forecast {
-  const warnings: ForecastWarning[] = state.forecast.filter((f) => f.turn === state.turn).map((f) => {
+  const soonest = [...state.forecast].sort((a, b) => a.fromStep - b.fromStep || a.step - b.step || a.event.localeCompare(b.event));
+  const warnings: ForecastWarning[] = soonest.map((f) => {
     const e = model.events.find((d) => d.id === f.event)!;
     const river = model.links.find((l) => l.kind === "river" && l.from === f.councils[0])?.name;
     return {
-      event: e.id, name: e.name, good: e.good, councils: f.councils, preparedBy: e.prepared_by,
+      event: e.id, name: e.name, good: e.good, councils: f.councils, preparedBy: e.prepared_by, fromStep: f.fromStep, toStep: f.toStep,
       cutBy: preparedHere(model, state, e, f.councils[0]!),
-      say: { key: "forecast.warning", vars: { line: e.warning, council: councilName(model, f.councils[0]!), councils: joinNames(f.councils.map((c) => councilName(model, c))), ...(river ? { river } : {}) } },
+      say: { key: "board.forecast.warning", vars: { line: e.warning, council: councilName(model, f.councils[0]!), councils: joinNames(f.councils.map((c) => councilName(model, c))), ...(river ? { river } : {}) } },
     };
   });
   let future: Forecast["future"] = null;
   const f = model.futures.find((x) => x.id === state.future);
-  if (f && state.turn >= revealTurn(model)) future = { key: "forecast.future.named", vars: { name: f.name, note: f.note } };
-  else if (f && state.turn > 0) {
+  if (f && state.step >= revealStep(model)) future = { key: "board.forecast.future.named", vars: { name: f.name, note: f.note } };
+  else if (f && state.step > 0) {
     const tracks: TrackId[] = ["weather", "economy", "prices"];
     const strongest = tracks.sort((a, b) => trackValue(model, state, b) - trackValue(model, state, a))[0]!;
-    future = { key: `forecast.future.leaning.${strongest}` };
+    future = { key: `board.forecast.future.leaning.${strongest}` };
   }
-  return { turn: state.turn, year: state.year, warnings, future };
+  return { step: state.step, year: state.year, warnings, future };
+}
+
+/**
+ * Rule E2, "rebuild better" (16.4): the trouble that makes builds in this council faster now, if
+ * any. An event of E2 `severity_at_least` or more (as it landed) hit the council in the last `years`.
+ * Undefined when the model has no E2 card.
+ */
+export function rebuildAfter(model: BoardModel, state: BoardState, council: CouncilCode): { record: EventRecord; untilStep: number } | undefined {
+  const at = optParam(model, RULE_IDS.rebuild, "severity_at_least");
+  if (at === undefined) return undefined;
+  const span = stepsOf(model, optParam(model, RULE_IDS.rebuild, "years") ?? 2);
+  const record = [...state.events].reverse().find((e) => e.step >= state.step - span && e.severity >= at && e.councils.includes(council)
+    && !model.events.find((d) => d.id === e.event)?.good);
+  return record ? { record, untilStep: record.step + span } : undefined;
+}
+
+/** The share of its build time a new build in this council takes now (rule E2): `time_share` after trouble, else 1. */
+export function rebuildShare(model: BoardModel, state: BoardState, council: CouncilCode): number {
+  return rebuildAfter(model, state, council) ? (optParam(model, RULE_IDS.rebuild, "time_share") ?? 0.5) : 1;
 }

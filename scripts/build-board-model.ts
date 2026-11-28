@@ -39,7 +39,8 @@ try {
   console.log(
     `board-model.json written: ${m.councils.length} councils, ${m.links.length} links ` +
       `(${kinds("commute")} commute from ${built.commute === "census" ? "Census 2021" : "the fallback"}, ${kinds("rail")} rail, ${kinds("river")} river), ` +
-      `${m.projects.length} projects, ${m.events.length} events, ${m.endings.length} endings; hash ${m.meta.hash}; ` +
+      `${m.projects.length} projects, ${m.events.length} events, ${m.endings.length} endings, ${m.chapters.length} chapters; ` +
+      `${m.game.steps} steps of ${m.game.years_per_step} years; hash ${m.meta.hash}; ` +
       `${m.meta.cy_review.length} Welsh entries awaiting review; ${m.meta.to_check.length} things to check`,
   );
 } catch (e) {

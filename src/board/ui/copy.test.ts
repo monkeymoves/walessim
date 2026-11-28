@@ -43,6 +43,31 @@ describe("board screen copy", () => {
     expect(cy["_cy_review"]).toBe(true);
   });
 
+  // keys built from a value at run time: every member of each family must exist in both languages
+  const families: Record<string, readonly string[]> = {
+    "season": ["summer", "autumn", "winter", "spring"],
+    "clock.speed": ["steady", "brisk", "fast"],
+    "clock.held": ["stop", "answer", "hidden", "reading", "ended"],
+    "settings.stop": ["respond", "election", "ended", "warning", "keystone", "tier_open", "visit", "tipping", "chapter", "deal_due", "purse_full", "finished", "year"],
+    "timeline.would": ["strong_win", "win", "lost"],
+    "timeline.mark": ["promise", "deal", "keystone_last_start", "care_bill", "end"],
+    "timeline.markShort": ["promise", "deal", "keystone_last_start", "care_bill", "end"],
+    "election.short": ["strong_win", "win", "lost"],
+    "election.result": ["strong_win", "win", "lost"],
+    "council.momentum": ["rising", "slipping"],
+    "momentum": ["rising", "slipping"],
+    "stop.tipping": ["rising", "slipping"],
+    "guide": ["map", "council", "build", "play", "speed", "playStep", "speedStep"],
+    "why.span": ["year", "term", "all"],
+    ...Object.fromEntries(["election", "ended", "warning", "keystone", "tier_open", "visit", "tipping", "chapter", "deal_due", "purse_full", "finished", "year"].map((k) => [`stop.${k}`, ["title", "line"]])),
+  };
+  for (const [lang, d] of [["en", en], ["cy", cy]] as const) {
+    it(`has every key built at run time in ${lang}`, () => {
+      const missing = Object.entries(families).flatMap(([f, ms]) => ms.map((m) => `${f}.${m}`)).filter((k) => !(k in d));
+      expect(missing).toEqual([]);
+    });
+  }
+
   it("uses no em or en dash", () => {
     for (const d of [en, cy]) for (const v of Object.values(d)) if (typeof v === "string") expect(v).not.toMatch(DASH);
   });

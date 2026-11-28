@@ -9,7 +9,7 @@ import { checkBoardModel, formatIssues } from "./check";
 export const BOARD_MODEL_URL = "board-model.json";
 
 /** The board-model.json version this build understands. Matches `BoardModel.meta.version`. */
-export const BOARD_MODEL_VERSION = 1;
+export const BOARD_MODEL_VERSION = 2;
 
 export class BoardModelLoadError extends Error {
   constructor(message: string) {

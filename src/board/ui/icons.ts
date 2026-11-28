@@ -18,3 +18,9 @@ export function branchIcon(model: BoardModel, branch: string): IconName {
   const first = model.projects.find((p) => p.branch === branch && p.tier === 1);
   return first ? iconFor(model, first.id) : "signal";
 }
+
+/** The icon for an event: by its track (weather, economy, prices), or a signal for one the board grew. */
+export function eventIcon(model: BoardModel, eventId: string): IconName {
+  const track = model.events.find((e) => e.id === eventId)?.track;
+  return track === "weather" ? "river" : track === "economy" ? "works" : track === "prices" ? "house" : "signal";
+}

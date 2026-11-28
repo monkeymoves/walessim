@@ -2,12 +2,12 @@ import { describe, expect, it } from "vitest";
 import { BoardActionError } from "./errors";
 import { boardFixture, FIXTURE_COUNCILS } from "./fixture";
 import { blockers, options, preview } from "./projects";
-import { act, endTurn, newBoard } from "./turn";
+import { act, advance, newBoard, tick } from "./clock";
 import type { BoardModel, BoardState, ProjectState } from "./types";
 
 const { merthyr, rct, cardiff } = FIXTURE_COUNCILS;
 const working = (project: string, council: string): ProjectState => ({
-  id: `${project}@${council}`, project, site: { council }, level: 1, status: "working", startedTurn: 0, readyTurn: 0,
+  id: `${project}@${council}`, project, site: { council }, level: 1, status: "working", startedStep: 0, readyStep: 0, roots: 1, joined: false,
 });
 const fresh = (model: BoardModel, start = "work-valleys"): BoardState => newBoard(model, 9, start);
 
@@ -31,7 +31,7 @@ describe("what can be built", () => {
     s = act(model, s, free);
     expect(s.coins).toBe(6);
     expect(s.freeProject).toBeNull();
-    expect(s.projects[0]).toMatchObject({ free: true, status: "building", readyTurn: 0 });
+    expect(s.projects[0]).toMatchObject({ free: true, status: "building", startedStep: 0, readyStep: 7 });
     expect(preview(model, s, { ...free, site: { council: rct } }).cost).toBe(3);
   });
 
@@ -73,7 +73,7 @@ describe("what can be built", () => {
     const s = fresh(model);
     s.coins = 20;
     s.year = 2044;
-    s.turn = 9;
+    s.step = 72;
     const b = blockers(model, s, { kind: "build", project: "rivers-room", site: { council: merthyr } });
     expect(b).toContainEqual({ kind: "too_late", lastYear: 2042 });
   });
@@ -86,15 +86,15 @@ describe("what can be built", () => {
     expect(s.ledger.some((c) => c.quantity === "backing" && c.cause.kind === "law" && c.council === cardiff && c.delta < 0)).toBe(true);
   });
 
-  it("offers the place a build names, once a turn", () => {
+  it("offers the place a build names, and one visit a year", () => {
     let s = fresh(model);
     s.coins = 10;
     s = act(model, s, { kind: "build", project: "frequent-trains", site: { link: "rail:merthyr-rct" } });
-    expect(s.pending).toEqual([{ kind: "visit", place: "merthyr-station", council: merthyr, offeredBy: { project: "frequent-trains" } }]);
+    expect(s.pending).toEqual([{ kind: "visit", place: "merthyr-station", council: merthyr, offeredBy: { project: "frequent-trains" }, since: 0 }]);
     const visits = options(model, s, merthyr).filter((o) => o.action.kind === "visit");
     expect(visits.map((o) => (o.action.kind === "visit" ? o.action.picks[0] : ""))).toEqual(["homes", "workspace", "park-ride"]);
     s = act(model, s, visits[0]!.action);
-    expect(s.visitsThisTurn).toBe(1);
+    expect(s.openVisitSince).toBe(0);
     expect(s.pending).toEqual([]);
     expect(s.projects[0]!.grade).toBeDefined();
   });
@@ -102,11 +102,10 @@ describe("what can be built", () => {
   it("builds a project in its build time and keeps it for the rest of the game", () => {
     let s = fresh(model);
     s = act(model, s, { kind: "build", project: "welsh-school", site: { council: merthyr } });
-    expect(s.projects[0]).toMatchObject({ status: "building", readyTurn: 2 });
-    s = endTurn(model, s).state;
-    s = endTurn(model, s).state;
+    expect(s.projects[0]).toMatchObject({ status: "building", readyStep: 23 });
+    while (s.step < 23) s = advance(model, s, { maxSteps: 23 - s.step }).state;
     expect(s.projects[0]!.status).toBe("building");
-    const out = endTurn(model, s);
+    const out = tick(model, s);
     expect(out.state.projects[0]!.status).toBe("working");
     expect(out.report.finished).toEqual([`welsh-school@${merthyr}`]);
   });
@@ -121,8 +120,8 @@ describe("preview", () => {
     const p = preview(model, s, { kind: "build", project: "big-employer", site: { council: cardiff } });
     expect(p.allowed).toBe(true);
     expect(p.coinsAfter).toBe(6);
-    expect(p.changes).toContainEqual({ council: cardiff, quantity: "work", delta: 0.8, year: 2028, rule: "project:big-employer" });
-    expect(p.changes).toContainEqual({ council: rct, quantity: "work", delta: 0.12, year: 2028, rule: "S1", via: { link: "commute:rct-cardiff", from: cardiff } });
+    expect(p.changes).toContainEqual({ council: cardiff, quantity: "work", delta: 0.8, year: 2026, rule: "project:big-employer" });
+    expect(p.changes).toContainEqual({ council: rct, quantity: "work", delta: 0.12, year: 2026, rule: "S1", via: { link: "commute:rct-cardiff", from: cardiff } });
     expect(p.changes.some((c) => c.rule === "S2" && c.council === rct && c.delta < 0)).toBe(true);
     expect(p.links).toContain("commute:rct-cardiff");
     expect(p.councils).toEqual(expect.arrayContaining([cardiff, rct, merthyr]));

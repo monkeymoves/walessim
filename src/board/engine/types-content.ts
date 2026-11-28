@@ -3,6 +3,7 @@
  * places. Each `...Def` is exactly the shape of one entry in its model/board YAML file.
  */
 import type { gradeRhondda } from "../../engine/places";
+import type { Momentum } from "./types-clock";
 import type {
   BranchId, CouncilCode, CouncilFeature, CouncilFlag, Confidence, EventId, Grade, GroupId, IndicatorId,
   LawId, Level, LinkKind, LinkQuality, MeasureId, PairId, PlaceId, ProjectId, RiskKind, RiskStep, RuleId,
@@ -44,17 +45,21 @@ export type Condition = { not?: boolean } & (
   /** A rail link touching this council has at least this quality. */
   | { kind: "link_quality"; at_least: LinkQuality }
   | { kind: "risk"; risk: RiskKind; at_least: RiskStep }
-  /** "rising" and "falling" compare with `over_turns` turns ago (default 2, four years). */
-  | { kind: "measure"; measure: MeasureId; op: "below" | "at_least" | "rising" | "falling"; value?: number; over_turns?: number }
+  /** "rising" and "falling" compare with the yearly frame `over_years` before the current step's year (default 4). */
+  | { kind: "measure"; measure: MeasureId; op: "below" | "at_least" | "rising" | "falling"; value?: number; over_years?: number }
   /** A people share in percent: young adults (20 to 34) or aged 65 and over. */
   | { kind: "share"; share: "young_adults" | "age65"; op: "below" | "at_least"; value: number }
   | { kind: "backing"; op: "below" | "at_least"; value: number }
-  /** board: the future's track this turn is at least `value` (0 to 1). */
+  /** board: the future's track in the current two year block is at least `value` (0 to 1). */
   | { kind: "track"; track: TrackId; at_least: number }
-  /** board: the year the current turn starts is within [from, to]. */
+  /** board: the calendar year of the current step is within [from, to]. */
   | { kind: "year"; from?: number; to?: number }
   /** board: the law is in force. */
   | { kind: "law"; law: LawId }
+  /** This council's momentum (rule R2, 16.3.3) is `is`. Always "steady" until package 8 switches R2 on. */
+  | { kind: "momentum"; is: Momentum }
+  /** board: that keystone, or any keystone when `project` is absent, is working. */
+  | { kind: "keystone"; project?: ProjectId }
 );
 
 /** Where an effect lands, relative to the council it belongs to. */
@@ -76,24 +81,36 @@ export type EffectSpecial =
   | "reverse_commute"
   /** Rivers given room: storm events on this river lose one severity step for good. */
   | "storm_step_down"
-  /** A cluster that roots: will not leave in a downturn if two colleges feed it. */
+  /** A cluster that roots: a downturn takes less (E1 `downturn_cut`) from any council with a skills college. */
   | "cluster_roots"
   /** Health close to home: removes the care bill (rule B2) when enough councils have one. */
   | "care_bill_off"
+  /** Heat and homes for all: the care bill (rule B2) never starts, or stops. */
+  | "no_care_bill"
+  /** Trains all evening and on Sundays: every upgraded rail link rises one more quality step. */
+  | "links_up"
+  /** Firms that train their own: every skills college works one level higher, free. */
+  | "colleges_up"
+  /** Farms paid to hold water: answers to storms cost no coins. */
+  | "storm_no_coins"
+  /** Homes that pay their own bills: running costs of every project are cut (B1 `running_share`). */
+  | "running_halved"
   /** Wetlands on the coast: blocks some building land here. */
-  | "land_blocked";
+  | "land_blocked"
+  /** A finished keystone (16.3.5): every project of its branch counts as joined wherever it stands (rule R1). */
+  | "branch_joined";
 
 /**
  * One effect of a project, pair, law, event, response or place option. Size scales with project
- * level through `ProjectDef.level_factor`. `after_turns` delays it after the project starts working
- * (bedding in); `ramp_turns` spreads the lift over that many turns.
+ * level through `ProjectDef.level_factor`. `after_years` delays it after the project starts working
+ * (bedding in); `ramp_years` spreads the lift over that many years, a little more every step.
  */
 export interface EffectBase {
   where?: EffectWhere;
   flag?: CouncilFlag;
   only_if?: Condition[];
-  after_turns?: number;
-  ramp_turns?: number;
+  after_years?: number;
+  ramp_years?: number;
   /** The rule card that names this effect's size and evidence, shown at the end of Why?. */
   rule?: RuleId;
 }
@@ -104,8 +121,8 @@ export type Effect = EffectBase & (
   /** Negative steps lower the risk. */
   | { kind: "risk"; risk: RiskKind; steps: number }
   | { kind: "link_quality"; steps: number }
-  /** Coins added (or taken, negative) every `every_turns` turns while it stands. */
-  | { kind: "coins"; coins: number; every_turns: number }
+  /** Coins added (or taken, negative) a year while it stands, paid a little every step. */
+  | { kind: "coins"; coins_per_year: number }
   /** Percentage points of the young adult share. */
   | { kind: "young_adults"; points: number }
   | { kind: "backing"; points: number; group?: GroupId }
@@ -119,9 +136,9 @@ export type Effect = EffectBase & (
 // ---------------------------------------------------------------------------
 // Projects and the tree (projects.yaml, tree.yaml)
 
+/** Coins a year a working project costs, charged a little every step (16.2.4). */
 export interface RunningCost {
-  coins: number;
-  every_turns: number;
+  coins_per_year: number;
 }
 
 /** model/board/projects.yaml, one entry. */
@@ -140,7 +157,8 @@ export interface ProjectDef {
   /** "council": placed in a council. "link": placed on a rail link between two councils. */
   site: "council" | "link";
   cost: number;
-  build_turns: number;
+  /** Years to build: 0 opens at once; otherwise it opens at the end of the last step of its build. */
+  build_years: number;
   running?: RunningCost;
   /** Feature and placement needs beyond the tier gate. All must hold for the council (or both link ends). */
   needs: Condition[];
@@ -154,6 +172,10 @@ export interface ProjectDef {
   tags: string[];
   /** Building it here offers this place visit. */
   visit?: PlaceId;
+  /** A small win (16.4): cheap, a year or less, and its first effect shows in the season it opens. */
+  quick?: boolean;
+  /** A legacy project (16.3.5): only open once this keystone is working. */
+  legacy_of?: ProjectId;
   rule?: RuleId;
   sources: SourceId[];
 }

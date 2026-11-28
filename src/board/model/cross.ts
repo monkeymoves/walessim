@@ -3,7 +3,7 @@
  * seeded figure has a value and a source, rule ids the engine needs exist, and the fairness rule's
  * data conditions hold (section 7.3). Shape checks run first, in check.ts.
  */
-import { MEASURE_IDS, RULE_IDS, type BoardModel, type Condition, type Effect, type EndCondition } from "../engine/types";
+import { MEASURE_IDS, REQUIRED_RULE_IDS, type BoardModel, type Condition, type Effect, type EndCondition } from "../engine/types";
 import type { Issue } from "./shape";
 
 const DASHES = /[\u2013\u2014]/;
@@ -51,6 +51,10 @@ export function crossCheck(m: BoardModel): Issue[] {
       need(tags, c.tag, path, "project tag");
     }
     if (c.kind === "law") need(laws, c.law, path, "law");
+    if (c.kind === "keystone" && c.project !== undefined) {
+      need(projects, c.project, path, "project");
+      if (!m.projects.find((p) => p.id === c.project)?.keystone) bad(path, `${c.project} is not a keystone`);
+    }
   };
   const conds = (cs: Condition[], path: string) => cs.forEach((c, i) => cond(c, `${path}[${i}]`));
   const effs = (es: Effect[], path: string) =>
@@ -71,7 +75,19 @@ export function crossCheck(m: BoardModel): Issue[] {
         need(projects, c.project, `${path}[${i}]`, "project");
         if (!m.projects.find((p) => p.id === c.project)?.keystone) bad(`${path}[${i}]`, `${c.project} is not a keystone`);
       }
+      if (c.kind === "event_landed") need(events, c.event, `${path}[${i}]`, "event");
     });
+
+  // The calendar (16.2.1): whole steps, elections on a step, one track value per block.
+  const g = m.game;
+  if (Math.abs((g.end_year - g.first_year) / g.years_per_step - g.steps) > 1e-9) bad("game.steps", `expected (end_year - first_year) / years_per_step = ${(g.end_year - g.first_year) / g.years_per_step}`);
+  g.election_years.forEach((y, i) => {
+    const at = (y - g.first_year) / g.years_per_step;
+    if (Math.abs(at - Math.round(at)) > 1e-9 || at <= 0 || at >= g.steps) bad(`game.election_years[${i}]`, `${y} does not fall on a step inside the game`);
+  });
+  if ((g.end_year - g.first_year) % g.track_years !== 0) bad("game.track_years", "must divide the years of the game");
+  if (!g.speeds.some((s) => s.id === g.default_speed)) bad("game.default_speed", `no speed ${g.default_speed}`);
+  for (const k of ["respond", "election", "ended"] as const) if (!g.stops[k]?.hard) bad(`game.stops.${k}`, "must be a hard stop");
 
   // Councils, measures and seeds: the build fails if a seeded indicator lacks a source or a value.
   m.game.councils.forEach((c, i) => need(councils, c, `game.councils[${i}]`, "council"));
@@ -95,7 +111,7 @@ export function crossCheck(m: BoardModel): Issue[] {
     if (l.kind === "commute" && l.share === undefined && l.strength === undefined) bad(`links[${i}]`, "a commute link needs a share or a strength");
   });
 
-  for (const id of Object.values(RULE_IDS)) if (!rules.has(id)) bad("rules", `missing rule ${id} that the engine reads`);
+  for (const id of REQUIRED_RULE_IDS) if (!rules.has(id)) bad("rules", `missing rule ${id} that the engine reads`);
   m.rules.forEach((r, i) => {
     r.sources.forEach((s, j) => need(sources, s, `rules[${i}].sources[${j}]`, "source"));
     if (r.kind === "spread" && !r.spread) bad(`rules[${i}]`, "a spread rule needs a spread block");
@@ -145,9 +161,21 @@ export function crossCheck(m: BoardModel): Issue[] {
     if (e.origin === "outside" && e.prepared_by.length < 2) bad(at, "fairness rule 3: an outside event needs two tier 1 projects that cut it");
     if (e.origin === "grown" && e.severity !== 0) bad(at, "grown events have severity 0");
   });
+  const blocks = Math.round((g.end_year - g.first_year) / g.track_years);
   m.futures.forEach((f, i) => {
-    for (const [k, v] of Object.entries(f.tracks)) if (v.length !== m.game.turns) bad(`futures[${i}].tracks.${k}`, `needs ${m.game.turns} values, has ${v.length}`);
+    for (const [k, v] of Object.entries(f.tracks)) if (v.length !== blocks) bad(`futures[${i}].tracks.${k}`, `needs ${blocks} values (one each ${g.track_years} years), has ${v.length}`);
   });
+  m.events.forEach((e, i) => {
+    if (e.responses.length > 0 && !e.responses.some((r) => r.cost === 0)) bad(`events[${i}].responses`, "a response holds the clock, so one must cost nothing");
+  });
+  m.projects.forEach((p, i) => {
+    if (p.legacy_of !== undefined && !m.projects.find((x) => x.id === p.legacy_of)?.keystone) bad(`projects[${i}].legacy_of`, `${p.legacy_of} is not a keystone`);
+  });
+  m.chapters.forEach((c, i) => {
+    c.when.forEach((w, j) => { if (w.kind === "tier_opened" && w.tier === 1) bad(`chapters[${i}].when[${j}]`, "tier 1 is always open"); });
+  });
+  ids("chapters", m.chapters);
+  if (m.chapters.length > 0 && !m.chapters.some((c) => c.when.length === 0)) bad("chapters", "one chapter must have no conditions (the fallback)");
   m.starts.forEach((s, i) => {
     need(projects, s.free_project, `starts[${i}].free_project`, "project");
     if (m.projects.find((p) => p.id === s.free_project)?.tier !== 1) bad(`starts[${i}].free_project`, "the free project must be tier 1");

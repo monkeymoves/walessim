@@ -1,7 +1,8 @@
 note: >
   The four futures (docs/design/v2-board.md section 7.2). One is drawn from the game number and
-  revealed a turn at a time. Each sets three pressure tracks, one value from 0 to 1 per turn
-  (twelve turns, 2026 to 2050). Outside events are drawn from these tracks, and every game draws
+  revealed as the game goes. Each sets three pressure tracks, one value from 0 to 1 for each two
+  years (twelve values, 2026 to 2050, game.yaml track_years). Outside events are drawn from these
+  tracks, at most one in each two years, and every game draws
   the same weight of trouble in all (rule E1): only the kind and the timing differ.
   Every value here is a game rule (tune), not a forecast.
 futures:

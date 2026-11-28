@@ -31,6 +31,7 @@ export const boardModelShape: Shape = obj({
   endings: arr(shapes.ending, { min: 1 }),
   letters: arr(shapes.letter),
   places: arr(shapes.place),
+  chapters: arr(shapes.chapter),
 });
 
 /** Every issue in a parsed model. Empty means it is fit to play. Cross checks run only on a sound shape. */

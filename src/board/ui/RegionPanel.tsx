@@ -8,7 +8,7 @@ import { TabButton } from "../../ui/parts";
 import type { ProjectState } from "../engine/api";
 import { useGame } from "./game";
 import { backsAtOf, councilMean } from "./mapLinks";
-import { councilName, projectName } from "./words";
+import { councilName, projectName, whenWords } from "./words";
 
 export function RegionPanel(): JSX.Element {
   const game = useGame();
@@ -49,7 +49,7 @@ export function RegionPanel(): JSX.Element {
                 {(p) => (
                   <li>
                     <span>{projectName(model, p.project)}</span>
-                    <span class="small">{t("boardui.region.where", { place: site(p), year: model.game.first_year + (p.readyTurn + 1) * model.game.turn_years })}</span>
+                    <span class="small">{t("boardui.region.where", { place: site(p), when: whenWords(model, p.readyStep + 1) })}</span>
                   </li>
                 )}
               </For>

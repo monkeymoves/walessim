@@ -1,20 +1,19 @@
 /**
  * People: groups, moods, Backing and elections (docs/design/v2-board.md section 6).
  *
- * Hooks for turn.ts (package 2, through hooks.ts), each working on the turn context's draft:
+ * Hooks for the clock (clock-step.ts), each working on the step context's draft:
  * - `seedPeople` once in `newBoard`, after the councils are seeded.
- * - `judgePromise` at the end of the turn that reaches the promise year (safe to call every turn).
- * - `updatePeople` at the end of every turn, after effects, events and spread, before the turn
- *   and year move on.
- * - `holdElection` after `updatePeople`, before the turn moves on (safe to call every turn: it
- *   does nothing unless the turn ends in an election year). Returns the view, or null.
+ * - `judgePromise` when a year closes (safe to call then: it judges once, in the promise year).
+ * - `updatePeople` when a year closes, after effects, events and spread, with the years closed.
+ * - `holdElection` on an election step, after `updatePeople`. Returns the record.
  * - `gradeVisit` (re-exported from places.ts) for a place visit in `act`.
- * Read only helpers for projects.ts: `refusesBuild`, `fasterBuild`.
+ * Read only helper for projects.ts: `fasterBuild`.
  */
-import type { TurnCtx } from "./ctx";
+import type { StepCtx } from "./ctx";
 import { allEndHold } from "./end-conditions";
 import { backingFrom, moveMoods, shiftMoods } from "./people-moods";
-import { param } from "./rules";
+import { optParam, param } from "./rules";
+import { stepAfter, stepOfYear, yearOfStep } from "./time";
 import type {
   BoardModel, BoardState, CouncilCode, ElectionRecord, ElectionResult, ElectionView, Say,
 } from "./types";
@@ -24,7 +23,7 @@ export { backingFrom, groupWeight, shiftMoods, syncMoods } from "./people-moods"
 export { gradeVisit } from "./places";
 
 /** Backing at the start (rule P2), nudged by what you were elected on. Every group starts at its council's Backing. */
-export function seedPeople(ctx: TurnCtx): void {
+export function seedPeople(ctx: StepCtx): void {
   const { model, state: draft } = ctx;
   const start = model.starts.find((s) => s.id === draft.start);
   const base = param(model, RULE_IDS.backingStart, "start");
@@ -34,7 +33,7 @@ export function seedPeople(ctx: TurnCtx): void {
     if (!c) continue;
     c.moods = Object.fromEntries(model.groups.map((g) => [g.id, { mood: base }]));
     c.backing = Math.round(backingFrom(model, code, c.moods, base) * 1e4) / 1e4;
-    c.lastReachedTurn = null;
+    c.lastReachedStep = null;
     const def = model.councils.find((x) => x.code === code);
     const points = (start?.backing ?? [])
       .filter((b) => (b.council ? b.council === code : b.flag ? def?.flags.includes(b.flag) : false))
@@ -43,20 +42,17 @@ export function seedPeople(ctx: TurnCtx): void {
   }
 }
 
-/** The year the current turn ends. */
-const endYear = (model: BoardModel, state: BoardState): number => state.year + model.game.turn_years;
-
-/** Judge the start's promise in the turn that reaches its year. Does nothing in other turns. */
-export function judgePromise(ctx: TurnCtx): void {
+/** Judge the start's promise once the clock reaches its year (`arriving` is the step the clock moves to). */
+export function judgePromise(ctx: StepCtx, arriving: number): void {
   const { model, state: draft } = ctx;
-  if (draft.promise.kept !== null || endYear(model, draft) < draft.promise.byYear) return;
+  if (draft.promise.kept !== null || yearOfStep(model, arriving) < draft.promise.byYear) return;
   const start = model.starts.find((s) => s.id === draft.start);
   draft.promise = { ...draft.promise, kept: start ? allEndHold(model, draft, start.promise.kept_when) : false };
 }
 
-/** End of turn: moods move and Backing follows (rules P1 and P3). */
-export function updatePeople(ctx: TurnCtx): void {
-  moveMoods(ctx);
+/** When a year closes: moods move and Backing follows (rules P1 and P3), over `years` (1 at a quarter year step). */
+export function updatePeople(ctx: StepCtx, years: number): void {
+  moveMoods(ctx, years);
 }
 
 /** Real 2026 population share of each council in play, 0 to 1. */
@@ -80,32 +76,32 @@ export function countBacking(model: BoardModel, state: BoardState): Count {
   return { backers, peopleShare, result };
 }
 
-/** Turns from one election to the next (four years: two turns). */
-function termTurns(model: BoardModel): number {
+/** Years from one election to the next (four). */
+function termYears(model: BoardModel): number {
   const ys = model.game.election_years;
-  const gap = ys.length > 1 ? ys[1]! - ys[0]! : 4;
-  return Math.max(1, Math.round(gap / model.game.turn_years));
+  return ys.length > 1 ? ys[1]! - ys[0]! : 4;
 }
 
 /**
- * Hold the election if the current turn ends in an election year. A loss gives the weak hand for
- * the next term (fewer coins, no law changes, big builds refused where you were not backed); a
- * strong win gives one extra law change and faster builds where you were backed.
+ * Hold the election on arriving at election step `step`. A loss means you govern with others for
+ * the term (no law changes; phase 1's weak hand B3 while a model carries it; with P6 a deal is
+ * offered by the clock through deals.ts `offerDeals`); a strong
+ * win gives one extra law change and faster builds where you were backed. The term runs to the
+ * last step before the next election.
  */
-export function holdElection(ctx: TurnCtx): ElectionView | null {
+export function holdElection(ctx: StepCtx, step: number): ElectionRecord {
   const { model, state: draft } = ctx;
-  const year = endYear(model, draft);
-  if (!model.game.election_years.includes(year)) return null;
+  const year = yearOfStep(model, step);
   const { backers, peopleShare, result } = countBacking(model, draft);
-  const record: ElectionRecord = { year, turn: draft.turn, result, backers, peopleShare };
-  const until = draft.turn + termTurns(model);
+  const record: ElectionRecord = { year, step, result, backers, peopleShare };
+  const until = stepAfter(model, step, termYears(model)) - 1;
   draft.election = {
     records: [...draft.election.records, record],
-    weakUntil: result === "lost" ? until : null,
+    hungUntil: result === "lost" ? until : null,
     strongUntil: result === "strong_win" ? until : null,
   };
   draft.lawChangesLeft = result === "lost" ? 0 : result === "strong_win" ? 2 : 1;
-  return viewOf(model, draft, record, true);
+  return record;
 }
 
 function viewOf(model: BoardModel, state: BoardState, r: { year: number; backers: CouncilCode[]; peopleShare: number; result: ElectionResult }, held: boolean): ElectionView {
@@ -116,10 +112,13 @@ function viewOf(model: BoardModel, state: BoardState, r: { year: number; backers
     return { code, backing, backs: held ? r.backers.includes(code) : backing >= backsAt, peopleShare: shares[code] ?? 0 };
   });
   const says: Say[] = [
-    { key: "election.count", vars: { backers: r.backers.length, councils: councils.length, people: Math.round(r.peopleShare * 100) } },
-    { key: `election.${r.result}${held ? "" : ".projected"}` },
+    { key: "board.election.count", vars: { backers: r.backers.length, councils: councils.length, people: Math.round(r.peopleShare * 100) } },
+    { key: `board.election.${r.result}${held ? "" : ".projected"}` },
   ];
-  if (r.result === "lost") says.push({ key: "election.weak_hand", vars: { coins: param(model, RULE_IDS.weakHand, "lost_coins"), cost: param(model, RULE_IDS.election, "refuse_cost") } });
+  const lostCoins = optParam(model, "B3", "lost_coins_per_year");
+  if (r.result === "lost" && lostCoins !== undefined) says.push({ key: "board.election.weak_hand", vars: { coins: lostCoins } });
+  const dealYears = optParam(model, RULE_IDS.hungTerm, "deal_years");
+  if (r.result === "lost" && dealYears !== undefined) says.push({ key: "board.election.hung", vars: { years: dealYears } });
   return {
     year: r.year, held, councils, backers: r.backers.length, councilCount: councils.length,
     peopleShare: r.peopleShare, result: r.result, says,
@@ -128,26 +127,22 @@ function viewOf(model: BoardModel, state: BoardState, r: { year: number; backers
 }
 
 /**
- * API: the election just held (at the end of the last turn), or the projection if one were held
- * now, for the next election year.
+ * API: the election just held (on this step), or the projection if one were held now, for the
+ * next election year.
  */
 export function election(model: BoardModel, state: BoardState): ElectionView {
   const last = state.election.records[state.election.records.length - 1];
-  if (last && last.turn === state.turn - 1) return viewOf(model, state, last, true);
-  const next = model.game.election_years.find((y) => y >= endYear(model, state)) ?? model.game.end_year;
+  if (last && last.step === state.step) return viewOf(model, state, last, true);
+  const next = model.game.election_years.find((y) => stepOfYear(model, y) > state.step) ?? model.game.end_year;
   return viewOf(model, state, { year: next, ...countBacking(model, state) }, false);
 }
 
-/** Lost the last election: a council that did not back you refuses builds this dear or more (rule P4 `refuse_cost`). */
-export function refusesBuild(model: BoardModel, state: BoardState, council: CouncilCode, cost: number): boolean {
-  const weak = state.election.weakUntil !== null && state.turn <= state.election.weakUntil;
-  const last = state.election.records[state.election.records.length - 1];
-  return weak && !!last && !last.backers.includes(council) && cost >= param(model, RULE_IDS.election, "refuse_cost");
-}
+/** Years taken off a build after a strong win where the council backed you (phase 1's one turn: two years). */
+const FASTER_YEARS = 2;
 
-/** Turns taken off a build here after a strong win where the council backed you (0 or 1). */
-export function fasterBuild(model: BoardModel, state: BoardState, council: CouncilCode): number {
-  const strong = state.election.strongUntil !== null && state.turn <= state.election.strongUntil;
+/** Years taken off a build here after a strong win where the council backed you (0 or 2). */
+export function fasterBuild(_model: BoardModel, state: BoardState, council: CouncilCode): number {
+  const strong = state.election.strongUntil !== null && state.step <= state.election.strongUntil;
   const last = state.election.records[state.election.records.length - 1];
-  return strong && !!last && last.backers.includes(council) ? 1 : 0;
+  return strong && !!last && last.backers.includes(council) ? FASTER_YEARS : 0;
 }

@@ -37,7 +37,7 @@ export function ColourKey(): JSX.Element {
     if (by === "backing") return t("boardui.colour.backingNote", { n: backsAtOf(model) });
     if (by === "behind") return t("boardui.colour.behindNote");
     if (by === "none") return "";
-    return (game.state()?.turn ?? 0) > 0 ? t("boardui.colour.estimate") : t("boardui.colour.real");
+    return (game.state()?.step ?? 0) > 0 ? t("boardui.colour.estimate") : t("boardui.colour.real");
   };
   const f = (n: number) => formatNum(n, { maximumFractionDigits: 1 });
   return (

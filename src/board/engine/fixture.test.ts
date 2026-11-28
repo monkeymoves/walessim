@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { boardFixture, FIXTURE_COUNCILS } from "./fixture";
-import { MEASURE_IDS, RULE_IDS } from "./types";
+import { MEASURE_IDS, OPTIONAL_RULE_IDS, REQUIRED_RULE_IDS, RULE_IDS } from "./types";
 import { param } from "./rules";
 import { BoardModelError } from "./errors";
 
@@ -15,7 +15,9 @@ describe("the three council fixture", () => {
   });
 
   it("has every engine rule, every measure, all four branches to a keystone and all eight endings", () => {
-    for (const id of Object.values(RULE_IDS)) expect(m.rules.some((r) => r.id === id), id).toBe(true);
+    for (const id of REQUIRED_RULE_IDS) expect(m.rules.some((r) => r.id === id), id).toBe(true);
+    // No phase 2 card yet: the fixture behaves as phase 1 did until packages 8 and 9 add them.
+    for (const id of OPTIONAL_RULE_IDS) expect(m.rules.some((r) => r.id === id), id).toBe(false);
     expect(m.measures.map((x) => x.id)).toEqual([...MEASURE_IDS]);
     for (const b of m.branches) {
       const tiers = m.projects.filter((p) => p.branch === b.id).map((p) => p.tier);
@@ -39,7 +41,7 @@ describe("the three council fixture", () => {
   });
 
   it("reads rule params by id and fails loudly on a missing one", () => {
-    expect(param(m, RULE_IDS.coins, "base")).toBe(6);
+    expect(param(m, RULE_IDS.coins, "base_per_year")).toBe(3);
     expect(param(m, RULE_IDS.election, "backs_at")).toBe(5);
     expect(() => param(m, "Z9", "x")).toThrow(BoardModelError);
     expect(() => param(m, "B1", "nope")).toThrow(BoardModelError);

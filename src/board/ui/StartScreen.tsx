@@ -13,7 +13,7 @@ import type { PaperMap } from "../../map";
 import { useGame } from "./game";
 import { iconFor } from "./icons";
 import { linksFor } from "./mapLinks";
-import { projectName, tx } from "./words";
+import { projectName, tx, whenWords } from "./words";
 
 /** A fresh game number: chance belongs to the UI, the engine only ever sees the number. */
 const freshNumber = () => 1000 + Math.floor(Math.random() * 9000);
@@ -23,7 +23,7 @@ export function StartScreen(props: { fixture: boolean }): JSX.Element {
   const model = game.model;
   const [pick, setPick] = createSignal(model.starts[0]?.id ?? "");
   const [number] = createSignal(freshNumber());
-  const saved = game.savedRun();
+  const saved = game.savedRun;
 
   const ready = (m: PaperMap) => {
     m.setPadding({ left: Math.min(640, window.innerWidth * 0.46), right: 32, top: 32, bottom: 32 });
@@ -46,13 +46,14 @@ export function StartScreen(props: { fixture: boolean }): JSX.Element {
         <h1 class="t-1 bw-start-title" id="bw-start-title"><Pair text={model.game.region} /></h1>
         <p class="bw-start-pitch story">{t("boardui.start.pitch")}</p>
         <p class="small bw-start-pitch2">{t("boardui.start.pitch2")}</p>
+        <p class="small bw-start-result"><b>{t("boardui.start.result")}</b></p>
         <Show when={props.fixture}>
           <p class="bw-fixture small" role="note">{t("boardui.fixture.note")}</p>
         </Show>
-        <Show when={saved}>
+        <Show when={saved()}>
           <div class="bw-start-resume">
             <StampButton onClick={() => game.resume()} data-testid="bw-resume">{t("boardui.start.resume")}</StampButton>
-            <span class="small">{t("boardui.start.resumeNote", { n: String(saved!.g) })}</span>
+            <span class="small">{t("boardui.start.resumeNote", { n: String(saved()!.gameNumber), when: whenWords(model, saved()!.step) })}</span>
           </div>
         </Show>
         <h2 class="t-3 bw-start-ask">{t("boardui.start.ask")}</h2>
@@ -81,12 +82,12 @@ export function StartScreen(props: { fixture: boolean }): JSX.Element {
         </Show>
         <div class="bw-start-go">
           <Show
-            when={saved}
+            when={saved()}
             fallback={<StampButton onClick={() => game.start(number(), pick())} data-testid="bw-go">{t("boardui.start.go")}</StampButton>}
           >
             <TabButton onClick={() => game.start(number(), pick())} data-testid="bw-go">{t("boardui.start.again")}</TabButton>
           </Show>
-          <span class="small">{t("boardui.start.length", { turns: model.game.turns, n: formatNum(number()) })}</span>
+          <span class="small">{t("boardui.start.length", { years: model.game.end_year - model.game.first_year, n: formatNum(number()) })}</span>
         </div>
         <p class="small bw-start-honest">{t("boardui.start.honest")}</p>
         <p class="small"><a class="inklink" href="#/yfory" onClick={(e) => { e.preventDefault(); navigate("#/yfory"); }}>{t("boardui.start.v1")}</a></p>

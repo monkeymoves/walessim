@@ -1,20 +1,21 @@
 /**
- * Run codes: the game number, the start and every step, short enough to paste (section 8, item 7).
- * Decoding replays the steps from the game number, so a code is also a save and a proof that the
- * engine is deterministic.
+ * Run codes: the game number, the start, the step reached and every action with its step, short
+ * enough to paste (section 8 item 7, 16.2.8). Decoding replays the log from the game number, so
+ * a code is also a save and a proof that the engine is deterministic.
  *
- * Format: "B1" then base64url of a JSON array
- * `[version, hash8, gameNumber, start, dictionary, steps]`. Ids are written once in the
- * dictionary; steps refer to them by base 36 index:
- * `e` (or `e3` for three ends of turn), `b<p>:<site>`, `u<p>:<site>` (site `c<i>` or `l<i>`),
- * `l<i>+` or `l<i>-` (law), `r<e>:<r>` (respond), `v<p>:<i>/<i>` (visit picks).
+ * Format: "b2." then base64url of a JSON array
+ * `[version, hash8, gameNumber, start, stepReached, dictionary, actions]`. Ids are written once in
+ * the dictionary; `actions` is a comma list of `<at>@<action>`, the step in base 36, and the
+ * action as `b<p>:<site>`, `u<p>:<site>` (site `c<i>` or `l<i>`), `l<i>+` or `l<i>-` (law),
+ * `r<e>:<r>` (respond), `v<p>:<i>/<i>` (visit picks), `d<c>:<m>` (deal), ids by base 36 index.
+ * A phase 1 code ("B1") is refused with a plain message.
  */
 import { BoardRunError } from "./errors";
-import { act, endTurn, newBoard } from "./turn";
-import type { Action, BoardModel, BoardState, RunStep, Site, StartId } from "./types";
+import { replay } from "./clock";
+import type { Action, BoardModel, BoardState, LoggedAction, Site } from "./types";
 
-const PREFIX = "B1";
-const VERSION = 1;
+const PREFIX = "b2.";
+const VERSION = 2;
 const hash8 = (h: string): string => h.slice(0, 8);
 
 const B64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
@@ -48,81 +49,75 @@ export function fromBase64Url(code: string): string {
   return new TextDecoder("utf-8", { fatal: true }).decode(new Uint8Array(bytes));
 }
 
-function encodeSteps(steps: RunStep[], dict: string[]): string {
+function encodeLog(log: readonly LoggedAction[], dict: string[]): string {
   const idx = (id: string): string => {
     let i = dict.indexOf(id);
     if (i < 0) i = dict.push(id) - 1;
     return i.toString(36);
   };
   const site = (s: Site): string => (s.council !== undefined ? `c${idx(s.council)}` : `l${idx(s.link!)}`);
-  const out: string[] = [];
-  let ends = 0;
-  const flush = () => {
-    if (ends > 0) out.push(ends === 1 ? "e" : `e${ends.toString(36)}`);
-    ends = 0;
+  const token = (a: Action): string => {
+    if (a.kind === "build" || a.kind === "upgrade") return `${a.kind === "build" ? "b" : "u"}${idx(a.project)}:${site(a.site)}`;
+    if (a.kind === "law") return `l${idx(a.law)}${a.pass ? "+" : "-"}`;
+    if (a.kind === "respond") return `r${idx(a.event)}:${idx(a.response)}`;
+    if (a.kind === "deal") return `d${idx(a.council)}:${idx(a.measure)}`;
+    return `v${idx(a.place)}:${a.picks.map(idx).join("/")}`;
   };
-  for (const s of steps) {
-    if (s.kind === "end_turn") { ends++; continue; }
-    flush();
-    if (s.kind === "build" || s.kind === "upgrade") out.push(`${s.kind === "build" ? "b" : "u"}${idx(s.project)}:${site(s.site)}`);
-    else if (s.kind === "law") out.push(`l${idx(s.law)}${s.pass ? "+" : "-"}`);
-    else if (s.kind === "respond") out.push(`r${idx(s.event)}:${idx(s.response)}`);
-    else out.push(`v${idx(s.place)}:${s.picks.map(idx).join("/")}`);
-  }
-  flush();
-  return out.join(",");
+  return log.map((e) => `${e.at.toString(36)}@${token(e.action)}`).join(",");
 }
 
-function decodeSteps(text: string, dict: string[]): RunStep[] {
+function decodeLog(text: string, dict: string[]): LoggedAction[] {
   const id = (s: string): string => {
     const v = dict[parseInt(s, 36)];
     if (v === undefined || !/^[0-9a-z]+$/.test(s)) throw new BoardRunError("The run code refers to something it does not list");
     return v;
   };
   const site = (s: string): Site => (s[0] === "c" ? { council: id(s.slice(1)) } : s[0] === "l" ? { link: id(s.slice(1)) } : (() => { throw new BoardRunError("Bad site in run code"); })());
-  const out: RunStep[] = [];
-  for (const tok of text ? text.split(",") : []) {
+  const action = (tok: string): Action => {
     const head = tok[0];
     const body = tok.slice(1);
-    if (head === "e") {
-      const n = body ? parseInt(body, 36) : 1;
-      if (!Number.isFinite(n) || n < 1 || n > 100) throw new BoardRunError("Bad end of turn in run code");
-      for (let i = 0; i < n; i++) out.push({ kind: "end_turn" });
-    } else if (head === "b" || head === "u") {
+    if (head === "b" || head === "u") {
       const [p, s] = body.split(":");
-      out.push({ kind: head === "b" ? "build" : "upgrade", project: id(p ?? ""), site: site(s ?? "") });
-    } else if (head === "l") {
+      return { kind: head === "b" ? "build" : "upgrade", project: id(p ?? ""), site: site(s ?? "") };
+    }
+    if (head === "l") {
       const sign = body.slice(-1);
       if (sign !== "+" && sign !== "-") throw new BoardRunError("Bad law in run code");
-      out.push({ kind: "law", law: id(body.slice(0, -1)), pass: sign === "+" });
-    } else if (head === "r") {
+      return { kind: "law", law: id(body.slice(0, -1)), pass: sign === "+" };
+    }
+    if (head === "r") {
       const [e, r] = body.split(":");
-      out.push({ kind: "respond", event: id(e ?? ""), response: id(r ?? "") });
-    } else if (head === "v") {
+      return { kind: "respond", event: id(e ?? ""), response: id(r ?? "") };
+    }
+    if (head === "d") {
+      const [c, m] = body.split(":");
+      return { kind: "deal", council: id(c ?? ""), measure: id(m ?? "") as Extract<Action, { kind: "deal" }>["measure"] };
+    }
+    if (head === "v") {
       const [p, picks] = body.split(":");
-      out.push({ kind: "visit", place: id(p ?? ""), picks: picks ? picks.split("/").map(id) : [] });
-    } else throw new BoardRunError("The run code has a step it cannot read");
-  }
-  return out;
+      return { kind: "visit", place: id(p ?? ""), picks: picks ? picks.split("/").map(id) : [] };
+    }
+    throw new BoardRunError("The run code has a step it cannot read");
+  };
+  return (text ? text.split(",") : []).map((entry) => {
+    const at = entry.indexOf("@");
+    const step = at > 0 ? parseInt(entry.slice(0, at), 36) : NaN;
+    if (!Number.isInteger(step) || step < 0 || !/^[0-9a-z]+$/.test(entry.slice(0, at))) throw new BoardRunError("Bad step in run code");
+    return { at: step, action: action(entry.slice(at + 1)) };
+  });
 }
 
-/** A short code: the game number, the start and the steps. Paste to replay. */
+/** A short code: the game number, the start, the step reached and the log. Paste to replay. */
 export function encodeRun(state: BoardState): string {
   const dict: string[] = [];
-  const steps = encodeSteps(state.steps, dict);
-  return PREFIX + toBase64Url(JSON.stringify([VERSION, hash8(state.modelHash), state.gameNumber, state.start, dict, steps]));
+  const log = encodeLog(state.log, dict);
+  return PREFIX + toBase64Url(JSON.stringify([VERSION, hash8(state.modelHash), state.gameNumber, state.start, state.step, dict, log]));
 }
 
-/** Replay steps from a game number and start. Throws whatever `act` or `endTurn` throws. */
-export function replay(model: BoardModel, gameNumber: number | string, start: StartId, steps: readonly RunStep[]): BoardState {
-  let state = newBoard(model, gameNumber, start);
-  for (const s of steps) state = s.kind === "end_turn" ? endTurn(model, state).state : act(model, state, s as Action);
-  return state;
-}
-
-/** Replay a run code into a state. Throws `BoardRunError` if it cannot be read or was made with another model. */
+/** Replay a run code into a state. Throws `BoardRunError` if it cannot be read, is from phase 1, or was made with another model. */
 export function decodeRun(model: BoardModel, code: string): BoardState {
   const trimmed = code.trim();
+  if (/^b1/i.test(trimmed)) throw new BoardRunError("This code is from an older version of the game.");
   if (!trimmed.startsWith(PREFIX)) throw new BoardRunError("That is not a board run code");
   let parsed: unknown;
   try {
@@ -130,16 +125,17 @@ export function decodeRun(model: BoardModel, code: string): BoardState {
   } catch (e) {
     throw e instanceof BoardRunError ? e : new BoardRunError("The run code could not be read");
   }
-  if (!Array.isArray(parsed) || parsed.length !== 6) throw new BoardRunError("The run code could not be read");
-  const [version, hash, gameNumber, start, dict, steps] = parsed as unknown[];
+  if (!Array.isArray(parsed) || parsed.length !== 7) throw new BoardRunError("The run code could not be read");
+  const [version, hash, gameNumber, start, reached, dict, log] = parsed as unknown[];
   if (version !== VERSION) throw new BoardRunError(`Run code version ${String(version)} is not supported`);
   if (hash !== hash8(model.meta.hash)) throw new BoardRunError("The run code was made with a different version of the board");
-  if ((typeof gameNumber !== "number" && typeof gameNumber !== "string") || typeof start !== "string" || typeof steps !== "string"
+  if ((typeof gameNumber !== "number" && typeof gameNumber !== "string") || typeof start !== "string" || typeof log !== "string"
+    || typeof reached !== "number" || !Number.isInteger(reached) || reached < 0 || reached > model.game.steps
     || !Array.isArray(dict) || !dict.every((d) => typeof d === "string")) throw new BoardRunError("The run code could not be read");
+  const entries = decodeLog(log, dict as string[]);
   try {
-    return replay(model, gameNumber, start, decodeSteps(steps, dict as string[]));
+    return replay(model, gameNumber, start, entries, reached);
   } catch (e) {
-    if (e instanceof BoardRunError) throw e;
     throw new BoardRunError(`The run code does not replay: ${(e as Error).message}`);
   }
 }

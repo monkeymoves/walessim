@@ -4,8 +4,9 @@
  * pair or law stands are in held.ts.
  */
 import { allHold, neighbours } from "./conditions";
-import type { TurnCtx } from "./ctx";
+import type { StepCtx } from "./ctx";
 import { shiftMoods } from "./people-moods";
+import { boundYoung } from "./spread-young";
 import type {
   BoardModel, BoardState, Cause, CouncilCode, Effect, LinkId, NodeId, RuleId, WhyQuantity,
 } from "./types";
@@ -92,11 +93,12 @@ export interface OnceOptions {
 }
 
 /**
- * Apply effects once, now (`after_turns` and `ramp_turns` are for held effects and are ignored).
+ * Apply effects once, now (`after_years` and `ramp_years` are for held effects and are ignored).
+ * Young adults stay inside the S3 floor and ceiling (`boundYoung`).
  * Backing effects move the groups' moods (all, or the one named) and Backing with them. Returns the
  * total applied to other quantities.
  */
-export function applyOnce(ctx: TurnCtx, effects: readonly Effect[], origin: Origin, cause: Cause, opts: OnceOptions): number {
+export function applyOnce(ctx: StepCtx, effects: readonly Effect[], origin: Origin, cause: Cause, opts: OnceOptions): number {
   let total = 0;
   for (const e of effects) {
     const amt = effectAmount(e, opts.factor ?? 1);
@@ -107,8 +109,9 @@ export function applyOnce(ctx: TurnCtx, effects: readonly Effect[], origin: Orig
         shiftMoods(ctx, t.council, amt.amount, e.group, rule, cause);
         continue;
       }
+      const delta = amt.quantity === "young_adults" ? boundYoung(ctx.model, ctx.state, t.council, amt.amount) : amt.amount;
       total += ctx.change({
-        council: t.council, quantity: amt.quantity, delta: amt.amount, rule, cause,
+        council: t.council, quantity: amt.quantity, delta, rule, cause,
         ...(t.via ? { via: t.via } : {}), jobs: e.kind === "measure" && !!e.jobs,
       });
     }

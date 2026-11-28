@@ -3,7 +3,7 @@
  * standing where, and how far each tier is from opening. The keystone is the top of each column.
  */
 import { For, Show, type JSX } from "solid-js";
-import { Pair, t } from "../../i18n";
+import { formatNum, Pair, t } from "../../i18n";
 import { CloseButton, Icon } from "../../ui/parts";
 import type { BranchDef, Tier } from "../engine/api";
 import { conditionWords } from "./blockers";
@@ -58,7 +58,7 @@ export function TreeSheet(): JSX.Element {
                               <span>
                                 <span class="bw-tree-name">{tx(p.name)}</span>
                                 <span class="small">
-                                  {t("boardui.tree.cost", { n: p.cost, years: Math.max(1, p.build_turns) * model.game.turn_years })}
+                                  {t("boardui.tree.cost", { n: p.cost, years: formatNum(p.build_years, { maximumFractionDigits: 1 }) })}
                                   <Show when={standing(p.id).length}>
                                     {" "}{t("boardui.tree.standing", { list: listOf(standing(p.id).map((x) => councilName(model, x.site.council ?? model.links.find((l) => l.id === x.site.link)?.from))) })}
                                   </Show>

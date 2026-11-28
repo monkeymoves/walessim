@@ -3,7 +3,7 @@
  * If a type changes, change its shape here; `check.test.ts` runs the typed fixture through
  * every shape, so a drift between the two fails a test.
  */
-import { GRADES, LINK_KINDS, MEASURE_IDS, RISK_KINDS } from "../engine/types";
+import { GRADES, LINK_KINDS, MEASURE_IDS, RISK_KINDS, STOP_KINDS } from "../engine/types";
 import { anyOf, arr, bool, int, lit, nullable, num, obj, openObj, range, rec, str, tuple, variant, type Shape } from "./shape";
 
 const strs = arr(str);
@@ -22,6 +22,12 @@ const quantity = lit(...MEASURE_IDS, "young_adults", "backing", "risk_flood", "r
 const honesty = lit("real", "game_estimate", "game_rule", "illustrative");
 const xy = tuple(num, num);
 const op = lit("below", "at_least");
+const momentum = lit("rising", "steady", "slipping");
+const season = lit("summer", "autumn", "winter", "spring");
+/** Years: a whole number, or a half or a quarter (a quick build is half a year). */
+const years = (max: number): Shape => (v, path, out) => {
+  if (typeof v !== "number" || v < 0 || v > max || Math.round(v * 4) !== v * 4) out.push({ path, message: `expected years from 0 to ${max} in quarters, got ${JSON.stringify(v)}` });
+};
 
 export const condition: Shape = variant("kind", {
   feature: [{ feature }],
@@ -30,12 +36,14 @@ export const condition: Shape = variant("kind", {
   project: [{ where: lit("here", "within_link", "anywhere") }, { project: str, tag: str, branch: str, tier, min_level: tier, status: lit("building", "working", "run_down"), links: arr(linkKind), at_least: int(1) }],
   link_quality: [{ at_least: int(1, 3) }],
   risk: [{ risk, at_least: step }],
-  measure: [{ measure, op: lit("below", "at_least", "rising", "falling") }, { value: range(0, 10), over_turns: int(1) }],
+  measure: [{ measure, op: lit("below", "at_least", "rising", "falling") }, { value: range(0, 10), over_years: int(1) }],
   share: [{ share: lit("young_adults", "age65"), op, value: range(0, 100) }],
   backing: [{ op, value: range(0, 10) }],
   track: [{ track, at_least: range(0, 1) }],
   year: [{}, { from: int(2026, 2050), to: int(2026, 2050) }],
   law: [{ law: str }],
+  momentum: [{ is: momentum }],
+  keystone: [{}, { project: str }],
 }, { not: bool });
 const conditions = arr(condition);
 
@@ -43,22 +51,25 @@ export const effect: Shape = variant("kind", {
   measure: [{ measure, points: num }, { jobs: bool }],
   risk: [{ risk, steps: int(-3, 3) }],
   link_quality: [{ steps: int(-2, 2) }],
-  coins: [{ coins: num, every_turns: int(1) }],
+  coins: [{ coins_per_year: num }],
   young_adults: [{ points: num }],
   backing: [{ points: num }, { group: str }],
   block: [{ spread: str, share: range(0, 1) }],
   boost: [{ spread: str, factor: range(0, 10) }],
-  special: [{ special: lit("reverse_commute", "storm_step_down", "cluster_roots", "care_bill_off", "land_blocked") }],
+  special: [{ special: lit(
+    "reverse_commute", "storm_step_down", "cluster_roots", "care_bill_off", "land_blocked", "branch_joined",
+    "no_care_bill", "links_up", "colleges_up", "storm_no_coins", "running_halved",
+  ) }],
 }, {
   where: lit("here", "link_ends", "downstream", "linked", "flagged", "everywhere"),
-  flag, only_if: conditions, after_turns: int(0), ramp_turns: int(0), rule: str,
+  flag, only_if: conditions, after_years: years(24), ramp_years: years(24), rule: str,
 });
 const effects = arr(effect);
 
 const param = obj({ default: num, min: num, max: num, unit: text, adjustable: bool }, { tune: bool, placeholder: bool });
 const spread = obj({
   links: arr(linkKind, { min: 1 }), travel: lit("to_home", "to_work", "towards_better", "downstream", "both_ways"),
-  input: quantity, output: quantity, sign: lit(1, -1), weight: lit("share", "strength", "one"), quality_multiplies: bool, lag: int(0),
+  input: quantity, output: quantity, sign: lit(1, -1), weight: lit("share", "strength", "one"), quality_multiplies: bool, lag_years: years(24),
 }, { blocked_by_tags: strs, only_from_projects: bool });
 const requires = obj({ applies_to: obj({}, { project: str, branch: str, tier, level: tier }), needs: conditions });
 
@@ -74,6 +85,28 @@ export const endCondition: Shape = variant("kind", {
   projects: [{}, { tier, at_least: int(0), at_most: int(0) }],
   links_upgraded: [{}, { at_least: int(0), at_most: int(0) }],
   risks_landed: [{ at_least: int(0) }],
+  elections_lost: [{ at_least: int(0) }],
+  deals_kept: [{ at_least: int(0) }],
+  keystone_finished_after: [{ year: int(2026, 2050), at_least: int(0) }],
+  events_prepared: [{ share: range(0, 1) }],
+  no_council_lower: [{}],
+  event_landed: [{ event: str }],
+});
+
+/** Term conditions (story.yaml chapters, 16.5.1). */
+export const termCondition: Shape = variant("kind", {
+  event_landed: [{}, { track, severity_at_least: num, prepared: bool, at_most: int(0) }],
+  election: [{ result: lit("strong_win", "win", "lost") }],
+  keystone: [{ phase: lit("started", "finished") }],
+  tier_opened: [{ tier }],
+  tipped: [{ to: momentum, at_least: int(1) }],
+  region_turn: [{}],
+  young_adults: [{ change: lit("up", "down"), by: num }, { flag, councils_at_least: int(1) }],
+  gap: [{ change: lit("closed", "wider"), by: num }],
+  finished: [{}, { at_least: int(0), at_most: int(0) }],
+  deal: [{ kept: bool }],
+  promise: [{ kept: bool }],
+  level: [{ change: lit("up", "down"), by: num }],
 });
 
 export const shapes = {
@@ -87,15 +120,18 @@ export const shapes = {
     share: range(0, 1), strength: int(1, 3), name: text, quality: int(1, 3), outside: bool, to_check: bool,
   }),
   rule: obj({
-    id: str, theme: lit("spread", "budget", "people", "projects", "events", "score"), name: text, note: text,
+    id: str, theme: lit("spread", "budget", "people", "projects", "events", "score", "growth"), name: text, note: text,
     kind: lit("linear", "saturating", "stock", "threshold", "spread", "requires"), params: rec(param),
     sources: strs, confidence: lit("high", "medium", "low"), evidence: lit("assessed", "published", "expert", "placeholder"), game_rule: bool,
-  }, { lag: int(0), spread, requires }),
+  }, { lag_years: years(24), spread, requires }),
   branch: obj({ id: str, name: text, note: text, tiers: tuple(...[1, 2, 3].map(() => obj({ tier, opens: conditions }, { rule: str }))) }),
   project: obj({
     id: str, branch: str, tier, keystone: bool, name: text, what: text, example: text, site: lit("council", "link"),
-    cost: int(0, 20), build_turns: int(0, 6), needs: conditions, effects, level_factor: tuple(num, num, num), tags: strs, sources: strs,
-  }, { catch: text, running: obj({ coins: num, every_turns: int(1) }), upgrade_costs: tuple(int(0, 20), int(0, 20)), visit: str, rule: str }),
+    cost: int(0, 20), build_years: years(12), needs: conditions, effects, level_factor: tuple(num, num, num), tags: strs, sources: strs,
+  }, {
+    catch: text, running: obj({ coins_per_year: num }), upgrade_costs: tuple(int(0, 20), int(0, 20)), visit: str, rule: str,
+    quick: bool, legacy_of: str,
+  }),
   pair: obj({
     id: str, kind: lit("together", "apart"), project: str,
     partners: arr(anyOf(obj({ project: str }), obj({ tag: str }), obj({ link_quality: int(1, 3) })), { min: 1 }),
@@ -128,8 +164,14 @@ export const shapes = {
     options: arr(obj({ id: str, name: text, gain: text, loss: text, effects, grades: arr(obj({ when: conditions, grade })), default_grade: grade }, { branch: str }), { min: 2, max: 3 }),
   }),
   game: obj({
-    region: text, councils: arr(str, { min: 1 }), first_year: int(2000, 2100), turn_years: int(1, 5), turns: int(1, 40), end_year: int(2000, 2100),
-    election_years: arr(int(2000, 2100)), keystone_last_start_year: int(2000, 2100), visits_per_turn: int(0, 3), report_lines_max: int(1, 10), save_key: str,
-  }),
+    region: text, councils: arr(str, { min: 1 }), first_year: int(2000, 2100), end_year: int(2000, 2100),
+    years_per_step: range(0.0625, 4), steps: int(1, 400), seasons: tuple(season, season, season, season),
+    election_years: arr(int(2000, 2100)), track_years: int(1, 5), keystone_last_start_year: int(2000, 2100),
+    visit_open_years: range(0.25, 4), term_report_lines_max: int(1, 10), year_lines_max: int(0, 10),
+    speeds: arr(obj({ id: str, ms_per_step: int(50, 60000) }), { min: 1 }), default_speed: str,
+    stops: obj({}, Object.fromEntries(STOP_KINDS.map((k) => [k, obj({}, { hard: bool, on: bool })]))),
+    save_key: str,
+  }, { note: str }),
+  chapter: obj({ id: str, name: text, line: text, priority: int(0), when: arr(termCondition) }),
   meta: obj({ version: int(1), generated: str, hash: str, cy_review: strs, to_check: arr(str) }, { fixture: bool }),
 };

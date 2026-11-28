@@ -6,7 +6,7 @@
  */
 import { gradeRhondda } from "../../engine/places";
 import { allHold, trackValue } from "./conditions";
-import type { TurnCtx } from "./ctx";
+import type { StepCtx } from "./ctx";
 import { applyOnce } from "./effects";
 import { ruleParam } from "./rule-defaults";
 import type { Action, BoardModel, BoardState, Grade, Pending, PlaceDef, PlaceOption } from "./types";
@@ -27,8 +27,8 @@ export function gradeBacking(model: BoardModel, grade: Grade): number {
   return ruleParam(model, VISIT_RULE, `backing_${grade}`);
 }
 
-/** Is this a wet turn for the Rhondda's tips? The future's weather track at or above V1 `wet_track`. */
-export function wetTurn(model: BoardModel, state: BoardState): boolean {
+/** Is this a wet time for the Rhondda's tips? The future's weather track now at or above V1 `wet_track`. */
+export function wetNow(model: BoardModel, state: BoardState): boolean {
   return trackValue(model, state, "weather") >= ruleParam(model, VISIT_RULE, "wet_track");
 }
 
@@ -49,14 +49,14 @@ export function visitGrade(model: BoardModel, state: BoardState, place: PlaceDef
     return o.grades.find((g) => allHold(model, state, place.council, g.when))?.grade ?? o.default_grade;
   }
   if (!place.board) return "adequately";
-  return gradeRhondda(place.board, picks, wetTurn(model, state)).grade;
+  return gradeRhondda(place.board, picks, wetNow(model, state)).grade;
 }
 
 /**
  * Hook for `act` on a visit: grade it, apply the T3 option's effects in the visited council, and
- * move Backing there by the grade. turn.ts sets the project's grade and removes the pending.
+ * move Backing there by the grade. clock.ts sets the project's grade and removes the pending.
  */
-export function gradeVisit(ctx: TurnCtx, action: VisitAction, pending: VisitPending): Grade {
+export function gradeVisit(ctx: StepCtx, action: VisitAction, pending: VisitPending): Grade {
   const { model, state } = ctx;
   const place = model.places.find((p) => p.id === action.place);
   if (!place) return "poorly";

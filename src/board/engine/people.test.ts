@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { boardFixture, FIXTURE_COUNCILS } from "./fixture";
-import { ctxOf, handState, nextTurn, standing } from "./hand-state";
-import { election, fasterBuild, holdElection, judgePromise, peopleShares, refusesBuild, seedPeople, shiftMoods, syncMoods, updatePeople } from "./people";
+import { ctxOf, handState, nextYears, standing } from "./hand-state";
+import { election, fasterBuild, holdElection, judgePromise, peopleShares, seedPeople, shiftMoods, syncMoods, updatePeople } from "./people";
+import { isElectionStep } from "./time";
 import { backingFrom } from "./people-moods";
+import { withCard } from "./test-cards";
 
 const { merthyr, rct, cardiff } = FIXTURE_COUNCILS;
 const model = boardFixture();
@@ -29,22 +31,22 @@ describe("moods (rules P1 and P3)", () => {
   it("a council whose measures rise while others do not grows its backing", () => {
     const s = seeded("warm-homes");
     for (const m of ["work", "homes"] as const) s.councils[merthyr]!.measures[m] += 1;
-    nextTurn(model, s);
+    nextYears(model, s, 2);
     const before = s.councils[merthyr]!.backing;
-    s.projects.push(standing("buses-meet-trains", { council: merthyr }, 1));
-    updatePeople(ctxOf(model, s));
+    s.projects.push(standing("buses-meet-trains", { council: merthyr }, 8));
+    updatePeople(ctxOf(model, s), 2);
     expect(s.councils[merthyr]!.backing).toBeGreaterThan(before);
     expect(s.councils[merthyr]!.moods.young!.mood).toBeGreaterThan(5);
-    expect(s.councils[merthyr]!.moods.young!.reason?.key).toBe("mood.measure.up");
+    expect(s.councils[merthyr]!.moods.young!.reason?.key).toBe("board.mood.measure.up");
   });
 
   it("every backing change is in the ledger with its rule and group", () => {
     const s = seeded("warm-homes");
     s.councils[cardiff]!.measures.health -= 1;
-    nextTurn(model, s);
+    nextYears(model, s, 2);
     const before = s.councils[cardiff]!.backing;
     const mark = s.ledger.length;
-    updatePeople(ctxOf(model, s));
+    updatePeople(ctxOf(model, s), 2);
     const parts = s.ledger.slice(mark).filter((c) => c.council === cardiff);
     const sum = parts.reduce((a, c) => a + c.delta, 0);
     expect(sum).toBeCloseTo(s.councils[cardiff]!.backing - before, 3);
@@ -53,19 +55,19 @@ describe("moods (rules P1 and P3)", () => {
 
   it("a council with nothing built near it for 8 years is passed over", () => {
     const s = seeded("warm-homes");
-    for (let t = 0; t < 4; t++) nextTurn(model, s);
-    updatePeople(ctxOf(model, s));
+    for (let t = 0; t < 4; t++) nextYears(model, s, 2);
+    updatePeople(ctxOf(model, s), 2);
     expect(s.ledger.some((c) => c.rule === "P3")).toBe(true);
-    expect(s.councils[cardiff]!.moods.older!.reason?.key).toBe("mood.passed_over");
+    expect(s.councils[cardiff]!.moods.older!.reason?.key).toBe("board.mood.passed_over");
   });
 
   it("a project within one link stops a council being passed over", () => {
     const s = seeded("warm-homes");
-    s.projects.push(standing("social-homes", { council: rct }, 3));
-    for (let t = 0; t < 4; t++) nextTurn(model, s);
-    updatePeople(ctxOf(model, s));
+    s.projects.push(standing("social-homes", { council: rct }, 24));
+    for (let t = 0; t < 4; t++) nextYears(model, s, 2);
+    updatePeople(ctxOf(model, s), 2);
     expect(s.ledger.filter((c) => c.rule === "P3")).toEqual([]);
-    expect(s.councils[cardiff]!.lastReachedTurn).toBe(3);
+    expect(s.councils[cardiff]!.lastReachedStep).toBe(24);
   });
 
   it("shiftMoods moves one group and backing by its share; syncMoods keeps direct changes", () => {
@@ -82,65 +84,62 @@ describe("moods (rules P1 and P3)", () => {
 });
 
 describe("the promise", () => {
-  it("is judged in the turn that reaches its year, against 2026", () => {
+  it("is judged when the clock reaches its year, against 2026", () => {
     const s = seeded("warm-homes");
-    for (let t = 0; t < 2; t++) nextTurn(model, s);
-    judgePromise(ctxOf(model, s));
+    nextYears(model, s, 4);
+    judgePromise(ctxOf(model, s), s.step);
     expect(s.promise.kept).toBeNull();
-    nextTurn(model, s); // turn 3 is 2032 to 2034
+    nextYears(model, s, 4);
     for (const c of Object.values(s.councils)) c.measures.homes += 0.5;
-    judgePromise(ctxOf(model, s));
+    judgePromise(ctxOf(model, s), s.step);
     expect(s.promise.kept).toBe(true);
   });
 });
 
 describe("elections (rule P4)", () => {
-  it("are held only when a turn ends in an election year", () => {
+  it("are held on the first step of an election year", () => {
     const s = seeded();
-    expect(holdElection(ctxOf(model, s))).toBeNull();
-    nextTurn(model, s);
-    expect(holdElection(ctxOf(model, s))?.year).toBe(2030);
+    expect([15, 16, 17, 32].map((x) => isElectionStep(model, x))).toEqual([false, true, false, true]);
+    expect(holdElection(ctxOf(model, s), 16)).toMatchObject({ year: 2030, step: 16 });
   });
 
   it("are won with backing councils holding more than half the people", () => {
     const s = seeded();
-    nextTurn(model, s);
+    nextYears(model, s, 2);
     for (const code of [merthyr, rct]) s.councils[code]!.backing = 6;
     s.councils[cardiff]!.backing = 4;
     const shares = peopleShares(model);
-    const v = holdElection(ctxOf(model, s))!;
+    s.step = 16;
+    const v = holdElection(ctxOf(model, s), 16);
     expect(v.peopleShare).toBeCloseTo(shares[merthyr]! + shares[rct]!, 6);
     expect(v.result).toBe(v.peopleShare > 0.5 ? (v.peopleShare >= 0.667 ? "strong_win" : "win") : "lost");
-    expect(v.backers).toBe(2);
-    expect(v.nextYear).toBe(2034);
+    expect(v.backers).toHaveLength(2);
+    expect(election(model, s)).toMatchObject({ held: true, backers: 2, nextYear: 2034 });
   });
 
-  it("a loss gives the weak hand: no law changes, and big builds refused where you were not backed", () => {
+  it("a loss means governing with others for the term: no law changes, and the weak hand while B3 stands", () => {
     const s = seeded();
-    nextTurn(model, s);
+    s.step = 16;
     s.councils[merthyr]!.backing = 6;
     s.councils[rct]!.backing = 4;
     s.councils[cardiff]!.backing = 4;
-    const v = holdElection(ctxOf(model, s))!;
+    const v = holdElection(ctxOf(model, s), 16);
     expect(v.result).toBe("lost");
-    expect(s.election.weakUntil).toBe(3);
+    expect(s.election.hungUntil).toBe(31);
     expect(s.lawChangesLeft).toBe(0);
-    nextTurn(model, s);
-    expect(refusesBuild(model, s, cardiff, 4)).toBe(true);
-    expect(refusesBuild(model, s, cardiff, 3)).toBe(false);
-    expect(refusesBuild(model, s, merthyr, 7)).toBe(false);
     expect(election(model, s).held).toBe(true);
-    expect(election(model, s).says.map((x) => x.key)).toContain("election.weak_hand");
+    expect(election(model, s).says.map((x) => x.key)).toContain("board.election.weak_hand");
   });
 
   it("a strong win gives an extra law change and faster builds where you were backed", () => {
     const s = seeded();
-    nextTurn(model, s);
+    nextYears(model, s, 2);
     for (const code of [merthyr, rct, cardiff]) s.councils[code]!.backing = 7;
-    expect(holdElection(ctxOf(model, s))!.result).toBe("strong_win");
+    s.step = 16;
+    expect(holdElection(ctxOf(model, s), 16).result).toBe("strong_win");
     expect(s.lawChangesLeft).toBe(2);
-    nextTurn(model, s);
-    expect(fasterBuild(model, s, cardiff)).toBe(1);
+    nextYears(model, s, 2);
+    expect(fasterBuild(model, s, cardiff)).toBe(2);
   });
 
   it("mid term the view is a projection for the next election", () => {
@@ -149,5 +148,44 @@ describe("elections (rule P4)", () => {
     expect(v.held).toBe(false);
     expect(v.year).toBe(2030);
     expect(v.says[1]!.key).toMatch(/\.projected$/);
+  });
+});
+
+describe("phase 2 people rules (16.3.1)", () => {
+  it("moods judged only against four years ago (P1 middle_share 0) are not zero sum", () => {
+    const run = (m: typeof model) => {
+      const s = handState(m, { start: "warm-homes" });
+      seedPeople(ctxOf(m, s));
+      for (const c of Object.values(s.councils)) for (const k of ["work", "homes", "health"] as const) c.measures[k] += 1;
+      nextYears(m, s, 2);
+      updatePeople(ctxOf(m, s), 2);
+      return s.councils[cardiff]!.backing;
+    };
+    expect(run(withCard(model, "P1", { middle_share: 0 }))).toBeGreaterThan(run(model));
+  });
+
+  it("with max_loss, only a council with nothing standing within one link is passed over, and the loss stops at the cap", () => {
+    const m = withCard(model, "P3", { loss_per_year: 0.5, max_loss: 1 });
+    const s = handState(m, { start: "warm-homes" });
+    seedPeople(ctxOf(m, s));
+    s.projects.push(standing("social-homes", { council: merthyr }, 0));
+    for (let y = 0; y < 16; y++) {
+      nextYears(m, s, 1);
+      const ctx = ctxOf(m, s);
+      ctx.step = s.step - 1;
+      updatePeople(ctx, 1);
+    }
+    const lost = (code: string) => s.ledger.filter((c) => c.rule === "P3" && c.council === code).reduce((a, c) => a + c.delta, 0);
+    expect(lost(merthyr)).toBe(0);
+    expect(lost(rct)).toBe(0);
+    expect(lost(cardiff)).toBe(0);
+    s.projects = [];
+    for (let y = 0; y < 6; y++) {
+      nextYears(m, s, 1);
+      const ctx = ctxOf(m, s);
+      ctx.step = s.step - 1;
+      updatePeople(ctx, 1);
+    }
+    expect(lost(cardiff)).toBeCloseTo(-1, 2);
   });
 });

@@ -1,6 +1,7 @@
-# Letters from 2050 (docs/design/v2-board.md section 8, step 5). Owner: package 4.
+# Letters from 2050 (docs/design/v2-board.md sections 8 and 16.5.3). Owner: package 10.
+# 24 letters: two for each of the twelve endings.
 # Each is a MADE-UP VOICE from the council that changed most, and says so in its sign-off.
-# Two per ending: one for when Life in your years was the weaker score ("life"), one for when
+# Two per ending: one for when Life in your years was the weaker of the two scores ("life"), one for when
 # Left for 2050 was ("left"). Slots: {council}, {town}, {project}, {year}, {place}.
 # People talking: exempt from the plain words list, not from the 18 word and no dash rules.
 note: "Every letter is a made-up voice, signed as one."
@@ -140,3 +141,71 @@ letters:
     body: { en: "The storms and the bills did most of the deciding, these years. We held on. The town is still here, still stubborn, still singing on a Saturday. Next time, I hope someone with a plan comes and asks us first.", cy: "Y stormydd a'r biliau oedd yn penderfynu fwyaf, y blynyddoedd hyn. Fe ddalion ni ati. Mae'r dref yma o hyd, yn dal yn styfnig, yn dal i ganu ar nos Sadwrn. Y tro nesaf, gobeithio daw rhywun â chynllun a gofyn i ni gyntaf.", cy_review: true }
     named: { en: "I remember {project}, in {year}. I wish there had been more like it.", cy: "Rwy'n cofio {project}, yn {year}. Hoffwn pe bai mwy tebyg iddo wedi bod.", cy_review: true }
     signoff: { en: "A choir member in {town} (a made-up voice)", cy: "Aelod o'r côr yn {town} (llais dychmygol)", cy_review: true }
+
+  # The long game
+  - id: long-game-life
+    ending: long-game
+    lower: life
+    salutation: { en: "To whoever ran Wales from 2026,", cy: "At bwy bynnag oedd yn rhedeg Cymru o 2026,", cy_review: true }
+    body: { en: "For years we heard about it and saw nothing but fences. People here gave up asking. Then it opened, all at once. My son says it will be good for his children. I hope he is right. I wish it had come sooner.", cy: "Am flynyddoedd clywson ni amdano a gweld dim ond ffensys. Rhoddodd pobl yma'r gorau i ofyn. Yna agorodd, i gyd ar unwaith. Mae fy mab yn dweud y bydd yn dda i'w blant. Gobeithio ei fod yn iawn. Hoffwn petai wedi dod yn gynt.", cy_review: true }
+    named: { en: "{project} opened in {town} in {year}. We had waited a long time.", cy: "Agorodd {project} yn {town} yn {year}. Roedden ni wedi aros yn hir.", cy_review: true }
+    signoff: { en: "A grandmother in {town} (a made-up voice)", cy: "Mam-gu yn {town} (llais dychmygol)", cy_review: true }
+
+  - id: long-game-left
+    ending: long-game
+    lower: left
+    salutation: { en: "Dear you,", cy: "Annwyl chi,", cy_review: true }
+    body: { en: "I started work the year it opened. Everyone older says the town was hard going for a long time. It does not feel like that now. There are new faces on the platform every week. I think the best part is still coming.", cy: "Dechreuais weithio'r flwyddyn yr agorodd. Mae pawb hŷn yn dweud bod y dref yn anodd am amser hir. Dydy hi ddim yn teimlo felly nawr. Mae wynebau newydd ar y platfform bob wythnos. Rwy'n credu bod y rhan orau eto i ddod.", cy_review: true }
+    named: { en: "My first job was at {project}, in {town}. It opened in {year}.", cy: "Roedd fy swydd gyntaf yn {project}, yn {town}. Agorodd yn {year}.", cy_review: true }
+    signoff: { en: "A young worker in {town} (a made-up voice)", cy: "Gweithiwr ifanc yn {town} (llais dychmygol)", cy_review: true }
+
+  # The comeback
+  - id: comeback-life
+    ending: comeback
+    lower: life
+    salutation: { en: "To the one who came back,", cy: "At yr un a ddaeth yn ôl,", cy_review: true }
+    body: { en: "We did not vote for you. I will be honest about that. Then you sat down with our council and made a deal. You kept it, which surprised us. The street looks different now. I still grumble, but not about that.", cy: "Wnaethon ni ddim pleidleisio drosoch chi. Rwy'n onest am hynny. Yna eisteddoch chi gyda'n cyngor a gwneud bargen. Fe wnaethoch ei chadw, ac fe synnodd hynny ni. Mae'r stryd yn edrych yn wahanol nawr. Rwy'n dal i gwyno, ond nid am hynny.", cy_review: true }
+    named: { en: "{project} came to {town} in {year}, as you promised.", cy: "Daeth {project} i {town} yn {year}, fel y gwnaethoch addo.", cy_review: true }
+    signoff: { en: "A bus driver in {town} (a made-up voice)", cy: "Gyrrwr bws yn {town} (llais dychmygol)", cy_review: true }
+
+  - id: comeback-left
+    ending: comeback
+    lower: left
+    salutation: { en: "To whoever ran Wales from 2026,", cy: "At bwy bynnag oedd yn rhedeg Cymru o 2026,", cy_review: true }
+    body: { en: "People write off places like ours. You nearly did, and then you did not. I remember the year it turned. Shops opened instead of closing. My daughter came home from Bristol. That is the whole story, really.", cy: "Mae pobl yn anghofio am lefydd fel ein lle ni. Bu bron i chi wneud hynny, ac yna wnaethoch chi ddim. Rwy'n cofio'r flwyddyn y trodd pethau. Agorodd siopau yn lle cau. Daeth fy merch adref o Fryste. Dyna'r stori i gyd, a dweud y gwir.", cy_review: true }
+    named: { en: "It started with {project} in {town}, in {year}.", cy: "Dechreuodd gyda {project} yn {town}, yn {year}.", cy_review: true }
+    signoff: { en: "A café owner in {town} (a made-up voice)", cy: "Perchennog caffi yn {town} (llais dychmygol)", cy_review: true }
+
+  # The gamble
+  - id: gamble-life
+    ending: gamble
+    lower: life
+    salutation: { en: "To whoever ran Wales from 2026,", cy: "At bwy bynnag oedd yn rhedeg Cymru o 2026,", cy_review: true }
+    body: { en: "When the big firm came, the whole town cheered. I got a job there, and so did my brother. When it went, it went fast. Nothing else had grown up around it. We are still picking up the pieces.", cy: "Pan ddaeth y cwmni mawr, roedd y dref gyfan yn bloeddio. Ces i swydd yno, a fy mrawd hefyd. Pan aeth, aeth yn gyflym. Doedd dim byd arall wedi tyfu o'i gwmpas. Rydyn ni'n dal i godi'r darnau.", cy_review: true }
+    named: { en: "The site in {town} has been quiet since {year}.", cy: "Mae'r safle yn {town} wedi bod yn dawel ers {year}.", cy_review: true }
+    signoff: { en: "A former machine operator in {town} (a made-up voice)", cy: "Cyn-weithredwr peiriannau yn {town} (llais dychmygol)", cy_review: true }
+
+  - id: gamble-left
+    ending: gamble
+    lower: left
+    salutation: { en: "To the one who took the chance,", cy: "At yr un a fentrodd,", cy_review: true }
+    body: { en: "I understand why you did it. Jobs now are easier to promise than skills later. But my children learned a lesson from it. Do not lean on one firm. They are building something smaller and slower, and it is theirs.", cy: "Rwy'n deall pam y gwnaethoch hynny. Mae'n haws addo swyddi nawr na sgiliau wedyn. Ond dysgodd fy mhlant wers. Peidiwch â dibynnu ar un cwmni. Maen nhw'n adeiladu rhywbeth llai ac arafach, a nhw sydd biau fe.", cy_review: true }
+    named: { en: "The big firm left {town} in {year}. We remember the date.", cy: "Gadawodd y cwmni mawr {town} yn {year}. Rydyn ni'n cofio'r dyddiad.", cy_review: true }
+    signoff: { en: "A teacher in {town} (a made-up voice)", cy: "Athro yn {town} (llais dychmygol)", cy_review: true }
+
+  # Holding the line
+  - id: holding-line-life
+    ending: holding-line
+    lower: life
+    salutation: { en: "To whoever ran Wales from 2026,", cy: "At bwy bynnag oedd yn rhedeg Cymru o 2026,", cy_review: true }
+    body: { en: "Nobody will write a song about these years. Nothing big opened here. But the river stayed out of my kitchen. The bus still comes. In a hard time, that counts for more than people think.", cy: "Fydd neb yn ysgrifennu cân am y blynyddoedd hyn. Agorodd dim byd mawr yma. Ond arhosodd yr afon allan o fy nghegin. Mae'r bws yn dal i ddod. Mewn cyfnod caled, mae hynny'n cyfrif mwy nag y mae pobl yn ei feddwl.", cy_review: true }
+    named: { en: "{project} has kept {town} safe since {year}.", cy: "Mae {project} wedi cadw {town} yn ddiogel ers {year}.", cy_review: true }
+    signoff: { en: "A pensioner in {town} (a made-up voice)", cy: "Pensiynwr yn {town} (llais dychmygol)", cy_review: true }
+
+  - id: holding-line-left
+    ending: holding-line
+    lower: left
+    salutation: { en: "Dear you, whoever you were,", cy: "Annwyl chi, pwy bynnag oeddech chi,", cy_review: true }
+    body: { en: "You did not change the world. You kept it standing, which is harder than it sounds. Every storm, I watched the water and waited. It never came in. The next person can build on that.", cy: "Wnaethoch chi ddim newid y byd. Fe wnaethoch ei gadw ar ei draed, sy'n anoddach nag mae'n swnio. Gyda phob storm, roeddwn i'n gwylio'r dŵr ac yn aros. Ddaeth e byth i mewn. Gall y person nesaf adeiladu ar hynny.", cy_review: true }
+    named: { en: "We were glad of {project} in {town}, built in {year}.", cy: "Roedden ni'n falch o {project} yn {town}, wedi'i adeiladu yn {year}.", cy_review: true }
+    signoff: { en: "A shop worker in {town} (a made-up voice)", cy: "Gweithiwr siop yn {town} (llais dychmygol)", cy_review: true }

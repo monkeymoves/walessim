@@ -18,3 +18,8 @@ export function param(model: BoardModel, id: RuleId, name: string): number {
   if (!p) throw new BoardModelError(`Rule ${id} has no param ${name}`);
   return p.default;
 }
+
+/** A rule param if the card has it, else undefined. For cards and params a model may not carry yet. */
+export function optParam(model: BoardModel, id: RuleId, name: string): number | undefined {
+  return model.rules.find((r) => r.id === id)?.params[name]?.default;
+}

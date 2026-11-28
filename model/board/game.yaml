@@ -1,6 +1,8 @@
-# The board's calendar and structure (docs/design/v2-board.md sections 3, 6 and 11).
+# The board's calendar and structure (docs/design/v2-board.md sections 3, 6, 11 and 16.2).
 # Structure only: every balance number is a rule card param under model/board/rules/.
-# Election years are the real Senedd calendar. Twelve two-year turns, 2026 to 2050.
+# Election years are the real Senedd calendar. Time runs in steps of a quarter of a year:
+# step 0 is May 2026, the day after a Senedd election, and the game ends at step 96, May 2050.
+# An election is held on the first step of its year, so on steps 16, 32, 48, 64 and 80.
 region: { en: South East Wales, cy: De Ddwyrain Cymru, cy_review: true }
 # The ten councils in play, in display order: Bridgend, Vale of Glamorgan, Cardiff,
 # Rhondda Cynon Taf, Caerphilly, Blaenau Gwent, Torfaen, Monmouthshire, Newport, Merthyr Tydfil.
@@ -16,13 +18,41 @@ councils:
   - W06000022
   - W06000024
 first_year: 2026
-turn_years: 2
-turns: 12
 end_year: 2050
+years_per_step: 0.25
+# The build checks steps = (end_year - first_year) / years_per_step.
+steps: 96
+seasons: [summer, autumn, winter, spring]
 election_years: [2030, 2034, 2038, 2042, 2046]
-# A keystone takes three turns (six years), so it must start by 2042 to stand in 2050.
-keystone_last_start_year: 2042
-visits_per_turn: 1
-report_lines_max: 3
+# futures.yaml tracks keep 12 values, one for each two years; at most one outside event lands in each.
+track_years: 2
+# A keystone takes six years: started by May 2044 it opens in the last step, by May 2050 (16.2.4).
+keystone_last_start_year: 2044
+# A visit offered by a build or an event lapses after this, and one visit is made at most this often.
+visit_open_years: 1
+term_report_lines_max: 3
+year_lines_max: 2
+# Clock speeds for the screens. Never part of the state or the run code.
+speeds:
+  - { id: steady, ms_per_step: 3000 }
+  - { id: brisk, ms_per_step: 1500 }
+  - { id: fast, ms_per_step: 750 }
+default_speed: steady
+# What pauses the clock (section 16.2.5). Hard stops cannot be switched off; the rest are the
+# player's settings, on or off by default. The engine reports them all and never reads the settings.
+stops:
+  respond: { hard: true }
+  election: { hard: true }
+  ended: { hard: true }
+  warning: { on: true }
+  keystone: { on: true }
+  tier_open: { on: true }
+  visit: { on: true }
+  tipping: { on: true }
+  chapter: { on: true }
+  deal_due: { on: true }
+  purse_full: { on: true }
+  finished: { on: false }
+  year: { on: false }
 # Saves are set and removed key by key under this prefix, never cleared wholesale.
-save_key: etifeddiaeth.board.v1.
+save_key: etifeddiaeth.board.v2.

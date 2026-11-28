@@ -79,7 +79,8 @@ export function seedCouncil(model: BoardModel, def: CouncilDef): CouncilState {
     backing: param(model, RULE_IDS.backingStart, "start"),
     moods: {},
     risks: seedRisks(model, def),
-    lastReachedTurn: null,
+    lastReachedStep: null,
+    momentum: "steady",
   };
 }
 

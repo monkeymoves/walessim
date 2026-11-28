@@ -1,20 +1,20 @@
 import { describe, expect, it } from "vitest";
 import { boardFixture, FIXTURE_COUNCILS } from "./fixture";
-import { handState, nextTurn, standing } from "./hand-state";
+import { handState, nextStep, standing } from "./hand-state";
 import { endHolds } from "./end-conditions";
 import { councilMean } from "./score";
-import { ending, evidenceLine, mostChanged, nearestNotBuilt, pickEnding } from "./endings";
+import { ending, evidenceLine, ghostFrame, mostChanged, nearestNotBuilt, pickEnding } from "./endings";
 import type { BoardModel, BoardState } from "./types";
 import { MEASURE_IDS } from "./types";
 
 const { merthyr, rct, cardiff } = FIXTURE_COUNCILS;
 const model: BoardModel = boardFixture();
 
-/** A 2050 board: 2026 seeds, then `shape` changes the board, then twelve turns pass. */
+/** A 2050 board: 2026 seeds, then `shape` changes the board, then 96 steps pass. */
 function at2050(shape: (s: BoardState) => void): BoardState {
   const s = handState(model, { start: "warm-homes" });
   shape(s);
-  while (s.turn < model.game.turns) nextTurn(model, s);
+  while (s.step < model.game.steps) nextStep(model, s);
   s.phase = "ended";
   return s;
 }
@@ -63,12 +63,12 @@ describe("the end screen", () => {
     const e = ending(model, s);
     expect(e.id).toBe("warm-country");
     expect(e.evidence).toHaveLength(3);
-    expect(e.evidence.every((l) => l.say.key === "ending.evidence" && !!l.say.vars?.line)).toBe(true);
+    expect(e.evidence.every((l) => l.say.key === "board.ending.evidence" && !!l.say.vars?.line)).toBe(true);
     expect(e.mostChanged[0]).toBe(merthyr);
     expect(e.letter.from).toBe(merthyr);
     expect(e.letter.letter).toBe("letter-warm-country");
     expect(e.letter.slots.council).toEqual(model.councils.find((c) => c.code === merthyr)!.name);
-    expect(e.scores.result).toBe(Math.min(e.scores.life, e.scores.left));
+    expect(e.scores.result).toBe(e.scores.left);
     expect(e.autopilot.start).toBeCloseTo(e.scores.start, 6);
   });
 
@@ -84,5 +84,48 @@ describe("the end screen", () => {
     expect(other.id).not.toBe(built.id);
     expect(other.when.length).toBeGreaterThan(0);
     expect(mostChanged(model, s)).toHaveLength(3);
+  });
+});
+
+describe("the four endings added in 16.5.3", () => {
+  const extra = (id: string, priority: number, when: BoardModel["endings"][number]["when"]) => ({ ...model.endings[0]!, id, priority, when });
+  const twelve: BoardModel = {
+    ...model,
+    endings: [
+      ...model.endings.map((e) => ({ ...e, priority: e.priority + 10 })),
+      extra("comeback", 1, [{ kind: "elections_lost", at_least: 1 }, { kind: "deals_kept", at_least: 1 }, { kind: "lowest_three", vs_2026: "higher" }]),
+      extra("long-game", 2, [{ kind: "keystone_finished_after", year: 2044, at_least: 2 }]),
+      extra("gamble", 3, [{ kind: "event_landed", event: "employer-leaves" }]),
+      extra("holding-line", 4, [{ kind: "keystones", at_most: 0 }, { kind: "events_prepared", share: 1 }, { kind: "no_council_lower" }]),
+    ],
+  };
+  const pick = (shape: (s: BoardState) => void) => pickEnding(twelve, at2050(shape)).id;
+
+  it("a recovery after a lost election and a kept deal is the comeback", () => {
+    expect(pick((s) => {
+      s.election.records.push({ year: 2030, step: 16, result: "lost", backers: [], peopleShare: 0.2 });
+      s.deals.push({ council: merthyr, measure: "homes", madeStep: 16, dueStep: 32, kept: true });
+      lift(s, 0.3);
+    })).toBe("comeback");
+  });
+
+  it("two keystones opened after 2044 are the long game", () => {
+    expect(pick((s) => s.projects.push({ ...standing("rivers-room", { council: rct }), readyStep: 80 }, { ...standing("cluster-roots", { council: cardiff }), readyStep: 84 }))).toBe("long-game");
+  });
+
+  it("a big employer that left is the gamble; every storm met and nothing lower is holding the line", () => {
+    expect(pick((s) => s.events.push({ event: "employer-leaves", step: 50, councils: [rct], severity: 0 }))).toBe("gamble");
+    expect(pick((s) => { s.events.push({ event: "storm-taff", step: 50, councils: [merthyr], severity: 1.5, prepared: true }); lift(s, 0.1); })).toBe("holding-line");
+  });
+});
+
+describe("the ghost map of the Wales you did not build", () => {
+  it("plays the same game number with the branch bot of that ending's keystone, and none for an ending with no keystone", () => {
+    const s = at2050(() => undefined);
+    const workshop = model.endings.find((e) => e.id === "workshop")!;
+    const frame = ghostFrame(model, s, workshop);
+    expect(frame?.step).toBe(model.game.steps);
+    const plain = model.endings.find((e) => !e.when.some((c) => c.kind === "keystone"))!;
+    expect(ghostFrame(model, s, plain)).toBeNull();
   });
 });

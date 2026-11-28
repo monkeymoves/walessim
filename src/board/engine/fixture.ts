@@ -8,13 +8,22 @@
  * Illustrative: link shares, project and event numbers, futures. `meta.fixture` is true so no
  * screen ever presents it as the real board. The real model is public/board-model.json.
  *
- * `boardFixture()` returns a fresh copy each call, so a test cannot leak changes into another.
+ * `boardFixture()` returns a fresh copy each call, so a test cannot leak changes into another. It
+ * runs on the clock at a quarter year step, keystones start by 2042 as in phase 1, and no phase 2
+ * rule card (R1 to R4, E2, P6) is in it, so it behaves as phase 1 did (ADR 0007).
  */
 import { CARDIFF, MERTHYR, RCT, fixtureBands, fixtureCouncils, fixtureIndicators, fixtureLinks, fixtureMeasures, fixtureSources, fixtureStubs, tx } from "./fixture-geo";
 import { fixtureRules } from "./fixture-rules";
 import { fixtureBranches, fixtureGroups, fixtureLaws, fixturePairs, fixturePlaces, fixtureProjects } from "./fixture-content";
 import { fixtureEndings, fixtureEvents, fixtureFutures, fixtureLetters, fixtureStarts } from "./fixture-story";
-import type { BoardModel, BoardRule, BranchDef } from "./types";
+import type { BoardGame, BoardModel, BoardRule, BranchDef } from "./types";
+
+/** Which stops are hard and which are on by default (docs/design/v2-board.md 16.2.5), as game.yaml has them. */
+export const FIXTURE_STOPS: BoardGame["stops"] = {
+  respond: { hard: true }, election: { hard: true }, ended: { hard: true },
+  warning: { on: true }, keystone: { on: true }, tier_open: { on: true }, visit: { on: true }, tipping: { on: true },
+  chapter: { on: true }, deal_due: { on: true }, purse_full: { on: true }, finished: { on: false }, year: { on: false },
+};
 
 /** The fixture's councils, upstream first. */
 export const FIXTURE_COUNCILS = { merthyr: MERTHYR, rct: RCT, cardiff: CARDIFF } as const;
@@ -47,14 +56,18 @@ export function gateRules(branches: BranchDef[]): BoardRule[] {
 export function boardFixture(): BoardModel {
   const branches: BranchDef[] = structuredClone(fixtureBranches);
   const model: BoardModel = {
-    meta: { version: 1, generated: "2026-11-27", hash: "fixture-1", cy_review: [], to_check: ["links: illustrative shares"], fixture: true },
+    meta: { version: 2, generated: "2026-11-28", hash: "fixture-2", cy_review: [], to_check: ["links: illustrative shares"], fixture: true },
     game: {
       region: tx("South East Wales (three council fixture)", "De Ddwyrain Cymru (gosodiad tri chyngor)"),
       councils: [MERTHYR, RCT, CARDIFF],
-      first_year: 2026, turn_years: 2, turns: 12, end_year: 2050,
-      election_years: [2030, 2034, 2038, 2042, 2046],
-      keystone_last_start_year: 2042, visits_per_turn: 1, report_lines_max: 3,
-      save_key: "etifeddiaeth.board.v1.",
+      first_year: 2026, end_year: 2050, years_per_step: 0.25, steps: 96,
+      seasons: ["summer", "autumn", "winter", "spring"],
+      election_years: [2030, 2034, 2038, 2042, 2046], track_years: 2,
+      keystone_last_start_year: 2042, visit_open_years: 1, term_report_lines_max: 3, year_lines_max: 2,
+      speeds: [{ id: "steady", ms_per_step: 3000 }, { id: "brisk", ms_per_step: 1500 }, { id: "fast", ms_per_step: 750 }],
+      default_speed: "steady",
+      stops: FIXTURE_STOPS,
+      save_key: "etifeddiaeth.board.v2.",
     },
     sources: fixtureSources,
     indicators: fixtureIndicators,
@@ -75,6 +88,7 @@ export function boardFixture(): BoardModel {
     endings: fixtureEndings,
     letters: fixtureLetters,
     places: fixturePlaces,
+    chapters: [],
   };
   return structuredClone(model);
 }

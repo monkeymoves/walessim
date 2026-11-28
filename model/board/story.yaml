@@ -1,0 +1,141 @@
+# The chapters the game writes (docs/design/v2-board.md section 16.5.1). Owner: package 10.
+#
+# A game has six terms: 2026 to 2030, and so on to 2046 to 2050. When a term closes, the game
+# names it. The first chapter by `priority` (lowest number first) whose `when` conditions all hold
+# for that term names it. A name is not used twice in one game unless nothing else fits.
+# "Holding on" has no conditions: it is the fallback.
+#
+# Honesty: the thresholds below (1 in 100 young adults, 0.3 points of gap, four projects) and the
+# priorities are GAME RULES (tune with the bots: "Stories differ" in section 16.6 points here).
+# Chapters are the game's own telling of a run, from what happened on the board. Not a forecast.
+# Slots the engine fills: {river}, {council}, {town}, {project}.
+# Every Welsh string is a fresh draft for a fluent reviewer (cy_review: true).
+note: "Thresholds and priorities are game rules (tune). The game's own telling of your run, from what happened on the board."
+chapters:
+  # A keystone finished this term. The chapter takes the keystone's name.
+  - id: keystone-opened
+    priority: 1
+    name: { en: "{project}", cy: "{project}", cy_review: true }
+    line: { en: "{project} opened in {town}. After that, the region worked in a new way.", cy: "Agorodd {project} yn {town}. Ar ôl hynny, roedd y rhanbarth yn gweithio mewn ffordd newydd.", cy_review: true }
+    when:
+      - { kind: keystone, phase: finished }
+
+  - id: the-turn
+    priority: 3
+    name: { en: "The turn", cy: "Y troad", cy_review: true }
+    line: { en: "So many places were on the rise at once that the whole region turned.", cy: "Roedd cymaint o lefydd yn codi ar yr un pryd nes i'r rhanbarth cyfan droi.", cy_review: true }
+    when:
+      - { kind: region_turn }
+
+  - id: river-rose
+    priority: 4
+    name: { en: "The winter the {river} rose", cy: "Y gaeaf y cododd {river}", cy_review: true }
+    line: { en: "The {river} flooded {town} before anything was ready to hold it back.", cy: "Gorlifodd {river} {town} cyn bod dim yn barod i'w ddal yn ôl.", cy_review: true }
+    when:
+      - { kind: event_landed, track: weather, severity_at_least: 2, prepared: false }
+
+  - id: hung-years
+    priority: 5
+    name: { en: "The hung years", cy: "Y blynyddoedd crog", cy_review: true }
+    line: { en: "You lost the election and had to govern with others.", cy: "Collwyd yr etholiad a bu'n rhaid i chi lywodraethu gydag eraill.", cy_review: true }
+    when:
+      - { kind: election, result: lost }
+
+  - id: deal-kept
+    priority: 2
+    name: { en: "The deal with {council}", cy: "Y fargen gyda {council}", cy_review: true }
+    line: { en: "You made a deal with {council} and kept it. People there noticed.", cy: "Gwnaethoch fargen gyda {council} a'i chadw. Sylwodd pobl yno.", cy_review: true }
+    when:
+      - { kind: deal, kept: true }
+
+  - id: town-turns
+    priority: 7
+    name: { en: "{town} turns a corner", cy: "{town} yn troi cornel", cy_review: true }
+    line: { en: "Life in {town} kept getting better, and it began to pull people in.", cy: "Roedd bywyd yn {town} yn dal i wella, a dechreuodd dynnu pobl i mewn.", cy_review: true }
+    when:
+      - { kind: tipped, to: rising, at_least: 1 }
+
+  - id: promise-kept
+    priority: 8
+    name: { en: "A promise kept", cy: "Addewid wedi'i chadw", cy_review: true }
+    line: { en: "You said what you would do, and you did it.", cy: "Dywedoch beth fyddech chi'n ei wneud, ac fe wnaethoch chi hynny.", cy_review: true }
+    when:
+      - { kind: promise, kept: true }
+
+  - id: work-went
+    priority: 9
+    name: { en: "When the work went", cy: "Pan aeth y gwaith", cy_review: true }
+    line: { en: "Hard times hit the firms, and jobs were lost in {town}.", cy: "Tarodd amser caled y cwmnïau, a chollwyd swyddi yn {town}.", cy_review: true }
+    when:
+      - { kind: event_landed, track: economy, prepared: false }
+
+  - id: leaving-years
+    priority: 10
+    name: { en: "The leaving years", cy: "Y blynyddoedd gadael", cy_review: true }
+    line: { en: "Young people left the valleys for work and homes somewhere else.", cy: "Gadawodd pobl ifanc y cymoedd am waith a chartrefi yn rhywle arall.", cy_review: true }
+    when:
+      - { kind: young_adults, flag: valley, change: down, by: 1, councils_at_least: 3 }
+
+  - id: coming-home
+    priority: 11
+    name: { en: "Coming home", cy: "Dod adref", cy_review: true }
+    line: { en: "Young people came back to the valleys, and some stayed to raise a family.", cy: "Daeth pobl ifanc yn ôl i'r cymoedd, ac arhosodd rhai i fagu teulu.", cy_review: true }
+    when:
+      - { kind: young_adults, flag: valley, change: up, by: 0.5, councils_at_least: 2 }
+
+  - id: big-build
+    priority: 12
+    name: { en: "The big build", cy: "Yr adeiladu mawr", cy_review: true }
+    line: { en: "Work started on {project}. It would take years to finish.", cy: "Dechreuodd y gwaith ar {project}. Byddai'n cymryd blynyddoedd i'w orffen.", cy_review: true }
+    when:
+      - { kind: keystone, phase: started }
+
+  - id: second-floor
+    priority: 13
+    name: { en: "The second floor", cy: "Yr ail lawr", cy_review: true }
+    line: { en: "The first projects were working, so bigger ones could start.", cy: "Roedd y prosiectau cyntaf yn gweithio, felly gallai rhai mwy ddechrau.", cy_review: true }
+    when:
+      - { kind: tier_opened, tier: 2 }
+
+  - id: rain-held
+    priority: 14
+    name: { en: "Hard rain, held", cy: "Glaw trwm, wedi'i ddal", cy_review: true }
+    line: { en: "The {river} rose, but what you had built held it back.", cy: "Cododd {river}, ond daliodd yr hyn a adeiladwyd gennych y dŵr yn ôl.", cy_review: true }
+    when:
+      - { kind: event_landed, track: weather, prepared: true }
+
+  - id: closing-gap
+    priority: 6
+    name: { en: "Closing the gap", cy: "Cau'r bwlch", cy_review: true }
+    line: { en: "The places furthest behind began to catch up.", cy: "Dechreuodd y llefydd pellaf ar ôl ddal i fyny.", cy_review: true }
+    when:
+      - { kind: gap, change: closed, by: 0.3 }
+
+  - id: two-speeds
+    priority: 15
+    name: { en: "Two speeds", cy: "Dau gyflymder", cy_review: true }
+    line: { en: "Some places pulled ahead while others fell further behind.", cy: "Aeth rhai llefydd ar y blaen tra syrthiodd eraill ymhellach ar ôl.", cy_review: true }
+    when:
+      - { kind: gap, change: wider, by: 0.3 }
+
+  - id: laying-ground
+    priority: 16
+    name: { en: "Laying the ground", cy: "Paratoi'r tir", cy_review: true }
+    line: { en: "Small projects opened across the region, ready for what came next.", cy: "Agorodd prosiectau bach ar draws y rhanbarth, yn barod am yr hyn a ddaeth nesaf.", cy_review: true }
+    when:
+      - { kind: finished, at_least: 4 }
+
+  - id: quiet-years
+    priority: 17
+    name: { en: "The quiet years", cy: "Y blynyddoedd tawel", cy_review: true }
+    line: { en: "Not much happened, for good or ill.", cy: "Ni ddigwyddodd llawer, er gwell nac er gwaeth.", cy_review: true }
+    when:
+      - { kind: event_landed, at_most: 0 }
+      - { kind: finished, at_most: 4 }
+
+  # The fallback: nothing else fits.
+  - id: holding-on
+    priority: 99
+    name: { en: "Holding on", cy: "Dal ati", cy_review: true }
+    line: { en: "Nothing big changed. You kept things going.", cy: "Ni newidiodd dim byd mawr. Fe wnaethoch gadw pethau i fynd.", cy_review: true }
+    when: []

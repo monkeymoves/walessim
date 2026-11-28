@@ -3,7 +3,7 @@ import { BoardRunError } from "./errors";
 import { boardFixture } from "./fixture";
 import { decodeRun, encodeRun, fromBase64Url, toBase64Url } from "./runcode";
 import { playGame } from "./test-play";
-import { newBoard } from "./turn";
+import { act, advance, newBoard } from "./clock";
 
 describe("run codes", () => {
   const model = boardFixture();
@@ -22,18 +22,30 @@ describe("run codes", () => {
     expect(decodeRun(model, encodeRun(newBoard(model, "42", "warm-homes"))).gameNumber).toBe("42");
   });
 
+  it("say plainly that a phase 1 code is from an older version", () => {
+    expect(() => decodeRun(model, `B1${toBase64Url("[1,2,3]")}`)).toThrow("This code is from an older version of the game.");
+  });
+
+  it("keep the step reached, so a paused game comes back where it was", () => {
+    let s = newBoard(model, 3, "warm-homes");
+    s = act(model, s, { kind: "build", project: "warm-terraces", site: { council: "W06000024" } });
+    const out = advance(model, s, { maxSteps: 7 }).state;
+    expect(decodeRun(model, encodeRun(out)).step).toBe(out.step);
+    expect(encodeRun(out)).toMatch(/^b2\./);
+  });
+
   it("refuse codes they cannot read or that were made with another model", () => {
     const code = encodeRun(newBoard(model, 1, "warm-homes"));
     expect(() => decodeRun(model, "hello")).toThrow(BoardRunError);
-    expect(() => decodeRun(model, "B1!!!")).toThrow(BoardRunError);
-    expect(() => decodeRun(model, `B1${toBase64Url("[1,2,3]")}`)).toThrow(BoardRunError);
+    expect(() => decodeRun(model, "b2.!!!")).toThrow(BoardRunError);
+    expect(() => decodeRun(model, `b2.${toBase64Url("[2,2,3]")}`)).toThrow(BoardRunError);
     const other = boardFixture();
     other.meta.hash = "another-model";
     expect(() => decodeRun(other, code)).toThrow(/different version/);
   });
 
-  it("refuse a code whose steps do not replay", () => {
-    const bad = `B1${toBase64Url(JSON.stringify([1, model.meta.hash.slice(0, 8), 1, "warm-homes", ["health-hub", "W06000024"], "b0:c1"]))}`;
+  it("refuse a code whose log does not replay", () => {
+    const bad = `b2.${toBase64Url(JSON.stringify([2, model.meta.hash.slice(0, 8), 1, "warm-homes", 0, ["health-hub", "W06000024"], "0@b0:c1"]))}`;
     expect(() => decodeRun(model, bad)).toThrow(/does not replay/);
   });
 });

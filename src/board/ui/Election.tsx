@@ -1,47 +1,40 @@
 /**
- * The election (v2-board.md section 6): the map coloured council by council by who backs you,
- * the count, the result and what it means for the next four years. No parties, no polls.
+ * The count at an election (v2-board.md section 6): how many councils back you, how many people
+ * they hold, the result, and what it means for the next four years. No parties, no polls. Shown
+ * inside the term report.
  */
-import { createMemo, For, Show, type JSX } from "solid-js";
+import { For, type JSX } from "solid-js";
 import { formatNum, t } from "../../i18n";
-import { StampButton } from "../../ui/parts";
 import type { ElectionView } from "../engine/api";
-import * as eng from "./engine";
 import { useGame } from "./game";
+import { ruleParamOf } from "./rules";
 import { councilName, say } from "./words";
 
-export function Election(): JSX.Element {
+export function Election(props: { view: ElectionView }): JSX.Element {
   const game = useGame();
   const model = game.model;
-  const view = createMemo<ElectionView | null>(() => game.report()?.election ?? (game.state() ? eng.election(model, game.state()!) : null));
+  const v = () => props.view;
   return (
-    <Show when={view()}>
-      {(v) => (
-        <div class="bw-election sheet-held" role="dialog" aria-labelledby="bw-election-title" data-testid="bw-election">
-          <p class="label">{t("boardui.election.year", { year: v().year })}</p>
-          <h2 class="t-1" id="bw-election-title">{t(`boardui.election.result.${v().result}`)}</h2>
-          <p class="bw-election-count">
-            <span class="figure-big">{v().backers}</span>{" "}
-            <span>{t("boardui.election.count", { of: v().councilCount, people: formatNum(v().peopleShare * 100, { maximumFractionDigits: 0 }) })}</span>
-          </p>
-          <ul class="bw-election-list">
-            <For each={[...v().councils].sort((a, b) => b.backing - a.backing)}>
-              {(c) => (
-                <li classList={{ yes: c.backs }}>
-                  <span>{councilName(model, c.code)}</span>
-                  <span class="small data">{c.backs ? t("boardui.region.backs") : t("boardui.region.backsNot")}</span>
-                </li>
-              )}
-            </For>
-          </ul>
-          <For each={v().says}>{(s) => <p class="story-small">{say(s)}</p>}</For>
-          <p class="small">{t("boardui.election.rule", { n: formatNum(model.rules.find((r) => r.id === "P4")?.params["backs_at"]?.default ?? 5) })}</p>
-          <p class="small bw-honest">{t("boardui.election.honest")}</p>
-          <StampButton onClick={() => game.nextScreen()} data-testid="bw-election-next">
-            {game.report()?.ended ? t("boardui.report.toEnd") : t("boardui.election.next")}
-          </StampButton>
-        </div>
-      )}
-    </Show>
+    <section class="bw-election" aria-labelledby="bw-election-title" data-testid="bw-election">
+      <h3 class="t-3" id="bw-election-title">
+        {t("boardui.election.year", { year: v().year })}: {t(`boardui.election.result.${v().result}`)}
+      </h3>
+      <p class="bw-election-count">
+        <span class="figure-big">{v().backers}</span>{" "}
+        <span>{t("boardui.election.count", { of: v().councilCount, people: formatNum(v().peopleShare * 100, { maximumFractionDigits: 0 }) })}</span>
+      </p>
+      <ul class="bw-election-list" aria-label={t("boardui.election.listAria")}>
+        <For each={[...v().councils].sort((a, b) => b.backing - a.backing)}>
+          {(c) => (
+            <li classList={{ yes: c.backs }}>
+              <span>{councilName(model, c.code)}</span>
+              <span class="small data">{c.backs ? t("boardui.region.backs") : t("boardui.region.backsNot")}</span>
+            </li>
+          )}
+        </For>
+      </ul>
+      <For each={v().says.map(say).filter(Boolean)}>{(line) => <p class="story-small">{line}</p>}</For>
+      <p class="small">{t("boardui.election.rule", { n: formatNum(ruleParamOf(model, "P4", "backs_at", 5)) })} <span class="bw-honest">{t("boardui.election.honest")}</span></p>
+    </section>
   );
 }

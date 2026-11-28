@@ -2,9 +2,10 @@
  * `Condition` tests evaluated on the board for one council (types-content.ts). Used by event
  * triggers and sizes, place grades, group cares and `requires` cards. Pure reads of model and state.
  *
- * Written by package 3 for events; package 2 may use it for project needs and tier gates so the
- * two never disagree (src/board/NEEDS.md).
+ * Shared by every package (owner: package 7), so needs, gates, triggers and grades never disagree.
  */
+import { frameAtYear } from "./frame";
+import { blockOf } from "./time";
 import type {
   BoardModel, BoardState, Condition, CouncilCode, LinkKind, MeasureId, ProjectDef, ProjectState,
 } from "./types";
@@ -31,22 +32,29 @@ export function siteCouncils(model: BoardModel, p: Pick<ProjectState, "site">): 
   return [link.from, link.to].filter((c) => inPlay.has(c));
 }
 
+/** The council a project is named by: its own, or the first end of its link that is in play. */
+export const siteCouncil = (model: BoardModel, p: Pick<ProjectState, "site">): CouncilCode | undefined => siteCouncils(model, p)[0];
+
 export function projectDef(model: BoardModel, id: string): ProjectDef | undefined {
   return model.projects.find((p) => p.id === id);
 }
 
-/** The board `over` turns ago, from the history frames, or the 2026 board if the game is younger. */
-export function pastMeasure(state: BoardState, code: CouncilCode, measure: MeasureId, over: number): number {
-  const idx = Math.max(0, Math.min(state.history.length - 1, state.turn - over));
-  const frame = state.history[idx];
+/** A measure in the yearly frame `overYears` before the current step's year, or the 2026 board if the game is younger. */
+export function pastMeasure(state: BoardState, code: CouncilCode, measure: MeasureId, overYears: number): number {
+  const frame = frameAtYear(state, state.year - overYears);
   return frame?.councils[code]?.measures[measure] ?? state.councils[code]?.measures[measure] ?? 0;
 }
 
-/** The future's pressure on a track this turn, 0 to 1. */
-export function trackValue(model: BoardModel, state: BoardState, track: "weather" | "economy" | "prices", turn = state.turn): number {
+/** The future's pressure on a track in the two year block of `step` (default: now), 0 to 1. */
+export function trackValue(model: BoardModel, state: BoardState, track: "weather" | "economy" | "prices", step = state.step): number {
   const future = model.futures.find((f) => f.id === state.future);
   const values = future?.tracks[track] ?? [];
-  return values[Math.min(Math.max(0, turn), values.length - 1)] ?? 0;
+  return values[Math.min(Math.max(0, blockOf(model, step)), values.length - 1)] ?? 0;
+}
+
+/** Keystones working now, by project id. */
+export function keystonesWorking(model: BoardModel, state: BoardState): string[] {
+  return state.projects.filter((p) => p.status === "working" && projectDef(model, p.project)?.keystone).map((p) => p.project);
 }
 
 type ProjectTest = Extract<Condition, { kind: "project" }>;
@@ -96,7 +104,7 @@ function holdsRaw(model: BoardModel, state: BoardState, code: CouncilCode, c: Co
       const now = council?.measures[c.measure] ?? 0;
       if (c.op === "below") return now < (c.value ?? 0);
       if (c.op === "at_least") return now >= (c.value ?? 0);
-      const past = pastMeasure(state, code, c.measure, c.over_turns ?? 2);
+      const past = pastMeasure(state, code, c.measure, c.over_years ?? 4);
       return c.op === "rising" ? now > past : now < past;
     }
     case "share": {
@@ -107,6 +115,11 @@ function holdsRaw(model: BoardModel, state: BoardState, code: CouncilCode, c: Co
     case "track": return trackValue(model, state, c.track) >= c.at_least;
     case "year": return (c.from === undefined || state.year >= c.from) && (c.to === undefined || state.year <= c.to);
     case "law": return state.laws.includes(c.law);
+    case "momentum": return (council?.momentum ?? "steady") === c.is;
+    case "keystone": {
+      const working = keystonesWorking(model, state);
+      return c.project ? working.includes(c.project) : working.length > 0;
+    }
   }
 }
 

@@ -19,6 +19,8 @@ export const BOARD_FILES: Record<string, Shape> = {
   "rules/spread.yaml": list("rules", shapes.rule),
   "rules/budget.yaml": list("rules", shapes.rule),
   "rules/people.yaml": list("rules", shapes.rule),
+  /** Phase 2 growth cards R1 to R4 (package 8). Optional until written. */
+  "rules/growth.yaml": list("rules", shapes.rule),
   "projects.yaml": list("projects", shapes.project),
   "tree.yaml": list("branches", shapes.branch),
   "pairs.yaml": list("pairs", shapes.pair),
@@ -29,6 +31,8 @@ export const BOARD_FILES: Record<string, Shape> = {
   "starts.yaml": list("starts", shapes.start),
   "endings.yaml": list("endings", shapes.ending),
   "letters.yaml": list("letters", shapes.letter),
+  /** Chapters (16.5.1, package 10). Optional until written: then every term is "Holding on". */
+  "story.yaml": list("chapters", shapes.chapter),
   /** model/data/board-commute.json, written by pipeline/board/commute.py. */
   "data/board-commute.json": list("links", shapes.link),
 };

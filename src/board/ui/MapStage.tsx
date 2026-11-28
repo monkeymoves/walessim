@@ -1,7 +1,9 @@
 /**
- * The map, large and central (v2-board.md section 3): coloured by one measure at a time, every
- * project drawn on it, the links visible as lines, the warned event marked. Hovering a project in
- * the build menu lights the links its effect travels; two years passing sends beads along them.
+ * The map, large and central (v2-board.md section 3, 16.2.3): coloured by one measure at a time,
+ * every working project stitched on it, builds under way as filling rings, councils on the rise
+ * or slipping marked, the links as lines. While the clock runs, what travelled along a link in
+ * the last step runs along it as a bead; paused, nothing moves. Hovering a project in the build
+ * menu lights the links its effect would travel.
  */
 import { createEffect, createSignal, on, onCleanup, Show, type JSX } from "solid-js";
 import { formatNum, lang, t } from "../../i18n";
@@ -11,16 +13,17 @@ import { MapView } from "../../ui/atlas/MapView";
 import "../../ui/atlas/atlas.css";
 import { TipSlip } from "../../ui/parts";
 import { geo } from "../../ui/shell/model";
-import type { BoardModel, BoardState, ProjectState } from "../engine/api";
+import type { BoardModel, ProjectState } from "../engine/api";
 import { ColourKey } from "./ColourKey";
 import { useGame } from "./game";
+import { MapMarks } from "./MapMarks";
 import { backsAtOf, lensFor, linksFor } from "./mapLinks";
-import { councilName, measureName, outOf10 } from "./words";
+import { measureName, outOf10 } from "./words";
 
-/** Where a project sits on the map: its council, or the middle of its link. */
+/** Where a working project sits on the map: its council, or the middle of its link. */
 function stitchOf(model: BoardModel, p: Pick<ProjectState, "id" | "project" | "site" | "status">): Stitch | null {
   const def = model.projects.find((d) => d.id === p.project);
-  const kind = p.status === "building" ? "generic" : def?.tags.includes("tips") ? "made-safe" : def?.branch && def.tags.includes("nature") ? "planted" : "built";
+  const kind = def?.tags.includes("tips") ? "made-safe" : def?.tags.includes("nature") ? "planted" : "built";
   if (p.site.council !== undefined) return { id: p.id, at: { la: p.site.council }, kind };
   const l = model.links.find((x) => x.id === p.site.link);
   const a = model.councils.find((c) => c.code === l?.from), b = model.councils.find((c) => c.code === l?.to);
@@ -28,18 +31,27 @@ function stitchOf(model: BoardModel, p: Pick<ProjectState, "id" | "project" | "s
   return { id: p.id, at: { x: (a.centre[0] + b.centre[0]) / 2, y: (a.centre[1] + b.centre[1]) / 2 }, kind };
 }
 
+/** Councils one link away, for framing a selection. */
+function neighbours(model: BoardModel, code: string): string[] {
+  return [...new Set(model.links.filter((l) => l.from === code || l.to === code).map((l) => (l.from === code ? l.to : l.from)))].filter((c) => model.game.councils.includes(c));
+}
+
 export function MapStage(): JSX.Element {
   const game = useGame();
   const model = game.model;
-  let map: PaperMap | null = null;
+  const [map, setMap] = createSignal<PaperMap | null>(null);
   const [hover, setHover] = createSignal<HoverInfo | null>(null);
-  const [ready, setReady] = createSignal(false);
-  const [beads, setBeads] = createSignal<{ ids: string[]; t: number } | null>(null);
+  /** Bumped when the map's view changes (zoom, resize), so the marks follow it. */
+  const [view, setView] = createSignal(0);
+  const reduced = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let viewTimer = 0;
+  const bumpLater = (ms = 470) => { clearTimeout(viewTimer); viewTimer = window.setTimeout(() => setView((n) => n + 1), ms); };
+  onCleanup(() => clearTimeout(viewTimer));
+  const rightPad = () => (window.innerWidth <= 1360 ? 356 : 392);
 
   const onReady = (m: PaperMap) => {
-    map = m;
     m.setLayers({ peaks: false, sites: false });
-    m.setPadding({ left: 40, right: window.innerWidth <= 1360 ? 356 : 392, top: 4, bottom: 4 });
+    m.setPadding({ left: 40, right: rightPad(), top: 4, bottom: 4 });
     m.focusLas(model.game.councils);
     const offs = [
       m.on("hover", (_c, info) => setHover(info && model.game.councils.includes(info.code) ? info : null)),
@@ -48,70 +60,63 @@ export function MapStage(): JSX.Element {
         game.setSelected(code && model.game.councils.includes(code) ? code : null);
       }),
     ];
-    onCleanup(() => offs.forEach((f) => f()));
-    setReady(true);
+    const ro = new ResizeObserver(() => bumpLater(60));
+    ro.observe(m.root);
+    onCleanup(() => { offs.forEach((f) => f()); ro.disconnect(); });
+    setMap(m);
+    bumpLater(60);
   };
 
-  // the colouring, the highlight of the councils in play, and the selection
+  // the colouring and the highlight of the councils in play
   createEffect(() => {
-    const s = game.state();
-    if (!ready() || !map || !s) return;
-    const by = game.screen() === "election" ? "backing" : game.colourBy();
-    map.setLens(lensFor(model, s, by, backsAtOf(model)));
-    map.setHighlight(model.game.councils);
+    const s = game.state(), m = map();
+    if (!m || !s) return;
+    m.setLens(lensFor(model, s, game.colourBy(), backsAtOf(model)));
+    m.setHighlight(model.game.councils);
   });
-  createEffect(() => { if (ready() && map) map.setSelected(game.selected()); });
+  createEffect(() => map()?.setSelected(game.selected()));
   // keep the region clear of the build menu while it is open
-  createEffect(on(() => game.sheet() === "build", (open) => { if (ready() && map) map.setPadding({ left: open ? 470 : 40 }); }, { defer: true }));
+  createEffect(on(() => game.sheet() === "build", (open) => { map()?.setPadding({ left: open ? 470 : 40 }); bumpLater(); }, { defer: true }));
 
-  // projects as stitches; the warned event as a dashed circle
+  // working projects as stitches (builds under way are rings, in MapMarks); warned events as dashed circles
   createEffect(() => {
-    const s = game.state();
-    if (!ready() || !map || !s) return;
-    map.setStitches(s.projects.map((p) => stitchOf(model, p)).filter((x): x is Stitch => !!x));
+    const s = game.state(), m = map();
+    if (!m || !s) return;
+    m.setStitches(s.projects.filter((p) => p.status !== "building").map((p) => stitchOf(model, p)).filter((x): x is Stitch => !!x));
     const warn = game.forecast()?.warnings ?? [];
     const markers: Marker[] = warn.flatMap((w) => w.councils.slice(0, 1).flatMap((code) => {
       const c = model.councils.find((x) => x.code === code);
       return c ? [{ id: `warn:${w.event}`, x: c.centre[0], y: c.centre[1], kind: "warning", size: 1.4 }] : [];
     }));
-    map.setMarkers(markers);
+    m.setMarkers(markers);
   });
 
-  // links: at rest, dimmed away from the selection, lit by a preview, with beads while time passes
+  // links: at rest, dimmed away from the selection, lit by a preview; beads only while the clock runs
+  const pulsed = () => {
+    if (reduced || !game.clock.running()) return null;
+    const r = game.clock.last();
+    if (!r || !r.flows.length) return null;
+    return new Map(r.flows.map((f) => [f.link, f.from]));
+  };
   createEffect(() => {
-    const s = game.state();
-    if (!ready() || !map || !s) return;
+    const s = game.state(), m = map();
+    if (!m || !s) return;
     const lit = [...(game.preview()?.links ?? []), ...(game.litLink() ? [game.litLink()!] : [])];
-    const b = beads();
-    const links: MapLink[] = linksFor(model, s, game.selected(), lit).map((l) => (b && b.ids.includes(l.id) ? { ...l, pulse: b.t, state: "rest" } : l));
-    map.setLinks(links);
+    const beads = pulsed();
+    const p = beads ? game.clock.progress() : null;
+    const links: MapLink[] = linksFor(model, s, game.selected(), lit).map((l) => {
+      const from = beads?.get(l.id);
+      if (from === undefined || p === null) return l;
+      const def = model.links.find((x) => x.id === l.id);
+      return { ...l, state: l.state === "dim" ? "rest" : l.state, pulse: p, reverse: def?.from !== from };
+    });
+    m.setLinks(links);
   });
-
-  // two years pass: beads run along the links the effects travelled
-  createEffect(on(() => game.screen(), (sc) => {
-    if (sc !== "passing") { setBeads(null); return; }
-    const r = game.report();
-    const s = game.state();
-    if (!r || !s) return;
-    const ids = travelled(model, s, r.flows.map((f) => f.link), r.finished);
-    const reduced = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduced || !ids.length) return;
-    let raf = 0;
-    const t0 = performance.now(), D = 1300, WAVES = 2;
-    const step = (now: number) => {
-      const e = (now - t0) / D;
-      if (e >= WAVES) { setBeads(null); return; }
-      setBeads({ ids, t: e % 1 });
-      raf = requestAnimationFrame(step);
-    };
-    raf = requestAnimationFrame(step);
-    onCleanup(() => cancelAnimationFrame(raf));
-  }));
 
   // keep the selection in view: zoom to it, back out to the region when cleared
   createEffect(on(() => game.selected(), (code) => {
-    if (!ready() || !map) return;
-    map.focusLas(code ? [code, ...neighbours(model, code)] : model.game.councils);
+    map()?.focusLas(code ? [code, ...neighbours(model, code)] : model.game.councils);
+    bumpLater();
   }, { defer: true }));
 
   const hoverValue = () => {
@@ -121,33 +126,20 @@ export function MapStage(): JSX.Element {
     const c = s.councils[h.code];
     if (!c || by === "none" || by === "behind") return t("boardui.map.click");
     if (by === "backing") return t("boardui.map.backing", { n: formatNum(c.backing, { maximumFractionDigits: 1 }) });
-    return `${measureName(model, by)}: ${outOf10(c.measures[by], s.turn > 0)}`;
+    return `${measureName(model, by)}: ${outOf10(c.measures[by], s.step > 0)}`;
   };
 
   return (
     <div class="bw-mapstage">
-      <MapView geo={geo()!} ariaLabel={t("boardui.map.aria")} onReady={onReady} class="bw-map" />
+      <MapView geo={geo()!} ariaLabel={t("boardui.map.aria")} onReady={onReady} class="bw-map">
+        <MapMarks map={map} view={view} />
+      </MapView>
       <Show when={hover()}>
         <TipSlip heading={lang() === "cy" ? hover()!.cy : hover()!.en} class="maptip bw-maptip" style={{ left: `${hover()!.px + 14}px`, top: `${hover()!.py + 16}px` }}>
           {hoverValue()}
         </TipSlip>
       </Show>
       <ColourKey />
-      <p class="bw-status small" role="status">
-        {game.selected() ? t("boardui.map.statusSelected", { name: councilName(model, game.selected()) }) : t("boardui.map.status")}
-      </p>
     </div>
   );
-}
-
-/** Councils one link away, for framing a selection. */
-function neighbours(model: BoardModel, code: string): string[] {
-  return [...new Set(model.links.filter((l) => l.from === code || l.to === code).map((l) => (l.from === code ? l.to : l.from)))].filter((c) => model.game.councils.includes(c));
-}
-
-/** Links to animate: the engine's flows, plus any rail link a finished project sits on. Nothing else is
- * drawn as travelling: a bead means something really moved along that line this turn. */
-function travelled(model: BoardModel, s: BoardState, flowLinks: string[], finished: string[]): string[] {
-  const linkSites = s.projects.filter((p) => finished.includes(p.id) && p.site.link).map((p) => p.site.link!);
-  return [...new Set([...flowLinks, ...linkSites])].filter((id) => model.links.some((l) => l.id === id));
 }

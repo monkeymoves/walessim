@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { makeCtx } from "./ctx";
 import { boardFixture, FIXTURE_COUNCILS } from "./fixture";
 import { downstreamOf, echoes, spreadAlongLinks, upstreamCut, youngFollowWork } from "./spread";
-import { act, endTurn, newBoard } from "./turn";
+import { act, advance, newBoard } from "./clock";
 import type { BoardModel, BoardState, Cause } from "./types";
 
 const { merthyr, rct, cardiff } = FIXTURE_COUNCILS;
@@ -12,7 +12,7 @@ function board(model: BoardModel): BoardState {
   return newBoard(model, 1, "work-valleys");
 }
 
-/** Pretend new jobs of `delta` landed in Cardiff this turn, then run one link rule. */
+/** Pretend new jobs of `delta` landed in Cardiff in this step, then run one link rule. */
 function jobsInCardiff(model: BoardModel, state: BoardState, delta: number, rule: "S1" | "S2") {
   const ctx = makeCtx(model, state);
   ctx.change({ council: cardiff, quantity: "work", delta, rule: "project:big-employer", cause, jobs: true });
@@ -63,7 +63,7 @@ describe("S2 prices travel up the line", () => {
   it("is held back by homes built there (social homes block half)", () => {
     const model = boardFixture();
     const s = board(model);
-    s.projects.push({ id: `social-homes@${rct}`, project: "social-homes", site: { council: rct }, level: 1, status: "working", startedTurn: 0, readyTurn: 0 });
+    s.projects.push({ id: `social-homes@${rct}`, project: "social-homes", site: { council: rct }, level: 1, status: "working", startedStep: 0, readyStep: 0, roots: 1, joined: false });
     const before = s.councils[rct]!.measures.homes;
     jobsInCardiff(model, s, 1, "S2");
     expect(s.councils[rct]!.measures.homes - before).toBeCloseTo(-0.15 * 0.4 * 0.5, 3);
@@ -105,22 +105,28 @@ describe("S4 water runs downhill", () => {
     expect(downstreamOf(model, cardiff)).toEqual([]);
   });
 
-  it("cuts flood risk downstream a turn after the water is slowed upstream", () => {
+  it("cuts flood risk downstream two years after the water is slowed upstream", () => {
     const model = boardFixture();
     let s = newBoard(model, 3, "ready-weather");
     s = act(model, s, { kind: "build", project: "slow-the-water", site: { council: merthyr } });
-    s = endTurn(model, s).state;
+    const runTo = (step: number) => {
+      while (s.step < step) {
+        for (const p of s.pending) if (p.kind === "respond") s = act(model, s, { kind: "respond", event: p.event, response: "accept" });
+        s = advance(model, s, { maxSteps: step - s.step }).state;
+      }
+    };
+    runTo(15);
     expect(s.ledger.some((c) => c.rule === "S4")).toBe(false);
-    s = endTurn(model, s).state;
+    runTo(16);
     const cut = s.ledger.find((c) => c.rule === "S4" && c.council === rct)!;
-    expect(cut).toMatchObject({ turn: 1, quantity: "risk_flood", delta: -1, via: { link: "river:taff-merthyr-rct", from: merthyr } });
+    expect(cut).toMatchObject({ step: 15, year: 2029, quantity: "risk_flood", delta: -1, via: { link: "river:taff-merthyr-rct", from: merthyr } });
   });
 
   it("weakens a storm for each flood project in the way", () => {
     const model = boardFixture();
     const s = board(model);
     expect(upstreamCut(model, s, rct)).toBe(0);
-    s.projects.push({ id: `slow-the-water@${merthyr}`, project: "slow-the-water", site: { council: merthyr }, level: 1, status: "working", startedTurn: 0, readyTurn: 0 });
+    s.projects.push({ id: `slow-the-water@${merthyr}`, project: "slow-the-water", site: { council: merthyr }, level: 1, status: "working", startedStep: 0, readyStep: 0, roots: 1, joined: false });
     expect(upstreamCut(model, s, rct)).toBeCloseTo(0.25);
   });
 });

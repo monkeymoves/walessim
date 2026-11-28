@@ -3,7 +3,7 @@
  * three council fixture while the real model is not built (said on screen), then shows the start,
  * the board, or the end. The paper map's geography comes from the shell, loaded once for v1.
  */
-import { createEffect, createResource, ErrorBoundary, lazy, Match, Show, Switch, type Component, type JSX } from "solid-js";
+import { createEffect, createResource, ErrorBoundary, lazy, Match, Switch, type JSX } from "solid-js";
 import { t } from "../../i18n";
 import { PaperSheet, StampButton, TabButton } from "../../ui/parts";
 import { geo } from "../../ui/shell/model";
@@ -12,16 +12,14 @@ import { useNarrow } from "../../ui/shell/viewport";
 import { boardFixture, type BoardModel } from "../engine/api";
 import { loadBoardModel } from "../model";
 import { BoardScreen } from "./BoardScreen";
-import { FallbackEnd } from "./FallbackEnd";
 import { createGame, GameContext } from "./game";
 import { StartScreen } from "./StartScreen";
 import { nameIdsFrom } from "./words";
 import "./board.css";
+import "./clock.css";
 
-const endModules = import.meta.glob<{ default: Component }>("./end/index.tsx");
-const endLoader = endModules["./end/index.tsx"];
-/** Package 6's end screen (time-lapse, then and now, the letter), when it exists. */
-const PackageEnd = endLoader ? lazy(endLoader) : null;
+/** The end screen (time-lapse, chapters, then and now, the letter), loaded when a game ends. */
+const EndScreen = lazy(() => import("./end/index"));
 
 async function loadModel(): Promise<{ model: BoardModel; fixture: boolean }> {
   try {
@@ -72,9 +70,7 @@ function Game(props: { model: BoardModel; fixture: boolean }): JSX.Element {
             <StartScreen fixture={props.fixture} />
           </Match>
           <Match when={game.screen() === "end"}>
-            <Show when={PackageEnd} fallback={<FallbackEnd />}>
-              {(() => { const E = PackageEnd!; return <E />; })()}
-            </Show>
+            <EndScreen />
           </Match>
           <Match when={game.state()}>
             <BoardScreen fixture={props.fixture} />

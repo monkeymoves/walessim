@@ -1,8 +1,9 @@
 /**
  * `councilView`: one council as the council panel shows it. A pure read of model and state:
- * the moods, risks and measures it shows are written by the turn modules.
+ * the moods, risks and measures it shows are written by the clock's step modules.
  */
 import { BoardModelError } from "./errors";
+import { freshStartHere } from "./roots";
 import { param } from "./rules";
 import type {
   BoardModel, BoardState, CouncilCode, CouncilView, LinkDef, MeasureId, Mood, ProjectState,
@@ -39,16 +40,13 @@ export function councilView(model: BoardModel, state: BoardState, code: CouncilC
   if (!def || !now) throw new BoardModelError(`No council ${code} on this board`);
   const first = state.history[0]?.councils[code];
   const last = state.history[state.history.length - 1]?.councils[code];
-  const estimate = state.turn > 0;
+  const estimate = state.step > 0;
   const backsAt = param(model, RULE_IDS.election, "backs_at");
 
   const measureOf = (indicator: string): MeasureId | null => model.measures.find((m) => m.indicators.includes(indicator))?.id ?? null;
   const real = model.indicators
     .filter((i) => def.real[i.id] !== undefined)
     .map((i) => ({ indicator: i.id, name: i.name, value: def.real[i.id]!, unit: i.unit, year: i.year, source: i.source, measure: measureOf(i.id) }));
-
-  const lastElection = state.election.records[state.election.records.length - 1];
-  const weak = state.election.weakUntil !== null && state.turn <= state.election.weakUntil;
 
   const sorted = [...MEASURE_IDS].sort((a, b) => now.measures[a] - now.measures[b]);
   const pending = state.pending.find((p) => p.kind === "visit" && p.council === code);
@@ -89,7 +87,9 @@ export function councilView(model: BoardModel, state: BoardState, code: CouncilC
       })),
     projects: state.projects.filter((p) => projectTouches(model, p, code)),
     asking: sorted.slice(0, 2),
-    refusesBigBuilds: weak && !!lastElection && !lastElection.backers.includes(code),
+    momentum: now.momentum,
+    freshStart: freshStartHere(model, state, code),
+    deal: state.deals.find((d) => d.council === code && d.kept === null) ?? null,
     visit: pending && pending.kind === "visit" ? pending.place : null,
   };
 }

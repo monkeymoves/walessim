@@ -3,11 +3,13 @@
  * the compiled public/board-model.json.
  */
 import type {
-  BoardBand, BoardGame, BoardRule, BoardSource, CouncilDef, CouncilFlag, EndingId, EventId, FutureId,
+  BoardBand, BoardRule, BoardSource, CouncilDef, CouncilFlag, EndingId, EventId, FutureId,
   IndicatorDef, IndicatorId, LetterId, LinkDef, MeasureDef, MeasureId, PlaceId, ProjectId, RiskKind, SourceId,
   StartId, StubDef, Text, Tier,
 } from "./types-model";
 import type { BranchDef, Condition, Effect, GroupDef, LawDef, PairDef, PlaceDef, ProjectDef, TrackId } from "./types-content";
+import type { ElectionResult } from "./types-state";
+import type { BoardGame, Momentum } from "./types-clock";
 
 // ---------------------------------------------------------------------------
 // Events (events.yaml)
@@ -46,7 +48,7 @@ export interface EventDef {
   /** All must hold for a candidate council. */
   trigger: Condition[];
   target: EventTarget;
-  /** The forecast slip a turn ahead. Slots: {council}, {councils}, {river}. */
+  /** The warning on the time line, ahead of landing (rule E1 `warn_years`). Slots: {council}, {councils}, {river}. */
   warning: Text;
   /** The report line when it lands. Same slots. */
   landed: Text;
@@ -65,12 +67,12 @@ export interface EventDef {
   sources: SourceId[];
 }
 
-/** model/board/futures.yaml. Drawn from the game number, revealed a turn at a time. */
+/** model/board/futures.yaml. Drawn from the game number, revealed as the game goes. */
 export interface FutureDef {
   id: FutureId;
   name: Text;
   note: Text;
-  /** Per track, one pressure value 0 to 1 per turn (length = turns). A game rule (tune). */
+  /** Per track, one pressure value 0 to 1 for each block of `game.track_years` (12 values). A game rule (tune). */
   tracks: Record<TrackId, number[]>;
 }
 
@@ -80,7 +82,7 @@ export interface StartDef {
   name: Text;
   pitch: Text;
   promise: { text: Text; by_year: number; kept_when: EndCondition[] };
-  /** One free tier 1 project; the player places it (council chosen in the first turn). */
+  /** One free tier 1 project; the player places it (council chosen at any time). */
   free_project: ProjectId;
   /** Which councils back you first. */
   backing: { flag?: CouncilFlag; council?: string; points: number }[];
@@ -103,7 +105,19 @@ export type EndCondition =
   | { kind: "wales"; vs_2026: "better" | "worse"; by?: number }
   | { kind: "projects"; tier?: Tier; at_least?: number; at_most?: number }
   | { kind: "links_upgraded"; at_least?: number; at_most?: number }
-  | { kind: "risks_landed"; at_least: number };
+  | { kind: "risks_landed"; at_least: number }
+  /** Elections lost in the game. */
+  | { kind: "elections_lost"; at_least: number }
+  /** Deals (rule P6) kept. */
+  | { kind: "deals_kept"; at_least: number }
+  /** Keystones working whose build finished after `year` (the year they opened is later than `year`). */
+  | { kind: "keystone_finished_after"; year: number; at_least: number }
+  /** The share (0 to 1) of outside trouble that landed on a council already prepared for it is at least `share`. False when no outside trouble landed. */
+  | { kind: "events_prepared"; share: number }
+  /** No council's mean of its six measures is lower than in 2026. */
+  | { kind: "no_council_lower" }
+  /** This event landed at least once. */
+  | { kind: "event_landed"; event: EventId };
 
 /** How an evidence line picks its council and fact from the board. */
 export type EvidenceKind = "young_adults_change" | "measure_change" | "no_event_since" | "project_standing" | "gap_change";
@@ -149,10 +163,43 @@ export interface LetterDef {
 }
 
 // ---------------------------------------------------------------------------
+// Chapters (story.yaml, 16.5.1)
+
+/** Id of a chapter in model/board/story.yaml. */
+export type ChapterId = string;
+
+/** A test on one election term (four years), judged when the term closes. Package 9's story.ts judges them. */
+export type TermCondition =
+  /** `at_most`: no more than that many such events landed (0 means none). */
+  | { kind: "event_landed"; track?: TrackId; severity_at_least?: number; prepared?: boolean; at_most?: number }
+  | { kind: "election"; result: ElectionResult }
+  | { kind: "keystone"; phase: "started" | "finished" }
+  | { kind: "tier_opened"; tier: Tier }
+  | { kind: "tipped"; to: Momentum; at_least: number }
+  | { kind: "region_turn" }
+  /** `councils_at_least`: that many flagged councils each moved `by` (without it, their mean moved `by`). */
+  | { kind: "young_adults"; flag?: CouncilFlag; change: "up" | "down"; by: number; councils_at_least?: number }
+  | { kind: "gap"; change: "closed" | "wider"; by: number }
+  | { kind: "finished"; at_least?: number; at_most?: number }
+  | { kind: "deal"; kept: boolean }
+  | { kind: "promise"; kept: boolean }
+  | { kind: "level"; change: "up" | "down"; by: number };
+
+/** model/board/story.yaml, one chapter. The first by `priority` whose conditions all hold names the term. Slots: {river}, {council}, {town}, {project}. */
+export interface ChapterDef {
+  id: ChapterId;
+  name: Text;
+  line: Text;
+  priority: number;
+  /** Empty for the fallback chapter ("Holding on"). */
+  when: TermCondition[];
+}
+
+// ---------------------------------------------------------------------------
 // The compiled model
 
 export interface BoardMeta {
-  /** Schema version of board-model.json. Bump on any breaking change. */
+  /** Schema version of board-model.json: 2 since the clock (ADR 0007). Bump on any breaking change. */
   version: number;
   /** ISO date of the build. */
   generated: string;
@@ -189,4 +236,6 @@ export interface BoardModel {
   endings: EndingDef[];
   letters: LetterDef[];
   places: PlaceDef[];
+  /** Chapters from model/board/story.yaml. Empty until package 10 writes the file: then every term is "Holding on". */
+  chapters: ChapterDef[];
 }
