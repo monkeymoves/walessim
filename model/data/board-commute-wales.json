@@ -1,0 +1,1184 @@
+{
+ "generated": "2026-11-28",
+ "note": "Census 2021 ODWP01EW (ONS, via Nomis, OGL v3.0), lower tier local authority file, all 22 Welsh councils. share is workers living in `from` whose fixed workplace is in `to`, divided by all workers living in `from` (including those at or from home). Destinations under 1 in 100 are left out. English destinations are folded into the candidate stubs listed in `stubs` (the 1 in 100 test is applied after folding); stub centres are the named town in the km frame. Census day was in the pandemic: ONS advises caution. Written by pipeline/board/commute_wales.py. Resident workers: {\"W06000001\": 29185, \"W06000002\": 51823, \"W06000003\": 48719, \"W06000004\": 40856, \"W06000005\": 73825, \"W06000006\": 61806, \"W06000008\": 30110, \"W06000023\": 61724, \"W06000009\": 52759, \"W06000010\": 81942, \"W06000011\": 100601, \"W06000012\": 59185, \"W06000013\": 63990, \"W06000014\": 59906, \"W06000015\": 160437, \"W06000016\": 103386, \"W06000018\": 77438, \"W06000019\": 28800, \"W06000020\": 40655, \"W06000021\": 42841, \"W06000022\": 72790, \"W06000024\": 25631}.",
+ "links": [
+  {
+   "id": "commute:isle-of-anglesey-gwynedd",
+   "kind": "commute",
+   "from": "W06000001",
+   "to": "W06000002",
+   "share": 0.1574,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:isle-of-anglesey-conwy",
+   "kind": "commute",
+   "from": "W06000001",
+   "to": "W06000003",
+   "share": 0.0193,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:gwynedd-isle-of-anglesey",
+   "kind": "commute",
+   "from": "W06000002",
+   "to": "W06000001",
+   "share": 0.0452,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:gwynedd-conwy",
+   "kind": "commute",
+   "from": "W06000002",
+   "to": "W06000003",
+   "share": 0.0248,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:conwy-denbighshire",
+   "kind": "commute",
+   "from": "W06000003",
+   "to": "W06000004",
+   "share": 0.1093,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:conwy-gwynedd",
+   "kind": "commute",
+   "from": "W06000003",
+   "to": "W06000002",
+   "share": 0.0296,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:conwy-flintshire",
+   "kind": "commute",
+   "from": "W06000003",
+   "to": "W06000005",
+   "share": 0.0209,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:denbighshire-conwy",
+   "kind": "commute",
+   "from": "W06000004",
+   "to": "W06000003",
+   "share": 0.0722,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:denbighshire-flintshire",
+   "kind": "commute",
+   "from": "W06000004",
+   "to": "W06000005",
+   "share": 0.0685,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:denbighshire-wrexham",
+   "kind": "commute",
+   "from": "W06000004",
+   "to": "W06000006",
+   "share": 0.0312,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:denbighshire-cheshire-west",
+   "kind": "commute",
+   "from": "W06000004",
+   "to": "stub:cheshire-west",
+   "share": 0.0169,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ],
+   "outside": true
+  },
+  {
+   "id": "commute:flintshire-cheshire-west",
+   "kind": "commute",
+   "from": "W06000005",
+   "to": "stub:cheshire-west",
+   "share": 0.102,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ],
+   "outside": true
+  },
+  {
+   "id": "commute:flintshire-wrexham",
+   "kind": "commute",
+   "from": "W06000005",
+   "to": "W06000006",
+   "share": 0.0572,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:flintshire-denbighshire",
+   "kind": "commute",
+   "from": "W06000005",
+   "to": "W06000004",
+   "share": 0.0384,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:flintshire-wirral",
+   "kind": "commute",
+   "from": "W06000005",
+   "to": "stub:wirral",
+   "share": 0.0118,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ],
+   "outside": true
+  },
+  {
+   "id": "commute:wrexham-flintshire",
+   "kind": "commute",
+   "from": "W06000006",
+   "to": "W06000005",
+   "share": 0.0594,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:wrexham-cheshire-west",
+   "kind": "commute",
+   "from": "W06000006",
+   "to": "stub:cheshire-west",
+   "share": 0.0462,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ],
+   "outside": true
+  },
+  {
+   "id": "commute:wrexham-shropshire",
+   "kind": "commute",
+   "from": "W06000006",
+   "to": "stub:shropshire",
+   "share": 0.0376,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ],
+   "outside": true
+  },
+  {
+   "id": "commute:wrexham-denbighshire",
+   "kind": "commute",
+   "from": "W06000006",
+   "to": "W06000004",
+   "share": 0.0221,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:ceredigion-carmarthenshire",
+   "kind": "commute",
+   "from": "W06000008",
+   "to": "W06000010",
+   "share": 0.055,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:ceredigion-pembrokeshire",
+   "kind": "commute",
+   "from": "W06000008",
+   "to": "W06000009",
+   "share": 0.0163,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:powys-shropshire",
+   "kind": "commute",
+   "from": "W06000023",
+   "to": "stub:shropshire",
+   "share": 0.0431,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ],
+   "outside": true
+  },
+  {
+   "id": "commute:powys-herefordshire",
+   "kind": "commute",
+   "from": "W06000023",
+   "to": "stub:herefordshire",
+   "share": 0.0176,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ],
+   "outside": true
+  },
+  {
+   "id": "commute:powys-monmouthshire",
+   "kind": "commute",
+   "from": "W06000023",
+   "to": "W06000021",
+   "share": 0.0105,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:powys-neath-port-talbot",
+   "kind": "commute",
+   "from": "W06000023",
+   "to": "W06000012",
+   "share": 0.0102,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:pembrokeshire-carmarthenshire",
+   "kind": "commute",
+   "from": "W06000009",
+   "to": "W06000010",
+   "share": 0.0329,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:pembrokeshire-ceredigion",
+   "kind": "commute",
+   "from": "W06000009",
+   "to": "W06000008",
+   "share": 0.0184,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:carmarthenshire-swansea",
+   "kind": "commute",
+   "from": "W06000010",
+   "to": "W06000011",
+   "share": 0.0821,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:carmarthenshire-neath-port-talbot",
+   "kind": "commute",
+   "from": "W06000010",
+   "to": "W06000012",
+   "share": 0.0219,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:carmarthenshire-ceredigion",
+   "kind": "commute",
+   "from": "W06000010",
+   "to": "W06000008",
+   "share": 0.02,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:carmarthenshire-pembrokeshire",
+   "kind": "commute",
+   "from": "W06000010",
+   "to": "W06000009",
+   "share": 0.0187,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:swansea-neath-port-talbot",
+   "kind": "commute",
+   "from": "W06000011",
+   "to": "W06000012",
+   "share": 0.0712,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:swansea-carmarthenshire",
+   "kind": "commute",
+   "from": "W06000011",
+   "to": "W06000010",
+   "share": 0.0405,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:swansea-bridgend",
+   "kind": "commute",
+   "from": "W06000011",
+   "to": "W06000013",
+   "share": 0.0139,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:neath-port-talbot-swansea",
+   "kind": "commute",
+   "from": "W06000012",
+   "to": "W06000011",
+   "share": 0.1572,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:neath-port-talbot-bridgend",
+   "kind": "commute",
+   "from": "W06000012",
+   "to": "W06000013",
+   "share": 0.0485,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:neath-port-talbot-carmarthenshire",
+   "kind": "commute",
+   "from": "W06000012",
+   "to": "W06000010",
+   "share": 0.0235,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:neath-port-talbot-rhondda-cynon-taf",
+   "kind": "commute",
+   "from": "W06000012",
+   "to": "W06000016",
+   "share": 0.0129,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:neath-port-talbot-cardiff",
+   "kind": "commute",
+   "from": "W06000012",
+   "to": "W06000015",
+   "share": 0.0128,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:neath-port-talbot-powys",
+   "kind": "commute",
+   "from": "W06000012",
+   "to": "W06000023",
+   "share": 0.0127,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:bridgend-neath-port-talbot",
+   "kind": "commute",
+   "from": "W06000013",
+   "to": "W06000012",
+   "share": 0.0539,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:bridgend-cardiff",
+   "kind": "commute",
+   "from": "W06000013",
+   "to": "W06000015",
+   "share": 0.0499,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:bridgend-rhondda-cynon-taf",
+   "kind": "commute",
+   "from": "W06000013",
+   "to": "W06000016",
+   "share": 0.0384,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:bridgend-vale-of-glamorgan",
+   "kind": "commute",
+   "from": "W06000013",
+   "to": "W06000014",
+   "share": 0.0304,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:bridgend-swansea",
+   "kind": "commute",
+   "from": "W06000013",
+   "to": "W06000011",
+   "share": 0.0225,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:vale-of-glamorgan-cardiff",
+   "kind": "commute",
+   "from": "W06000014",
+   "to": "W06000015",
+   "share": 0.1722,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:vale-of-glamorgan-bridgend",
+   "kind": "commute",
+   "from": "W06000014",
+   "to": "W06000013",
+   "share": 0.0276,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:vale-of-glamorgan-rhondda-cynon-taf",
+   "kind": "commute",
+   "from": "W06000014",
+   "to": "W06000016",
+   "share": 0.018,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:vale-of-glamorgan-newport",
+   "kind": "commute",
+   "from": "W06000014",
+   "to": "W06000022",
+   "share": 0.0104,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:cardiff-vale-of-glamorgan",
+   "kind": "commute",
+   "from": "W06000015",
+   "to": "W06000014",
+   "share": 0.0351,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:cardiff-newport",
+   "kind": "commute",
+   "from": "W06000015",
+   "to": "W06000022",
+   "share": 0.0241,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:cardiff-rhondda-cynon-taf",
+   "kind": "commute",
+   "from": "W06000015",
+   "to": "W06000016",
+   "share": 0.0209,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:cardiff-caerphilly",
+   "kind": "commute",
+   "from": "W06000015",
+   "to": "W06000018",
+   "share": 0.0126,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:cardiff-bridgend",
+   "kind": "commute",
+   "from": "W06000015",
+   "to": "W06000013",
+   "share": 0.0102,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:rhondda-cynon-taf-cardiff",
+   "kind": "commute",
+   "from": "W06000016",
+   "to": "W06000015",
+   "share": 0.0959,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:rhondda-cynon-taf-caerphilly",
+   "kind": "commute",
+   "from": "W06000016",
+   "to": "W06000018",
+   "share": 0.033,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:rhondda-cynon-taf-bridgend",
+   "kind": "commute",
+   "from": "W06000016",
+   "to": "W06000013",
+   "share": 0.0296,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:rhondda-cynon-taf-merthyr-tydfil",
+   "kind": "commute",
+   "from": "W06000016",
+   "to": "W06000024",
+   "share": 0.0288,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:rhondda-cynon-taf-vale-of-glamorgan",
+   "kind": "commute",
+   "from": "W06000016",
+   "to": "W06000014",
+   "share": 0.0216,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:rhondda-cynon-taf-newport",
+   "kind": "commute",
+   "from": "W06000016",
+   "to": "W06000022",
+   "share": 0.0103,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:caerphilly-cardiff",
+   "kind": "commute",
+   "from": "W06000018",
+   "to": "W06000015",
+   "share": 0.0858,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:caerphilly-newport",
+   "kind": "commute",
+   "from": "W06000018",
+   "to": "W06000022",
+   "share": 0.0589,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:caerphilly-rhondda-cynon-taf",
+   "kind": "commute",
+   "from": "W06000018",
+   "to": "W06000016",
+   "share": 0.0425,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:caerphilly-torfaen",
+   "kind": "commute",
+   "from": "W06000018",
+   "to": "W06000020",
+   "share": 0.0252,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:caerphilly-merthyr-tydfil",
+   "kind": "commute",
+   "from": "W06000018",
+   "to": "W06000024",
+   "share": 0.0227,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:caerphilly-blaenau-gwent",
+   "kind": "commute",
+   "from": "W06000018",
+   "to": "W06000019",
+   "share": 0.0193,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:blaenau-gwent-caerphilly",
+   "kind": "commute",
+   "from": "W06000019",
+   "to": "W06000018",
+   "share": 0.0851,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:blaenau-gwent-monmouthshire",
+   "kind": "commute",
+   "from": "W06000019",
+   "to": "W06000021",
+   "share": 0.0766,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:blaenau-gwent-torfaen",
+   "kind": "commute",
+   "from": "W06000019",
+   "to": "W06000020",
+   "share": 0.0666,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:blaenau-gwent-newport",
+   "kind": "commute",
+   "from": "W06000019",
+   "to": "W06000022",
+   "share": 0.0387,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:blaenau-gwent-merthyr-tydfil",
+   "kind": "commute",
+   "from": "W06000019",
+   "to": "W06000024",
+   "share": 0.0332,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:blaenau-gwent-cardiff",
+   "kind": "commute",
+   "from": "W06000019",
+   "to": "W06000015",
+   "share": 0.0222,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:blaenau-gwent-powys",
+   "kind": "commute",
+   "from": "W06000019",
+   "to": "W06000023",
+   "share": 0.019,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:blaenau-gwent-rhondda-cynon-taf",
+   "kind": "commute",
+   "from": "W06000019",
+   "to": "W06000016",
+   "share": 0.0121,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:torfaen-newport",
+   "kind": "commute",
+   "from": "W06000020",
+   "to": "W06000022",
+   "share": 0.1146,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:torfaen-monmouthshire",
+   "kind": "commute",
+   "from": "W06000020",
+   "to": "W06000021",
+   "share": 0.0541,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:torfaen-cardiff",
+   "kind": "commute",
+   "from": "W06000020",
+   "to": "W06000015",
+   "share": 0.0317,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:torfaen-caerphilly",
+   "kind": "commute",
+   "from": "W06000020",
+   "to": "W06000018",
+   "share": 0.029,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:torfaen-bristol",
+   "kind": "commute",
+   "from": "W06000020",
+   "to": "stub:bristol",
+   "share": 0.0169,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ],
+   "outside": true
+  },
+  {
+   "id": "commute:torfaen-blaenau-gwent",
+   "kind": "commute",
+   "from": "W06000020",
+   "to": "W06000019",
+   "share": 0.0162,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:monmouthshire-bristol",
+   "kind": "commute",
+   "from": "W06000021",
+   "to": "stub:bristol",
+   "share": 0.0557,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ],
+   "outside": true
+  },
+  {
+   "id": "commute:monmouthshire-newport",
+   "kind": "commute",
+   "from": "W06000021",
+   "to": "W06000022",
+   "share": 0.0536,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:monmouthshire-torfaen",
+   "kind": "commute",
+   "from": "W06000021",
+   "to": "W06000020",
+   "share": 0.0357,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:monmouthshire-herefordshire",
+   "kind": "commute",
+   "from": "W06000021",
+   "to": "stub:herefordshire",
+   "share": 0.0187,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ],
+   "outside": true
+  },
+  {
+   "id": "commute:monmouthshire-forest-of-dean",
+   "kind": "commute",
+   "from": "W06000021",
+   "to": "stub:forest-of-dean",
+   "share": 0.0179,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ],
+   "outside": true
+  },
+  {
+   "id": "commute:monmouthshire-cardiff",
+   "kind": "commute",
+   "from": "W06000021",
+   "to": "W06000015",
+   "share": 0.0165,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:monmouthshire-powys",
+   "kind": "commute",
+   "from": "W06000021",
+   "to": "W06000023",
+   "share": 0.0161,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:monmouthshire-blaenau-gwent",
+   "kind": "commute",
+   "from": "W06000021",
+   "to": "W06000019",
+   "share": 0.0112,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:newport-cardiff",
+   "kind": "commute",
+   "from": "W06000022",
+   "to": "W06000015",
+   "share": 0.071,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:newport-torfaen",
+   "kind": "commute",
+   "from": "W06000022",
+   "to": "W06000020",
+   "share": 0.0475,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:newport-bristol",
+   "kind": "commute",
+   "from": "W06000022",
+   "to": "stub:bristol",
+   "share": 0.0432,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ],
+   "outside": true
+  },
+  {
+   "id": "commute:newport-monmouthshire",
+   "kind": "commute",
+   "from": "W06000022",
+   "to": "W06000021",
+   "share": 0.0285,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:newport-caerphilly",
+   "kind": "commute",
+   "from": "W06000022",
+   "to": "W06000018",
+   "share": 0.0248,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:merthyr-tydfil-rhondda-cynon-taf",
+   "kind": "commute",
+   "from": "W06000024",
+   "to": "W06000016",
+   "share": 0.0859,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:merthyr-tydfil-caerphilly",
+   "kind": "commute",
+   "from": "W06000024",
+   "to": "W06000018",
+   "share": 0.0641,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:merthyr-tydfil-cardiff",
+   "kind": "commute",
+   "from": "W06000024",
+   "to": "W06000015",
+   "share": 0.0451,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  },
+  {
+   "id": "commute:merthyr-tydfil-blaenau-gwent",
+   "kind": "commute",
+   "from": "W06000024",
+   "to": "W06000019",
+   "share": 0.0307,
+   "honesty": "real",
+   "sources": [
+    "nomis_census_odwp01ew"
+   ]
+  }
+ ],
+ "stubs": [
+  {
+   "id": "stub:bristol",
+   "name": {
+    "en": "Bristol and South Gloucestershire",
+    "cy": "Bryste a De Swydd Gaerloyw",
+    "cy_review": true
+   },
+   "folds": [
+    "E06000023",
+    "E06000025"
+   ],
+   "centre": [
+    191.0,
+    227.5
+   ],
+   "centre_town": "Bristol city centre (51.4545, -2.5879)"
+  },
+  {
+   "id": "stub:herefordshire",
+   "name": {
+    "en": "Herefordshire",
+    "cy": "Swydd Henffordd",
+    "cy_review": true
+   },
+   "folds": [
+    "E06000019"
+   ],
+   "centre": [
+    182.3,
+    160.5
+   ],
+   "centre_town": "Hereford (52.0565, -2.716)"
+  },
+  {
+   "id": "stub:forest-of-dean",
+   "name": {
+    "en": "Forest of Dean",
+    "cy": "Fforest y Ddena",
+    "cy_review": true
+   },
+   "folds": [
+    "E07000080"
+   ],
+   "centre": [
+    194.9,
+    197.0
+   ],
+   "centre_town": "Lydney (51.7286, -2.5302)"
+  },
+  {
+   "id": "stub:shropshire",
+   "name": {
+    "en": "Shropshire",
+    "cy": "Swydd Amwythig",
+    "cy_review": true
+   },
+   "folds": [
+    "E06000051"
+   ],
+   "centre": [
+    179.7,
+    88.1
+   ],
+   "centre_town": "Shrewsbury (52.7077, -2.754)"
+  },
+  {
+   "id": "stub:cheshire-west",
+   "name": {
+    "en": "Cheshire West and Chester",
+    "cy": "Gorllewin Swydd Gaer a Chaer",
+    "cy_review": true
+   },
+   "folds": [
+    "E06000050"
+   ],
+   "centre": [
+    170.4,
+    34.4
+   ],
+   "centre_town": "Chester (53.1905, -2.891)"
+  },
+  {
+   "id": "stub:wirral",
+   "name": {
+    "en": "Wirral",
+    "cy": "Cilgwri",
+    "cy_review": true
+   },
+   "folds": [
+    "E08000015"
+   ],
+   "centre": [
+    162.0,
+    11.9
+   ],
+   "centre_town": "Birkenhead (53.3934, -3.0148)"
+  }
+ ]
+}
