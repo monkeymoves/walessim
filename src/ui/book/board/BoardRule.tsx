@@ -33,6 +33,7 @@ export function BoardRulePage(props: { m: BModel; rule: BRule } & Nav): JSX.Elem
       <Show when={(r().lag_years ?? 0) > 0}><p class="small">{t("boardend.book.rule.lag", { n: num(r().lag_years) })}</p></Show>
       <Show when={params().length}>
         <h2 class="t-3">{t("boardend.book.rule.params")}</h2>
+        <p class="small" data-testid="board-rule-fixed">{t("boardend.book.rule.paramsFixed")}</p>
         <table class="ledger ruleledger">
           <thead>
             <tr>

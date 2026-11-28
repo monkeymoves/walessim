@@ -234,6 +234,7 @@
   "book.rule.gameRule": "Rheol gêm yw hon. Dewis dylunio yw ei maint, nid ffigur wedi'i fesur.",
   "book.rule.lag": "Mae'n cymryd {n} blynedd i'w deimlo.",
   "book.rule.params": "Ei rhifau",
+  "book.rule.paramsFixed": "Gallwch ddarllen y rhifau hyn ond nid eu newid eto. Mae'r deialau eraill yn y llyfr hwn yn newid y gêm fesul pedair blynedd yn unig.",
   "book.rule.param": "Rhif",
   "book.rule.value": "Yn dechrau ar",
   "book.rule.range": "Gallai fod",

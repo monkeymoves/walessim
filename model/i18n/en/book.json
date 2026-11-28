@@ -60,7 +60,7 @@
   "rule.lagShort.other": "{n} turns",
   "rule.lagNoneShort": "none",
   "rule.params": "Change this setting",
-  "rule.paramsIntro": "The game tries many futures. Each one picks a value from this range. Move a dial to set the middle value. The small triangle marks the default.",
+  "rule.paramsIntro": "The game tries many futures. Each one picks a value from this range. Move a dial to set the middle value. The small triangle marks the default. These dials change the game played in four-year turns. The real-time board does not use them yet.",
   "slider.fixed": "Fixed at {v}. A rule of the game, so you cannot change it.",
   "slider.valuetext": "{v} {unit}, default {d}",
   "slider.default": "default {v}",

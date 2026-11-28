@@ -225,6 +225,7 @@
   "book.rule.gameRule": "This is a game rule. Its size is a design choice, not a measured figure.",
   "book.rule.lag": "It takes {n} years to be felt.",
   "book.rule.params": "Its numbers",
+  "book.rule.paramsFixed": "You can read these numbers but not change them yet. The dials elsewhere in this book change only the game played in four-year turns.",
   "book.rule.param": "Number",
   "book.rule.value": "Starts at",
   "book.rule.range": "Could be",

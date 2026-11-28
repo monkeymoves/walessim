@@ -65,7 +65,7 @@
   "rule.lagShort.other": "{n} tro",
   "rule.lagNoneShort": "dim",
   "rule.params": "Newid y gosodiad hwn",
-  "rule.paramsIntro": "Mae'r gêm yn rhoi cynnig ar lawer o ddyfodolau. Mae pob un yn dewis gwerth o'r ystod hon. Symudwch ddeial i osod y gwerth canol. Mae'r triongl bach yn dangos y gwerth arferol.",
+  "rule.paramsIntro": "Mae'r gêm yn rhoi cynnig ar lawer o ddyfodolau. Mae pob un yn dewis gwerth o'r ystod hon. Symudwch ddeial i osod y gwerth canol. Mae'r triongl bach yn dangos y gwerth arferol. Mae'r deialau hyn yn newid y gêm a chwaraeir fesul pedair blynedd. Nid yw'r bwrdd amser real yn eu defnyddio eto.",
   "slider.fixed": "Wedi'i osod ar {v}. Rheol y gêm, felly allwch chi ddim ei newid.",
   "slider.valuetext": "{v} {unit}, rhagosodiad {d}",
   "slider.default": "rhagosodiad {v}",
