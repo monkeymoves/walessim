@@ -185,3 +185,15 @@ Order: 13 at once. 14 alone. Then 15 to 19 together, a join, balance in `model/b
 5. **Places.** Rhyl, Port Talbot and Machynlleth for the new visits?
 6. **v1.** Does it stay live as "the short game" once All Wales passes?
 7. **Welsh.** Who is the fluent reviewer for the new place names and words?
+
+## 7. Luke's answers (28 November 2026)
+
+Luke accepted the recommended answers:
+
+1. Boards: All Wales (22), South East (10), North (6), South West (4), Mid and West (5). His five names are the map groups on All Wales.
+2. The South East's 49 in 100 stays as real. "Won well" on All Wales needs two thirds of the people and most councils in four of the five groups.
+3. Fast is the default for everyone. The slower speeds stay in settings.
+4. The outline pulses for 5 seconds, then stays steady.
+5. The new visits are Rhyl, Port Talbot and Machynlleth.
+6. v1 stays live as "the short game".
+7. The fluent Welsh reviewer is still to find. All new Welsh keeps `cy_review: true`.
