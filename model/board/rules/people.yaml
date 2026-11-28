@@ -152,11 +152,13 @@ rules:
     params:
       min: { default: 9, min: 9, max: 9, unit: { en: severity points, cy: pwyntiau difrifoldeb, cy_review: true }, adjustable: false }
       max: { default: 11, min: 11, max: 11, unit: { en: severity points, cy: pwyntiau difrifoldeb, cy_review: true }, adjustable: false }
-      first_year: { default: 2028, min: 2026, max: 2032, unit: { en: year, cy: blwyddyn, cy_review: true }, adjustable: false }
+      first_year: { default: 2030, min: 2026, max: 2032, unit: { en: year, cy: blwyddyn, cy_review: true }, adjustable: false }
       warn_years: { default: 1.5, min: 1, max: 3, unit: { en: years of warning before outside trouble lands, cy: blynyddoedd o rybudd cyn i drafferth o'r tu allan gyrraedd, cy_review: true }, adjustable: true, tune: true }
       grown_warn_years: { default: 1, min: 1, max: 3, unit: { en: years of warning before trouble the board grows lands, cy: blynyddoedd o rybudd cyn i drafferth y bwrdd gyrraedd, cy_review: true }, adjustable: true, tune: true }
       grown_at_once: { default: 1, min: 0, max: 2, unit: { en: events at once, cy: digwyddiadau ar unwaith, cy_review: true }, adjustable: true, tune: true }
       grown_gap_years: { default: 2, min: 1, max: 4, unit: { en: years between them, cy: blynyddoedd rhyngddynt, cy_review: true }, adjustable: true, tune: true }
+      repeat_max: { default: 2, min: 1, max: 4, unit: { en: times one event can come in a game, cy: gwaith y gall un digwyddiad ddod mewn gêm, cy_review: true }, adjustable: true, tune: true }
+      repeat_gap_years: { default: 8, min: 2, max: 12, unit: { en: years before the same event can come again, cy: blynyddoedd cyn y gall yr un digwyddiad ddod eto, cy_review: true }, adjustable: true, tune: true }
       prepared_cut: { default: 0.5, min: 0.25, max: 0.5, unit: { en: share left for each project ready for it, cy: cyfran sy'n weddill am bob prosiect sy'n barod amdano, cy_review: true }, adjustable: true, tune: true }
       downturn_cut: { default: 0.5, min: 0.25, max: 0.75, unit: { en: share of a downturn left where a college stands once a cluster has roots, cy: cyfran o ddirwasgiad sy'n weddill lle mae coleg unwaith mae gan glwstwr wreiddiau, cy_review: true }, adjustable: true, tune: true }
       storm_step: { default: 0.5, min: 0.25, max: 0.75, unit: { en: share of a storm left when rivers have room, cy: cyfran o storm sy'n weddill pan fo lle i afonydd, cy_review: true }, adjustable: true, tune: true }

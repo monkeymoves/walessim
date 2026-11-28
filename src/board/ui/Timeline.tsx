@@ -10,10 +10,10 @@
  * `Timeline` is the board's own, with the clock at its left end.
  */
 import { createMemo, For, Match, Show, Switch, type JSX } from "solid-js";
-import { t } from "../../i18n";
+import { t } from "./lang";
 import { Icon } from "../../ui/parts";
 import type { BoardModel, BoardState, TimelineView } from "../engine/api";
-import { timeline } from "../engine/api";
+import { eventNoun, timeline } from "../engine/api";
 import { Clock } from "./clock/Clock";
 import { useGame } from "./game";
 import { eventIcon } from "./icons";
@@ -39,6 +39,15 @@ export interface TimelineStripProps {
 const BRANCH_STOCK = ["buff", "green", "pink", "blue"];
 const pct = (f: number) => `${f * 100}%`;
 
+/**
+ * True when a year on the axis would sit under the "now" tag (a share of the track either side of
+ * the now line, on the side the tag hangs), so the axis never prints "20 Summer 2028".
+ */
+export function underNow(year: number, now: number): boolean {
+  const d = year - now;
+  return now > 0.86 ? d > -0.095 && d < 0.025 : d > -0.025 && d < 0.095;
+}
+
 /** The plain name of a piece, for its button and its tip. */
 function itemWords(model: BoardModel, state: BoardState, i: TimelineItem): string {
   switch (i.kind) {
@@ -46,11 +55,11 @@ function itemWords(model: BoardModel, state: BoardState, i: TimelineItem): strin
     case "election": return i.held
       ? t("boardui.timeline.held", { year: i.year, result: t(`boardui.election.short.${i.result}`) })
       : t("boardui.timeline.ahead", { year: i.year, result: t(`boardui.timeline.would.${i.result}`) });
-    case "event": return t("boardui.timeline.landed", { name: tx(model.events.find((e) => e.id === i.event)?.name), place: councilName(model, i.council), when: whenWords(model, i.step) });
+    case "event": return t("boardui.timeline.landed", { name: tx(model.events.find((e) => e.id === i.event)?.name), noun: t(eventNoun(i.event)), place: councilName(model, i.council), when: whenWords(model, i.step) });
     case "moment": return say(i.moment.say) || t("boardui.timeline.moment", { when: whenWords(model, i.step) });
     case "build": return t("boardui.timeline.build", { name: projectName(model, i.project), place: councilName(model, i.site.council ?? model.links.find((l) => l.id === i.site.link)?.from), when: whenWords(model, i.readyStep + 1) });
     case "more": return t("boardui.timeline.more", { n: i.count });
-    case "warning": return t("boardui.timeline.warning", { name: tx(model.events.find((e) => e.id === i.event)?.name), place: councilName(model, i.councils[0]), when: whenWords(model, i.fromStep) });
+    case "warning": return t("boardui.timeline.warning", { name: tx(model.events.find((e) => e.id === i.event)?.name), noun: t(eventNoun(i.event)), place: councilName(model, i.councils[0]), when: whenWords(model, i.fromStep) });
     case "mark": return say(i.say) || t(`boardui.timeline.mark.${i.mark}`, { when: whenWords(model, i.step), council: councilName(model, i.council) });
   }
 }
@@ -120,7 +129,7 @@ export function TimelineStrip(props: TimelineStripProps): JSX.Element {
       <div class="bw-tl-track" style={{ "--now": pct(nowAt()) }}>
         <span class="bw-tl-past" aria-hidden="true" />
         <ol class="bw-tl-years" aria-hidden="true">
-          <For each={years}>{(y) => <li class="small data" style={{ left: pct(yearAt(y)) }}>{y}</li>}</For>
+          <For each={years}>{(y) => <li class="small data" classList={{ "under-now": underNow(yearAt(y), nowAt()) }} style={{ left: pct(yearAt(y)) }}>{y}</li>}</For>
         </ol>
         <ol class="bw-tl-items">
           <For each={items()}>

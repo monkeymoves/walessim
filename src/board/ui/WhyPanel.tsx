@@ -4,14 +4,15 @@
  * thread is provenance, so this sheet is where red lives.
  */
 import { createMemo, For, Show, type JSX } from "solid-js";
-import { t } from "../../i18n";
-import { CloseButton, SourceTag } from "../../ui/parts";
+import { t } from "./lang";
+import { CloseButton, SourceTag, sourceShort } from "../../ui/parts";
 import type { Why } from "../engine/api";
-import { causeWords, viaWords } from "./causes";
+import { viaWords, whyCauseWords } from "./causes";
 import { sourceOf } from "./CouncilPanel";
 import * as eng from "./engine";
 import { useGame } from "./game";
-import { councilName, measureName, say, signed, tx, whenWords } from "./words";
+import { councilName, measureName, signed, whenWords } from "./words";
+import { ruleHref, ruleLabel, sourceLabels } from "./whyWords";
 import { stepOfYear, stepsOf } from "../engine/api";
 
 export function WhyPanel(): JSX.Element {
@@ -57,19 +58,18 @@ export function WhyPanel(): JSX.Element {
             {(w) => (
               <li class="bw-why-item">
                 <p class="bw-why-delta"><b class="data">{signed(w.delta)}</b> <span class="small">{t("boardui.why.points", { when: whenWords(model, w.step) })}</span></p>
-                <Show when={say(w.say)}><p class="story-small">{say(w.say)}</p></Show>
-                <p class="bw-why-row"><span class="label">{t("boardui.why.you")}</span> {causeWords(model, w.cause, w.year)}</p>
+                <p class="bw-why-row"><span class="label">{t("boardui.why.you")}</span> {whyCauseWords(model, w, game.state()!)}</p>
                 <Show when={w.via}>
                   <p class="bw-why-row"><span class="label">{t("boardui.why.along")}</span> {viaWords(model, w)}</p>
                 </Show>
-                <p class="bw-why-row"><span class="label">{t("boardui.why.rule")}</span> <Show when={ruleOf(w.rule)} fallback={w.rule}><b>{tx(ruleOf(w.rule)!.name)}.</b> {tx(ruleOf(w.rule)!.note)}</Show></p>
+                <p class="bw-why-row"><span class="label">{t("boardui.why.rule")}</span> <b>{ruleLabel(model, w.rule).name}.</b> {ruleLabel(model, w.rule).note}</p>
                 <p class="small bw-why-foot">
                   <span class="bw-honest">{t(`boardui.honesty.${w.honesty}`)}</span>{" "}
                   <Show when={ruleOf(w.rule)}>{t(`boardui.confidence.${ruleOf(w.rule)!.confidence}`)}</Show>
                 </p>
-                <p class="small"><a class="threadlink" href={`#/llyfr/bwrdd/${encodeURIComponent(w.rule)}`}>{t("boardui.why.ruleLink")}</a></p>
+                <p class="small"><a class="threadlink" href={ruleHref(model, w.rule)}>{t("boardui.why.ruleLink")}</a></p>
                 <Show when={w.sources.length}>
-                  <p class="bw-why-sources"><For each={w.sources}>{(id) => <SourceTag source={sourceOf(model, id)} />}</For></p>
+                  <p class="bw-why-sources"><For each={sourceLabels(w.sources.map((id) => sourceOf(model, id)), sourceShort)}>{(label, i) => <SourceTag source={sourceOf(model, w.sources[i()]!)} label={label} />}</For></p>
                 </Show>
               </li>
             )}

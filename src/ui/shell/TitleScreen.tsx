@@ -1,6 +1,6 @@
 // The title screen. The paper Wales of 2026 settles onto the board; the name in Besley 800;
-// the hook; three ways in; and along the foot, the generation from 2026 to a sealed letter in
-// 2050. Touching any authority opens it in the atlas.
+// the hook; the ways in, the board first (the first game one click below it); and along the foot,
+// the generation from 2026 to a sealed letter in 2050. Touching any authority opens it in the atlas.
 import { createSignal, For, onCleanup, Show, type JSX } from "solid-js";
 import { lang, pick, t, textOf } from "../../i18n";
 import type { HoverInfo, PaperMap, WalesGeo } from "../../map";
@@ -46,21 +46,27 @@ export function TitleScreen(props: { geo: WalesGeo | null }): JSX.Element {
         </p>
         <p class="title-hook story">{t("shell.title.hook")}</p>
         <ul class="title-ways">
+          {/* the board is the way in (cold playtest 8); the first game stays one click away. On a
+              narrow screen the board cannot be played, so the first game leads there. */}
+          <Show when={!narrow()}>
+            <li class="title-way-main">
+              <StampButton onClick={() => navigate("#/bwrdd")} data-testid="way-bwrdd">{t("boardclock.title.board")}</StampButton>
+              <span class="small">{t("boardclock.title.boardNote")}</span>
+            </li>
+          </Show>
           <Show when={saved}>
             <li>
-              <StampButton onClick={() => navigate("#/yfory")} data-testid="resume">{t("shell.title.resume")}</StampButton>
+              <Show when={narrow()} fallback={<TabButton onClick={() => navigate("#/yfory")} data-testid="resume">{t("boardclock.title.resumeFirst")}</TabButton>}>
+                <StampButton onClick={() => navigate("#/yfory")} data-testid="resume">{t("shell.title.resume")}</StampButton>
+              </Show>
               <span class="small">{t("shell.title.resumeNote")}</span>
             </li>
           </Show>
           <li>
-            <Show when={!saved} fallback={<TabButton onClick={() => navigate("#/yfory")}>{t("shell.title.play")}</TabButton>}>
+            <Show when={narrow() && !saved} fallback={<TabButton onClick={() => navigate("#/yfory")} data-testid="way-yfory">{t("boardclock.title.first")}</TabButton>}>
               <StampButton onClick={() => navigate("#/yfory")} data-testid="way-yfory">{t("shell.title.play")}</StampButton>
             </Show>
-            <span class="small">{t("shell.title.playNote")}</span>
-          </li>
-          <li>
-            <TabButton onClick={() => navigate("#/bwrdd")} data-testid="way-bwrdd">{t("boardui.title.try")}</TabButton>
-            <span class="small">{t("boardui.title.tryNote")}</span>
+            <span class="small">{narrow() && !saved ? t("shell.title.playNote") : t("boardclock.title.firstNote")}</span>
           </li>
           <li>
             <TabButton onClick={() => navigate("#/heddiw")} data-testid="way-heddiw">{t("shell.title.explore")}</TabButton>

@@ -5,15 +5,17 @@
  * stock of its branch, so a glance says which branch it feeds.
  */
 import { createMemo, createSignal, For, Show, type JSX } from "solid-js";
-import { formatNum, Pair, t, tn } from "../../i18n";
+import { lang, Pair, t, tn } from "./lang";
 import { CloseButton, Icon, StampButton } from "../../ui/parts";
 import type { Action, ActionOption, BoardModel, ProjectDef } from "../engine/api";
 import { blockerWords } from "./blockers";
-import { options } from "./engine";
+import { BranchRoad } from "./BranchRoad";
+import { branchPath } from "./branchPath";
+import { councilView, options } from "./engine";
 import { useGame } from "./game";
 import { iconFor } from "./icons";
 import { PreviewLines } from "./PreviewLines";
-import { councilName, tx, whenWords } from "./words";
+import { councilName, measureName, num, tx, wholeCoins, whenWords } from "./words";
 
 const key = (a: Action) => JSON.stringify(a);
 const BRANCH_STOCK = ["buff", "green", "pink", "blue"];
@@ -40,6 +42,27 @@ export function BuildMenu(props: { code: string }): JSX.Element {
   const byBranch = (branch: string, tier: number) => opts().filter((o) => o.branch === branch && o.tier === tier);
   const def = (o: ActionOption): ProjectDef | undefined => model.projects.find((p) => p.id === o.project);
   const free = (o: ActionOption) => o.action.kind === "build" && game.state()?.freeProject === o.project;
+  const view = createMemo(() => {
+    const s = game.state();
+    try { return s ? councilView(model, s, props.code) : null; } catch { return null; }
+  });
+  /**
+   * Why a build costs less than its list price, named on the card (playtest 8, should-fix 3: prices
+   * changed with no word). A fresh start (rule R3) and an open deal here (rule P6) are the two discounts.
+   */
+  const discountWords = (o: ActionOption): string => {
+    const d = def(o);
+    if (!d || o.action.kind !== "build" || free(o) || o.cost >= d.cost) return "";
+    const v = view(), why: string[] = [];
+    if (v?.freshStart) why.push(t("boardui.build.offFresh"));
+    if (v?.deal && v.deal.kept === null) why.push(t("boardui.build.offDeal", { measure: measureName(model, v.deal.measure) }));
+    return t("boardui.build.off", { n: num(d.cost - o.cost), full: num(d.cost) }) + (why.length ? " " + why.join(" ") : "");
+  };
+  const upgradeLevel = (o: ActionOption): number => {
+    const a = o.action;
+    if (a.kind !== "upgrade") return 0;
+    return (game.state()?.projects.find((p) => p.project === a.project && p.site.council === a.site.council && p.site.link === a.site.link)?.level ?? 1) + 1;
+  };
 
   const build = (o: ActionOption) => {
     if (game.act(o.action)) { setOpen(null); game.setHover(null); }
@@ -51,17 +74,19 @@ export function BuildMenu(props: { code: string }): JSX.Element {
         <h2 class="t-2" id="bw-build-title">{t("boardui.build.title", { name: councilName(model, props.code) })}</h2>
         <CloseButton label={t("boardui.close")} onClick={() => { game.setSheet(null); game.setHover(null); }} />
       </header>
-      <p class="small bw-build-coins">{tn("boardui.build.coins", Math.floor((game.state()?.coins ?? 0) + 1e-6))} {t("boardui.build.anyTime")}</p>
+      <p class="small bw-build-coins">{tn("boardui.build.coins", wholeCoins(game.state()?.coins ?? 0))} {t("boardui.build.anyTime")}</p>
+      <Show when={view()?.freshStart}><p class="small bw-fresh">{t("boardui.council.freshStart")}</p></Show>
       <div class="bw-build-scroll">
         <For each={model.branches}>
           {(b, bi) => (
             <section class="bw-branch" style={{ "--stock": `var(--ticket-${BRANCH_STOCK[bi() % 4]})` }}>
-              <Pair text={b.name} as="h3" class="t-3 bw-branch-name" />
+              <Pair single={lang() === "cy"} text={b.name} as="h3" class="t-3 bw-branch-name" />
               <p class="small bw-branch-note">{tx(b.note)}</p>
+              <Show when={game.state()}>{(st) => <BranchRoad path={branchPath(model, st(), b)} year={st().year} />}</Show>
               <For each={[1, 2, 3]}>
                 {(tier) => (
                   <Show when={byBranch(b.id, tier).length}>
-                    <ol class="bw-tickets" aria-label={t("boardui.build.tier", { n: tier })}>
+                    <ol class="bw-tickets" aria-label={t(`boardui.tierHead.${tier}`)} onPointerLeave={() => !open() && game.setHover(null)}>
                       <For each={byBranch(b.id, tier)}>
                         {(o) => {
                           const d = def(o);
@@ -77,21 +102,22 @@ export function BuildMenu(props: { code: string }): JSX.Element {
                                 onClick={() => { const next = open() === id ? null : id; setOpen(next); game.setHover(next ? o.action : null); }}
                                 data-testid={`bw-opt-${o.project}`}
                               >
-                                <span class="bw-ticket-stub"><Icon name={iconFor(model, o.project ?? "")} size={26} /><span class="furniture">{t("boardui.build.tierShort", { n: tier })}</span></span>
+                                <span class="bw-ticket-stub"><Icon name={iconFor(model, o.project ?? "")} size={26} /><span class="furniture">{t(`boardui.tierShort.${tier}`)}</span></span>
                                 <span class="bw-ticket-body">
                                   <span class="bw-ticket-name">
-                                    {o.action.kind === "upgrade" ? t("boardui.build.upgrade", { name: tx(d?.name) }) : tx(d?.name)}
+                                    {o.action.kind === "upgrade" ? t("boardui.build.upgrade", { name: tx(d?.name), level: upgradeLevel(o) }) : tx(d?.name)}
                                     <Show when={d?.keystone}><span class="small bw-keystone">{t("boardui.build.keystone")}</span></Show>
                                     <Show when={d?.quick}><span class="small bw-keystone">{t("boardui.build.quick")}</span></Show>
                                   </span>
                                   <span class="small bw-ticket-site">{siteWords(model, o, props.code)}</span>
+                                  <Show when={discountWords(o)}><span class="small bw-ticket-off">{discountWords(o)}</span></Show>
                                   <Show when={!o.allowed}>
                                     <span class="small bw-ticket-why">{o.blockers.map((x) => blockerWords(model, x)).join(" ")}</span>
                                   </Show>
                                 </span>
                                 <span class="bw-ticket-fare">
                                   <span class="furniture">{t("boardui.build.cost")}</span>
-                                  <span class="bw-fare-n" classList={{ short: o.blockers.some((x) => x.kind === "coins") }}>{free(o) ? t("boardui.build.free") : o.cost}</span>
+                                  <span class="bw-fare-n" classList={{ short: o.blockers.some((x) => x.kind === "coins") }}>{free(o) ? t("boardui.build.free") : num(o.cost)}</span>
                                   <Show when={o.readyStep !== undefined}><span class="small">{t("boardui.build.works", { when: whenWords(model, o.readyStep! + 1) })}</span></Show>
                                 </span>
                               </button>
@@ -100,8 +126,8 @@ export function BuildMenu(props: { code: string }): JSX.Element {
                                   <p class="story-small">{tx(d?.what)}</p>
                                   <p class="small"><i>{t("boardui.build.example", { text: tx(d?.example) })}</i></p>
                                   <Show when={d?.catch}><p class="small bw-catch">{t("boardui.build.catch", { text: tx(d?.catch) })}</p></Show>
-                                  <Show when={o.buildYears !== undefined}><p class="small">{t("boardui.build.takes", { n: formatNum(o.buildYears!, { maximumFractionDigits: 1 }) })}</p></Show>
-                                  <Show when={d?.running}><p class="small">{t("boardui.build.running", { n: formatNum(d!.running!.coins_per_year, { maximumFractionDigits: 2 }) })}</p></Show>
+                                  <Show when={o.buildYears !== undefined}><p class="small">{t("boardui.build.takes", { n: num(o.buildYears!) })}</p></Show>
+                                  <Show when={d?.running}><p class="small">{t("boardui.build.running", { n: num(d!.running!.coins_per_year) })}</p></Show>
                                   <PreviewLines />
                                   <Show when={o.allowed} fallback={<p class="small bw-ticket-why">{o.blockers.map((x) => blockerWords(model, x)).join(" ")}</p>}>
                                     <StampButton onClick={() => build(o)} data-testid="bw-build-it">

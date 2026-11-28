@@ -28,13 +28,13 @@ election_years: [2030, 2034, 2038, 2042, 2046]
 track_years: 2
 # A keystone takes six years: started by May 2044 it opens in the last step, by May 2050 (16.2.4).
 keystone_last_start_year: 2044
-# A visit offered by a build or an event lapses after this, and one visit is made at most this often.
+# A visit offered by a build or an event lapses after this. A visit on offer can always be made.
 visit_open_years: 1
 term_report_lines_max: 3
 year_lines_max: 2
 # Clock speeds for the screens. Never part of the state or the run code.
 speeds:
-  - { id: steady, ms_per_step: 3000 }
+  - { id: steady, ms_per_step: 4000 }
   - { id: brisk, ms_per_step: 1500 }
   - { id: fast, ms_per_step: 750 }
 default_speed: steady

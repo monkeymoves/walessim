@@ -3,7 +3,8 @@
  * plain forms of points, coins and years (docs/design/plain-wales.md). No player text is written
  * here: every string comes from model/i18n through t(), or from a `{en, cy}` field in the model.
  */
-import { formatNum, hasKey, lang, pick, t } from "../../i18n";
+import { formatNum, hasKey, lang, pick, t } from "./lang";
+import { fillCy, listCy } from "./cymraeg";
 import type { BoardModel, ChapterRecord, CouncilCode, MeasureId, NodeId, Say, SayVar, Text, WhyQuantity } from "../engine/api";
 import { seasonOf, yearOfStep } from "../engine/api";
 
@@ -16,7 +17,7 @@ export function nameIdsFrom(model: BoardModel | null): void { named = model; }
 /** A Say value as words: a Text in the active language, a number, an i18n key, or an id given its name. */
 function varText(v: SayVar): string {
   // no thousands commas: the board's numbers are small, and a year must read 2035, not 2,035
-  if (typeof v === "number") return formatNum(v, { maximumFractionDigits: 1, useGrouping: false });
+  if (typeof v === "number") return num(v);
   if (isText(v)) return pick(v, lang());
   if (/^[a-z][\w-]*(\.[\w-]+)+$/.test(v) && (hasKey(v) || hasKey(`board.${v}`))) return t(hasKey(v) ? v : `board.${v}`);
   const m = named;
@@ -42,7 +43,8 @@ export function say(s: Say | null | undefined): string {
   // a sentence the engine carries whole from the model (an event warning, an evidence line), with
   // its slots filled from the other values, when there is no wrapping key for it yet
   // a value may itself be a model sentence with slots (an event warning in `line`): fill those from the same values
-  const out = (key ? t(key, vars) : vars["line"] ?? "").replace(/\{(\w+)\}/g, (all, k: string) => vars[k] ?? all);
+  const first = key ? t(key, vars) : vars["line"] ?? "";
+  const out = lang() === "cy" ? fillCy(first, vars) : first.replace(/\{(\w+)\}/g, (all, k: string) => vars[k] ?? all);
   if (!out) return "";
   if (/\{\w+\}/.test(out)) { console.warn(`board: ${key} has a slot the engine did not fill`, s.vars); return ""; }
   return out;
@@ -51,7 +53,15 @@ export function say(s: Say | null | undefined): string {
 /** "a, b and c" in the active language. */
 export function listOf(items: string[]): string {
   if (items.length < 2) return items.join("");
+  if (lang() === "cy") return listCy(items);
   return items.slice(0, -1).join(t("boardui.list.comma")) + t("boardui.list.and") + items[items.length - 1];
+}
+
+/** "a, b or c" in the active language (Welsh: "neu" softens the last name). */
+export function orOf(items: string[]): string {
+  if (items.length < 2) return items.join("");
+  if (lang() === "cy") return listCy(items, true);
+  return items.slice(0, -1).join(t("boardui.list.comma")) + t("boardui.list.or") + items[items.length - 1];
 }
 
 /** A model `{en, cy}` field in the active language. */
@@ -59,6 +69,9 @@ export const tx = (text: Text | string | null | undefined): string => pick(text 
 
 /** Fill the {council}, {councils} and {river} slots of a model sentence (events, endings). */
 export function fill(model: BoardModel, text: string, councils: CouncilCode[], river?: Text): string {
+  if (lang() === "cy") {
+    return fillCy(text, { council: councilName(model, councils[0]), councils: listCy(councils.map((c) => councilName(model, c))), river: river ? tx(river) : "" });
+  }
   return text
     .replace(/\{council\}/g, councilName(model, councils[0]))
     .replace(/\{councils\}/g, councils.map((c) => councilName(model, c)).join(t("boardui.list.and")))
@@ -80,15 +93,31 @@ export function measureName(model: BoardModel, id: WhyQuantity | MeasureId): str
 export const projectName = (model: BoardModel, id: string): string => tx(model.projects.find((p) => p.id === id)?.name ?? id);
 export const branchName = (model: BoardModel, id: string): string => tx(model.branches.find((b) => b.id === id)?.name ?? id);
 
+/**
+ * A number as every board screen shows it: at most one decimal, no thousands comma
+ * (playtest 8, must-fix 8: "You have 1.8132"). Every figure on a board screen goes through here.
+ */
+export const num = (n: number): string => formatNum(n, { maximumFractionDigits: 1, useGrouping: false });
+
+/** Coins as the screens count them: the engine keeps four decimals, the screens show whole coins (and a ring). */
+export const wholeCoins = (n: number): number => Math.floor(n + 1e-6);
+
+/**
+ * Backing as the screens show it: cut DOWN to one decimal, never rounded up, so a shown figure of
+ * `backs_at` (5) or more always means "backs you" and a lower one never does (rule P4, playtest 8
+ * must-fix 6: "Does not back you. Backing 5 out of 10"). The engine's test is backing >= backs_at.
+ */
+export const backingShown = (n: number): number => Math.floor(n * 10) / 10;
+
 /** "about 5 out of 10": a score is always an estimate after 2026, so it is said with "about". */
 export function outOf10(n: number, about = true): string {
-  return t(about ? "boardui.score.about" : "boardui.score.exact", { n: formatNum(n, { maximumFractionDigits: 1 }) });
+  return t(about ? "boardui.score.about" : "boardui.score.exact", { n: num(n) });
 }
 
 /** "+0.4" or "-1.2", for previews and changes (points out of 10). */
 export function signed(n: number): string {
   const r = Math.round(n * 10) / 10;
-  return (r > 0 ? "+" : r < 0 ? "−" : "") + formatNum(Math.abs(r), { maximumFractionDigits: 1 });
+  return (r > 0 ? "+" : r < 0 ? "−" : "") + num(Math.abs(r));
 }
 
 /** The first letter in capitals, for words that open a line ("yr haf" opens as "Yr haf"). */
@@ -105,14 +134,12 @@ export function whenWords(model: BoardModel, step: number, lead = false): string
   return lead ? capFirst(out) : out;
 }
 
-/** The year a project starts working: the year of the step after its ready step. */
-export const readyYearOf = (model: BoardModel, readyStep: number): number => yearOfStep(model, readyStep + 1);
-
 function fillChapter(model: BoardModel, rec: ChapterRecord, field: "name" | "line"): string | null {
   const def = model.chapters?.find((c) => c.id === rec.chapter);
   if (!def) return null;
   const vars = Object.fromEntries(Object.entries(rec.slots ?? {}).map(([k, v]) => [k, varText(v)]));
-  return tx(def[field]).replace(/\{(\w+)\}/g, (all, k: string) => vars[k] ?? all);
+  const s = tx(def[field]);
+  return lang() === "cy" ? fillCy(s, vars) : s.replace(/\{(\w+)\}/g, (all, k: string) => vars[k] ?? all);
 }
 
 /** A chapter's name with its slots filled, or the fallback name while the chapters are not written. */

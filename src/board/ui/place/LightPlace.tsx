@@ -5,7 +5,7 @@
  * previewed; the engine judges the choice against the board when it is made.
  */
 import { createMemo, createSignal, For, Show, type JSX } from "solid-js";
-import { lang, t } from "../../../i18n";
+import { lang, t } from "../lang";
 import { StampButton, TabButton } from "../../../ui/parts";
 import { geo } from "../../../ui/shell/model";
 import type { BoardModel, PlaceDef } from "../../engine/api";
@@ -59,7 +59,7 @@ export function LightPlace(props: { model: BoardModel; place: PlaceDef; onChoose
                 type="button"
                 role="radio"
                 aria-checked={picked() === o.id}
-                class="bp-option ticket"
+                class="bp-option"
                 classList={{ chosen: picked() === o.id }}
                 onClick={() => setPicked(o.id)}
                 data-testid={`bp-opt-${o.id}`}

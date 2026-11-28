@@ -118,6 +118,7 @@ function buildBlockers(model: BoardModel, state: BoardState, def: ProjectDef, si
 }
 
 function upgradeBlockers(model: BoardModel, state: BoardState, def: ProjectDef, p: ProjectState | undefined): Blocker[] {
+  if (p?.status === "building") return [{ kind: "still_building", readyStep: p.readyStep }];
   if (!p || p.status !== "working") return [{ kind: "not_offered" }];
   if (!def.upgrade_costs || p.level >= 3) return [{ kind: "max_level" }];
   const out: Blocker[] = [];
@@ -145,11 +146,9 @@ export function blockers(model: BoardModel, state: BoardState, action: Action): 
       return state.lawChangesLeft > 0 ? [] : [{ kind: "law_changes_used" }];
     }
     case "respond": return respondBlockers(model, state, action.event, action.response);
-    case "visit": {
-      if (!state.pending.some((p) => p.kind === "visit" && p.place === action.place)) return [{ kind: "not_offered" }];
-      const wait = Math.max(1, stepsOf(model, model.game.visit_open_years));
-      return state.openVisitSince !== null && state.step - state.openVisitSince < wait ? [{ kind: "visit_used" }] : [];
-    }
+    // A visit on offer can always be made (playtest 8, must-fix 11: a second offer inside a year
+    // was shown and then refused). Offers lapse after `game.visit_open_years` instead.
+    case "visit": return state.pending.some((p) => p.kind === "visit" && p.place === action.place) ? [] : [{ kind: "not_offered" }];
     case "deal": return dealBlockers(model, state, action);
   }
 }

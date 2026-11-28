@@ -47,6 +47,8 @@ describe("boardend copy", () => {
       ...["links", "projects", "events", "endings", "chapters"].flatMap((p) => [`book.${p}.title`, `book.${p}.blurb`]),
       ...["commute", "rail", "river"].map((k) => `book.links.${k}`),
       "rhondda.risk1", "rhondda.risk2", "rhondda.risk3", "chapter.holding-on",
+      ...["ahead", "behind", "level"].flatMap((x) => [`verdict.nothing.${x}`, `verdict.start.${x}`]),
+      ...["strong_win", "win", "lost"].map((r) => `record.result.${r}`),
     ];
     for (const d of [en, cy]) expect(need.filter((k) => !(k in d))).toEqual([]);
   });

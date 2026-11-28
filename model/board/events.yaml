@@ -26,8 +26,8 @@ events:
       - { kind: feature, feature: river }
     target: { pick: highest_risk, risk: flood }
     travels: downstream
-    warning: { en: "Heavy rain is likely over the {river}. {councils} are most at risk.", cy: "Mae glaw trwm yn debygol dros {river}. {councils} sydd fwyaf mewn perygl.", cy_review: true }
-    landed: { en: "The {river} burst its banks in {council}. Homes and shops were flooded.", cy: "Gorlifodd {river} yn {council}. Cafodd cartrefi a siopau eu llifogi.", cy_review: true }
+    warning: { en: "Heavy rain is likely over the {river}. {councils} are most at risk.", cy: "Mae glaw trwm yn debygol dros afon {river}. {councils} sydd fwyaf mewn perygl.", cy_review: true }
+    landed: { en: "The {river} burst its banks in {council}. Homes and shops were flooded.", cy: "Gorlifodd afon {river} yn {council}. Cafodd cartrefi a siopau eu llifogi.", cy_review: true }
     effects:
       - { kind: measure, measure: homes, points: -0.8 }
       - { kind: measure, measure: nature, points: -0.8 }

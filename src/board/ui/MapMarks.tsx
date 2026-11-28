@@ -1,19 +1,22 @@
 /**
- * Marks drawn over the paper map (16.2.3 and 16.3.3): a ring for each build under way that fills
- * a quarter turn for each quarter of its build time, with the season it opens beside it; an up or
- * down cut mark on a council that is on the rise or slipping; and, for the step that has just
- * run, a slip by each council where something finished or landed. Positions come from the map's
- * own projection and follow it when it zooms or resizes. Marks change only when a step runs.
+ * Marks drawn over the paper map (16.2.3 and 16.3.3), so the map carries the story: one ring for
+ * each site with builds under way, filling a quarter turn for each quarter of the soonest build, a
+ * count when there are more, and the season it opens beside it; an up or down mark on a council
+ * on the rise or slipping; what finished or landed in the step that has just run; and the year's
+ * biggest changes (the ticker's year lines) on the councils they happened in, for a year.
+ * Positions come from the map's own projection and follow it when it zooms or resizes; the words
+ * are laid out so none print over another (markLayout.ts). Marks change only when a step runs.
  */
-import { createMemo, For, type Accessor, type JSX } from "solid-js";
-import { t } from "../../i18n";
+import { createMemo, For, Show, type Accessor, type JSX } from "solid-js";
+import { t } from "./lang";
 import type { PaperMap } from "../../map";
 import type { BoardModel, CouncilCode, ProjectState, Site } from "../engine/api";
+import { stepsOf } from "../engine/api";
 import { useGame } from "./game";
-import { councilName, projectName, tx, whenWords } from "./words";
+import { groupBy, layoutSlips, type Slip } from "./markLayout";
+import { councilName, measureName, projectName, signed, tx, whenWords } from "./words";
 
 const RING_R = 9;
-const RING_GAP = 24;
 
 /** Host pixels of a site: a council's label point, or the middle of its rail link. */
 function siteAt(model: BoardModel, map: PaperMap, site: Site): [number, number] | null {
@@ -32,26 +35,30 @@ function arc(r: number, share: number): string {
   return `M0 ${-r}A${r} ${r} 0 ${share > 0.5 ? 1 : 0} 1 ${x.toFixed(2)} ${y.toFixed(2)}`;
 }
 
-export function MapMarks(props: { map: Accessor<PaperMap | null>; view: Accessor<number> }): JSX.Element {
+interface Ring { id: string; x: number; y: number; share: number; keystone: boolean; count: number; label: string; title: string }
+type SlipKind = "ring" | "news" | "event" | "up" | "down";
+
+export function MapMarks(props: { map: Accessor<PaperMap | null>; view: Accessor<number>; moving?: Accessor<boolean> }): JSX.Element {
   const game = useGame();
   const model = game.model;
 
-  const rings = createMemo(() => {
+  /** One ring per site: the soonest build there leads, the rest are counted. */
+  const rings = createMemo<Ring[]>(() => {
     props.view();
     const m = props.map(), s = game.state();
     if (!m || !s) return [];
-    const seen = new Map<string, number>();
-    return s.projects.filter((p) => p.status === "building").map((p: ProjectState) => {
+    const building = s.projects.filter((p) => p.status === "building").sort((a, b) => a.readyStep - b.readyStep);
+    return groupBy(building, (p: ProjectState) => p.site.council ?? p.site.link ?? "").flatMap((group) => {
+      const p = group[0]!;
       const at = siteAt(model, m, p.site);
-      const key = p.site.council ?? p.site.link ?? "";
-      const n = seen.get(key) ?? 0;
-      seen.set(key, n + 1);
+      if (!at) return [];
       const span = Math.max(1, p.readyStep + 1 - p.startedStep);
       // whole quarters: the ring moves a quarter turn for each quarter of the build
-      const share = Math.floor(((s.step - p.startedStep) / span) * 4) / 4;
-      const keystone = !!model.projects.find((d) => d.id === p.project)?.keystone;
-      return at ? { id: p.id, x: at[0] + n * RING_GAP, y: at[1] + 22, share: Math.max(0, share), keystone, label: whenWords(model, p.readyStep + 1, true), name: projectName(model, p.project) } : null;
-    }).filter((x) => !!x);
+      const share = Math.max(0, Math.floor(((s.step - p.startedStep) / span) * 4) / 4);
+      const keystone = group.some((x) => !!model.projects.find((d) => d.id === x.project)?.keystone);
+      const title = group.map((x) => t("boardui.map.ring", { name: projectName(model, x.project), when: whenWords(model, x.readyStep + 1) })).join(". ");
+      return [{ id: p.id, x: at[0], y: at[1] + 22, share, keystone, count: group.length, label: whenWords(model, p.readyStep + 1, true), title }];
+    });
   });
 
   const tips = createMemo(() => {
@@ -65,34 +72,52 @@ export function MapMarks(props: { map: Accessor<PaperMap | null>; view: Accessor
     });
   });
 
-  /** What finished and what landed in the step that has just run, by council. */
-  const news = createMemo(() => {
+  /**
+   * The words on the map: what finished and landed in the step that has just run, the year's
+   * biggest changes on the councils they happened in (the same lines as the ticker), and each
+   * ring's season. Laid out so that none overlap.
+   */
+  const slips = createMemo(() => {
     props.view();
-    const m = props.map(), s = game.state(), r = game.clock.last();
-    if (!m || !s || !r || r.step !== s.step - 1) return [];
-    const out: { key: string; x: number; y: number; text: string; event: boolean }[] = [];
-    for (const id of r.finished) {
-      const p = s.projects.find((x) => x.id === id);
-      const at = p ? siteAt(model, m, p.site) : null;
-      if (p && at) out.push({ key: `f${id}`, x: at[0], y: at[1] - 20, text: t("boardui.map.finished", { project: projectName(model, p.project) }), event: false });
+    const m = props.map(), s = game.state();
+    if (!m || !s) return [];
+    const out: (Slip & { kind: SlipKind })[] = [];
+    const r = game.clock.last();
+    if (r && r.step === s.step - 1) {
+      for (const id of r.finished) {
+        const p = s.projects.find((x) => x.id === id);
+        const at = p ? siteAt(model, m, p.site) : null;
+        if (p && at) out.push({ key: `f${id}`, x: at[0], y: at[1] - 46, centre: true, up: true, rank: 1, kind: "news", text: t("boardui.map.finished", { project: projectName(model, p.project) }) });
+      }
+      for (const e of r.events) {
+        const code: CouncilCode | undefined = e.councils[0];
+        const at = code ? m.anchorOf(code) : null;
+        if (at) out.push({ key: `e${e.event}`, x: at[0], y: at[1] - 46, centre: true, up: true, rank: 0, kind: "event", text: tx(model.events.find((x) => x.id === e.event)?.name) });
+      }
     }
-    for (const e of r.events) {
-      const code: CouncilCode | undefined = e.councils[0];
-      const at = code ? m.anchorOf(code) : null;
-      if (at) out.push({ key: `e${e.event}`, x: at[0], y: at[1] - 38, text: tx(model.events.find((x) => x.id === e.event)?.name), event: true });
+    const year = stepsOf(model, 1);
+    const lines = game.clock.ticker().filter((l) => l.kind === "year" && l.step > s.step - 1 - year);
+    const latest = lines.length ? Math.max(...lines.map((l) => l.step)) : -1;
+    for (const l of lines) {
+      if (l.kind !== "year" || l.step !== latest || !l.line.council) continue;
+      const at = m.anchorOf(l.line.council);
+      if (at) out.push({ key: `y${l.id}`, x: at[0], y: at[1] - 46, centre: true, up: true, rank: 0, kind: l.line.delta >= 0 ? "up" : "down", text: `${measureName(model, l.line.quantity)} ${signed(l.line.delta)}` });
     }
-    return out;
+    for (const g of rings()) out.push({ key: `r${g.id}`, x: g.x + (g.keystone ? 15 : 12), y: g.y - 8, rank: 2, kind: "ring", text: g.label });
+    const kinds = new Map(out.map((x) => [x.key, x.kind]));
+    return layoutSlips(out).map((p) => ({ ...p, kind: kinds.get(p.key)! }));
   });
 
   return (
-    <div class="bw-marks" aria-hidden="true">
+    <div class="bw-marks" classList={{ moving: !!props.moving?.() }} aria-hidden="true">
       <svg class="bw-marks-svg">
         <For each={rings()}>
           {(r) => (
-            <g transform={`translate(${r!.x} ${r!.y})`} class="bw-ring" classList={{ keystone: r!.keystone }}>
-              <title>{t("boardui.map.ring", { name: r!.name, when: r!.label })}</title>
-              <circle r={r!.keystone ? RING_R + 3 : RING_R} class="bw-ring-track" />
-              <path d={arc(r!.keystone ? RING_R + 3 : RING_R, r!.share)} class="bw-ring-fill" />
+            <g transform={`translate(${r.x} ${r.y})`} class="bw-ring" classList={{ keystone: r.keystone }}>
+              <title>{r.title}</title>
+              <circle r={r.keystone ? RING_R + 3 : RING_R} class="bw-ring-track" />
+              <path d={arc(r.keystone ? RING_R + 3 : RING_R, r.share)} class="bw-ring-fill" />
+              <Show when={r.count > 1}><text class="bw-ring-count" text-anchor="middle" dy="0.35em">{r.count}</text></Show>
             </g>
           )}
         </For>
@@ -105,11 +130,14 @@ export function MapMarks(props: { map: Accessor<PaperMap | null>; view: Accessor
           )}
         </For>
       </svg>
-      <For each={rings()}>
-        {(r) => <span class="bw-ring-year small data" style={{ left: `${r!.x + (r!.keystone ? 15 : 12)}px`, top: `${r!.y - 8}px` }}>{r!.label}</span>}
-      </For>
-      <For each={news()}>
-        {(n) => <span class="bw-news small" classList={{ event: n.event }} style={{ left: `${n.x}px`, top: `${n.y}px` }}>{n.text}</span>}
+      <For each={slips()}>
+        {(n) => (
+          <span
+            class={n.kind === "ring" ? "bw-ring-year small data" : `bw-news bw-news-${n.kind} small`}
+            classList={{ event: n.kind === "event" }}
+            style={{ left: `${n.box[0]}px`, top: `${n.box[1]}px` }}
+          >{n.text}</span>
+        )}
       </For>
     </div>
   );

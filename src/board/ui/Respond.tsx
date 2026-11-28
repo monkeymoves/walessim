@@ -4,12 +4,13 @@
  * answer. A slate slip, pinned and askew: the one angled thing on the board.
  */
 import { createMemo, For, onMount, type JSX } from "solid-js";
-import { Pair, t, tn } from "../../i18n";
+import { lang, Pair, t, tn } from "./lang";
 import { TabButton } from "../../ui/parts";
 import { blockerWords } from "./blockers";
 import { options } from "./engine";
 import { useGame } from "./game";
 import { fill, tx, whenWords } from "./words";
+import { riverAt } from "../engine/api";
 
 export function Respond(props: { event: string; councils: string[] }): JSX.Element {
   const game = useGame();
@@ -27,8 +28,8 @@ export function Respond(props: { event: string; councils: string[] }): JSX.Eleme
     <div ref={slip} class="bw-respond on-slate" role="alertdialog" aria-labelledby="bw-respond-title" data-testid="bw-respond">
       <span class="bw-slip-pin" aria-hidden="true" />
       <p class="label bw-slip-from">{t("boardui.respond.from", { when: whenWords(model, game.state()?.step ?? 0) })}</p>
-      <Pair text={ev()?.name} class="t-2 bw-slip-title" id="bw-respond-title" />
-      <p class="bw-slip-say">{fill(model, tx(ev()?.landed), props.councils)}</p>
+      <Pair single={lang() === "cy"} text={ev()?.name} class="t-2 bw-slip-title" id="bw-respond-title" />
+      <p class="bw-slip-say">{fill(model, tx(ev()?.landed), props.councils, riverAt(model, props.councils[0]!, props.councils[1]))}</p>
       <ul class="bw-respond-list">
         <For each={opts()}>
           {(o) => {

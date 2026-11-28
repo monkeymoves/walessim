@@ -3,10 +3,10 @@
  * is expected and the links it travels. Always "about", always a game estimate.
  */
 import { For, Show, type JSX } from "solid-js";
-import { t } from "../../i18n";
+import { t } from "./lang";
 import type { WhyQuantity } from "../engine/api";
 import { useGame } from "./game";
-import { councilName, measureName, say, signed, tx } from "./words";
+import { councilName, listOf, measureName, say, signed, tx } from "./words";
 
 export function PreviewLines(): JSX.Element {
   const game = useGame();
@@ -41,7 +41,7 @@ export function PreviewLines(): JSX.Element {
         </ul>
       </Show>
       <Show when={linkNames().length}>
-        <p class="small bw-preview-links">{t("boardui.preview.links", { list: linkNames().join(t("boardui.list.and")) })}</p>
+        <p class="small bw-preview-links">{t("boardui.preview.links", { list: listOf(linkNames()) })}</p>
       </Show>
       <For each={(p()?.notes ?? []).filter((n) => !n.key.endsWith("build.catch"))}>{(n) => <p class="small bw-catch">{say(n)}</p>}</For>
       <p class="small bw-honest">{t("boardui.preview.honest")}</p>

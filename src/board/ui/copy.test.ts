@@ -47,7 +47,6 @@ describe("board screen copy", () => {
   const families: Record<string, readonly string[]> = {
     "season": ["summer", "autumn", "winter", "spring"],
     "clock.speed": ["steady", "brisk", "fast"],
-    "clock.held": ["stop", "answer", "hidden", "reading", "ended"],
     "settings.stop": ["respond", "election", "ended", "warning", "keystone", "tier_open", "visit", "tipping", "chapter", "deal_due", "purse_full", "finished", "year"],
     "timeline.would": ["strong_win", "win", "lost"],
     "timeline.mark": ["promise", "deal", "keystone_last_start", "care_bill", "end"],
@@ -57,7 +56,6 @@ describe("board screen copy", () => {
     "council.momentum": ["rising", "slipping"],
     "momentum": ["rising", "slipping"],
     "stop.tipping": ["rising", "slipping"],
-    "guide": ["map", "council", "build", "play", "speed", "playStep", "speedStep"],
     "why.span": ["year", "term", "all"],
     ...Object.fromEntries(["election", "ended", "warning", "keystone", "tier_open", "visit", "tipping", "chapter", "deal_due", "purse_full", "finished", "year"].map((k) => [`stop.${k}`, ["title", "line"]])),
   };

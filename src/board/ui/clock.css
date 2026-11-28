@@ -14,8 +14,8 @@
 .bw-scores { flex: 1; min-width: 0; display: flex; gap: 10px; }
 .bw-scores .tip-host { display: block; min-width: 0; }
 .bw-score { display: flex; align-items: center; gap: 8px; padding: 5px 12px 5px 10px; background: var(--paper) var(--grain); box-shadow: var(--lit-edge), var(--shadow-flat); min-height: 46px; }
-.bw-score-n { font-size: 24px; line-height: 1; min-width: 1.6ch; }
-.bw-score-word { display: grid; line-height: 1.2; }
+.bw-score-n { flex: none; font-size: 24px; line-height: 1; min-width: 1.6ch; }
+.bw-score-word { display: grid; line-height: 1.2; min-width: 0; }
 .bw-score-word b { font-weight: var(--wght-grot-strong); white-space: nowrap; }
 .bw-score-word .small { color: var(--ink-2); white-space: nowrap; }
 .bw-score-main { box-shadow: var(--lit-edge), var(--shadow-flat), inset 0 -3px 0 var(--ink); }
@@ -39,6 +39,7 @@
 .bw-tl-years li::before { content: ""; position: absolute; left: 50%; top: -5px; height: 4px; border-left: 1px solid var(--rule-strong); }
 .bw-tl-years li:first-child { transform: none; }
 .bw-tl-years li:last-child { transform: translateX(-100%); }
+.bw-tl-years li.under-now { visibility: hidden; }
 .bw-tl-items { position: absolute; inset: 0; }
 .bw-tl-li { display: contents; }
 .bw-tl-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
@@ -119,6 +120,51 @@
 .bw-clock-set:hover, .bw-clock-set[aria-expanded="true"] { background: var(--paper) var(--grain); box-shadow: var(--shadow-flat); }
 .bw-clock-held { grid-column: 1 / -1; min-height: 15px; color: var(--ink-2); line-height: 15px; }
 .bw-clock-held:empty::before { content: "\a0"; }
+
+/* playtest 8: time starts stopped behind one big, plain button. The status line under the
+   controls always says what time is doing; held is said on the button too. */
+.bw-clock { position: relative; }
+.bw-clock.fresh { grid-template-columns: auto auto; }
+.bw-clock.fresh .bw-clock-play { grid-column: 1 / -1; justify-content: center; min-height: 46px; font-size: 19px; gap: 10px; box-shadow: var(--shadow-slate), 0 0 0 3px var(--brass); }
+.bw-clock.fresh .bw-clock-play svg { width: 15px; height: 15px; }
+.bw-clock.fresh .bw-clock-speeds { justify-self: start; }
+.bw-clock.fresh .bw-clock-held { color: var(--ink); font-weight: var(--wght-grot-strong); }
+.bw-clock-play.held { background: var(--paper-2) var(--grain); color: var(--ink); box-shadow: inset 0 0 0 2px var(--warn), var(--shadow-flat); }
+.bw-clock.held .bw-clock-held { color: var(--warn); font-weight: var(--wght-grot-strong); }
+@media (prefers-reduced-motion: no-preference) {
+  .bw-clock.fresh .bw-clock-play { animation: bw-beckon 2.4s ease-in-out infinite; }
+  .bw-clock-lesson { animation: bw-slide var(--dur-slide) var(--ease-paper); }
+}
+@keyframes bw-beckon { 0%, 100% { box-shadow: var(--shadow-slate), 0 0 0 3px var(--brass); } 50% { box-shadow: var(--shadow-slate), 0 0 0 6px rgba(217, 162, 27, 0.45); } }
+
+/* the first time time runs: a note pinned to the clock on pause and speed */
+.bw-clock-lesson {
+  position: absolute; left: -4px; bottom: calc(100% + 16px); z-index: 30; width: 340px; padding: 14px 16px 14px;
+  display: grid; gap: 8px; justify-items: start; background: var(--paper) var(--grain);
+  box-shadow: var(--lit-edge), var(--shadow-lifted), inset 0 3px 0 var(--ink);
+}
+.bw-clock-lesson::after { content: ""; position: absolute; left: 44px; top: 100%; border: 11px solid transparent; border-top-color: var(--paper); filter: drop-shadow(0 2px 0 rgba(20, 24, 26, 0.25)); }
+.bw-clock-lesson-title { margin: 0; }
+.bw-clock-lesson-list { display: grid; gap: 6px; font-family: var(--font-print); font-size: 15px; line-height: 1.4; }
+.bw-clock-lesson-list b { font-weight: 700; }
+.bw-clock-lesson-list .small { font-family: var(--font-grot); color: var(--ink-2); }
+
+/* ---------- top strip: the purse and the headline's movement ---------- */
+.bw-coins-line { display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }
+.bw-coins-note { white-space: nowrap; }
+.bw-coins.soon { box-shadow: var(--lit-edge), var(--shadow-flat), inset 0 -3px 0 var(--warn); }
+.bw-coins.soon .bw-coins-note { color: var(--warn); font-weight: var(--wght-grot-strong); }
+.bw-coins.full { background: var(--warn-paper) var(--grain); box-shadow: var(--lit-edge), var(--shadow-flat), inset 0 0 0 2px var(--warn); }
+.bw-coins.full .bw-coins-note { color: var(--ink); font-weight: var(--wght-grot-strong); }
+.tip-host:has(> .bw-coins) { flex: none; }
+.bw-head .bw-score-n { min-width: 2.6ch; transition: color 0.4s; }
+.bw-head-note { display: block; font-size: var(--size-small); line-height: var(--lh-small); color: var(--ink-2); white-space: nowrap; }
+.bw-head-up { color: var(--yarn-resilient); font-weight: var(--wght-grot-strong); }
+.bw-head-down { color: var(--warn); font-weight: var(--wght-grot-strong); }
+.bw-head-building { color: var(--stitch-deep); }
+.bw-head-if { color: var(--stitch-deep); font-weight: var(--wght-grot-strong); }
+.bw-head.up .bw-score-n { color: var(--yarn-resilient); }
+.bw-head.down .bw-score-n { color: var(--warn); }
 
 /* ---------- the ticker, by the time line ---------- */
 .bw-ticker { position: absolute; left: 262px; right: 404px; bottom: 14px; z-index: 7; display: flex; justify-content: flex-start; pointer-events: none; }
@@ -232,6 +278,8 @@
   .bw-score-n { font-size: 21px; }
   .bw-score { padding: 4px 9px 4px 8px; }
   .bw-score-word .small { display: none; }
+  .bw-head-note { white-space: normal; max-width: 220px; }
+  .bw-scores .tip-host + .tip-host .bw-score-word b { white-space: normal; max-width: 8em; }
 }
 
 @media (prefers-reduced-motion: reduce) {

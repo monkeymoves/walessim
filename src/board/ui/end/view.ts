@@ -9,6 +9,7 @@ import type {
   BoardModel, ChapterRecord, CouncilCode, Ending, Frame, FrameCouncil, MeasureId, Moment, SayVar, Text,
 } from "../../engine/api";
 import { MEASURE_IDS } from "../../engine/api";
+import { fillCy } from "../cymraeg";
 
 /** What a small map or the time-lapse is coloured by: one measure, all six together, or young adults. */
 export type EndLens = MeasureId | "all" | "young";
@@ -104,15 +105,30 @@ export function slotText(v: SayVar | undefined, lang: "en" | "cy"): string {
 export function fillText(text: Text | undefined, slots: Record<string, SayVar>, lang: "en" | "cy"): string {
   if (!text) return "";
   const s = (lang === "cy" ? text.cy : text.en) || text.en;
+  if (lang === "cy" && text.cy) {
+    // Welsh: each value takes the mutation the word before it asks for ("yng Nghasnewydd", "o'r Barri")
+    const vals = Object.fromEntries(Object.entries(slots).map(([k, v]) => [k, slotText(v, lang)]));
+    return fillCy(s, vals);
+  }
   return s.replace(/\{(\w+)\}/g, (all, k: string) => (k in slots ? slotText(slots[k], lang) : all));
 }
 
 /** True when a filled sentence still has an empty slot, so it should not be shown. */
 export const hasGap = (s: string): boolean => /\{\w+\}/.test(s);
 
-/** The letter's four parts, filled for one language, or null when the model has no such letter. */
-export function letterOf(model: BoardModel, ending: Ending, lang: "en" | "cy"): { salutation: string; body: string; named: string; signoff: string } | null {
-  const def = model.letters.find((l) => l.id === ending.letter.letter);
+/**
+ * The letters that fit this ending, in the game's own order (the engine's choice first, then the
+ * rest in the model's order, as endings.ts `letterChoices` rotates them).
+ */
+export function letterChoicesOf(model: BoardModel, ending: Ending): string[] {
+  const fit = model.letters.filter((l) => l.ending === ending.id && (l.lower === ending.scores.lower || l.lower === "either")).map((l) => l.id);
+  const k = fit.indexOf(ending.letter.letter);
+  return k < 0 ? fit : [...fit.slice(k), ...fit.slice(0, k)];
+}
+
+/** The letter's four parts, filled for one language, or null when the model has no such letter. `id`: another letter that fits. */
+export function letterOf(model: BoardModel, ending: Ending, lang: "en" | "cy", id = ending.letter.letter): { salutation: string; body: string; named: string; signoff: string } | null {
+  const def = model.letters.find((l) => l.id === id);
   if (!def) return null;
   const slots = ending.letter.slots as Record<string, SayVar>;
   const part = (t: Text) => { const s = fillText(t, slots, lang); return hasGap(s) ? "" : s; };

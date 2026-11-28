@@ -8,7 +8,7 @@
 import { effectAmount, effectTargets, type Origin } from "./effects";
 import { pairApplies } from "./held";
 import { dealServed } from "./deals";
-import { rebuildAfter } from "./events";
+import { eventNoun, rebuildAfter } from "./events";
 import { blockers, buildDiscounts, buildSteps, costOf, projectDef, projectStateId, readyStepOf, siteOf, yearAfter } from "./projects";
 import { needFactor, needOn } from "./roots";
 import { yearOfStep } from "./time";
@@ -64,7 +64,7 @@ function growthNotes(model: BoardModel, state: BoardState, def: ProjectDef, site
     if (deal) notes.push({ key: "board.build.deal", vars: { council: council(deal.council) } });
     const rebuild = councils.map((c) => rebuildAfter(model, state, c)).find((x) => !!x);
     const event = rebuild && model.events.find((e) => e.id === rebuild.record.event);
-    if (rebuild && event) notes.push({ key: "board.build.rebuild", vars: { event: event.name, year: yearOfStep(model, rebuild.untilStep) } });
+    if (rebuild && event) notes.push({ key: "board.build.rebuild", vars: { event: eventNoun(event.id), year: yearOfStep(model, rebuild.untilStep) } });
   }
   if (!needOn(model)) return notes;
   const lifts = def.effects.flatMap((e) => (e.kind === "measure" && e.points > 0 && (e.where ?? "here") === "here" ? [e.measure] : []));

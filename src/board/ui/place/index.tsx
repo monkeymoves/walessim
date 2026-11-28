@@ -6,9 +6,10 @@
  * The clock is held while a place is open (16.2.3).
  */
 import { createSignal, Match, onCleanup, onMount, Show, Switch, type JSX } from "solid-js";
-import { Pair, t } from "../../../i18n";
+import { lang, Pair, t } from "../lang";
 import { StampButton, TabButton } from "../../../ui/parts";
-import type { BoardModel, BoardState, Grade, PlaceDef } from "../../engine/api";
+import { eventNoun, type BoardModel, type BoardState, type Grade, type PlaceDef } from "../../engine/api";
+import { visitBlockWords } from "../blockers";
 import { useGame } from "../game";
 import { councilName, projectName, tx } from "../words";
 import { LightPlace } from "./LightPlace";
@@ -32,7 +33,7 @@ export function offeredBy(model: BoardModel, state: BoardState, place: PlaceDef)
   if (!p || p.kind !== "visit") return "";
   if ("project" in p.offeredBy) return t("boardend.place.offeredBuild", { project: projectName(model, p.offeredBy.project), council: councilName(model, place.council) });
   const ev = model.events.find((e) => e.id === (p.offeredBy as { event: string }).event);
-  return t("boardend.place.offeredEvent", { event: tx(ev?.name), council: councilName(model, place.council) });
+  return ev ? t("boardend.place.offeredEvent", { event: t(eventNoun(ev.id)), council: councilName(model, place.council) }) : "";
 }
 
 export default function PlaceVisit(): JSX.Element {
@@ -44,10 +45,15 @@ export default function PlaceVisit(): JSX.Element {
   let sheet!: HTMLDivElement;
 
   const leave = () => game.setVisit(null);
+  /** Why this visit cannot be made now (an offer that lapsed while the sheet was open), or null. */
+  const blocked = () => {
+    const p = place(), s = game.state();
+    return p && s && !grade() ? visitBlockWords(model, s, p.id) : null;
+  };
   const choose = (picks: string[]) => {
     const p = place(), s = game.state();
     if (!p || !s) return;
-    if (!game.act({ kind: "visit", place: p.id, picks })) { setError(t("boardend.place.notNow")); return; }
+    if (!game.act({ kind: "visit", place: p.id, picks })) { setError(visitBlockWords(model, s, p.id) ?? t("boardend.place.notNow")); return; }
     setGrade(gradeGiven(game.state()!, p) ?? "adequately");
   };
 
@@ -64,13 +70,14 @@ export default function PlaceVisit(): JSX.Element {
         {(p) => (
           <div class="bp-sheet sheet">
             <header class="bp-head">
-              <Pair text={p().name} as="h2" class="t-1" id="bp-title" />
+              <Pair single={lang() === "cy"} text={p().name} as="h2" class="t-1" id="bp-title" />
               <p class="small">{councilName(model, p().council)}</p>
               <Show when={game.state() && offeredBy(model, game.state()!, p())}><p class="small">{offeredBy(model, game.state()!, p())}</p></Show>
               <p class="story">{tx(p().prompt)}</p>
               <p class="story-small bp-hard">{tx(p().why_hard)}</p>
             </header>
             <Show when={!grade()} fallback={<Graded place={p()} grade={grade()!} onDone={leave} />}>
+              <Show when={!blocked()} fallback={<Blocked reason={blocked()!} onLeave={leave} />}>
               <Switch fallback={<Missing onLeave={leave} />}>
                 <Match when={p().template === "T3" && p().options?.length}>
                   <LightPlace model={model} place={p()} onChoose={(id) => choose([id])} onLeave={leave} />
@@ -79,6 +86,7 @@ export default function PlaceVisit(): JSX.Element {
                   <RhonddaPlace model={model} place={p()} onChoose={choose} onLeave={leave} />
                 </Match>
               </Switch>
+              </Show>
               <Show when={error()}><p class="small bp-error" role="alert">{error()}</p></Show>
             </Show>
           </div>
@@ -98,6 +106,15 @@ function Graded(props: { place: PlaceDef; grade: Grade; onDone: () => void }): J
       <Show when={scaled()}><p class="small">{t("boardend.place.scales", { project: scaled() })}</p></Show>
       <p class="small">{t("boardend.place.honest")}</p>
       <StampButton onClick={() => props.onDone()} data-testid="bp-done">{t("boardend.place.done")}</StampButton>
+    </div>
+  );
+}
+
+function Blocked(props: { reason: string; onLeave: () => void }): JSX.Element {
+  return (
+    <div class="bp-graded" data-testid="bp-blocked">
+      <p class="story" role="status">{props.reason}</p>
+      <TabButton onClick={() => props.onLeave()} data-testid="bp-leave">{t("boardend.place.close")}</TabButton>
     </div>
   );
 }

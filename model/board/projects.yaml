@@ -9,9 +9,12 @@
 #
 # Phase 2 (section 16): build times are in years. Quick projects (`quick: true`, the small wins of
 # 16.4) cost 2 coins and open within a year; other tier 1 projects take two years, tier 2 three,
-# keystones six (8 coins). Measure effects are the phase 1 sizes times 1.25 for tier 1, 1.5 for
-# tier 2 and 2 for keystones (16.3.2). Each keystone unlocks one legacy project (`legacy_of`, 5 coins,
-# three years, 16.3.5). Running costs are coins a year, charged a little every step.
+# keystones six (8 coins). Measure effects began as the phase 1 sizes times 1.25 for tier 1, 1.5 for
+# tier 2 and 2 for keystones (16.3.2); the balance rounds moved them since (playtest 8: quick
+# projects 1.75 times their first size, with shallow roots, R1 `quick_max_factor`; tier 2, legacy
+# projects and keystones 1.3 times), all logged in docs/design/board-balance-log.md. Each keystone
+# unlocks one legacy project (`legacy_of`, 5 coins, three years, 16.3.5). Running costs are coins a
+# year, charged a little every step.
 projects:
   # ---------------------------------------------------------------------------
   # Branch 1: Joined-up valleys (rail, towns and reach)
@@ -53,9 +56,9 @@ projects:
     needs:
       - { kind: feature, feature: rail }
     effects:
-      - { kind: measure, measure: health, points: 0.375 }
-      - { kind: measure, measure: work, points: 0.25 }
-      - { kind: measure, measure: climate, points: 0.125 }
+      - { kind: measure, measure: health, points: 0.656 }
+      - { kind: measure, measure: work, points: 0.438 }
+      - { kind: measure, measure: climate, points: 0.219 }
     upgrade_costs: [2, 3]
     level_factor: [1, 2.2, 3.5]
     tags: [bus, services]
@@ -75,9 +78,9 @@ projects:
     needs:
       - { kind: feature, feature: rail }
     effects:
-      - { kind: measure, measure: homes, points: 0.75 }
-      - { kind: measure, measure: work, points: 0.6, jobs: true }
-      - { kind: measure, measure: health, points: 0.15 }
+      - { kind: measure, measure: homes, points: 0.975 }
+      - { kind: measure, measure: work, points: 0.78, jobs: true }
+      - { kind: measure, measure: health, points: 0.195 }
       - { kind: block, spread: S2, share: 0.8 }
       - { kind: young_adults, points: 0.1 }
     upgrade_costs: [4, 5]
@@ -101,9 +104,9 @@ projects:
       - { kind: feature, feature: valley }
       - { kind: link_quality, at_least: 2 }
     effects:
-      - { kind: measure, measure: work, points: 2, jobs: true }
+      - { kind: measure, measure: work, points: 2.6, jobs: true }
       - { kind: young_adults, points: 0.3 }
-      - { kind: measure, measure: welsh, points: 0.2, after_years: 2 }
+      - { kind: measure, measure: welsh, points: 0.26, after_years: 2 }
       - { kind: special, special: reverse_commute }
       - { kind: special, special: branch_joined }
     level_factor: [1, 2.2, 3.5]
@@ -143,10 +146,10 @@ projects:
     name: { en: "Back local firms", cy: "Cefnogi cwmnïau lleol", cy_review: true }
     what: { en: "Councils, hospitals and schools buy more from firms nearby. Small, steady work across many firms.", cy: "Mae cynghorau, ysbytai ac ysgolion yn prynu mwy gan gwmnïau cyfagos. Gwaith bach, cyson, ar draws llawer o gwmnïau.", cy_review: true }
     example: { en: "Public bodies in Caerphilly and Torfaen buying from local firms.", cy: "Cyrff cyhoeddus yng Nghaerffili a Thor-faen yn prynu gan gwmnïau lleol.", cy_review: true }
-    catch: { en: "It grows slowly. Nobody cuts a ribbon.", cy: "Mae'n tyfu'n araf. Does neb yn torri rhuban.", cy_review: true }
+    catch: { en: "It helps at once, but it stays small. Nobody cuts a ribbon.", cy: "Mae'n helpu ar unwaith, ond mae'n aros yn fach. Does neb yn torri rhuban.", cy_review: true }
     needs: []
     effects:
-      - { kind: measure, measure: work, points: 0.25, jobs: true }
+      - { kind: measure, measure: work, points: 0.525, jobs: true }
       - { kind: risk, risk: employer, steps: -1 }
     upgrade_costs: [2, 3]
     level_factor: [1, 2.2, 3.5]
@@ -188,9 +191,9 @@ projects:
     needs:
       - { kind: flag, flag: city, not: true }
     effects:
-      - { kind: measure, measure: climate, points: 0.9 }
-      - { kind: measure, measure: homes, points: 0.36 }
-      - { kind: measure, measure: work, points: 0.18, jobs: true }
+      - { kind: measure, measure: climate, points: 1.17 }
+      - { kind: measure, measure: homes, points: 0.468 }
+      - { kind: measure, measure: work, points: 0.234, jobs: true }
       - { kind: coins, coins_per_year: 0.25, only_if: [{ kind: project, project: community-energy, where: here, min_level: 2 }] }
     upgrade_costs: [3, 4]
     level_factor: [1, 2.2, 3.5]
@@ -210,9 +213,9 @@ projects:
     catch: { en: "Factories need land, power and lorries. Nature and Climate pay a price.", cy: "Mae angen tir, pŵer a lorïau ar ffatrïoedd. Mae Natur a Hinsawdd yn talu pris.", cy_review: true }
     needs: []
     effects:
-      - { kind: measure, measure: work, points: 4.2, jobs: true }
-      - { kind: measure, measure: nature, points: -0.6 }
-      - { kind: measure, measure: climate, points: -0.6 }
+      - { kind: measure, measure: work, points: 5.46, jobs: true }
+      - { kind: measure, measure: nature, points: -0.78 }
+      - { kind: measure, measure: climate, points: -0.78 }
       - { kind: risk, risk: employer, steps: -1 }
       - { kind: special, special: cluster_roots }
       - { kind: special, special: branch_joined }
@@ -261,7 +264,7 @@ projects:
       - { kind: feature, feature: river }
     effects:
       - { kind: risk, risk: flood, steps: -1, where: downstream, after_years: 2 }
-      - { kind: measure, measure: nature, points: 0.469 }
+      - { kind: measure, measure: nature, points: 0.787 }
     upgrade_costs: [2, 3]
     level_factor: [1, 2.2, 3.5]
     tags: [nature, flood]
@@ -305,9 +308,9 @@ projects:
     needs:
       - { kind: flag, flag: coal_valley }
     effects:
-      - { kind: measure, measure: health, points: 0.703, where: flagged, flag: coal_valley, only_if: [{ kind: project, branch: landscape, tier: 1, where: here }] }
-      - { kind: measure, measure: nature, points: 0.703, where: flagged, flag: coal_valley }
-      - { kind: measure, measure: work, points: 0.235, jobs: true }
+      - { kind: measure, measure: health, points: 0.914, where: flagged, flag: coal_valley, only_if: [{ kind: project, branch: landscape, tier: 1, where: here }] }
+      - { kind: measure, measure: nature, points: 0.914, where: flagged, flag: coal_valley }
+      - { kind: measure, measure: work, points: 0.305, jobs: true }
     upgrade_costs: [4, 5]
     level_factor: [1, 2.2, 3.5]
     tags: [nature, health, park]
@@ -329,8 +332,8 @@ projects:
     effects:
       - { kind: special, special: storm_step_down }
       - { kind: special, special: branch_joined }
-      - { kind: measure, measure: nature, points: 2.5 }
-      - { kind: measure, measure: health, points: 0.625 }
+      - { kind: measure, measure: nature, points: 3.25 }
+      - { kind: measure, measure: health, points: 0.812 }
       - { kind: risk, risk: flood, steps: -1 }
       - { kind: risk, risk: flood, steps: -1, where: downstream, after_years: 2 }
     level_factor: [1, 2.2, 3.5]
@@ -413,7 +416,7 @@ projects:
     catch: { en: "The care bill only falls once several towns have one.", cy: "Dim ond pan fydd gan sawl tref un y mae'r bil gofal yn gostwng.", cy_review: true }
     needs: []
     effects:
-      - { kind: measure, measure: health, points: 0.765 }
+      - { kind: measure, measure: health, points: 0.995 }
       - { kind: backing, points: 0.3, group: older }
       - { kind: special, special: care_bill_off }
     upgrade_costs: [4, 5]
@@ -434,11 +437,11 @@ projects:
     catch: { en: "It is slow and costly. Little else gets built while it does.", cy: "Mae'n araf ac yn ddrud. Ychydig arall sy'n cael ei adeiladu tra mae'n digwydd.", cy_review: true }
     needs: []
     effects:
-      - { kind: measure, measure: health, points: 1.8 }
-      - { kind: measure, measure: climate, points: 1.8 }
-      - { kind: measure, measure: homes, points: 0.72 }
-      - { kind: measure, measure: health, points: 0.54, where: flagged, flag: coal_valley }
-      - { kind: measure, measure: climate, points: 0.36, where: everywhere }
+      - { kind: measure, measure: health, points: 2.34 }
+      - { kind: measure, measure: climate, points: 2.34 }
+      - { kind: measure, measure: homes, points: 0.936 }
+      - { kind: measure, measure: health, points: 0.702, where: flagged, flag: coal_valley }
+      - { kind: measure, measure: climate, points: 0.468, where: everywhere }
       - { kind: special, special: no_care_bill }
       - { kind: special, special: branch_joined }
     level_factor: [1, 2.2, 3.5]
@@ -462,9 +465,9 @@ projects:
     catch: { en: "It fixes what is broken now. It does not make old homes warm for good.", cy: "Mae'n trwsio'r hyn sydd wedi torri nawr. Dydy e ddim yn gwneud hen gartrefi'n gynnes am byth.", cy_review: true }
     needs: []
     effects:
-      - { kind: measure, measure: health, points: 0.25 }
-      - { kind: measure, measure: homes, points: 0.25 }
-      - { kind: measure, measure: climate, points: 0.125 }
+      - { kind: measure, measure: health, points: 0.438 }
+      - { kind: measure, measure: homes, points: 0.438 }
+      - { kind: measure, measure: climate, points: 0.219 }
     upgrade_costs: [2, 3]
     level_factor: [1, 2.2, 3.5]
     tags: [warmth, repairs]
@@ -527,13 +530,13 @@ projects:
     build_years: 3
     name: { en: "Farms paid to hold water", cy: "Talu ffermydd i ddal dŵr", cy_review: true }
     what: { en: "Hill farmers are paid to let fields hold water after heavy rain. Every river town floods less, and storms cost nothing to answer.", cy: "Mae ffermwyr y bryniau'n cael eu talu i adael i gaeau ddal dŵr ar ôl glaw trwm. Mae pob tref ar afon yn gorlifo llai, ac nid yw ateb storm yn costio dim.", cy_review: true }
-    example: { en: "Hill farms above the Taff, the Ebbw and the Usk.", cy: "Ffermydd mynydd uwchben afonydd Taf, Ebwy a Wysg.", cy_review: true }
+    example: { en: "Hill farms above the Taff, the Ebbw and the Usk.", cy: "Ffermydd mynydd uwchben afonydd Taf, Ebwy ac Wysg.", cy_review: true }
     catch: { en: "Some fields are too wet to farm for part of the year.", cy: "Mae rhai caeau'n rhy wlyb i'w ffermio am ran o'r flwyddyn.", cy_review: true }
     needs:
       - { kind: keystone, project: rivers-room }
     effects:
       - { kind: risk, risk: flood, steps: -1, where: everywhere, only_if: [{ kind: feature, feature: river }] }
-      - { kind: measure, measure: nature, points: 0.3, where: everywhere, only_if: [{ kind: feature, feature: river }] }
+      - { kind: measure, measure: nature, points: 0.39, where: everywhere, only_if: [{ kind: feature, feature: river }] }
       - { kind: special, special: storm_no_coins }
     level_factor: [1, 2.2, 3.5]
     tags: [nature, flood]
@@ -555,8 +558,8 @@ projects:
       - { kind: keystone, project: heat-and-homes }
     effects:
       - { kind: special, special: running_halved }
-      - { kind: measure, measure: homes, points: 0.3, where: everywhere, only_if: [{ kind: project, tag: warmth, where: here }] }
-      - { kind: measure, measure: climate, points: 0.3, where: everywhere }
+      - { kind: measure, measure: homes, points: 0.39, where: everywhere, only_if: [{ kind: project, tag: warmth, where: here }] }
+      - { kind: measure, measure: climate, points: 0.39, where: everywhere }
     level_factor: [1, 2.2, 3.5]
     tags: [homes, energy]
     sources: [retrofit-eval, energy-gen-wales]

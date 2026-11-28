@@ -29,9 +29,9 @@ export function createGame(model: BoardModel) {
 
   const [state, setState] = createSignal<BoardState | null>(null);
   const [screen, setScreen] = createSignal<Screen>("start");
-  const [selected, setSelected] = createSignal<CouncilCode | null>(null);
+  const [selected, setSelectedSignal] = createSignal<CouncilCode | null>(null);
   const [colourBy, setColourBy] = createSignal<ColourBy>("work");
-  const [sheet, setSheet] = createSignal<Sheet>(null);
+  const [sheet, setSheetSignal] = createSignal<Sheet>(null);
   const [hover, setHover] = createSignal<Action | null>(null);
   const [whyAt, setWhyAt] = createSignal<WhyTarget | null>(null);
   /** A place visit open on screen (package 12 draws it), by place id. */
@@ -48,10 +48,30 @@ export function createGame(model: BoardModel) {
     try { store.set(runKey, eng.encodeRun(s)); } catch (e) { console.warn("board: could not save", e); }
   };
 
-  const reading = () => sheet() !== null || whyAt() !== null || visit() !== null || warning() !== null || termOpen() !== null;
+  /**
+   * The build menu belongs to the selected council: closing the council closes the menu, so no
+   * menu is left open that nothing draws (it held the clock for minutes, playtest 8 must fix 2).
+   * Leaving the build menu drops the project being pointed at, so the top strip never shows a
+   * stale "left if you build it" (must fix 16).
+   */
+  const setSelected = (code: CouncilCode | null) => batch(() => {
+    setSelectedSignal(code);
+    if (code === null && sheet() === "build") { setSheetSignal(null); setHover(null); }
+  });
+  const setSheet = (next: Sheet) => batch(() => {
+    if (next !== "build") setHover(null);
+    setSheetSignal(next);
+  });
 
   const clock = createClock(model, {
-    state, setState, save, reading,
+    state, setState, save,
+    open: () => {
+      const n = termOpen();
+      return {
+        sheet: sheet(), selected: selected() !== null, why: whyAt() !== null, visit: visit() !== null,
+        warning: warning() !== null, term: n !== null && !!clock.terms()[n],
+      };
+    },
     select: (code) => setSelected(code),
     onEnded: () => { batch(() => { setSheet(null); setWhyAt(null); setScreen("end"); }); },
     onError: (m) => setError(m),
@@ -122,16 +142,16 @@ export function createGame(model: BoardModel) {
     batch(() => { setState(null); clock.restore([]); setSelected(null); closeAll(); setScreen("start"); setSaveVersion((n) => n + 1); });
   }
 
-  function guideNext(skip = false, last = 4): void {
-    const n = guide();
-    if (skip || n >= last) { setGuide(-1); store.set(guideKey, "done"); }
-    else setGuide(n + 1);
+  /** Move the guide to note `n`, or end it (-1, remembered in this browser). */
+  function guideTo(n: number): void {
+    if (n < 0) { setGuide(-1); store.set(guideKey, "done"); }
+    else setGuide(n);
   }
 
   return {
     model, state, screen, setScreen, selected, setSelected, colourBy, setColourBy, sheet, setSheet, hover, setHover,
     preview, forecast, whyAt, setWhyAt, visit, setVisit, warning, setWarning, termOpen, setTermOpen, litLink, setLitLink,
-    error, setError, guide, setGuide, guideNext, savedRun, clock, closeAll,
+    error, setError, guide, guideTo, savedRun, clock, closeAll,
     start, resume, act, newGame,
   };
 }

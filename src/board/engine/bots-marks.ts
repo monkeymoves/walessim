@@ -54,6 +54,15 @@ export function balanceTable(runs: RunResult[], x: Extras = {}): Row[] {
   row("Skill beats autopilot", "Skilled beats Autopilot, same game; median gap", `${fmt(sa.share)}; ${fmt(sa.gap, 1)}`, ">= 0.95; >= 15", both(ok(sa.share, (v) => v >= 0.95), ok(sa.gap, (v) => v >= 15)));
   const sr = beats("skilled", "reactive");
   row("Thought beats reaction", "Skilled beats Reactive, same game", fmt(sr.share), ">= 0.85", ok(sr.share, (v) => v >= 0.85));
+  if (bots.includes("spender")) {
+    const ss = beats("skilled", "spender");
+    row("Thought beats spending", "Skilled beats Spender (every coin on the cheapest build), same game", fmt(ss.share), ">= 0.85", ok(ss.share, (v) => v >= 0.85));
+  }
+  const earlyOf = (b: string) => median(byBot(runs, b).flatMap((r) => (r.early === undefined ? [] : [r.early])));
+  const skEarly = earlyOf("skilled");
+  const apEarly = earlyOf("autopilot");
+  row("Things move early", "result at the 2030 election less 2026, median: Skilled; Autopilot", `${fmt(skEarly, 1)}; ${fmt(apEarly, 1)}`, ">= 3; -1 to 1",
+    both(ok(skEarly, (v) => v >= 3), ok(apEarly, (v) => Math.abs(v) <= 1)));
 
   const medians = bots.map((b) => ({ b, m: medianOf(b) })).sort((a, b) => b.m - a.m);
   const apart = medians.length > 1 ? medians[0]!.m - medians[medians.length - 1]!.m : NaN;

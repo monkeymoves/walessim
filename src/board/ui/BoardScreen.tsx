@@ -5,9 +5,10 @@
  * to answer, a stop, the term report, a warning, Why?, a sheet, a place visit, the guide.
  */
 import { createMemo, lazy, Match, onCleanup, onMount, Show, Switch, type Component, type JSX } from "solid-js";
-import { t } from "../../i18n";
+import { t } from "./lang";
 import { PaperSheet, TabButton } from "../../ui/parts";
 import { BuildMenu } from "./BuildMenu";
+import type { Overlay } from "./clock/hold";
 import { clockKey } from "./clock/keys";
 import { Settings } from "./clock/Settings";
 import { CouncilPanel } from "./CouncilPanel";
@@ -37,6 +38,8 @@ export function BoardScreen(props: { fixture: boolean }): JSX.Element {
   const head = () => c.queue()[0] ?? null;
   const pastTerm = () => { const n = game.termOpen(); return n ? c.terms()[n] ?? null : null; };
   const busy = () => !!respond() || !!head();
+  // what is drawn over the map comes from the same list as the clock's hold (clock/hold.ts)
+  const shows = (o: Overlay) => c.shown().includes(o);
 
   onMount(() => {
     // Escape closes what is open over the map wherever the focus is (it may have gone back to the page)
@@ -58,18 +61,18 @@ export function BoardScreen(props: { fixture: boolean }): JSX.Element {
             {(code) => <CouncilPanel code={code} />}
           </Show>
         </div>
-        <Show when={game.sheet() === "build" && game.selected()} keyed>
+        <Show when={shows("build") && game.selected()} keyed>
           {(code) => <BuildMenu code={code} />}
         </Show>
         <Ticker />
         <Show when={props.fixture}>
           <p class="bw-standin small" role="note">{t("boardui.fixture.short")}</p>
         </Show>
-        <Show when={game.warning() && !busy()}><WarningSlip /></Show>
-        <Show when={game.sheet() === "tree"}><TreeSheet /></Show>
-        <Show when={game.sheet() === "laws"}><LawsSheet /></Show>
-        <Show when={game.sheet() === "settings"}><Settings /></Show>
-        <Show when={pastTerm()} keyed>{(r) => <TermReport report={r} asStop={false} />}</Show>
+        <Show when={shows("warning")}><WarningSlip /></Show>
+        <Show when={shows("tree")}><TreeSheet /></Show>
+        <Show when={shows("laws")}><LawsSheet /></Show>
+        <Show when={shows("settings")}><Settings /></Show>
+        <Show when={shows("term") && pastTerm()} keyed>{(r) => <TermReport report={r} asStop={false} />}</Show>
         <Switch>
           <Match when={respond()} keyed>
             {(p) => (p.kind === "respond" ? <Respond event={p.event} councils={p.councils} /> : null)}
@@ -81,8 +84,8 @@ export function BoardScreen(props: { fixture: boolean }): JSX.Element {
             {(q) => <StopCard item={q} />}
           </Match>
         </Switch>
-        <Show when={game.whyAt()}><WhyPanel /></Show>
-        <Show when={game.visit()}>
+        <Show when={shows("why")}><WhyPanel /></Show>
+        <Show when={shows("visit")}>
           <PlaceVisit />
         </Show>
         <Show when={game.error() && game.sheet() !== "build"}>

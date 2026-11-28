@@ -6,7 +6,7 @@
  * menu lights the links its effect would travel.
  */
 import { createEffect, createSignal, on, onCleanup, Show, type JSX } from "solid-js";
-import { formatNum, lang, t } from "../../i18n";
+import { lang, t } from "./lang";
 import type { HoverInfo, Marker, PaperMap, Stitch } from "../../map";
 import type { MapLink } from "../../map/PaperMap";
 import { MapView } from "../../ui/atlas/MapView";
@@ -18,7 +18,7 @@ import { ColourKey } from "./ColourKey";
 import { useGame } from "./game";
 import { MapMarks } from "./MapMarks";
 import { backsAtOf, lensFor, linksFor } from "./mapLinks";
-import { measureName, outOf10 } from "./words";
+import { backingShown, measureName, num, outOf10 } from "./words";
 
 /** Where a working project sits on the map: its council, or the middle of its link. */
 function stitchOf(model: BoardModel, p: Pick<ProjectState, "id" | "project" | "site" | "status">): Stitch | null {
@@ -44,8 +44,14 @@ export function MapStage(): JSX.Element {
   /** Bumped when the map's view changes (zoom, resize), so the marks follow it. */
   const [view, setView] = createSignal(0);
   const reduced = typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  /** True while the map eases to a new view: the marks hide, so none shows at a stale place. */
+  const [moving, setMoving] = createSignal(false);
   let viewTimer = 0;
-  const bumpLater = (ms = 470) => { clearTimeout(viewTimer); viewTimer = window.setTimeout(() => setView((n) => n + 1), ms); };
+  const bumpLater = (ms = 470) => {
+    clearTimeout(viewTimer);
+    if (ms >= 200) setMoving(true);
+    viewTimer = window.setTimeout(() => { setView((n) => n + 1); setMoving(false); }, ms);
+  };
   onCleanup(() => clearTimeout(viewTimer));
   const rightPad = () => (window.innerWidth <= 1360 ? 356 : 392);
 
@@ -125,14 +131,14 @@ export function MapStage(): JSX.Element {
     const by = game.colourBy();
     const c = s.councils[h.code];
     if (!c || by === "none" || by === "behind") return t("boardui.map.click");
-    if (by === "backing") return t("boardui.map.backing", { n: formatNum(c.backing, { maximumFractionDigits: 1 }) });
+    if (by === "backing") return t("boardui.map.backing", { n: num(backingShown(c.backing)), at: num(backsAtOf(model)) });
     return `${measureName(model, by)}: ${outOf10(c.measures[by], s.step > 0)}`;
   };
 
   return (
     <div class="bw-mapstage">
       <MapView geo={geo()!} ariaLabel={t("boardui.map.aria")} onReady={onReady} class="bw-map">
-        <MapMarks map={map} view={view} />
+        <MapMarks map={map} view={view} moving={moving} />
       </MapView>
       <Show when={hover()}>
         <TipSlip heading={lang() === "cy" ? hover()!.cy : hover()!.en} class="maptip bw-maptip" style={{ left: `${hover()!.px + 14}px`, top: `${hover()!.py + 16}px` }}>

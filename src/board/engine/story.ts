@@ -3,7 +3,8 @@
  * Owner: package 9. The clock calls `noteStep` after every step and `nameChapter` when a term
  * closes; api.ts and endings.ts call `story`. Chapters are judged in story-terms.ts.
  *
- * Moments (16.5.2): a tier or legacy project opening, a keystone finishing, a council tipping for
+ * Moments (16.5.2): a tier or legacy project opening (at the step it opened, or the next step for
+ * one opened by a build between steps), a keystone finishing, a council tipping for
  * the first time each way, the region turning, an election, a landed event (outside trouble of
  * severity 2 or more as it landed, and every grown event), the promise judged, a deal judged, and
  * a council's young adult share 2 points from 2026. Each is weighed, each time a year closes, by
@@ -12,6 +13,7 @@
  */
 import type { StepCtx, StepFacts } from "./ctx";
 import { round4 } from "./ctx";
+import { openedNow } from "./clock-stops";
 import { regionTurnStep, risingCount } from "./momentum";
 import { siteCouncil } from "./conditions";
 import { pickChapter } from "./story-terms";
@@ -48,7 +50,8 @@ function momentsOf(ctx: StepCtx, facts: StepFacts): Moment[] {
   };
   const withCouncil = (code: CouncilCode | undefined, vars: Record<string, SayVar> = {}) => (code ? { ...vars, council: nameOf(model, code) } : vars);
 
-  for (const key of facts.opened) {
+  // a tier opened by a build between steps is not in `facts.opened`: catch it on the next step
+  for (const key of new Set([...facts.opened, ...[...openedNow(model, state)].sort()])) {
     const [branch, tier] = key.split(":");
     const vars: Record<string, SayVar> = branch === "legacy"
       ? { project: projectName(model, tier ?? "") }

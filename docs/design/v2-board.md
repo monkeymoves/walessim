@@ -645,6 +645,8 @@ Two notes from Luke, to fold into the design before phase 2:
 
 *Written 28 November 2026 by the designer of sections 1 to 14, after phase 1 was built and measured. This section wins wherever it disagrees with sections 1 to 15. Earlier lines it changes are marked "(revised in 16)". Every size below is a game rule and a starting value for the bots (tune), unless it says "real".*
 
+*Note added at the join after cold playtest 8 (28 November 2026): the sizes in this section are the starting values. The balance rounds and fix round 1 moved many of them (the purse, coins a year, the S3 floor, R1 to R4, outside event sizes and timing, repeat limits, the steady speed). The model in `model/board/` is the truth: its rule files carry each size with its reason, and `docs/design/board-balance-log.md` holds the latest bot table.*
+
 ### 16.1 What phase 1 showed
 
 The build is sound: ten real councils, links, a ledger, bots, a full game by hand. The game on top of it does not work yet. Measured on `public/board-model.json` (hash 8fcc0e0cc8e7) with `npx tsx scripts/board-balance.ts --quick`, plus two probe runs that summed the ledger by rule:

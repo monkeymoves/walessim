@@ -1,17 +1,18 @@
 /**
- * The term report at each election (16.2.6): the name the game gave the four years, the election,
- * and at most three lines, each a council and a cause with Why? over the term. After a lost
- * election, the deal to pick. At the end it leads on to the Wales you built.
+ * The term report at each election (16.2.6): the name the game gave the four years, the election
+ * and what its result means, and at most three lines, each a council and a cause with Why? over
+ * the term. After a lost election the deal to pick sits in the foot, above "Carry on", so it is in
+ * sight without scrolling (playtest 8, must-fix 10). At the end it leads on to the Wales you built.
  *
  * As a stop it holds the clock until "Carry on". From the time line it opens the same report for
  * a past term.
  */
 import { For, onMount, Show, type JSX } from "solid-js";
-import { t } from "../../i18n";
+import { t } from "./lang";
 import { CloseButton, StampButton, ThreadButton } from "../../ui/parts";
 import type { ReportLine, TermReport as TermReportData } from "../engine/api";
 import { stepOfYear } from "../engine/api";
-import { causeWords } from "./causes";
+import { whyCauseWords } from "./causes";
 import { DealChoice, dealPending } from "./DealChoice";
 import { Election } from "./Election";
 import { useGame } from "./game";
@@ -37,22 +38,22 @@ export function TermReport(props: { report: TermReportData; asStop: boolean; end
         <Show when={!props.asStop}><CloseButton label={t("boardui.close")} onClick={close} /></Show>
       </header>
       <div class="bw-term-scroll">
-        <Show when={props.asStop && !props.ended}><DealChoice /></Show>
+        <Election view={r().election} />
         <ol class="bw-slips" aria-label={t("boardui.term.linesAria")}>
           <For each={r().lines} fallback={<li class="bw-slip-line"><p class="story-small">{t("boardui.report.none")}</p></li>}>
             {(l) => (
               <li class="bw-slip-line">
                 <p class="t-3">{councilName(model, l.council)}: {measureName(model, l.quantity)} <span class="data">{signed(l.delta)}</span></p>
                 <p class="story-small">{lineText(l)}</p>
-                <p class="small">{causeWords(model, l.why.cause, l.why.year)}</p>
+                <p class="small">{whyCauseWords(model, l.why, game.state()!)}</p>
                 <ThreadButton onClick={() => game.setWhyAt({ council: l.council ?? undefined, measure: l.quantity, ...span() })}>{t("boardui.why.button")}</ThreadButton>
               </li>
             )}
           </For>
         </ol>
-        <Election view={r().election} />
       </div>
       <footer class="bw-term-foot">
+        <Show when={mustDeal()}><DealChoice /></Show>
         <Show when={props.asStop} fallback={<StampButton onClick={close}>{t("boardui.term.close")}</StampButton>}>
           <StampButton onClick={close} why={mustDeal() ? t("boardui.deal.first") : null} data-testid="bw-term-on">
             {props.ended ? t("boardui.report.toEnd") : t("boardui.stop.carryOn")}

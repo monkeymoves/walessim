@@ -7,6 +7,7 @@
  * bill and the end). Every mark ahead has a `board.timeline.<kind>` sentence; elections show the
  * result if one were held now. Keep the signature (api.ts calls it).
  */
+import { eventNoun } from "./events";
 import { countBacking } from "./people";
 import { optParam } from "./rules";
 import { seasonOf, stepOfYear, yearOfStep } from "./time";
@@ -27,7 +28,7 @@ export function timeline(model: BoardModel, state: BoardState): TimelineView {
   for (const f of state.forecast) {
     const e = model.events.find((d) => d.id === f.event);
     if (!e) continue;
-    ahead.push({ kind: "warning", fromStep: f.fromStep, toStep: f.toStep, event: f.event, councils: [...f.councils], good: e.good, say: { key: "board.timeline.warning", vars: { event: e.name } } });
+    ahead.push({ kind: "warning", fromStep: f.fromStep, toStep: f.toStep, event: f.event, councils: [...f.councils], good: e.good, say: { key: "board.timeline.warning", vars: { event: eventNoun(f.event) } } });
   }
   const promiseStep = stepOfYear(model, state.promise.byYear);
   if (state.promise.kept === null && promiseStep > now) {

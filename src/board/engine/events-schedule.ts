@@ -53,7 +53,8 @@ function landingStep(model: BoardModel, seed: number, block: number, e: EventDef
 /**
  * The outside events of a game: at most one in each two year block from E1 `first_year`, drawn in
  * proportion to the future's track in that block (a weighted draw by the seed), until the severity
- * reaches E1 `min` without passing `max`. If the tracks are too quiet to reach `min`, events are
+ * reaches E1 `min` without passing `max`, and no event comes back sooner or more often than
+ * `repeatLimits` allows. If the tracks are too quiet to reach `min`, events are
  * added in blocks where their track is lower, still in proportion. Each lands on a seeded step
  * inside its block (storms in autumn or winter).
  */
@@ -79,15 +80,28 @@ export function outsideSchedule(model: BoardModel, seed: number, futureId: Futur
   cands.sort(order);
   const picked: ScheduledEvent[] = [];
   const used = new Set<number>();
+  const { most, gapYears } = repeatLimits(model);
+  const gap = stepsOf(model, gapYears);
+  const tooSoon = (event: EventId, step: number) => {
+    const same = picked.filter((p) => p.event === event);
+    return same.length >= most || same.some((p) => Math.abs(p.step - step) < gap);
+  };
   let total = 0;
   for (const c of cands) {
     if (total >= min) break;
     if (used.has(c.block) || total + c.severity > max) continue;
-    picked.push({ event: c.event, block: c.block, step: landingStep(model, seed, c.block, outside.find((e) => e.id === c.event)!), severity: c.severity });
+    const step = landingStep(model, seed, c.block, outside.find((e) => e.id === c.event)!);
+    if (tooSoon(c.event, step)) continue;
+    picked.push({ event: c.event, block: c.block, step, severity: c.severity });
     used.add(c.block);
     total += c.severity;
   }
   return picked.sort((a, b) => a.step - b.step);
+}
+
+/** How often one event may come back (E1): at most `repeat_max` times a game, and never within `repeat_gap_years` of the last time. */
+export function repeatLimits(model: BoardModel): { most: number; gapYears: number } {
+  return { most: ruleParam(model, RULE_IDS.severity, "repeat_max"), gapYears: ruleParam(model, RULE_IDS.severity, "repeat_gap_years") };
 }
 
 /** Total outside severity a game number draws (fairness rule 2: always E1 `min` to `max`). */

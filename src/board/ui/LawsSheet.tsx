@@ -3,7 +3,7 @@
  * backing somewhere, never coins, and the sheet says where before you choose.
  */
 import { createMemo, For, Show, type JSX } from "solid-js";
-import { Pair, t } from "../../i18n";
+import { lang, Pair, t } from "./lang";
 import { CloseButton, TabButton } from "../../ui/parts";
 import { blockerWords } from "./blockers";
 import * as eng from "./engine";
@@ -32,7 +32,7 @@ export function LawsSheet(): JSX.Element {
             const o = () => opts().find((x) => x.action.kind === "law" && x.action.law === law.id);
             return (
               <li class="bw-law">
-                <Pair text={law.name} class="t-3" />
+                <Pair single={lang() === "cy"} text={law.name} class="t-3" />
                 <p class="story-small">{tx(law.what)}</p>
                 <p class="small bw-catch">{t("boardui.build.catch", { text: tx(law.catch) })}</p>
                 <p class="small">{inForce(law.id) ? t("boardui.laws.inForce") : t("boardui.laws.notInForce")}</p>

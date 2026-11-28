@@ -12,13 +12,14 @@ rules:
     kind: stock
     name: { en: Roots, cy: Gwreiddiau, cy_review: true }
     note:
-      en: A project is worth more every year it stands, and much more when it has company.
-      cy: Mae prosiect yn werth mwy bob blwyddyn y mae'n sefyll, a llawer mwy pan fydd ganddo gwmni.
+      en: A project is worth more every year it stands, and much more when it has company. A quick project helps at once, but its roots stay shallow.
+      cy: Mae prosiect yn werth mwy bob blwyddyn y mae'n sefyll, a llawer mwy pan fydd ganddo gwmni. Mae prosiect cyflym yn helpu ar unwaith, ond mae ei wreiddiau'n aros yn fas.
       cy_review: true
     params:
       grow_alone_per_year: { default: 0.01, min: 0, max: 0.1, unit: { en: share more each year for a project on its own, cy: cyfran yn fwy bob blwyddyn i brosiect ar ei ben ei hun, cy_review: true }, adjustable: true, tune: true }
       grow_joined_per_year: { default: 0.08, min: 0, max: 0.2, unit: { en: share more each year for a project with company, cy: cyfran yn fwy bob blwyddyn i brosiect gyda chwmni, cy_review: true }, adjustable: true, tune: true }
       max_factor: { default: 7, min: 1, max: 8, unit: { en: times its starting size at most, cy: gwaith ei faint cychwynnol ar y mwyaf, cy_review: true }, adjustable: true, tune: true }
+      quick_max_factor: { default: 1.5, min: 1, max: 8, unit: { en: times its starting size at most for a quick project, cy: gwaith ei faint cychwynnol ar y mwyaf i brosiect cyflym, cy_review: true }, adjustable: true, tune: true }
     sources: []
     confidence: low
     evidence: placeholder
@@ -39,7 +40,7 @@ rules:
       pull_points: { default: 1, min: 0, max: 3, unit: { en: points better or worse when young adults choose where to go, cy: pwyntiau yn well neu'n waeth pan fydd oedolion ifanc yn dewis ble i fynd, cy_review: true }, adjustable: true, tune: true }
       roots_bonus: { default: 0.02, min: 0, max: 0.05, unit: { en: share faster or slower that roots grow each year, cy: cyfran yn gyflymach neu'n arafach y mae gwreiddiau'n tyfu bob blwyddyn, cy_review: true }, adjustable: true, tune: true }
       backing_per_year: { default: 0.15, min: 0, max: 0.5, unit: { en: points of backing a year, cy: pwyntiau o gefnogaeth y flwyddyn, cy_review: true }, adjustable: true, tune: true }
-      coins_per_year: { default: 1, min: 0, max: 1, unit: { en: coins a year from each council on the rise, cy: darnau arian y flwyddyn o bob cyngor sydd ar i fyny, cy_review: true }, adjustable: true, tune: true }
+      coins_per_year: { default: 0.5, min: 0, max: 1, unit: { en: coins a year from each council on the rise, cy: darnau arian y flwyddyn o bob cyngor sydd ar i fyny, cy_review: true }, adjustable: true, tune: true }
       region_turn_councils: { default: 5, min: 3, max: 8, unit: { en: councils on the rise at once, cy: cynghorau ar i fyny ar yr un pryd, cy_review: true }, adjustable: true, tune: true }
       region_turn_coins_per_year: { default: 1, min: 0, max: 2, unit: { en: more coins a year once the region turns, cy: mwy o ddarnau arian y flwyddyn ar ôl i'r rhanbarth droi, cy_review: true }, adjustable: true, tune: true }
     sources: []
@@ -55,7 +56,7 @@ rules:
       cy: Mae pobl yn cefnogi'r peth newydd cyntaf. Mae'n costio llai ac yn cyfrif fel bod ganddo gwmni am ddeuddeng mlynedd.
       cy_review: true
     params:
-      discount: { default: 2, min: 0, max: 3, unit: { en: coins off the first project, cy: darnau arian oddi ar y prosiect cyntaf, cy_review: true }, adjustable: true, tune: true }
+      discount: { default: 3, min: 0, max: 3, unit: { en: coins off the first project, cy: darnau arian oddi ar y prosiect cyntaf, cy_review: true }, adjustable: true, tune: true }
       min_cost: { default: 1, min: 0, max: 2, unit: { en: coins it costs at least, cy: darnau arian y mae'n eu costio o leiaf, cy_review: true }, adjustable: false }
       joined_years: { default: 12, min: 0, max: 12, unit: { en: years it counts as having company, cy: blynyddoedd y mae'n cyfrif fel bod ganddo gwmni, cy_review: true }, adjustable: true, tune: true }
       lowest_count: { default: 3, min: 1, max: 5, unit: { en: lowest councils that also get a fresh start, cy: cynghorau isaf sydd hefyd yn cael dechrau newydd, cy_review: true }, adjustable: true, tune: true }

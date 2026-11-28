@@ -79,4 +79,15 @@ describe("Why?", () => {
     }
     expect(why(model, state, { council: rct, measure: "welsh", fromStep: 990, toStep: 999 })).toEqual([]);
   });
+
+  it("names young adults moving as young adults moving, not people changing their minds (playtest 8: the circular Why?)", () => {
+    const { state } = playGame(model, 3, "work-valleys");
+    const young = state.ledger.filter((c) => c.rule === "S3" && c.council);
+    expect(young.length).toBeGreaterThan(0);
+    const c = young[0]!;
+    const reasons = why(model, state, { council: c.council!, measure: c.quantity as never, fromStep: 0, toStep: state.step });
+    const s3 = reasons.filter((r) => r.rule === "S3");
+    expect(s3.length).toBeGreaterThan(0);
+    for (const r of s3) expect(r.say.vars?.cause).toBe("board.cause.people_young");
+  });
 });

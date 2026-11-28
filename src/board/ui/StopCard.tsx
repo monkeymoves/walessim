@@ -4,9 +4,10 @@
  * warning is a slate slip, pinned and askew, as the forecast was; everything else is a paper slip.
  */
 import { onMount, Show, type JSX } from "solid-js";
-import { t } from "../../i18n";
+import { t } from "./lang";
 import { StampButton, TabButton } from "../../ui/parts";
-import type { BoardModel, Stop } from "../engine/api";
+import { eventNoun, type BoardModel, type Stop } from "../engine/api";
+import { visitBlockWords } from "./blockers";
 import { useGame } from "./game";
 import { councilName, projectName, say, tx, whenWords } from "./words";
 import type { QueuedStop } from "./clock/stops";
@@ -18,6 +19,7 @@ function fallbackLine(model: BoardModel, stop: Stop): string {
     council: councilName(model, stop.council),
     project: projectName(model, ref),
     event: tx(model.events.find((e) => e.id === ref)?.name ?? ""),
+    noun: model.events.some((e) => e.id === ref) ? t(eventNoun(ref)) : "",
     place: tx(model.places.find((p) => p.id === ref)?.name ?? ""),
     branch: tx(model.branches.find((b) => b.id === ref.split(":")[0])?.name ?? ""),
     tier: ref.split(":")[1] ?? "",
@@ -40,6 +42,11 @@ export function StopCard(props: { item: QueuedStop }): JSX.Element {
     if (s.kind === "warning" && s.ref) game.setWarning(s.ref);
   };
   const visitPlace = () => (stop().kind === "visit" ? stop().ref : undefined);
+  /** Why the visit cannot be made now, so "Go and visit" never leads to a refusal. */
+  const visitBlock = () => {
+    const place = visitPlace(), s = game.state();
+    return place && s ? visitBlockWords(model, s, place) : null;
+  };
   let card!: HTMLDivElement;
   // a keyboard player lands on the card's own buttons, not on whatever the clock left behind
   onMount(() => card.querySelector<HTMLButtonElement>("[data-testid=bw-stop-on], [data-testid=bw-stop-visit]")?.focus());
@@ -56,10 +63,10 @@ export function StopCard(props: { item: QueuedStop }): JSX.Element {
       </Show>
       <div class="bw-stop-row">
         <Show when={visitPlace()}>
-          <StampButton onClick={() => { game.clock.look(); game.setVisit(visitPlace()!); }} data-testid="bw-stop-visit">{t("boardui.stop.visitGo")}</StampButton>
+          <StampButton onClick={() => { game.clock.look(); game.setVisit(visitPlace()!); }} why={visitBlock()} data-testid="bw-stop-visit">{t("boardui.stop.visitGo")}</StampButton>
         </Show>
         <Show when={stop().council}>
-          <TabButton onClick={look} data-testid="bw-stop-look">{t("boardui.stop.look")}</TabButton>
+          <TabButton onClick={look} data-testid="bw-stop-look">{t("boardui.stop.lookAt", { council: councilName(model, stop().council) })}</TabButton>
         </Show>
         <Show when={visitPlace()} fallback={<StampButton onClick={() => game.clock.carryOn()} data-testid="bw-stop-on">{stop().kind === "ended" ? t("boardui.report.toEnd") : t("boardui.stop.carryOn")}</StampButton>}>
           <TabButton onClick={() => game.clock.carryOn()} data-testid="bw-stop-on">{t("boardui.stop.carryOn")}</TabButton>

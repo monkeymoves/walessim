@@ -8,7 +8,12 @@
 # Honesty: the thresholds below (1 in 100 young adults, 0.3 points of gap, four projects) and the
 # priorities are GAME RULES (tune with the bots: "Stories differ" in section 16.6 points here).
 # Chapters are the game's own telling of a run, from what happened on the board. Not a forecast.
-# Slots the engine fills: {river}, {council}, {town}, {project}.
+# Slots the engine fills: {river}, {council}, {town}, {project}. A chapter about an event names the
+# council it landed on; one that names a {river} counts river floods only. A chapter about a keystone
+# names the keystone's own council. A chapter whose words need a slot the term cannot fill does not fit.
+# Truth rules, checked by src/board/engine/endings-truth.test.ts on many bot games: a chapter never
+# says the opposite of what its term did, and no chapter name is told twice in one game (the
+# chapters with no conditions at the end are the fallbacks that make that possible).
 # Every Welsh string is a fresh draft for a fluent reviewer (cy_review: true).
 note: "Thresholds and priorities are game rules (tune). The game's own telling of your run, from what happened on the board."
 chapters:
@@ -29,8 +34,8 @@ chapters:
 
   - id: river-rose
     priority: 4
-    name: { en: "The winter the {river} rose", cy: "Y gaeaf y cododd {river}", cy_review: true }
-    line: { en: "The {river} flooded {town} before anything was ready to hold it back.", cy: "Gorlifodd {river} {town} cyn bod dim yn barod i'w ddal yn ôl.", cy_review: true }
+    name: { en: "The winter the {river} rose", cy: "Y gaeaf y cododd afon {river}", cy_review: true }
+    line: { en: "The {river} flooded homes in {council} before anything was ready to hold it back.", cy: "Gorlifodd afon {river} gartrefi yn {council} cyn bod dim yn barod i'w ddal yn ôl.", cy_review: true }
     when:
       - { kind: event_landed, track: weather, severity_at_least: 2, prepared: false }
 
@@ -38,6 +43,22 @@ chapters:
     priority: 5
     name: { en: "The hung years", cy: "Y blynyddoedd crog", cy_review: true }
     line: { en: "You lost the election and had to govern with others.", cy: "Collwyd yr etholiad a bu'n rhaid i chi lywodraethu gydag eraill.", cy_review: true }
+    when:
+      - { kind: election, result: lost }
+
+  # A second and third lost election in one game get their own names, so a losing run still reads
+  # as a story and never tells the same chapter twice. Tried late: only once The hung years is told.
+  - id: still-out
+    priority: 20
+    name: { en: "Out in the cold", cy: "Allan yn yr oerfel", cy_review: true }
+    line: { en: "You lost again. Others shaped these four years, and you made the best of it.", cy: "Colloch chi eto. Eraill oedd yn llywio'r pedair blynedd hyn, ac fe wnaethoch y gorau ohoni.", cy_review: true }
+    when:
+      - { kind: election, result: lost }
+
+  - id: the-long-wait
+    priority: 21
+    name: { en: "The long wait", cy: "Yr aros hir", cy_review: true }
+    line: { en: "Another election lost. People were waiting for a reason to back you.", cy: "Etholiad arall wedi'i golli. Roedd pobl yn aros am reswm i'ch cefnogi.", cy_review: true }
     when:
       - { kind: election, result: lost }
 
@@ -75,13 +96,16 @@ chapters:
     line: { en: "Young people left the valleys for work and homes somewhere else.", cy: "Gadawodd pobl ifanc y cymoedd am waith a chartrefi yn rhywle arall.", cy_review: true }
     when:
       - { kind: young_adults, flag: valley, change: down, by: 1, councils_at_least: 3 }
+      - { kind: young_adults, flag: valley, change: down, by: 0.3 }
 
   - id: coming-home
     priority: 11
     name: { en: "Coming home", cy: "Dod adref", cy_review: true }
     line: { en: "Young people came back to the valleys, and some stayed to raise a family.", cy: "Daeth pobl ifanc yn ôl i'r cymoedd, ac arhosodd rhai i fagu teulu.", cy_review: true }
+    # The valleys as a whole must have gained young adults too, not two towns while the rest emptied.
     when:
       - { kind: young_adults, flag: valley, change: up, by: 0.5, councils_at_least: 2 }
+      - { kind: young_adults, flag: valley, change: up, by: 0.2 }
 
   - id: big-build
     priority: 12
@@ -90,6 +114,7 @@ chapters:
     when:
       - { kind: keystone, phase: started }
 
+  # The first time any branch reaches tier 2 (a tier condition counts the first opening only).
   - id: second-floor
     priority: 13
     name: { en: "The second floor", cy: "Yr ail lawr", cy_review: true }
@@ -100,7 +125,7 @@ chapters:
   - id: rain-held
     priority: 14
     name: { en: "Hard rain, held", cy: "Glaw trwm, wedi'i ddal", cy_review: true }
-    line: { en: "The {river} rose, but what you had built held it back.", cy: "Cododd {river}, ond daliodd yr hyn a adeiladwyd gennych y dŵr yn ôl.", cy_review: true }
+    line: { en: "The {river} rose, but what you had built held it back.", cy: "Cododd afon {river}, ond daliodd yr hyn a adeiladwyd gennych y dŵr yn ôl.", cy_review: true }
     when:
       - { kind: event_landed, track: weather, prepared: true }
 
@@ -121,7 +146,7 @@ chapters:
   - id: laying-ground
     priority: 16
     name: { en: "Laying the ground", cy: "Paratoi'r tir", cy_review: true }
-    line: { en: "Small projects opened across the region, ready for what came next.", cy: "Agorodd prosiectau bach ar draws y rhanbarth, yn barod am yr hyn a ddaeth nesaf.", cy_review: true }
+    line: { en: "Small projects opened across the region, one after another.", cy: "Agorodd prosiectau bach ar draws y rhanbarth, un ar ôl y llall.", cy_review: true }
     when:
       - { kind: finished, at_least: 4 }
 
@@ -133,9 +158,36 @@ chapters:
       - { kind: event_landed, at_most: 0 }
       - { kind: finished, at_most: 4 }
 
-  # The fallback: nothing else fits.
+  # Quiet terms that still moved one way: told before the fallbacks.
+  - id: slow-climb
+    priority: 18
+    name: { en: "The slow climb", cy: "Y dringo araf", cy_review: true }
+    line: { en: "Nothing big happened, but life got a little better, year on year.", cy: "Ni ddigwyddodd dim byd mawr, ond aeth bywyd ychydig yn well, flwyddyn ar ôl blwyddyn.", cy_review: true }
+    when:
+      - { kind: level, change: up, by: 0.5 }
+
+  - id: slow-slide
+    priority: 19
+    name: { en: "The slow slide", cy: "Y llithro araf", cy_review: true }
+    line: { en: "Nothing big happened, but life got a little harder, year on year.", cy: "Ni ddigwyddodd dim byd mawr, ond aeth bywyd ychydig yn galetach, flwyddyn ar ôl blwyddyn.", cy_review: true }
+    when:
+      - { kind: level, change: down, by: 0.5 }
+
+  # The fallbacks: nothing else fits. Three, so no game needs to tell the same one twice.
   - id: holding-on
-    priority: 99
+    priority: 97
     name: { en: "Holding on", cy: "Dal ati", cy_review: true }
     line: { en: "Nothing big changed. You kept things going.", cy: "Ni newidiodd dim byd mawr. Fe wnaethoch gadw pethau i fynd.", cy_review: true }
+    when: []
+
+  - id: steady-hands
+    priority: 98
+    name: { en: "Steady hands", cy: "Dwylo cadarn", cy_review: true }
+    line: { en: "You kept the region running, and the work of these years was mostly out of sight.", cy: "Fe wnaethoch gadw'r rhanbarth i fynd, ac roedd gwaith y blynyddoedd hyn o'r golwg gan fwyaf.", cy_review: true }
+    when: []
+
+  - id: four-more-years
+    priority: 99
+    name: { en: "Four more years", cy: "Pedair blynedd arall", cy_review: true }
+    line: { en: "Four years passed with no big turn, for good or ill.", cy: "Aeth pedair blynedd heibio heb dro mawr, er gwell nac er gwaeth.", cy_review: true }
     when: []

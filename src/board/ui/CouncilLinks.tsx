@@ -4,7 +4,7 @@
  * figure is real or illustrative, and hovering a row lights that link on the map.
  */
 import { For, Show, type JSX } from "solid-js";
-import { formatNum, t } from "../../i18n";
+import { formatNum, t } from "./lang";
 import type { CouncilView, LinkKind } from "../engine/api";
 import { LINK_KINDS } from "../engine/api";
 import { useGame } from "./game";

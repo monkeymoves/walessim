@@ -11,14 +11,15 @@ import type { BoardModel, RuleId } from "./types";
 /** Rule id to param name to starting value. */
 export const RULE_DEFAULTS: Record<RuleId, Record<string, number>> = {
   /** Coins: what you start with in May 2026, and the share of running costs paid once homes pay their own bills. */
-  B1: { opening: 6, running_share: 0.5 },
+  B1: { opening: 8, running_share: 0.5 },
   /** Moods: what a kept or broken promise, a crisis handled or not, and services close by count for, in points. */
   P1: { promise_points: 1, crisis_points: 0.5, presence_points: 0.5 },
   /** Score: band edges (change from 2026 out of 100) and what a risk left at step 3 takes in 2050. */
   G1: { band_little: 3, band_much: 10, risk_left_points: 0.3 },
-  /** Events: the first year outside trouble can land, how far ahead outside and grown events are warned, grown events at once and the years between them, preparation, room for rivers and a cluster with roots. */
+  /** Events: the first year outside trouble can land, how far ahead outside and grown events are warned, grown events at once and the years between them, how often one event comes back, preparation, room for rivers and a cluster with roots. */
   E1: {
-    first_year: 2028, warn_years: 1.5, grown_warn_years: 1, grown_at_once: 1, grown_gap_years: 2,
+    first_year: 2030, warn_years: 1.5, grown_warn_years: 1, grown_at_once: 1, grown_gap_years: 2,
+    repeat_max: 2, repeat_gap_years: 8,
     prepared_cut: 0.5, storm_step: 0.5, downturn_cut: 0.5,
   },
   /** Place visits: how a grade scales the project it is about, the backing it moves there, and the weather track that makes a turn wet. */

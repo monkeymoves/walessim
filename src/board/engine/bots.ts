@@ -16,7 +16,7 @@ import { options as realOptions } from "./projects";
 import type { BoardEngine, BotView } from "./bots-common";
 import { actionKey, answerAll, keepDealOption, pickDeal, pickResponse, pickVisit } from "./bots-common";
 import type { Bot } from "./bots-strategies";
-import { autopilot, branchBot, cardiffFirst, random, reactive, rescue, scatter, secondBranch, skilled, sleeper } from "./bots-strategies";
+import { autopilot, branchBot, cardiffFirst, random, reactive, rescue, scatter, secondBranch, skilled, sleeper, spender } from "./bots-strategies";
 import type { Action, BoardModel, BoardState, StartId, StopKind } from "./types";
 
 export type { Bot } from "./bots-strategies";
@@ -26,15 +26,15 @@ export type { BoardEngine } from "./bots-common";
 export const realEngine: BoardEngine = { newBoard: realNewBoard, options: realOptions, act: realAct, advance: realAdvance };
 
 /**
- * The twelve bots: Autopilot, Random, Reactive, one per branch (four), Cardiff first, Skilled,
- * Sleeper, Rescue and Scatter.
+ * The thirteen bots: Autopilot, Random, Reactive, one per branch (four), Cardiff first, Skilled,
+ * Sleeper, Rescue, Scatter and Spender (low effort: every coin on the cheapest build).
  */
 export function allBots(model: BoardModel): Bot[] {
   const branches = model.branches.slice(0, 4).map((b) => branchBot(b.id, secondBranch(model, b.id)));
-  return [autopilot, random, reactive, ...branches, cardiffFirst, skilled(), sleeper(), rescue(), scatter()];
+  return [autopilot, random, reactive, ...branches, cardiffFirst, skilled(), sleeper(), rescue(), scatter(), spender];
 }
 
-export { autopilot, branchBot, cardiffFirst, random, reactive, rescue, scatter, skilled, sleeper };
+export { autopilot, branchBot, cardiffFirst, random, reactive, rescue, scatter, skilled, sleeper, spender };
 
 /** A safety stop: no bot takes more than this many actions at one decision. */
 const MAX_ACTIONS = 12;
@@ -85,10 +85,15 @@ export function stepsToDecision(model: BoardModel, step: number): number {
   return left > 0 ? left : perYear;
 }
 
-/** Play a whole game: the bot's choices at the start, when each year closes, and at stops, to 2050. */
-export function playGame(model: BoardModel, bot: Bot, gameNumber: number | string, start: StartId, engine: BoardEngine = realEngine): BoardState {
+/**
+ * Play a whole game: the bot's choices at the start, when each year closes, and at stops, to 2050.
+ * `observe` sees the state each time the clock stops, before the bot acts (for measures taken mid
+ * game, such as the headline at the first election).
+ */
+export function playGame(model: BoardModel, bot: Bot, gameNumber: number | string, start: StartId, engine: BoardEngine = realEngine, observe?: (state: BoardState) => void): BoardState {
   const v: BotView = { model, engine, state: engine.newBoard(model, gameNumber, start), seed: hashSeed(`${bot.id}:${gameNumber}`), tried: new Set() };
   for (let guard = 0; guard < model.game.steps * 4 && v.state.phase !== "ended"; guard++) {
+    observe?.(v.state);
     playTurn(v, bot);
     v.state = answerAll(engine, model, v.state);
     if (v.state.phase !== "play") break;

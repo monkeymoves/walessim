@@ -7,8 +7,9 @@
  * `place`, `year` as they apply. A tipping stop names its direction: `board.stop.tipping.rising`,
  * `.slipping`, or `.region` when the region turns (rule R2, with `ref: "region"`).
  */
+import { eventNoun } from "./events";
 import type { StepFacts } from "./ctx";
-import { holds, siteCouncil } from "./conditions";
+import { holds, siteCouncil, siteCouncils } from "./conditions";
 import { regionTurned, risingCount } from "./momentum";
 import { optParam } from "./rules";
 import { stepsOf } from "./time";
@@ -69,13 +70,13 @@ export function stopsOf(model: BoardModel, was: Before, state: BoardState, facts
 
   for (const p of state.pending) {
     if (was.pending.has(pendingKey(p))) continue;
-    if (p.kind === "respond") add("respond", { event: model.events.find((e) => e.id === p.event)?.name ?? p.event }, p.councils[0], p.event);
+    if (p.kind === "respond") add("respond", { event: eventNoun(p.event) }, p.councils[0], p.event);
   }
   if (facts.election) add("election", { result: facts.election.result });
   if (state.phase === "ended") add("ended");
   for (const f of state.forecast) {
     if (was.forecast.has(forecastKey(f))) continue;
-    add("warning", { event: model.events.find((e) => e.id === f.event)?.name ?? f.event }, f.councils[0], f.event);
+    add("warning", { event: eventNoun(f.event) }, f.councils[0], f.event);
   }
   for (const id of facts.finished) {
     const p = state.projects.find((x) => x.id === id);
@@ -95,7 +96,12 @@ export function stopsOf(model: BoardModel, was: Before, state: BoardState, facts
   if (purse !== undefined && was.coins < purse && state.coins >= purse) add("purse_full", { n: purse });
   for (const id of facts.finished) {
     const p = state.projects.find((x) => x.id === id);
-    if (p && !model.projects.find((d) => d.id === p.project)?.keystone) add("finished", { project: projectName(p.project) }, siteCouncil(model, p), p.project);
+    if (!p || model.projects.find((d) => d.id === p.project)?.keystone) continue;
+    // a project on a line works for both ends: name both, never only the one listed first
+    // (cold playtest 8 join: trains built from Merthyr Tydfil were "working now in Rhondda Cynon Taf")
+    const ends = siteCouncils(model, p);
+    if (p.site.link && ends.length === 2) add("finished", { project: projectName(p.project), from: nameOf(model, ends[0]!), to: nameOf(model, ends[1]!) }, ends[0], p.project, "board.stop.finished_link");
+    else add("finished", { project: projectName(p.project) }, siteCouncil(model, p), p.project);
   }
   if (facts.closedYears.length > 0) add("year", { year: facts.closedYears[facts.closedYears.length - 1]! });
   return out.sort((a, b) => Number(b.hard) - Number(a.hard));

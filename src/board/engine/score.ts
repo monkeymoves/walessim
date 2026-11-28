@@ -5,9 +5,10 @@
  * Left for 2050 alone (16.3.6): Life in your years is still worked out, picks the letter and
  * shapes the story, but is not the result. Also the Fairness gap of section 4.1.
  */
+import { lastArrival, onTheWay, type OnTheWay } from "./on-the-way";
 import { param } from "./rules";
 import { ruleParam } from "./rule-defaults";
-import { stepsOf } from "./time";
+import { stepsOf, yearOfStep } from "./time";
 import type {
   BoardModel, BoardState, CouncilCode, MeasureId, ResultBand, RiskKind, Scores,
 } from "./types";
@@ -81,31 +82,57 @@ export function fairnessGap(model: BoardModel, board: MeasureBoard): number {
 const RISK_MEASURE: Record<RiskKind, MeasureId> = { flood: "nature", tip: "nature", employer: "work" };
 
 /**
- * The 2050 board carried forward `future_years`: projects still being built add their level 1
- * measure lifts where they stand, and each risk left at step 3 takes `risk_left_points` from the
- * measure it threatens.
+ * The 2050 board carried forward `future_years`: what is on the way (on-the-way.ts: projects
+ * still being built that open by then, and lifts still bedding in or ramping up, at their full
+ * size) is added where it lands, and each risk left at step 3 takes `risk_left_points` from the
+ * measure it threatens. So the headline moves when a choice is made, not years later.
  */
 export function leftBoard(model: BoardModel, state: BoardState): MeasureBoard {
+  return leftBoardWith(model, state, true);
+}
+
+/** The last step a build may open and still count for Left for 2050 (G1 `future_years` past the end). */
+const countedTo = (model: BoardModel): number => model.game.steps + stepsOf(model, param(model, RULE_IDS.score, "future_years"));
+
+function leftBoardWith(model: BoardModel, state: BoardState, withComing: boolean): MeasureBoard {
   const out: MeasureBoard = {};
   for (const code of model.game.councils) {
     const c = state.councils[code];
     if (c) out[code] = { measures: { ...c.measures } };
   }
-  const years = param(model, RULE_IDS.score, "future_years");
-  const lastStep = model.game.steps + stepsOf(model, years);
-  for (const p of state.projects) {
-    if (p.status !== "building" || p.readyStep > lastStep || p.site.council === undefined) continue;
-    const def = model.projects.find((d) => d.id === p.project);
-    const target = out[p.site.council];
-    if (!def || !target) continue;
-    const factor = def.level_factor[p.level - 1] ?? 1;
-    for (const e of def.effects) {
-      if (e.kind !== "measure" || (e.where && e.where !== "here")) continue;
-      target.measures[e.measure] = clamp10(target.measures[e.measure] + e.points * factor);
-    }
+  const coming = withComing ? onTheWay(model, state, countedTo(model)) : {};
+  for (const [code, lifts] of Object.entries(coming)) {
+    const target = out[code];
+    if (!target) continue;
+    for (const [m, v] of Object.entries(lifts) as [MeasureId, number][]) target.measures[m] = clamp10(target.measures[m] + v);
   }
   priceRisks(model, out, (code) => state.councils[code]?.risks);
   return out;
+}
+
+/** What is still on the way in Left for 2050, and when the last of it lands. */
+export interface Headway {
+  /** Points of Left for 2050 (out of 100) that are on the way: built or started, not yet on the board. */
+  comingPoints: number;
+  /** The year the last of it lands, or null when nothing is on the way. */
+  comingBy: number | null;
+  /** The same per council and measure (on-the-way.ts), for the dashed part of the bars. */
+  byCouncil: OnTheWay;
+}
+
+/**
+ * The headline's "on the way" (playtest 8, should-fix 1): how much of Left for 2050 is in motion
+ * but not yet on the board, and the year it is all in. Roots (R1) are not counted ahead: they grow
+ * only while a project keeps its company, so they are shown as they happen.
+ */
+export function headway(model: BoardModel, state: BoardState): Headway {
+  const to = countedTo(model);
+  const at = lastArrival(model, state, to);
+  return {
+    comingPoints: boardScore(model, leftBoardWith(model, state, true)) - boardScore(model, leftBoardWith(model, state, false)),
+    comingBy: at === null ? null : yearOfStep(model, at),
+    byCouncil: onTheWay(model, state, to),
+  };
 }
 
 /** Each risk at step 3 takes `risk_left_points` from the measure it threatens, in place. */

@@ -1,13 +1,14 @@
 /**
- * The end of a game of the board (docs/design/v2-board.md 16.5.3), in order: the time-lapse with
- * its turning points, the name of the Wales you built, your Wales in six chapters, then and now,
- * the letter, the Wales you did not build, the count (folded), and the run code with Play again.
+ * The end of a game of the board (docs/design/v2-board.md 16.5.3), in order: the result (the
+ * verdict, both scores, your record, and in a hard game the turns you could have taken), the
+ * time-lapse with its turning points, the name of the Wales you built, your Wales in six chapters,
+ * then and now, the letter, the Wales you did not build, the count (folded), and the run code.
  *
  * Loaded lazily by the board route as a default export with no props. It reads the game with
  * `useGame()`. A run opened from a code is shown in place of the player's own until they go back.
  */
 import { createEffect, createMemo, createSignal, ErrorBoundary, For, Show, type JSX } from "solid-js";
-import { Pair, t } from "../../../i18n";
+import { lang, Pair, t } from "../lang";
 import { LangToggle, PaperSheet, ThreadButton } from "../../../ui/parts";
 import * as api from "../../engine/api";
 import type { BoardState, Ending, EvidenceLine } from "../../engine/api";
@@ -21,6 +22,7 @@ import { NotBuilt } from "./NotBuilt";
 import { RunCode } from "./RunCode";
 import { ThenNow } from "./ThenNow";
 import { TimeLapse } from "./TimeLapse";
+import { Verdict } from "./Verdict";
 import { termsOf, turningFrames } from "./view";
 import "./end.css";
 
@@ -88,12 +90,13 @@ function Body(props: { view: View; opened: boolean; found: string[]; onOpen: (s:
       <Show when={props.opened}>
         <p class="be-opened small" role="status">{t("boardend.code.viewing", { n: String(state.gameNumber) })}</p>
       </Show>
+      <Verdict model={model} state={state} ending={ending} frames={frames} />
       <ErrorBoundary fallback={<p class="small">{t("boardend.lapse.failed")}</p>}>
         <TimeLapse model={model} state={state} frames={frames} points={points} terms={terms} />
       </ErrorBoundary>
       <section class="be-name" data-testid="be-name">
         <p class="label">{t("boardend.name.built")}</p>
-        <h1 class="t-1" id="be-name"><Pair text={ending.name} /></h1>
+        <h1 class="t-1" id="be-name"><Pair single={lang() === "cy"} text={ending.name} /></h1>
         <p class="story">{tx(ending.summary)}</p>
         <ul class="be-evidence">
           <For each={ending.evidence.filter((e) => say(e.say))}>{(e) => <Evidence line={e} />}</For>
@@ -101,7 +104,7 @@ function Body(props: { view: View; opened: boolean; found: string[]; onOpen: (s:
       </section>
       <Chapters model={model} chapters={story.chapters} />
       <ThenNow model={model} frames={frames} mostChanged={ending.mostChanged} />
-      <Letter model={model} ending={ending} />
+      <Letter model={model} ending={ending} state={state} opened={props.opened} />
       <NotBuilt model={model} ending={ending} last={frames[frames.length - 1]!} />
       <Count model={model} ending={ending} found={props.found} />
       <RunCode model={model} state={state} ending={ending} opened={props.opened} onOpen={props.onOpen} onBack={props.onBack} onAgain={props.onAgain} />

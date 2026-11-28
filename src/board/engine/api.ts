@@ -19,6 +19,7 @@
  * | forecast    | events.ts    | 9       |
  * | election    | people.ts    | 9       |
  * | scores      | score.ts     | 9       |
+ * | headway     | score.ts     | D       |
  * | ending      | endings.ts   | 9       |
  * | timeline    | timeline.ts  | 9       |
  * | story       | story.ts     | 9       |
@@ -50,6 +51,10 @@ export { BoardActionError, BoardModelError, BoardRunError } from "./errors";
 export { boardFixture, FIXTURE_COUNCILS } from "./fixture";
 /** Calendar helpers for the screens: the year and season of a step, and steps in a span of years. */
 export { blockOf, closesYear, isElectionStep, perStep, seasonOf, stepOfYear, stepsOf, yearOfStep } from "./time";
+/** An event's noun key for the middle of a sentence (board.json `event.<id>`), and the river it names in a council. */
+export { eventNoun, riverAt } from "./events";
+export type { Headway } from "./score";
+export type { OnTheWay } from "./on-the-way";
 
 /** A new game at step 0 (May 2026): the real board, the chosen start, and a future drawn from the game number. */
 export function newBoard(model: BoardModel, gameNumber: number | string, start: StartId): BoardState {
@@ -104,6 +109,14 @@ export function election(model: BoardModel, state: BoardState): ElectionView {
 /** Both scores as they stand now, for the top strip (and the same call at the end). */
 export function scores(model: BoardModel, state: BoardState): Scores {
   return scoreMod.scores(model, state);
+}
+
+/**
+ * What is on the way in Left for 2050: points built or started but not yet on the board (builds,
+ * bedding in, ramps), the year the last lands, and the same per council and measure for the bars.
+ */
+export function headway(model: BoardModel, state: BoardState): scoreMod.Headway {
+  return scoreMod.headway(model, state);
 }
 
 /** The named ending, evidence, scores, letter, the Wales not built and the story. Call when the game is over. */

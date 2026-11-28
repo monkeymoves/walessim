@@ -4,7 +4,7 @@
  * from the first version of the board is refused with a plain line.
  */
 import { createSignal, Show, type JSX } from "solid-js";
-import { t } from "../../../i18n";
+import { t } from "../lang";
 import { StampButton, TabButton } from "../../../ui/parts";
 import * as api from "../../engine/api";
 import type { BoardModel, BoardState, Ending } from "../../engine/api";

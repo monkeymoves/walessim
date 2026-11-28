@@ -12,18 +12,28 @@
  * `board.cause.<cause kind>` filled from the same slots; a report line is `board.report.up` or
  * `board.report.down`. Slots are listed in `sayVars`.
  */
+import { eventNoun } from "./events";
 import { causeKey } from "./held";
 import type {
   BoardModel, BoardState, Contribution, CouncilCode, Honesty, NodeId, ReportLine, RuleId, Say, SayVar, SourceId, Text,
   Why, WhyTarget,
 } from "./types";
-import { MEASURE_IDS } from "./types";
+import { MEASURE_IDS, RULE_IDS } from "./types";
 
 const r2 = (v: number): number => Math.round(v * 100) / 100;
 
 export function nodeName(model: BoardModel, id: NodeId): Text | string {
   return model.councils.find((c) => c.code === id)?.name ?? model.stubs.find((s) => s.id === id)?.name ?? id;
 }
+
+
+/**
+ * The Say key naming a change's cause: `board.cause.<kind>`, except young adults moving (S3), which
+ * reads "Young adults moving towards work and homes" rather than people changing their minds
+ * (playtest 8: the circular Why?).
+ */
+const causeKeyFor = (c: Contribution): string =>
+  c.cause.kind === "people" && c.rule === RULE_IDS.youngFollowWork ? "board.cause.people_young" : `board.cause.${c.cause.kind}`;
 
 /** The plain sentence a rule ends at: its card's note, or the content page's own line. */
 export function ruleNote(model: BoardModel, id: RuleId): Text | undefined {
@@ -63,7 +73,7 @@ function quantityName(model: BoardModel, q: string): Text | string {
 export function sayVars(model: BoardModel, c: Contribution, delta: number, year: number): Record<string, SayVar> {
   const v: Record<string, SayVar> = {
     n: r2(Math.abs(delta)), delta: r2(delta), quantity: quantityName(model, c.quantity), year,
-    council: c.council ? nodeName(model, c.council) : "", cause: `board.cause.${c.cause.kind}`, rule: c.rule,
+    council: c.council ? nodeName(model, c.council) : "", cause: causeKeyFor(c), rule: c.rule,
   };
   const note = ruleNote(model, c.rule);
   if (note) v.note = note;
@@ -72,7 +82,9 @@ export function sayVars(model: BoardModel, c: Contribution, delta: number, year:
     site.council ? nodeName(model, site.council) : model.links.find((l) => l.id === site.link)?.name ?? site.link ?? "";
   if (cause.kind === "project") { v.project = model.projects.find((p) => p.id === cause.project)?.name ?? cause.project; v.site = v.place = siteName(cause.site); }
   if (cause.kind === "pair") { v.pair = model.pairs.find((p) => p.id === cause.pair)?.name ?? cause.pair; v.site = v.place = siteName(cause.site); }
-  if (cause.kind === "event" || cause.kind === "response") v.event = model.events.find((e) => e.id === cause.event)?.name ?? cause.event;
+  // An event starts its sentence by its title; an answer names it inside a sentence (its noun).
+  if (cause.kind === "event") v.event = model.events.find((e) => e.id === cause.event)?.name ?? cause.event;
+  if (cause.kind === "response") v.event = eventNoun(cause.event);
   if (cause.kind === "response") v.response = model.events.find((e) => e.id === cause.event)?.responses.find((r) => r.id === cause.response)?.name ?? cause.response;
   if (cause.kind === "law") v.law = model.laws.find((l) => l.id === cause.law)?.name ?? cause.law;
   if (cause.kind === "visit") { v.place = model.places.find((p) => p.id === cause.place)?.name ?? cause.place; v.grade = `board.grade.${cause.grade}`; }

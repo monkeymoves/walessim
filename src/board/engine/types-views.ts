@@ -22,10 +22,11 @@ export type Blocker =
   /** One of each keystone a game (sections 5.3 and 16.3.5): this one stands or is being built somewhere. */
   | { kind: "one_keystone" }
   | { kind: "max_level" }
+  /** A project still being built cannot be made bigger until it works (from the step after `readyStep`). */
+  | { kind: "still_building"; readyStep: number }
   /** A keystone started now would not be finished by 2050. */
   | { kind: "too_late"; lastYear: number }
   | { kind: "law_changes_used" }
-  | { kind: "visit_used" }
   | { kind: "phase"; phase: string }
   | { kind: "not_offered" };
 
@@ -123,6 +124,8 @@ export interface CoinsReport {
   running: number;
   charges: number;
   after: number;
+  /** Coins not paid this step because the purse was full (B1 `purse_max`). Always set by the engine. */
+  lost?: number;
 }
 
 export interface ForecastWarning {

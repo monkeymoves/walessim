@@ -4,7 +4,7 @@
  * saved under the board's own key, never shared with another app's storage.
  */
 import { For, type JSX } from "solid-js";
-import { t } from "../../../i18n";
+import { t } from "../lang";
 import { CloseButton } from "../../../ui/parts";
 import type { StopKind } from "../../engine/api";
 import { useGame } from "../game";

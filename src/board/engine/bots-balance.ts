@@ -9,6 +9,7 @@ import { pickEnding } from "./endings";
 import { frameAtYear } from "./frame";
 import { councilMean, lowestCouncils, scores } from "./score";
 import type { BoardModel, BoardState, CouncilCode, Frame, MeasureId } from "./types";
+import { stepOfYear } from "./time";
 import { MEASURE_IDS } from "./types";
 
 /** One finished game by one bot. */
@@ -51,6 +52,8 @@ export interface RunResult {
   lowestRose: boolean;
   /** The six chapter ids, in order. */
   chapters: string[];
+  /** The result at the first election less the 2026 board's score (things move early). */
+  early?: number;
 }
 
 function vectorOf(model: BoardModel, councils: Record<CouncilCode, { measures: Record<MeasureId, number>; young: number; backing: number }>): number[] {
@@ -60,8 +63,25 @@ function vectorOf(model: BoardModel, councils: Record<CouncilCode, { measures: R
   });
 }
 
+/**
+ * Watches a game for the headline at the first election: pass `observe` to `playGame`, then read
+ * `early()` (the result there less the 2026 board's score; undefined if the game never got there).
+ */
+export function earlyWatch(model: BoardModel): { observe: (s: BoardState) => void; early: () => number | undefined } {
+  const at = stepOfYear(model, model.game.election_years[0] ?? model.game.end_year);
+  let early: number | undefined;
+  return {
+    observe: (s) => {
+      if (early !== undefined || s.step < at) return;
+      const sc = scores(model, s);
+      early = sc.result - sc.start;
+    },
+    early: () => early,
+  };
+}
+
 /** Summarise a finished state for the table. */
-export function runResult(model: BoardModel, bot: string, game: number, state: BoardState): RunResult {
+export function runResult(model: BoardModel, bot: string, game: number, state: BoardState, early?: number): RunResult {
   const sc = scores(model, state);
   const first = state.history[0];
   const frames: Frame[] = [...state.history];
@@ -95,6 +115,7 @@ export function runResult(model: BoardModel, bot: string, game: number, state: B
     lowestChange: lowest && first ? councilMean(state.councils[lowest]!) - councilMean(first.councils[lowest]!) : NaN,
     lowestRose: !!lowest && risen.includes(lowest),
     chapters: state.story.chapters.map((c) => c.chapter),
+    ...(early !== undefined ? { early } : {}),
   };
 }
 

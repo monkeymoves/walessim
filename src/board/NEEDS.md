@@ -305,7 +305,118 @@ File: model/board/projects.yaml (owner: package 10)
 Need: a decision. Every made here project lifts only Work and pay and Climate. With roots, those two reach 10 (the ceiling) in most councils by about 2040, so more building there does nothing, and branch-made_here ends 6 to 9 points below the other branch bots in every start and future ("Each branch has its day" fails, and the bot loses most elections). Raising its sizes does not help: the lifts are cut at 10. It needs some lift on Health, Nature or Welsh and culture (for example a college that teaches in Welsh, or firms that fund health checks), which is content, not tuning.
 Stub meanwhile: sizes raised (skills college 1.5 times, community energy 1.2, the cluster keystone 1.5); the mark still fails.
 
-## [P9 balance] Design numbers in v2-board.md 16 now differ from the model  (for the coordinator)
+## [P9 balance] Design numbers in v2-board.md 16 now differ from the model  (done at the join: section 16 now says its sizes are starting values and points at the balance log)
 File: docs/design/v2-board.md (owner: the designer)
 Need: section 16 quotes starting sizes the balance rounds changed: the purse (12, now 16), base coins (3 a year, now 3.75), the S3 floor (0.6, now 0.85) and pull, R1 cap (5, now 7) and alone growth (0.03, now 0.01), R2 edges (0.3, now 0.6) and coins (0.5, now 1), R3 (1 coin and 8 years, now 2 and 12), R4 (now 1.6 less 0.15 a point, between 0.25 and 1.5), chapter priorities, outside event sizes (doubled) and bus running costs (halved). All are game rules. The log has the reasons. Please update 16 or mark its numbers "starting values, see the balance log".
 Stub meanwhile: the model is the truth; the rule book reads the model.
+
+## [B] A slower default speed: 4 of 8 cold players felt rushed  (done by D: steady is 4000 ms a step)
+File: model/board/game.yaml (owner: package D, or the coordinator)
+Need: set `steady` to `ms_per_step: 4000` (a year in 16 seconds, about 6 and a half minutes of running time in a game), keeping brisk and fast. It is pacing, not a game rule, and no words change: the clock's status line reads the speed ("Time is running: a year every 16 seconds").
+Stub meanwhile: the game now opens with time stopped behind a big "Start time" button, and the first time time runs a note pinned to the clock teaches Pause, Space and the three speeds (src/board/ui/clock/Clock.tsx).
+
+## [B] What is still to come on the headline: bedding in and roots  (done by D: headway() in api.ts, leftBoard counts what is on the way)
+File: src/board/engine/score.ts, api.ts (owner: package D)
+Need: an API view, for example `headway(model, state): { comingPoints: number; comingBy: number | null }`, giving how much Left for 2050 will still rise from what is already standing if nothing else is built: the rest of each working project's and law's ramp (`after_years`, `ramp_years`, held.ts) and R1 roots growth, with the year the last of it lands. No events, no drift. The top strip would show "+{n} still to come by {year}" beside "Up {n} since 2026". Also, please check a contradiction: `leftBoard` counts a build's full lift while it is being built, but once it opens only the ramped part is in the measures, so Left for 2050 can dip on the day a slow build opens. Counting the unramped rest of working projects in `leftBoard` would fix both.
+Stub meanwhile: src/board/ui/clock/headway.ts shows the headline to one decimal, "Up / Down {n} since 2026", the part still being built with the year it opens, and "If you build it: {n} (+{change})" while a project is pointed at, all through `scores`.
+
+## [B] Coins lost to a full purse in the step report  (done by D: CoinsReport.lost)
+File: src/board/engine/budget.ts, types-views.ts (owner: package D)
+Need: `CoinsReport.lost`: the coins not paid this step because the purse was full. Then the strip can say how many were lost, and the purse warning can count them.
+Stub meanwhile: the coin counter reads "{n} of 16 coins", warns "Purse nearly full: spend some" when a year's income would fill it, and "Purse full: new coins are lost" when full (src/board/ui/clock/coins.ts).
+
+## [B] "Press play" words now that the button says "Start time"  (done by C)
+File: model/i18n/{en,cy}/boardui.json `ticker.first` (owner: package C)
+Need: the clock's button reads "Start time" until time first runs, so `ticker.first` should say "Nothing moves until you press Start time." (cy: "Does dim yn symud nes i chi bwyso Dechrau'r amser."). `guide.map`, `guide.play`, `guide.speed` and `clock.held.*` in boardui.json are no longer read; the guide and the clock read boardclock.json. They can be dropped when copy.test.ts's families list drops them.
+Stub meanwhile: none; the ticker line is the only stale one.
+
+## [B] The build menu leaves a hovered project set  (done by C)
+File: src/board/ui/BuildMenu.tsx (owner: package C)
+Need: the hover set by `onPointerEnter` on a ticket is only cleared by a click, a build or closing; please clear it on `onPointerLeave` of the ticket list too, so the bars' dotted "if you build it" never stays after the pointer has gone.
+Stub meanwhile: the top strip shows "left if you build it" and "If you build it" only while the build menu is open on a project that can be built now; game.ts drops the hover when the build menu closes or its council is closed.
+
+## [B] Notice: clock, guide and title changes  (a notice for the coordinator and package C)
+File: src/board/ui/ (owner: package B)
+Need: none. The clock is held only by what the board draws (`clock.shown()`, src/board/ui/clock/hold.ts; BoardScreen draws from the same list). Closing a council closes its build menu. After answering an event the clock stays paused until Play; "Carry on" on a card still carries on. The button says "Held" with the reason underneath. The guide is three notes (map, council, build) and shows a note only when its subject is on screen. A new key `<save_key>clocktaught` records that the pause and speed note was seen. `game.guideNext` is replaced by `game.guideTo(n)`. The title's main button is now the board ("Play: run South East Wales", data-testid way-bwrdd); the first game is one click below it (way-yfory), and leads on a narrow screen.
+Stub meanwhile: n/a.
+
+## [C] Gwent Levels option cards overlap (playtest 8 must-fix 17)  (done at the join: LightPlace options no longer carry the shared `ticket` class, whose four-column grid caused the overlap)
+File: src/board/ui/place/place.css (owner: the package that owns src/board/ui/place/)
+Need: each option in LightPlace.tsx is `class="bp-option ticket"`, and the shared `.ticket` rule in src/ui/parts/parts.css sets `grid-template-columns: 18px var(--ticket-stub-w) 1fr 26px`, so the name, gain and loss fall into four narrow columns and print over each other (policy `g1-42.png`). Add `grid-template-columns: 1fr;` to `.bp-option` in place.css (or drop the `ticket` class). Not a Respond.tsx problem: the event answer slip is fine.
+Stub meanwhile: none; package C did not touch place/.
+
+## [C] A refused place visit says only "not allowed now" (playtest 8 must-fix 11)  (done at the join: blockers.ts `visitBlockWords`, read by the stop card, the council panel and the place sheet, which shows the reason and a Close button instead of the options; the dead `visit_used` blocker and its words are gone)
+File: src/board/ui/place/index.tsx (owner: the package that owns src/board/ui/place/)
+Need: the cause was the one-visit-a-year blocker `visit_used`: policy visited the Gwent Levels in Winter 2032 and opened the Rhondda tips in Summer 2033, and the sheet showed the generic act error and "That choice cannot be made now". This round the engine no longer raises `visit_used` (projects.ts `case "visit"` only checks the offer is open), so the visit itself now goes through. What is left for the place sheet: before the choose button, read `options(model, state)` for `{ kind: "visit", place }`; when it is not allowed (an offer that lapsed while the sheet was open), show `blockerWords(model, b)` from src/board/ui/blockers.ts and disable the choose button, instead of the generic error. The stop card's "Go and visit" and the council panel's visit button already carry the engine's reason and are disabled while any blocker holds.
+Stub meanwhile: none.
+
+## [C] Engine Why? sentence reads "Your A repairs team" (playtest 8 must-fix 14)  (done by D: board.json cause.project and cause.people_young)
+File: model/i18n/{en,cy}/board.json (owner: the package that owns board.json)
+Need: `cause.project` is "Your {project} in {site}", which reads "Your A repairs team for cold, damp homes" and "Your Land a big employer". Suggest "{project}, which you built in {site}" (the Why? panel's own words now). `cause.people` ("People moving and changing their minds") is circular: suggest "Young adults moving towards work and homes" (rule S3) for the young group. The Why? panel no longer shows the engine's `why.line_*` sentence (the delta, cause, link and rule rows say it all), so only other readers of `Why.say` still show these.
+Stub meanwhile: src/board/ui/causes.ts writes its own cause words from boardui.json.
+
+## [C] Answers to package B's two entries for package C  (done)
+File: model/i18n/{en,cy}/boardui.json, src/board/ui/BuildMenu.tsx, src/board/ui/Ticker.tsx, src/board/ui/copy.test.ts (owner: package C)
+Need: none. `ticker.first` now says "Nothing moves until you press Start time." (step by step mode: `ticker.firstStep`, "... press Next season."). The unread `guide.map`, `guide.council`, `guide.build`, `guide.play`, `guide.speed`, `guide.playStep`, `guide.speedStep` and `clock.held.*` are gone from boardui.json and from copy.test.ts's families. Each ticket list of the build menu clears the hovered project on pointer leave unless a ticket is open.
+Stub meanwhile: n/a.
+
+## [A] The board e2e: the result is now at the top of the end screen, not folded in the count  (done at the join: checkEnd expects be-verdict first, be-band and be-record visible without a click)
+File: tests/e2e/board.spec.ts, `checkEnd` (owner: coordinator)
+Need: playtest 8 must-fix 1 moved the verdict and both scores to a new first section, `be-verdict` (above `be-lapse`), so `be-band` is visible as soon as the end opens. The lines "the count is folded shut until opened" (`be-band` toBeHidden, then visible after `be-count-open`) now fail. Please change them to: `be-verdict` first in the order list and visible; `be-band` visible without a click; then click `be-count-open` and check `be-found` as before. `be-record` (promise, place furthest behind, elections, deals) is inside `be-verdict`; `be-turns` shows only in a hard game.
+Stub meanwhile: none. Not run here (the e2e builds and plays a whole game); unit tests cover the pieces (src/board/ui/end/record.test.ts).
+
+## [A] Package 10's content tests changed for more chapters and letters  (done, a notice for the coordinator)
+File: src/board/content/story.test.ts, src/board/content/content.test.ts (owner: package 10)
+Need: none. They pin the counts of the files package A now owns. story.yaml has 24 chapters (three fallbacks so no game tells the same chapter twice, two more for a second and third lost election, a slow climb and a slow slide), and letters.yaml has 36 letters (a third, `lower: either`, for each ending). The two assertions were updated to match; nothing else in those files changed.
+Stub meanwhile: n/a.
+
+## [A] Welsh mutation of {council} in the new end screen sentences  (done by the Welsh pass: src/board/ui/cymraeg.ts fills every Welsh board slot)
+File: model/i18n/cy/boardend.json, model/board/story.yaml, model/board/endings.yaml (owner: package A); the slot filler (owner of must-fix 19)
+Need: the new Welsh lines say "yn {council}", "i {council}" and "gartrefi yn {council}" (river floods now name the council, not a town, so playtest 8 should-fix 12's "The Ely flooded Barry" cannot recur). When the {council} slot learns its soft and nasal mutations, these follow with no change here.
+Stub meanwhile: unmutated names, as before.
+
+## [D] Answers to package B's entries for package D  (done, a notice for package B)
+File: model/board/game.yaml, src/board/engine/score.ts, on-the-way.ts, budget.ts, api.ts (owner: package D)
+Need: none. (1) `steady` is now 4000 ms a step. (2) `headway(model, state)` in api.ts returns `{ comingPoints, comingBy, byCouncil }`: points of Left for 2050 that are built or started but not yet on the board (builds, bedding in, ramps, at full size, need and level included), the year the last of it lands, and the same per council and measure (`OnTheWay`) for the dashed part of the bars. R1 roots are not counted ahead: they grow only while a project keeps company, so they show as they happen. The contradiction is fixed at its cause: `leftBoard` now counts what is on the way (on-the-way.ts) for every standing project, building or ramping, so Left for 2050 no longer dips the day a slow build opens (on-the-way.test.ts). Your "still being built" line can read `headway().comingPoints` and `comingBy`. (3) `CoinsReport.lost`: coins not paid this step because the purse was full (always set by the engine; optional in the type so your stops.test.ts fixture still compiles).
+Stub meanwhile: n/a.
+
+## [D] Event names inside sentences: use the noun key  (done at the join: Timeline, StopCard, CouncilPanel, causes.ts and the place sheet pass `noun`; English copy puts the noun after a colon; Respond.tsx and Verdict.tsx pass `riverAt`; the duplicate river helpers in end/view.ts and story-terms.ts are gone)
+File: src/board/ui/Timeline.tsx, StopCard.tsx (fallbackLine), Respond.tsx, place/index.tsx, model/i18n/{en,cy}/boardui.json, boardend.json; src/board/engine/story.ts (owners: B and C)
+Need: playtest 8 must-fix 7. Each event now has a noun form for the middle of a sentence in board.json, `event.<id>` ("a dirty river", "afon fudr"; "a firm that wants to grow", "cwmni sydd eisiau tyfu"). `eventNoun(id)` in api.ts gives its key (`board.event.<id>`), and the engine already sends it in every `{event}` slot it fills (stops respond and warning, time line warning, build rebuild note, cause.response). Screen sentences that still put the title (`name`) into a slot: boardui `timeline.landed` "{name} landed on {place}", `timeline.warning`, `stop.warning.line`, boardend `place.offeredEvent`, and story.ts `moment.event` (its board.json sentence is now "In {council}: {event}.", which reads with either form). Please pass `t(eventNoun(id))` there, and keep `name` for headings and map labels. Also Respond.tsx fills `landed` with `fill(model, tx(ev.landed), councils)` and no river, which gives "The  burst its banks" when a storm lands in a river's last council: pass `riverAt(model, councils[0], councils[1])` (api.ts) as the river. The engine's forecast already does.
+Stub meanwhile: the engine's own sentences are fixed; event-words.test.ts checks every {event} the engine sends is a noun key and every river event names a river.
+
+## [D] The Ely runs through the Vale to Cardiff: river towns in story and endings  (done by A: river lines name the council; story-terms.ts and endings.ts now use events.ts `riverAt`)
+File: src/board/engine/story-terms.ts, endings.ts (owner: package B)
+Need: playtest 8 should-fix 12, "The Ely flooded Barry". links.yaml now has the Ely as Rhondda Cynon Taf, then the Vale of Glamorgan (Peterston-super-Ely), then Cardiff, where it reaches the sea; the old fork straight from Rhondda Cynon Taf to Cardiff is gone (rivers.test.ts checks every river's course and mouth). A chapter or ending that names a town for a river event should not take the council's first town (`towns[0]`, Barry for the Vale): Barry is on no river in play. Use the council name, or a town on that river.
+Stub meanwhile: none.
+
+## [D] Notice: pace, events and balance numbers changed  (a notice for the coordinator and all packages)
+File: model/board/ (owner: package D)
+Need: none. Every change is a game rule and is in docs/design/board-balance-log.md with its reason: B1 opening 6 to 8 and base 3.75 to 4 coins a year; E1 first outside trouble 2030 (was 2028), new E1 `repeat_max` 2 and `repeat_gap_years` 8 (no event more than twice a game or within 8 years); R1 new `quick_max_factor` 1.5 (quick projects help at once with shallow roots), quick projects' lifts 1.75 times, tier 2 and keystone lifts 1.3 times; R2 coins 0.5 a rising council (was 1); R3 discount 3 (was 2). A place visit on offer can always be made (the `visit_used` blocker is gone). The fixture pins its phase 1 values (fixture-rules.ts) so clock-equivalence stays green. New bot Spender (every coin on the cheapest build) and two marks: "Thought beats spending" and "Things move early".
+Stub meanwhile: n/a.
+
+## [Welsh] Notice: every Welsh board sentence is filled by src/board/ui/cymraeg.ts  (a notice for the coordinator and all packages)
+File: src/board/ui/ (owner: the Welsh pass)
+Need: none. Board screens now import `t` and `tn` from src/board/ui/lang.ts, not src/i18n (an import path change in each board UI file; cymraeg.test.ts fails if one goes back). In Cymraeg it fills `{slots}` through cymraeg.ts `fillCy`: the soft, nasal and aspirate mutations by the word before the slot ("yng Nghasnewydd", "i Gaerffili", "a Chaerdydd"), the article joined ("o'r haf", "i'r Barri", "Mae'r Gymraeg"), lists with "a"/"ac" and the aspirate (`listOf`, new `orOf` in words.ts), and figures ("1 flwyddyn", "8 mlynedd", "2 brosiect"). words.ts `say`, `fill`, chapters and end/view.ts `fillText` use it too. English is untouched. Names keep no English line under them in Cymraeg (`<Pair single={lang() === "cy"}>`, as v1 does since cold playtest 6). src/i18n is not changed.
+Stub meanwhile: n/a.
+
+## [Welsh] The headline's change line is hidden under the big number  (done at the join: the figure no longer shrinks, clock.css `.bw-score-n { flex: none }`)
+File: src/board/ui/TopStrip.tsx, clock.css (owner: package B)
+Need: the line under "Left for 2050" ("Up 0.4 since 2026", Welsh "Wedi codi 0.4 ers 2026") starts under the large figure, so its first letter is covered (design/shots-build/board-fix1/cy/10-stop-warning.png, b-15-deal.png; the old Welsh "I fyny" lost its "I" entirely). Give the text column a left margin clear of the figure.
+Stub meanwhile: the Welsh now reads "Wedi codi" / "Wedi gostwng", which survives a covered first letter less badly.
+
+## [Welsh] English sentences still put an event title in a sentence slot  (done at the join, with [D] "Event names inside sentences")
+File: src/board/ui/Timeline.tsx (timeline.landed, timeline.warning), StopCard.tsx (stop.warning.line), CouncilPanel.tsx (council.mapWarn), causes.ts (cause.response), place/index.tsx (boardend.place.offeredEvent), end/Verdict.tsx (boardend.turns.eventNamed)
+Need: these pass the event title (`name`), not the noun (`t(eventNoun(id))`). The Welsh is now written so a title stands after a colon or alone ("{name}: daeth i {place}", "Rhybudd i {council}: {event}", "Trafferth yn {council}: {event}"), so Welsh reads right with either. English still gives "A warning: The river runs dirty may hit Newport".
+Stub meanwhile: Welsh fixed in the copy; English as before.
+
+## [Welsh] Source titles on Why? and rule cards are English in Cymraeg  (closed at the join: kept as citations, a publication's own title; a Welsh title field is a data task for the owner, logged in playtest-8 "After fix round 1")
+File: model/sources.yaml and the board sources (owner: data)
+Need: a decision. Titles such as "Census 2021 ODWP01EW Location of usual residence..." and "ONS mid-year population estimates" show in English on Welsh screens (design/shots-build/board-fix1/cy/32-why.png). They are the publications' own titles, so they are left as citations; a Welsh title field, where the publisher has one, would close it. Cold playtest 6 logged the same for v1.
+Stub meanwhile: English citation titles.
+
+
+## [JOIN fix 1] Fix round 1 joined  (done, a notice for the coordinator)
+File: src/board/ (the join may edit any board file)
+Need: none. Every open entry above is closed or decided. New at the join: `visitBlockWords` (blockers.ts), the `still_building` blocker, `board.stop.finished_link`, `shownGap` (end/record.ts), `underNow` (Timeline.tsx), `up` slips (markLayout.ts), the strip's "on the way" from the engine's `headway`, and `on-the-way.ts` dating a build's opening from the step after `readyStep`. Removed: `visit_used`, `riverOf` (end/view.ts), story-terms.ts `riverAt`, `readyYearOf`, `branchIcon`, `hitCouncils`, `boardui.title.try*`. Scripts: design/scripts/board-fix1-join.mjs, board-fix1-join-visit.mjs. The marks are in docs/design/playtest-8-board-cold.md "After fix round 1".
+Stub meanwhile: n/a.

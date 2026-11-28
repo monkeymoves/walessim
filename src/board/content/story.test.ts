@@ -1,7 +1,7 @@
 /**
  * The chapters the game writes (docs/design/v2-board.md 16.5.1), as package 10 writes them into
- * model/board/story.yaml: eighteen, each a short plain name and one line, one fallback, and only
- * the slots the engine fills.
+ * model/board/story.yaml: twenty-four, each a short plain name and one line, three fallbacks (so
+ * no game tells the same chapter twice), and only the slots the engine fills.
  */
 import { describe, expect, it } from "vitest";
 import type { ChapterDef, TermCondition } from "../engine/types";
@@ -12,16 +12,17 @@ const SLOTS = new Set(["river", "council", "town", "project"]);
 const has = (c: ChapterDef, kind: TermCondition["kind"]) => c.when.some((w) => w.kind === kind);
 
 describe("chapters (package 10)", () => {
-  it("has eighteen chapters with unique ids and priorities", () => {
-    expect(chapters.length).toBe(18);
-    expect(new Set(chapters.map((c) => c.id)).size).toBe(18);
-    expect(new Set(chapters.map((c) => c.priority)).size).toBe(18);
+  it("has twenty-four chapters with unique ids and priorities", () => {
+    expect(chapters.length).toBe(24);
+    expect(new Set(chapters.map((c) => c.id)).size).toBe(24);
+    expect(new Set(chapters.map((c) => c.priority)).size).toBe(24);
   });
 
-  it("has one fallback, Holding on, tried last", () => {
-    const fallback = chapters.filter((c) => c.when.length === 0);
-    expect(fallback.map((c) => c.name.en)).toEqual(["Holding on"]);
-    expect(Math.max(...chapters.map((c) => c.priority))).toBe(fallback[0]!.priority);
+  it("has three fallbacks, Holding on first, tried after every other chapter", () => {
+    const fallback = chapters.filter((c) => c.when.length === 0).sort((a, b) => a.priority - b.priority);
+    expect(fallback.map((c) => c.name.en)).toEqual(["Holding on", "Steady hands", "Four more years"]);
+    const others = chapters.filter((c) => c.when.length > 0);
+    expect(Math.max(...others.map((c) => c.priority))).toBeLessThan(fallback[0]!.priority);
   });
 
   it("names a term from each kind of thing that can happen in it", () => {

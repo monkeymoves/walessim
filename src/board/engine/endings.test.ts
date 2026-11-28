@@ -59,15 +59,17 @@ describe("end conditions", () => {
 describe("the end screen", () => {
   const s = at2050((x) => { x.projects.push(standing("heat-and-homes", { council: cardiff }, 5)); lift(x, 0.4); lift(x, 1, [merthyr]); x.councils[merthyr]!.young += 1; });
 
-  it("names the ending, three evidence lines, the most changed councils and a letter from the first", () => {
+  it("names the ending, three evidence lines, the most changed councils, and a letter from the keystone's council", () => {
     const e = ending(model, s);
     expect(e.id).toBe("warm-country");
     expect(e.evidence).toHaveLength(3);
     expect(e.evidence.every((l) => l.say.key === "board.ending.evidence" && !!l.say.vars?.line)).toBe(true);
     expect(e.mostChanged[0]).toBe(merthyr);
-    expect(e.letter.from).toBe(merthyr);
+    // the ending is about Heat and homes for all, built in Cardiff: the letter comes from there and names it
+    expect(e.letter.from).toBe(cardiff);
     expect(e.letter.letter).toBe("letter-warm-country");
-    expect(e.letter.slots.council).toEqual(model.councils.find((c) => c.code === merthyr)!.name);
+    expect(e.letter.slots.council).toEqual(model.councils.find((c) => c.code === cardiff)!.name);
+    expect(e.letter.slots.project).toEqual(model.projects.find((p) => p.id === "heat-and-homes")!.name);
     expect(e.scores.result).toBe(e.scores.left);
     expect(e.autopilot.start).toBeCloseTo(e.scores.start, 6);
   });
@@ -76,6 +78,39 @@ describe("the end screen", () => {
     const line = evidenceLine(model, s, model.endings[0]!.evidence[0]!);
     expect(line.council).toBe(merthyr);
     expect(line.say.vars?.line).toEqual(model.endings[0]!.evidence[0]!.up);
+  });
+
+  it("a project line names the ending's own project, in its own council and year, not the first council's", () => {
+    const shaped = at2050((x) => {
+      x.projects.push(standing("buses-meet-trains", { council: merthyr }, 2), standing("work-up-the-line", { council: rct }, 30));
+      lift(x, 0.2, [lowest(x)]);
+    });
+    const line = evidenceLine(model, shaped, { kind: "project_standing", up: { en: "{project} in {council} since {year}", cy: "" }, down: { en: "none in {council}", cy: "" } },
+      (d) => d.id === "work-up-the-line");
+    expect(line.council).toBe(rct);
+    expect(line.say.vars?.project).toEqual(model.projects.find((p) => p.id === "work-up-the-line")!.name);
+    expect(line.say.vars?.year).toBe(2026 + Math.floor((30 + 1) / 4));
+  });
+
+  it("with nothing working, a project line names a council only, never a project or year", () => {
+    const bare = at2050(() => undefined);
+    const line = evidenceLine(model, bare, { kind: "project_standing", up: { en: "{project}", cy: "" }, down: { en: "none in {council}", cy: "" } });
+    expect(line.say.vars?.line).toEqual({ en: "none in {council}", cy: "" });
+    expect(line.say.vars?.project).toBeUndefined();
+    expect(line.say.vars?.year).toBeUndefined();
+  });
+
+  it("a flood line names the river council flooded most and the year of its last flood", () => {
+    const wet = at2050((x) => x.events.push({ event: "storm-taff", step: 20, councils: [rct], severity: 2 }, { event: "storm-taff", step: 40, councils: [rct], severity: 2 }));
+    const ev = { kind: "no_event_since" as const, up: { en: "dry since {year}", cy: "" }, down: { en: "{river} in {council} in {year}", cy: "" } };
+    const line = evidenceLine(model, wet, ev);
+    if (model.links.some((l) => l.kind === "river" && (l.from === rct || l.to === rct))) {
+      expect(line.council).toBe(rct);
+      expect(line.say.vars?.year).toBe(2036);
+    }
+    const dry = evidenceLine(model, at2050(() => undefined), ev);
+    expect(dry.say.vars?.line).toEqual(ev.up);
+    if (dry.council) expect(dry.say.vars?.year).toBe(model.game.first_year);
   });
 
   it("the Wales not built is another ending with conditions, the nearest first", () => {

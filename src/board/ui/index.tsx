@@ -4,7 +4,7 @@
  * the board, or the end. The paper map's geography comes from the shell, loaded once for v1.
  */
 import { createEffect, createResource, ErrorBoundary, lazy, Match, Switch, type JSX } from "solid-js";
-import { t } from "../../i18n";
+import { t } from "./lang";
 import { PaperSheet, StampButton, TabButton } from "../../ui/parts";
 import { geo } from "../../ui/shell/model";
 import { navigate } from "../../ui/shell/router";

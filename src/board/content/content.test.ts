@@ -54,16 +54,16 @@ describe("board content (package 10)", () => {
     }
   });
 
-  it("has twelve endings with three evidence lines, one fallback, and two letters each", () => {
+  it("has twelve endings with three evidence lines, one fallback, and three letters each", () => {
     const m = contentModel();
     expect(m.endings.length).toBe(12);
     expect(m.endings.filter((e) => e.when.length === 0).map((e) => e.id)).toEqual(["patchwork"]);
     expect(new Set(m.endings.map((e) => e.priority)).size).toBe(12);
     for (const id of ["comeback", "long-game", "holding-line", "gamble"]) expect(m.endings.some((e) => e.id === id), id).toBe(true);
-    expect(m.letters.length).toBe(24);
+    expect(m.letters.length).toBe(36);
     for (const e of m.endings) {
       expect(e.evidence.length, e.id).toBe(3);
-      for (const lower of ["life", "left"] as const) expect(m.letters.some((l) => l.ending === e.id && l.lower === lower), `${e.id} ${lower}`).toBe(true);
+      for (const lower of ["life", "left", "either"] as const) expect(m.letters.some((l) => l.ending === e.id && l.lower === lower), `${e.id} ${lower}`).toBe(true);
     }
     for (const l of m.letters) expect(l.signoff.en, l.id).toMatch(/\(a made-up voice\)$/);
   });

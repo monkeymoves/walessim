@@ -1,5 +1,5 @@
 /**
- * The bot gate (docs/design/v2-board.md sections 13.2 and 16.6): plays the twelve strategy bots
+ * The bot gate (docs/design/v2-board.md sections 13.2 and 16.6): plays the thirteen strategy bots
  * over many game numbers, across every start and future, plus the measures that need games of
  * their own, and prints the 16.6 table. Writes it to docs/design/board-balance-log.md unless
  * --no-write. Games run in parallel child processes (one per core less one, at most 11).
@@ -20,8 +20,8 @@ import { fileURLToPath } from "node:url";
 import { hashSeed } from "../src/engine/rng";
 import { acceptBoardModel } from "../src/board/model/load";
 import { boardFixture } from "../src/board/engine/fixture";
-import { allBots, playGame, random, skilled, startFor } from "../src/board/engine/bots";
-import { botSummary, median, runResult, type RunResult } from "../src/board/engine/bots-balance";
+import { allBots, playGame, random, realEngine, skilled, startFor } from "../src/board/engine/bots";
+import { botSummary, earlyWatch, median, runResult, type RunResult } from "../src/board/engine/bots-balance";
 import { balanceTable, tableMarkdown } from "../src/board/engine/bots-marks";
 import { clockExact, compoundRatio, idleDrift } from "../src/board/engine/bots-probes";
 import { keystonesStanding } from "../src/board/engine/end-conditions";
@@ -70,7 +70,10 @@ type Out =
 function runJob(model: BoardModel, job: Job): Out {
   if (job.kind === "bots") {
     const start = startFor(model, job.game);
-    return { kind: "bots", runs: allBots(model).map((bot) => runResult(model, bot.id, job.game, playGame(model, bot, job.game, start))) };
+    return { kind: "bots", runs: allBots(model).map((bot) => {
+      const watch = earlyWatch(model);
+      return runResult(model, bot.id, job.game, playGame(model, bot, job.game, start, realEngine, watch.observe), watch.early());
+    }) };
   }
   if (job.kind === "shuffled") {
     const start = startFor(model, job.game);

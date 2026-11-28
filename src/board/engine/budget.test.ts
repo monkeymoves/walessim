@@ -115,12 +115,14 @@ describe("coins", () => {
     s.coins = 5;
     expect(settleCoins(makeCtx(purse, s, 7)).after).toBeCloseTo(5.75, 4);
     s.coins = 11.9;
-    expect(settleCoins(makeCtx(purse, s, 8))).toMatchObject({ income: 0.1, after: 12 });
+    // A quarter of 3 coins a year is 0.75: 0.1 fits, 0.65 is lost to the full purse and reported.
+    expect(settleCoins(makeCtx(purse, s, 8))).toMatchObject({ income: 0.1, after: 12, lost: 0.65 });
     s.coins = 12;
     s.projects.push(working("buses-meet-trains", merthyr, 0));
     const r = settleCoins(makeCtx(purse, s, 9));
     expect(r.running).toBeCloseTo(0.0625, 4);
     expect(r.after).toBe(12);
+    expect(r.lost! + r.income).toBeCloseTo(0.75, 4);
   });
 
   it("pay half a coin a year for each council on the rise, and a coin more for good once the region turns (rule R2)", () => {

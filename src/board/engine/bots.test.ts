@@ -168,9 +168,9 @@ describe("balance measures", () => {
 });
 
 describe("bots on the fixture with the real engine", () => {
-  it("all twelve bots finish a game in 2050, and a bot's game replays the same", () => {
+  it("all thirteen bots finish a game in 2050, and a bot's game replays the same", () => {
     const bots = allBots(model);
-    expect(bots.map((b) => b.id)).toHaveLength(12);
+    expect(bots.map((b) => b.id)).toHaveLength(13);
     for (const bot of bots.filter((b) => !["skilled", "rescue", "scatter", "sleeper"].includes(b.id))) {
       const a = playGame(model, bot, 11, startFor(model, 11));
       expect(a.phase, bot.id).toBe("ended");

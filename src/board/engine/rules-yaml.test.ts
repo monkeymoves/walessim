@@ -29,7 +29,7 @@ const NEEDED: Record<string, Record<string, string[]>> = {
     B2: ["care_bill_per_year", "from_year", "hubs_needed"],
   },
   "growth.yaml": {
-    R1: ["grow_alone_per_year", "grow_joined_per_year", "max_factor"],
+    R1: ["grow_alone_per_year", "grow_joined_per_year", "max_factor", "quick_max_factor"],
     R2: [
       "over_years", "rise_at", "slip_at", "settle_band", "pull_points", "roots_bonus", "backing_per_year", "coins_per_year",
       "region_turn_councils", "region_turn_coins_per_year",

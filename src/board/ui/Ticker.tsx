@@ -4,7 +4,7 @@
  * still while the clock is paused. Before the first season it says the clock waits for you.
  */
 import { createMemo, For, Show, type JSX } from "solid-js";
-import { t } from "../../i18n";
+import { t } from "./lang";
 import { ThreadButton } from "../../ui/parts";
 import { stepsOf } from "../engine/api";
 import type { TickerLine } from "./clock/stops";
@@ -33,7 +33,7 @@ export function Ticker(): JSX.Element {
   };
   return (
     <div class="bw-ticker" role="log" aria-live="polite" aria-label={t("boardui.ticker.aria")} data-testid="bw-ticker">
-      <Show when={!fresh()} fallback={<p class="bw-ticker-line bw-ticker-first">{t("boardui.ticker.first")}</p>}>
+      <Show when={!fresh()} fallback={<p class="bw-ticker-line bw-ticker-first">{t(c.prefs().stepByStep ? "boardui.ticker.firstStep" : "boardui.ticker.first")}</p>}>
         <Show when={lines().length} fallback={<p class="bw-ticker-line small">{game.selected() ? t("boardui.map.statusSelected", { name: councilName(model, game.selected()) }) : t("boardui.map.status")}</p>}>
           <ul>
             <For each={lines()}>
@@ -43,7 +43,7 @@ export function Ticker(): JSX.Element {
                   <span class="bw-ticker-text">{text(l)}</span>
                   <Show when={l.kind === "year"}><ThreadButton class="bw-why" onClick={() => whyOf(l)}>{t("boardui.why.button")}</ThreadButton></Show>
                   <Show when={l.kind === "news" && l.council}>
-                    <button type="button" class="inklink small" onClick={() => l.kind === "news" && game.setSelected(l.council)}>{t("boardui.stop.look")}</button>
+                    <button type="button" class="inklink small" onClick={() => l.kind === "news" && game.setSelected(l.council)} data-testid="bw-ticker-look">{t("boardui.stop.lookAt", { council: councilName(model, l.kind === "news" ? l.council : null) })}</button>
                   </Show>
                 </li>
               )}

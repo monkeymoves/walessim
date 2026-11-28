@@ -13,7 +13,7 @@
  * Why? too.
  */
 import { allHold, siteCouncils } from "./conditions";
-import type { StepCtx } from "./ctx";
+import { round4, type StepCtx } from "./ctx";
 import { momentumCoinsPerYear } from "./momentum";
 import { ruleParam } from "./rule-defaults";
 import { optParam, param } from "./rules";
@@ -130,14 +130,16 @@ export function settleCoins(ctx: StepCtx): CoinsReport {
   let inc = 0;
   let running = 0;
   let charges = 0;
+  let lost = 0;
   for (const m of ordered) {
     const delta = purse !== undefined && m.delta > 0 ? Math.min(m.delta, Math.max(0, purse - state.coins)) : m.delta;
+    lost += m.delta - delta;
     const applied = ctx.change({ council: null, quantity: "coins", delta, rule: m.rule, cause: m.cause });
     if (m.kind === "income") inc += applied;
     else if (m.kind === "running") running -= applied;
     else charges -= applied;
   }
-  return { before, income: inc, running, charges, after: state.coins };
+  return { before, income: inc, running, charges, after: state.coins, lost: round4(lost) };
 }
 
 /** The coins in May 2026: rule B1 `opening`. */

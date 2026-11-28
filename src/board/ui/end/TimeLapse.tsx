@@ -5,7 +5,7 @@
  * as stills, with the turning points as a list.
  */
 import { createEffect, createMemo, createSignal, For, onCleanup, Show, type JSX } from "solid-js";
-import { t } from "../../../i18n";
+import { t } from "../lang";
 import type { PaperMap } from "../../../map";
 import { MapView } from "../../../ui/atlas/MapView";
 import "../../../ui/atlas/atlas.css";

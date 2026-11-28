@@ -5,7 +5,7 @@
  * player pick which tips first, on the council drawn close and in a list that works by keyboard.
  */
 import { createSignal, For, Show, type JSX } from "solid-js";
-import { formatNum, t, tn } from "../../../i18n";
+import { formatNum, t, tn } from "../lang";
 import { StampButton, TabButton } from "../../../ui/parts";
 import type { BoardModel, PlaceDef, V1PlaceBoard } from "../../engine/api";
 import { councilName, tx } from "../words";

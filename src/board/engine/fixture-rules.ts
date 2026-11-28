@@ -42,7 +42,9 @@ export const fixtureRules: BoardRule[] = [
     spread({ links: ["river"], travel: "downstream", input: "risk_flood", output: "risk_flood", sign: 1, weight: "one", quality_multiplies: false, lag_years: 2 })),
   card("B1", "budget", "linear", tx("Coins each year", "Darnau arian bob blwyddyn"),
     tx("You get coins all through the year, and more as Work and pay grows.", "Rydych chi'n cael darnau arian drwy'r flwyddyn, a mwy wrth i Waith a chyflog dyfu."),
-    { base_per_year: p(3, 2, 4, u.coins), growth_per_year: p(0.5, 0.25, 1, u.coins), per_work_points: p(4, 2, 8, u.points), carry_max: p(2, 0, 4, u.coins, false) }),
+    // `opening` pins the phase 1 start (the real card moved on in playtest 8), so the fixture keeps
+    // matching phase 1 (clock-equivalence.test.ts).
+    { base_per_year: p(3, 2, 4, u.coins), growth_per_year: p(0.5, 0.25, 1, u.coins), per_work_points: p(4, 2, 8, u.points), carry_max: p(2, 0, 4, u.coins, false), opening: p(6, 4, 8, u.coins) }),
   card("B2", "budget", "stock", tx("The care bill", "Y bil gofal"),
     tx("From 2038 care costs half a coin a year, unless health hubs stand in enough places.", "O 2038 mae gofal yn costio hanner darn arian y flwyddyn, oni bai bod canolfannau iechyd mewn digon o lefydd."),
     { care_bill_per_year: p(0.5, 0, 1, u.coins), from_year: p(2038, 2034, 2042, u.year, false), hubs_needed: p(2, 1, 4, u.count) }),
@@ -69,5 +71,10 @@ export const fixtureRules: BoardRule[] = [
     { fairness_share: p(0.25, 0.1, 0.4, u.share), lowest_count: p(3, 1, 3, u.count, false), future_years: p(8, 0, 8, u.years, false) }),
   card("E1", "events", "threshold", tx("The same weight of trouble", "Yr un pwysau o drafferth"),
     tx("Every game draws the same amount of outside trouble. Only the kind and timing differ.", "Mae pob gêm yn tynnu'r un faint o drafferth o'r tu allan. Dim ond y math a'r amseru sy'n wahanol."),
-    { min: p(9, 9, 9, tx("severity points", "pwyntiau difrifoldeb"), false), max: p(11, 11, 11, tx("severity points", "pwyntiau difrifoldeb"), false) }),
+    // `first_year` and the repeat limits pin phase 1's schedule (no limit on repeats), so the
+    // fixture keeps matching phase 1; the real card limits repeats (events-repeat.test.ts).
+    {
+      min: p(9, 9, 9, tx("severity points", "pwyntiau difrifoldeb"), false), max: p(11, 11, 11, tx("severity points", "pwyntiau difrifoldeb"), false),
+      first_year: p(2028, 2026, 2032, u.year, false), repeat_max: p(12, 1, 12, u.count), repeat_gap_years: p(0, 0, 12, u.years),
+    }),
 ];

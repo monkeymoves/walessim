@@ -15,7 +15,8 @@
  * - `election`: an election held in the term had that result.
  * - `keystone`: "started", one was started in the term and is still being built; "finished", one
  *   started working in the term.
- * - `tier_opened`: a tier of that number opened in the term (any branch).
+ * - `tier_opened`: the first tier of that number in the game (any branch) opened in the term. A
+ *   chapter about reaching a tier tells the first time only, so it is never told twice.
  * - `tipped`: at least `at_least` councils tipped to that momentum for the first time in the game.
  * - `region_turn`: the region turned (rule R2 `region_turn_councils` councils on the rise at once).
  * - `young_adults`: the mean young adult share of the flagged councils moved `by` points or more
@@ -24,10 +25,16 @@
  * - `finished`: how many projects started working in the term.
  * - `deal`, `promise`: one was judged in the term, kept or broken as asked.
  * - `level`: the board's score out of 100 (score.ts `boardScore`) moved `by` or more.
+ *
+ * Slots: a chapter about an event takes {council}, {town} and {river} from that event; a chapter
+ * whose words name a {river} only counts river floods (an event whose trigger needs a river). A
+ * chapter about a keystone takes {project}, {council} and {town} from that keystone's own site.
  */
 import { openedNow } from "./clock-stops";
+import { riverAt } from "./events";
 import type { StepCtx } from "./ctx";
 import { flagged } from "./end-conditions";
+import { siteCouncil } from "./conditions";
 import { frameAtYear } from "./frame";
 import { regionTurnStep } from "./momentum";
 import { boardScore, councilMean, fairnessGap } from "./score";
@@ -76,12 +83,15 @@ function regionTurnedIn(t: Term): boolean {
   return at !== null && at > t.fromStep && at <= t.toStep;
 }
 
-/** Tiers opened in the term: from the moments, plus any opened in the closing step (not yet a moment). */
-function tiersOpened(t: Term): string[] {
-  const noted = t.state.story.moments.filter((m) => m.kind === "tier_open");
-  const inside = noted.filter((m) => inTerm(t, m.step)).map((m) => m.ref ?? "");
-  const known = new Set(noted.map((m) => m.ref));
-  return [...inside, ...[...openedNow(t.model, t.state)].filter((k) => !known.has(k))];
+/**
+ * Did the first tier of this number in the game (any branch, not a legacy project) open in the
+ * term? From the moments, or in the closing step (not yet a moment) when none opened before.
+ */
+function firstTierOpenedIn(t: Term, tier: number): boolean {
+  const isTier = (k: string | undefined) => !!k && k.endsWith(`:${tier}`) && !k.startsWith("legacy:");
+  const noted = t.state.story.moments.filter((m) => m.kind === "tier_open" && isTier(m.ref)).sort((a, b) => a.step - b.step);
+  if (noted.length > 0) return inTerm(t, noted[0]!.step);
+  return [...openedNow(t.model, t.state)].some(isTier);
 }
 
 /** Was something judged in the term? From its moment, or judged in the closing step when it has none yet. */
@@ -97,12 +107,16 @@ export function dealsJudged(t: Term, kept: boolean): CouncilCode[] {
 const youngMean = (board: Record<CouncilCode, { young: number }> | undefined, codes: CouncilCode[]): number =>
   mean(codes.filter((c) => board?.[c]).map((c) => board![c]!.young));
 
-/** Events that landed in the term and match an `event_landed` condition, heaviest first. */
-function landedMatching(t: Term, c: Extract<TermCondition, { kind: "event_landed" }>): EventRecord[] {
+/** A river flood: an event whose trigger needs a river (model/board/events.yaml). */
+export const isRiverEvent = (model: BoardModel, id: string): boolean =>
+  !!model.events.find((d) => d.id === id)?.trigger.some((c) => c.kind === "feature" && c.feature === "river");
+
+/** Events that landed in the term and match an `event_landed` condition, heaviest first. `rivers`: river floods only. */
+function landedMatching(t: Term, c: Extract<TermCondition, { kind: "event_landed" }>, rivers = false): EventRecord[] {
   return t.events.filter((e) => {
     const def = t.model.events.find((d) => d.id === e.event);
     return !!def && (!c.track || def.track === c.track) && e.severity >= (c.severity_at_least ?? 0)
-      && (c.prepared === undefined || !!e.prepared === c.prepared);
+      && (c.prepared === undefined || !!e.prepared === c.prepared) && (!rivers || isRiverEvent(t.model, e.event));
   }).sort((a, b) => b.severity - a.severity || a.step - b.step);
 }
 
@@ -118,7 +132,7 @@ export function termHolds(t: Term, c: TermCondition): boolean {
     case "keystone": return state.projects.some((p) => isKeystone(model, p.project) && (c.phase === "started"
       ? inTerm(t, p.startedStep) && p.status === "building"
       : inTerm(t, p.readyStep) && p.status !== "building"));
-    case "tier_opened": return tiersOpened(t).some((k) => k.endsWith(`:${c.tier}`) && !k.startsWith("legacy:"));
+    case "tier_opened": return firstTierOpenedIn(t, c.tier);
     case "tipped": return firstTips(t, c.to).length >= c.at_least;
     case "region_turn": return regionTurnedIn(t);
     case "young_adults": {
@@ -150,9 +164,7 @@ export function termHolds(t: Term, c: TermCondition): boolean {
 }
 
 const councilName = (model: BoardModel, code: CouncilCode): Text => model.councils.find((c) => c.code === code)?.name ?? { en: code, cy: code };
-const townOf = (model: BoardModel, code: CouncilCode): Text => model.councils.find((c) => c.code === code)?.towns[0] ?? councilName(model, code);
-const riverAt = (model: BoardModel, code: CouncilCode): Text | undefined =>
-  model.links.find((l) => l.kind === "river" && (l.from === code || l.to === code) && l.name)?.name;
+export const townOf = (model: BoardModel, code: CouncilCode): Text => model.councils.find((c) => c.code === code)?.towns[0] ?? councilName(model, code);
 
 /** The council whose mean moved most in the term (up when `up`, else either way), or undefined. */
 function mostMoved(t: Term, up: boolean): CouncilCode | undefined {
@@ -166,8 +178,8 @@ export function termSlots(t: Term): Record<string, SayVar> {
   const { model, state } = t;
   const slots: Record<string, SayVar> = {};
   const bad = t.events.filter((e) => !model.events.find((d) => d.id === e.event)?.good);
-  const storm = [...bad].filter((e) => model.events.find((d) => d.id === e.event)?.track === "weather").sort((a, b) => b.severity - a.severity || a.step - b.step)[0];
-  const river = storm ? riverAt(model, storm.councils[0]!) : undefined;
+  const storm = [...bad].filter((e) => isRiverEvent(model, e.event)).sort((a, b) => b.severity - a.severity || a.step - b.step)[0];
+  const river = storm ? riverAt(model, storm.councils[0]!, storm.councils[1]) : undefined;
   if (river) slots.river = river;
   const council = dealsJudged(t, true)[0] ?? dealsJudged(t, false)[0] ?? mostMoved(t, false);
   if (council) slots.council = councilName(model, council);
@@ -180,16 +192,36 @@ export function termSlots(t: Term): Record<string, SayVar> {
   return slots;
 }
 
+/** The slot names a chapter's name and line use. */
+const slotsUsed = (def: ChapterDef): Set<string> => new Set([...`${def.name.en} ${def.line.en}`.matchAll(/\{(\w+)\}/g)].map((m) => m[1]!));
+
 /**
- * A chapter about an event tells it where it landed: {town} and {river} come from the heaviest
- * event its `event_landed` condition matched, not from the term at large.
+ * A chapter tells what it is about where it happened. A chapter about an event takes {council},
+ * {town} and {river} from the heaviest event its `event_landed` condition matched (river floods
+ * only when its words name a river), with no river slot when that event was not on a river. A
+ * chapter about a keystone takes {project}, {council} and {town} from that keystone's site.
  */
 function slotsFor(t: Term, def: ChapterDef, slots: Record<string, SayVar>): Record<string, SayVar> {
+  const { model, state } = t;
+  const key = def.when.find((x): x is Extract<TermCondition, { kind: "keystone" }> => x.kind === "keystone");
+  if (key) {
+    const keystones = state.projects.filter((p) => isKeystone(model, p.project));
+    const k = key.phase === "finished"
+      ? keystones.filter((p) => p.status !== "building" && inTerm(t, p.readyStep)).sort((a, b) => b.readyStep - a.readyStep)[0]
+      : keystones.filter((p) => p.status === "building" && inTerm(t, p.startedStep)).sort((a, b) => b.startedStep - a.startedStep)[0];
+    const at = k ? siteCouncil(model, k) : undefined;
+    const name = k ? model.projects.find((d) => d.id === k.project)?.name : undefined;
+    if (!k || !at || !name) return slots;
+    return { ...slots, project: name, council: councilName(model, at), town: townOf(model, at) };
+  }
   const c = def.when.find((x): x is Extract<TermCondition, { kind: "event_landed" }> => x.kind === "event_landed" && x.at_most === undefined);
-  const where = c && landedMatching(t, c)[0]?.councils[0];
-  if (!where) return slots;
-  const river = riverAt(t.model, where);
-  return { ...slots, town: townOf(t.model, where), ...(river ? { river } : {}) };
+  if (!c) return slots;
+  const rivers = slotsUsed(def).has("river");
+  const where = landedMatching(t, c, rivers)[0]?.councils[0];
+  const { river: _r, ...rest } = slots;
+  if (!where) return rivers ? rest : slots;
+  const river = rivers ? riverAt(model, where) : undefined;
+  return { ...rest, council: councilName(model, where), town: townOf(model, where), ...(river ? { river } : {}) };
 }
 
 /** The slots a chapter's name uses: two chapters with the same id and the same name slots are the same name. */
@@ -198,14 +230,15 @@ function nameKey(def: ChapterDef, slots: Record<string, SayVar>): string {
   return `${def.id}|${used.map((u) => JSON.stringify(slots[u] ?? null)).join("|")}`;
 }
 
-/** A chapter whose name needs a slot the term cannot fill does not fit. */
-const slotsFilled = (def: ChapterDef, slots: Record<string, SayVar>): boolean =>
-  [...def.name.en.matchAll(/\{(\w+)\}/g)].every((m) => slots[m[1]!] !== undefined);
+/** A chapter whose name or line needs a slot the term cannot fill does not fit. */
+const slotsFilled = (def: ChapterDef, slots: Record<string, SayVar>): boolean => [...slotsUsed(def)].every((k) => slots[k] !== undefined);
 
 /**
  * Name an election term as it closes: the first chapter by `priority` (1 first, as endings) whose
- * conditions all hold and whose name is not used yet in this game. If every fitting name is used,
- * the first that fits. With no chapters in the model, the fallback id.
+ * conditions all hold and whose name is not used yet in this game. Chapters with no conditions are
+ * the fallbacks, so a model with enough of them never tells the same chapter twice; only when every
+ * fitting name is used is the first that fits told again. With no chapters in the model, the
+ * fallback id.
  */
 export function pickChapter(ctx: StepCtx, term: number, fromYear: number, toYear: number): ChapterRecord {
   const { model, state } = ctx;

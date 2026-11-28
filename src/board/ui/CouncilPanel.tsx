@@ -4,16 +4,18 @@
  * here, and Build here. A sheet on the right of the stage; the map zooms to the council.
  */
 import { createMemo, For, Show, type JSX } from "solid-js";
-import { formatNum, Pair, t } from "../../i18n";
+import { lang, Pair, t } from "./lang";
 import { CloseButton, SourceTag, StampButton, TabButton, ThreadButton } from "../../ui/parts";
 import type { Source } from "../../model/schema";
 import type { BoardModel, CouncilView, MeasureId, PreviewChange } from "../engine/api";
-import { RISK_KINDS, stepsOf } from "../engine/api";
+import { eventNoun, RISK_KINDS, stepsOf } from "../engine/api";
 import { Bar } from "./Bar";
 import * as eng from "./engine";
 import { useGame } from "./game";
 import { CouncilLinks } from "./CouncilLinks";
-import { councilName, measureName, outOf10, projectName, signed, tx, whenWords } from "./words";
+import { visitBlockWords } from "./blockers";
+import { backsAtOf } from "./mapLinks";
+import { backingShown, councilName, measureName, num, outOf10, projectName, say, signed, tx, whenWords } from "./words";
 
 export const sourceOf = (model: BoardModel, id: string): Source | null => (model.sources.find((s) => s.id === id) as unknown as Source) ?? null;
 
@@ -37,6 +39,31 @@ export function CouncilPanel(props: { code: string }): JSX.Element {
     const by = game.colourBy();
     return by === "backing" || by === "behind" || by === "none" ? null : by;
   };
+  /** A visit offered here, and why it cannot be made now. */
+  const visitBlock = () => {
+    const s = game.state(), place = view()?.visit;
+    return s && place ? visitBlockWords(model, s, place) : null;
+  };
+  /** What the map shows for this council, so the panel points back at the map. */
+  const onMap = (): string[] => {
+    const s = game.state(), v = view();
+    if (!s || !v) return [];
+    const out: string[] = [];
+    const building = s.projects.filter((p) => p.status === "building" && (p.site.council === props.code || model.links.some((l) => l.id === p.site.link && (l.from === props.code || l.to === props.code))));
+    if (building.length) {
+      const first = Math.min(...building.map((p) => p.readyStep));
+      // one ring per spot (MapMarks): this council's label, or the middle of each line it sits on
+      const rings = new Set(building.map((p) => p.site.council ?? p.site.link)).size;
+      out.push(t(building.length === 1 ? "boardui.council.mapRing.one" : "boardui.council.mapRing.other", { n: building.length, rings, when: whenWords(model, first + 1) }));
+    }
+    if (v.momentum !== "steady") out.push(t(`boardui.council.mapTip.${v.momentum}`));
+    for (const w of game.forecast()?.warnings ?? []) {
+      if (w.councils.includes(props.code)) out.push(t("boardui.council.mapWarn", { event: tx(w.name), noun: t(eventNoun(w.event)), when: whenWords(model, w.fromStep) }));
+    }
+    const working = v.projects.filter((p) => p.status !== "building").length;
+    if (working) out.push(t(working === 1 ? "boardui.council.mapStitch.one" : "boardui.council.mapStitch.other", { n: working }));
+    return out;
+  };
   const real = () => (view()?.real ?? []).filter((r) => (shownMeasure() ? r.measure === shownMeasure() : r.measure === view()?.asking[0]));
 
   return (
@@ -44,12 +71,12 @@ export function CouncilPanel(props: { code: string }): JSX.Element {
       {(v) => (
         <aside class="bw-council sheet" aria-labelledby="bw-council-name" data-testid="bw-council">
           <header class="bw-council-head">
-            <Pair text={v().name} as="h2" class="t-1" id="bw-council-name" />
+            <Pair single={lang() === "cy"} text={v().name} as="h2" class="t-1" id="bw-council-name" />
             <CloseButton label={t("boardui.close")} onClick={() => game.setSelected(null)} />
           </header>
           <p class="bw-backs" classList={{ yes: v().backs }}>
             <b>{v().backs ? t("boardui.council.backs") : t("boardui.council.backsNot")}</b>{" "}
-            <span class="data">{t("boardui.council.backing", { n: formatNum(v().backing, { maximumFractionDigits: 1 }) })}</span>
+            <span class="data">{t("boardui.council.backing", { n: num(backingShown(v().backing)), at: num(backsAtOf(model)) })}</span>
             <span class="small bw-honest">{t("boardui.honesty.game_estimate")}</span>
           </p>
           <Show when={v().momentum !== "steady"}>
@@ -63,6 +90,12 @@ export function CouncilPanel(props: { code: string }): JSX.Element {
           </Show>
 
           <div class="bw-council-scroll">
+            <Show when={onMap().length}>
+              <section class="bw-sec bw-onmap-sec" data-testid="bw-onmap">
+                <h3 class="label">{t("boardui.council.onMap")}</h3>
+                <ul class="bw-onmap small"><For each={onMap()}>{(line) => <li>{line}</li>}</For></ul>
+              </section>
+            </Show>
             <ul class="bw-measures">
               <For each={v().measures}>
                 {(m) => (
@@ -94,7 +127,7 @@ export function CouncilPanel(props: { code: string }): JSX.Element {
                   {(r) => (
                     <li>
                       <span class="bw-real-name">{tx(r.name)}</span>
-                      <span class="bw-real-val data">{formatNum(r.value, { maximumFractionDigits: 1 })} <span class="small">{tx(r.unit)}</span></span>
+                      <span class="bw-real-val data">{num(r.value)} <span class="small">{tx(r.unit)}</span></span>
                       <SourceTag source={sourceOf(model, r.source)} year={r.year} />
                     </li>
                   )}
@@ -113,6 +146,7 @@ export function CouncilPanel(props: { code: string }): JSX.Element {
                     <li>
                       <span class="bw-g-name">{tx(g.name)}</span>
                       <span class={`bw-mood mood-${g.mood}`}>{t(`boardui.mood.${g.mood}`)}</span>
+                      <Show when={say(g.reason)}><span class="small bw-g-why">{say(g.reason)}</span></Show>
                     </li>
                   )}
                 </For>
@@ -143,7 +177,7 @@ export function CouncilPanel(props: { code: string }): JSX.Element {
                         <span class="small">
                           {p.status === "building"
                             ? t("boardui.project.building", { when: whenWords(model, p.readyStep + 1) })
-                            : t(`boardui.project.${p.status}`, { level: p.level })}
+                            : t(`boardui.project.${p.status}`, { level: p.level, max: 3 })}
                         </span>
                       </li>
                     )}
@@ -160,7 +194,7 @@ export function CouncilPanel(props: { code: string }): JSX.Element {
               </StampButton>
             </Show>
             <Show when={v().visit}>
-              <TabButton onClick={() => game.setVisit(v().visit)}>{t("boardui.council.visit")}</TabButton>
+              <TabButton onClick={() => game.setVisit(v().visit)} why={visitBlock()} data-testid="bw-council-visit">{t("boardui.council.visit")}</TabButton>
             </Show>
           </footer>
         </aside>

@@ -1,10 +1,22 @@
 # Authored links of the board (docs/design/v2-board.md section 4.2).
-# - River links: `from` is the council upstream of `to` on the named river, one hop each. A river
-#   link is a direction, not a flow figure. Authored from knowledge of the river courses, NOT yet
-#   checked against OS Open Rivers or the NRW catchment maps, so every row carries to_check: true.
-#   The Ogmore is Bridgend's river. It rises and runs inside Bridgend and its estuary is the border
-#   with the Vale of Glamorgan, so it is written as Bridgend upstream of the Vale (a weak case,
-#   to check first).
+# - River links: `from` is the council upstream of `to` on the named river, one hop each, in the
+#   order the river runs. A river link is a direction, not a flow figure. Each row was checked on
+#   28 November 2026 against the river's course through the towns named below (playtest 8 found
+#   "The Ely flooded Barry"). They are still to be checked against the OS Open Rivers lines and the
+#   NRW catchment maps themselves, so every row keeps to_check: true.
+#   - Taff: Taf Fawr and Taf Fechan meet at Cefn Coed, through Merthyr Tydfil and Aberfan, into
+#     Rhondda Cynon Taf at Abercynon and Pontypridd, then Taff's Well into Cardiff, to Cardiff Bay.
+#   - Rhymney: from above Rhymney town through Bargoed and Ystrad Mynach (Caerphilly), into Cardiff
+#     at Llanrumney and Rumney, to the sea at Cardiff.
+#   - Ebbw: from Ebbw Vale and Abertillery (Blaenau Gwent), through Crumlin, Newbridge and Risca
+#     (Caerphilly), to Rogerstone and the Usk at Newport.
+#   - Afon Lwyd: from Blaenavon through Pontypool and Cwmbran (Torfaen), to the Usk at Caerleon (Newport).
+#   - Usk: through Abergavenny and Usk (Monmouthshire), to Caerleon and Newport.
+#   - Ely: from Tonyrefail through Llantrisant and Pontyclun (Rhondda Cynon Taf), through
+#     Peterston-super-Ely (Vale of Glamorgan), into Cardiff at St Fagans, to Cardiff Bay. It does
+#     not reach Barry or the Vale's coast, so the Vale is upstream of Cardiff on it, not its end.
+#   - Ogmore: from Ogmore Vale to Bridgend town, its estuary the border with the Vale of Glamorgan
+#     at Ogmore-by-Sea, so Bridgend is written upstream of the Vale (a weak case, to check first).
 # - Stubs: places off the board, shown at the map edge. Commute links to them (the real shares in
 #   model/data/board-commute.json) carry a fixed outside flow and cannot be built on.
 #   Swansea is not a stub: under 3 in 100 of any council in play work there. Centres are in the km
@@ -77,9 +89,9 @@ links:
     honesty: real
     sources: [os_open_rivers, nrw_catchments]
     to_check: true
-  - id: "river:ely:rhondda-cynon-taf-cardiff"
+  - id: "river:ely:vale-of-glamorgan-cardiff"
     kind: river
-    from: W06000016
+    from: W06000014
     to: W06000015
     name: { en: "Ely", cy: "Elái", cy_review: true }
     honesty: real

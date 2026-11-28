@@ -79,6 +79,15 @@ export const autopilot: Bot = {
   },
 };
 
+/**
+ * Spender: low effort (playtest 8, should-fix 11). Spends every coin, every year, on the cheapest
+ * build it can make, with no thought for where or why. Thought should beat it.
+ */
+export const spender: Bot = {
+  id: "spender", careful: false,
+  next: (v) => buildOptions(v).sort(byCost)[0] ?? null,
+};
+
 /** Random: a random council, then any allowed build or upgrade there (or in the next council drawn), stopping at random. */
 export const random: Bot = {
   id: "random", careful: false,

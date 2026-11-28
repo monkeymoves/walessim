@@ -97,3 +97,64 @@ Most false lines were true to play but not shown on the end screen (promise, coi
 ## Best moments
 
 Why? with a named rule and "how sure"; dashed "if you build it" previews; warnings that name their fix, then the event lands; the Rhondda tips choice; the Merthyr pensioner letter; "The Wales you did not build"; the honest autopilot line.
+
+## After fix round 1
+
+*Marked at the join, 28 November 2026, after packages A to D and the Welsh pass. The join played one full game in English from the title page, on the clock at the default speed (a year every 16 seconds, about 7 and a half minutes of play), as a careless first-time player who builds every second year and keeps no deal. Script: `design/scripts/board-fix1-join.mjs`; the Gwent Levels visit: `design/scripts/board-fix1-join-visit.mjs`. Shots: `design/shots-build/board-fix1/join/`. A text scan of every screen found no raw decimal, raw key, empty slot, doubled word or dash, and the page logged no errors.*
+
+### Must fix
+
+| # | Finding | Status | Where, and what the join saw |
+|---|---|---|---|
+| 1 | Result hidden in "The count" | Fixed | `src/board/ui/end/Verdict.tsx` (A). The join also made the gap words come from the whole numbers shown (`record.ts` `shownGap`, tested): its game showed "45 → 52" beside "about 6 points better". `70-end-open.png` |
+| 2 | Clock held but says "Pause" | Fixed | `src/board/ui/clock/hold.ts` (B). "Held" with the reason under it in every held shot (`21-build-held.png`, `50-term-2030.png`) |
+| 3 | Coin cap told only at 16 | Fixed | `src/board/ui/clock/coins.ts` (B). "13 of 16 coins, Purse nearly full: spend some" (`60-board-2044.png`) |
+| 4 | Ending names the wrong project and year | Fixed | `src/board/engine/endings.ts` (A). The letter names the keystone built in the Vale and its year (`71-end-07-be-letter.png`) |
+| 5 | End text contradicts itself | Fixed | `src/board/engine/endings-truth.test.ts` (A). Six different chapters, each true to the game (`71-end-05-be-chapters.png`) |
+| 6 | Backing threshold contradicts | Fixed | `src/board/ui/words.ts` `backingShown` (C). "Backing 4.8 out of 10. A council backs you at 5 or more." |
+| 7 | Template splices | Fixed | Engine nouns (D); the join passed the noun in the screen sentences left (`Timeline.tsx`, `StopCard.tsx`, `CouncilPanel.tsx`, `causes.ts`, the place sheet), the river in `Respond.tsx` and `Verdict.tsx`, and moved ending titles after a colon in `endings.yaml` ("you might have had: The gamble") |
+| 8 | Raw decimals | Fixed | `src/board/ui/words.ts` (C). None in the whole game's text scan |
+| 9 | Map labels | Partly | `src/board/ui/markLayout.ts` (C); the join made words above a council's name move up, not down onto it (tested). Still open: a working mark or slip can sit on a base-map town name (Newport in `61-council-2031.png`), and a slip can slide under the colour key (`60-board-2044.png`) |
+| 10 | Deal hidden after a lost election | Fixed | `TermReport.tsx` (C). Deals in sight, Carry on waits for one (`52-deal.png`) |
+| 11 | "Not allowed now" on a visit | Fixed | Blocker removed (D); the join added `visitBlockWords` in `blockers.ts`, read by the stop card, the council panel and the place sheet, which now shows the reason instead of options. Dead `visit_used` removed |
+| 12 | Legacy project with no reason | Fixed | `src/board/ui/blockers.ts` (C). "Opens when Work comes up the line is working. It is the keystone..." (`64-tree.png`) |
+| 13 | "Look" opens the wrong council | Fixed | `StopCard.tsx`, `Ticker.tsx` (C). "Look at Torfaen" opened Torfaen (`41-warning-look.png`) |
+| 14 | Raw ids in Why? | Fixed | `causes.ts`, `whyWords.ts` (C), `board.json` (D). Checked on C's `en-a-22-why.png` |
+| 15 | Game number differs | Fixed | `src/board/ui/startOffer.ts` (B) |
+| 16 | Stale "left if you build it" | Fixed | `TopStrip.tsx` (B). Shows only in the build menu (`05-build-preview.png`) |
+| 17 | Overlapping Gwent Levels cards | Fixed | At the join: `place/LightPlace.tsx` options no longer carry the shared `ticket` grid (`81-visit-gwent-picked.png`) |
+| 18 | Title "Start" opens the old game | Fixed | `src/ui/shell/TitleScreen.tsx` (B). `00-title.png` |
+| 19 | Welsh | Fixed | `src/board/ui/cymraeg.ts`, `tests/e2e/board-cy.spec.ts` (Welsh pass). Not replayed in Welsh by the join beyond the e2e |
+
+### Should fix
+
+| # | Finding | Status | Where, and what the join saw |
+|---|---|---|---|
+| 1 | Nothing moves for ten years | Partly | `on-the-way.ts`, `score.ts`, rules (D); headline to one decimal with what is on the way (B; the join wired it to the engine's `headway`). The bots meet "Things move early" (Skilled +3.4 by 2030), but the join's careless game was "Up 0.3 since 2026" in 2030 and its first chapter "Holding on". A casual player can still feel stuck for four years |
+| 2 | Elections change nothing visible | Fixed | `Election.tsx` (C). Each result and yours marked (`51-election-2030.png`) |
+| 3 | Prices change silently | Fixed | `BuildMenu.tsx` (C). "2 off the full price of 3. A fresh start here" |
+| 4 | Guide covers Build | Fixed | `Guide.tsx` (B). Three notes, each beside its subject (`02`, `03`, `05`) |
+| 5 | Jargon | Mostly | `boardui.json` (C). "Starter, bigger, keystone" explained where shown; "purse" stays, explained on the counter |
+| 6 | Keystone not signposted | Fixed | `branchPath.ts`, `BranchRoad.tsx` (C). "Top of this branch" on every branch (`64-tree.png`) |
+| 7 | Clock restarts after a card | Fixed | `Clock.tsx` (B). "Paused after your answer. Press Play when you are ready." (`44-after-respond.png`) |
+| 8 | Circular Why | Fixed | `causes.ts` (C), `board.json` (D) |
+| 9 | Repeated events | Fixed | E1 `repeat_max`, `repeat_gap_years` (D) |
+| 10 | Same letter both games | Fixed | `letters.yaml`, `found.ts` (A) |
+| 11 | Balance | Partly | Skilled beats Spender and Reactive in every game (D). Quick run meets 26 of 31 marks: drift mild, place matters, tipping points differ, stories differ (18 of 24 chapters seen) and each branch has its day (Made here) still fail |
+| 12 | "The Ely flooded Barry" | Fixed | `links.yaml` (D), river lines name the council (A); the duplicate river helpers in `story-terms.ts` and `end/view.ts` now use the engine's `riverAt` |
+| 13 | End screen lacks promise, lowest council, backing | Fixed | `be-record` (A). `71-end-01-be-record.png` |
+
+### Found and fixed at the join
+
+- The strip said "open by 2027" beside a ring marked "Summer 2028": `on-the-way.ts` counted a build's opening one step early. The strip now reads the engine's `headway` ("0.1 of it is still on the way, all in by 2028"); `headway.test.ts` checks the year is never before the opening season.
+- A line project built from Merthyr Tydfil was "working now in Rhondda Cynon Taf": it now names both ends (`clock-stops.ts`, `board.stop.finished_link`).
+- "Make it bigger" on a project still being built said only "Not on offer now": a new blocker says it can be made bigger once it works, and when (`projects.ts`, `blockers.ts`).
+- The axis year under the time line's "now" tag printed "20 Summer 2028": hidden while covered (`Timeline.tsx`).
+- The headline figure could shrink under its change line (`clock.css`).
+
+### Still open, for the designer
+
+- A careless game falls from 8 councils backing in 2030 to 0 in 2042 and 2046 after three broken deals (backing falls 0.5 everywhere for each). The player cannot win again. Worth a look against "A lost election is not the end", which the bots pass because they keep deals.
+- Map marks over base-map town names (must-fix 9, above).
+- The made here branch still cannot have its day (balance log; content, not tuning).
+- Source titles stay English on Welsh screens: they are the publications' own titles. A Welsh title field is a data task.

@@ -4,7 +4,7 @@
  * made. No second game is run and nothing is claimed about what would have happened.
  */
 import { createMemo, createSignal, For, Show, type JSX } from "solid-js";
-import { t } from "../../../i18n";
+import { t } from "../lang";
 import { ThreadButton } from "../../../ui/parts";
 import * as api from "../../engine/api";
 import type { BoardModel, BoardState, Moment, Why } from "../../engine/api";

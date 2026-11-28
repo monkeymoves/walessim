@@ -143,17 +143,34 @@ export function heldTargets(model: BoardModel, state: BoardState, step: number):
   return out;
 }
 
-/** What held causes have added so far, by key, with the first record for each key. */
-function appliedSoFar(ledger: readonly Contribution[]): Map<string, { sum: number; first: Contribution }> {
-  const out = new Map<string, { sum: number; first: Contribution }>();
-  for (const c of ledger) {
-    if (!HELD_CAUSES.has(c.cause.kind) || RUN_RULES.has(c.rule) || c.quantity === "coins" || c.quantity === "fairness") continue;
-    const k = heldKey(c);
-    const got = out.get(k);
-    if (got) got.sum += c.delta;
-    else out.set(k, { sum: c.delta, first: c });
+type Applied = Map<string, { sum: number; first: Contribution }>;
+
+/**
+ * The sums so far for a ledger array, and how many of its records they cover. The ledger only
+ * grows by push within a year (`foldLedger` makes a new array when a year closes, and a clone is a
+ * new array), so a later call reads only the records added since. Saves a scan of the whole
+ * ledger every step (the bots' look ahead is most of the balance run).
+ */
+const appliedCache = new WeakMap<readonly Contribution[], { upTo: number; sums: Applied }>();
+
+function addTo(sums: Applied, c: Contribution): void {
+  if (!HELD_CAUSES.has(c.cause.kind) || RUN_RULES.has(c.rule) || c.quantity === "coins" || c.quantity === "fairness") return;
+  const k = heldKey(c);
+  const got = sums.get(k);
+  if (got) got.sum += c.delta;
+  else sums.set(k, { sum: c.delta, first: c });
+}
+
+/** What held causes have added so far, by key, with the first record for each key. Read only: the map is cached. */
+function appliedSoFar(ledger: readonly Contribution[]): Applied {
+  let cached = appliedCache.get(ledger);
+  if (!cached || cached.upTo > ledger.length) {
+    cached = { upTo: 0, sums: new Map() };
+    appliedCache.set(ledger, cached);
   }
-  return out;
+  for (let i = cached.upTo; i < ledger.length; i++) addTo(cached.sums, ledger[i]!);
+  cached.upTo = ledger.length;
+  return cached.sums;
 }
 
 /** Bring every held effect to its target for this step. */

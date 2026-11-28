@@ -12,6 +12,20 @@
 .be-honest { color: var(--ink-2); font-style: italic; }
 .be-error { color: var(--warn); }
 
+/* ---------- the result: first, plain and big (playtest 8 must-fix 1) ---------- */
+.be-main > section.be-verdict { gap: 12px; padding: 24px 28px 26px; border-top: 4px solid var(--ink); }
+.be-verdict-line { font-family: var(--font-print); font-stretch: normal; font-weight: 700; font-size: var(--size-title-1); line-height: var(--lh-title-1); max-width: 30ch; }
+.be-scores { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 4px; }
+.be-score { display: grid; gap: 4px; align-content: start; padding: 12px 16px 14px; background: var(--paper-2); border-left: 3px solid var(--ink); }
+.be-score-big { font-family: var(--font-print); font-stretch: normal; font-weight: 700; font-size: var(--size-figure-big); line-height: 1; font-variant-numeric: var(--figures-print); }
+.be-score-to { font-weight: 400; color: var(--ink-2); }
+.be-record { width: 100%; display: grid; gap: 0; border-top: 1px solid var(--rule-strong); margin-top: 6px; }
+.be-record-row { display: grid; grid-template-columns: 200px 1fr; column-gap: 14px; padding: 8px 0; border-bottom: 1px solid var(--rule); }
+.be-record-row > dt { padding-top: 3px; }
+.be-record-list { display: grid; gap: 2px; }
+.be-turns { width: 100%; display: grid; gap: 8px; margin-top: 8px; padding: 14px 16px; background: var(--paper-2); border-left: 3px solid var(--thread-deep); }
+.be-turn-list { display: grid; gap: 6px; padding-left: 18px; list-style: disc; }
+
 /* ---------- time-lapse ---------- */
 .be-lapse-body { width: 100%; display: grid; gap: 10px; }
 .be-lapse-stage { position: relative; height: min(62vh, 560px); min-height: 360px; box-shadow: var(--shadow-well); background: var(--sea); overflow: hidden; }
@@ -84,4 +98,7 @@
   .be-pair { grid-template-columns: 1fr; }
   .be-stills-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .be-chapter { grid-template-columns: 1fr; }
+  .be-scores { grid-template-columns: 1fr; }
+  .be-record-row { grid-template-columns: 1fr; }
+  .be-main > section.be-verdict { padding: 18px 16px; }
 }

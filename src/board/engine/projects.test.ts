@@ -86,7 +86,7 @@ describe("what can be built", () => {
     expect(s.ledger.some((c) => c.quantity === "backing" && c.cause.kind === "law" && c.council === cardiff && c.delta < 0)).toBe(true);
   });
 
-  it("offers the place a build names, and one visit a year", () => {
+  it("offers the place a build names, and the visit closes the offer", () => {
     let s = fresh(model);
     s.coins = 10;
     s = act(model, s, { kind: "build", project: "frequent-trains", site: { link: "rail:merthyr-rct" } });
@@ -97,6 +97,19 @@ describe("what can be built", () => {
     expect(s.openVisitSince).toBe(0);
     expect(s.pending).toEqual([]);
     expect(s.projects[0]!.grade).toBeDefined();
+  });
+
+  it("never shows a visit it will refuse: a second offer within a year can be made", () => {
+    let s = fresh(model);
+    s.coins = 10;
+    s = act(model, s, { kind: "build", project: "frequent-trains", site: { link: "rail:merthyr-rct" } });
+    s = act(model, s, options(model, s, merthyr).find((o) => o.action.kind === "visit")!.action);
+    // A second offer arrives a season later, well inside the year since the first visit.
+    s = { ...s, step: s.step + 1, pending: [{ kind: "visit", place: "merthyr-station", council: merthyr, offeredBy: { project: "frequent-trains" }, since: s.step + 1 }] };
+    const visits = options(model, s, merthyr).filter((o) => o.action.kind === "visit");
+    expect(visits.length).toBeGreaterThan(0);
+    expect(visits.every((o) => o.allowed)).toBe(true);
+    expect(() => act(model, s, visits[0]!.action)).not.toThrow();
   });
 
   it("builds a project in its build time and keeps it for the rest of the game", () => {

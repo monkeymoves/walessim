@@ -4,7 +4,7 @@
  * councils that changed most are named beside them, with the change in words.
  */
 import { createMemo, createSignal, For, type JSX } from "solid-js";
-import { formatNum, t } from "../../../i18n";
+import { formatNum, t } from "../lang";
 import type { BoardModel, CouncilCode, Frame } from "../../engine/api";
 import { councilName, measureName, outOf10, signed } from "../words";
 import { MiniMap } from "./MiniMap";

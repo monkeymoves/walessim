@@ -4,7 +4,7 @@
  *
  * R1: each working project has a `roots` factor that starts at 1 and multiplies its measure and
  * young adult effects (held.ts). Each step it grows by `(1 + rate) ^ years_per_step`, at most
- * `max_factor`. The rate is `grow_joined_per_year` when the project has company, else
+ * `max_factor` (`quick_max_factor` for a quick project: it helps at once, with shallow roots). The rate is `grow_joined_per_year` when the project has company, else
  * `grow_alone_per_year`, plus or minus R2 `roots_bonus` where its council is rising or slipping
  * (never below 0). Growth stops while a project is run down.
  *
@@ -93,13 +93,16 @@ export function growRoots(ctx: StepCtx): void {
   const { model, state, step } = ctx;
   if (!rootsOn(model)) return;
   const max = r1(model, "max_factor", 5);
+  // Quick projects help at once but put down shallow roots (R1 `quick_max_factor`).
+  const quickMax = Math.min(max, r1(model, "quick_max_factor", max));
   const fresh = freshlyJoined(model, state, step);
   const joined = new Map(state.projects.map((p) => [p.id, p.status === "working" && (fresh.has(p.id) || hasCompany(model, state, p))]));
   for (const p of state.projects) {
     p.joined = joined.get(p.id) ?? false;
     if (p.status !== "working") continue;
     const rate = rootsRate(model, state, p, p.joined);
-    p.roots = round4(Math.min(max, Math.max(1, p.roots * (1 + rate) ** model.game.years_per_step)));
+    const cap = defOf(model, p)?.quick ? quickMax : max;
+    p.roots = round4(Math.min(cap, Math.max(1, p.roots * (1 + rate) ** model.game.years_per_step)));
   }
 }
 

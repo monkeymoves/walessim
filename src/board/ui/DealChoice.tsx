@@ -4,7 +4,7 @@
  * taken and no council refuses builds.
  */
 import { createMemo, For, Show, type JSX } from "solid-js";
-import { t } from "../../i18n";
+import { t } from "./lang";
 import { TabButton } from "../../ui/parts";
 import { stepsOf } from "../engine/api";
 import { blockerWords } from "./blockers";

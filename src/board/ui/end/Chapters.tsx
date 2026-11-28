@@ -3,7 +3,7 @@
  * what happened on the board, labelled once as the game's own telling.
  */
 import { For, Show, type JSX } from "solid-js";
-import { hasKey, lang, t } from "../../../i18n";
+import { hasKey, lang, t } from "../lang";
 import type { BoardModel, ChapterRecord } from "../../engine/api";
 import { chapterOf, termsOf } from "./view";
 

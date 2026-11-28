@@ -257,3 +257,25 @@
   .bw-slip, .bw-respond, .bw-build, .bw-note, .bw-slip-line, .bw-tree, .bw-laws, .bw-why-panel, .bw-settings { animation: none; }
 }
 @keyframes bw-in { from { translate: 0 -24px; opacity: 0; } to { translate: 0 0; opacity: 1; } }
+
+/* package C, playtest 8 fixes: the map's own words, the road to a keystone, discounts, the deal */
+.bw-marks .bw-news { transform: none; }
+.bw-news-up { box-shadow: var(--shadow-flat), inset 0 -2px 0 var(--ink); }
+.bw-news-down { color: var(--warn); box-shadow: var(--shadow-flat), inset 0 -2px 0 var(--warn); }
+.bw-ring-count { font-family: var(--font-grot); font-weight: var(--wght-grot-strong); font-size: 11px; fill: var(--ink); }
+.bw-road { display: grid; gap: 2px; padding: 6px 8px; background: var(--paper); box-shadow: var(--shadow-flat); border-left: 3px solid var(--ink); }
+.bw-road p { margin: 0; }
+.bw-ticket-off { color: var(--ink); font-weight: var(--wght-grot-strong); }
+.bw-tree-shutwhy { color: var(--warn); font-weight: var(--wght-grot-strong); }
+.bw-onmap { display: grid; gap: 2px; margin: 0; padding: 6px 0 0; }
+.bw-onmap li { list-style: none; }
+.bw-groups li { flex-wrap: wrap; }
+.bw-g-why { flex-basis: 100%; color: var(--ink-2); }
+.bw-election-means { display: grid; gap: 4px; padding: 8px 10px; background: var(--paper-2); }
+.bw-election-means ul { display: grid; gap: 3px; margin: 0; padding: 0; }
+.bw-election-means li { list-style: none; display: flex; justify-content: space-between; gap: 8px; font-size: var(--size-label); color: var(--ink-2); padding: 2px 6px; }
+.bw-election-means li.yours { color: var(--ink); background: var(--paper); box-shadow: inset 3px 0 0 var(--ink); font-weight: var(--wght-grot-strong); }
+.bw-election-you { white-space: nowrap; }
+.bw-term-foot .bw-deals { margin-bottom: 4px; }
+.bw-marks { transition: opacity var(--dur-lift, 160ms) ease-out; }
+.bw-marks.moving { opacity: 0; transition: none; }

@@ -123,7 +123,7 @@ async function stepToEnd(page: Page, seen: Seen): Promise<void> {
 async function checkEnd(page: Page, lang: "en" | "cy"): Promise<void> {
   const end = page.getByTestId("bw-end");
   await expect(end).toBeVisible();
-  const order = ["be-lapse", "be-name", "be-chapters", "be-thennow", "be-letter", "be-notbuilt", "be-count", "be-run"];
+  const order = ["be-verdict", "be-lapse", "be-name", "be-chapters", "be-thennow", "be-letter", "be-notbuilt", "be-count", "be-run"];
   const tops: number[] = [];
   for (const id of order) {
     await expect(page.getByTestId(id)).toBeVisible();
@@ -132,10 +132,11 @@ async function checkEnd(page: Page, lang: "en" | "cy"): Promise<void> {
   expect([...tops].sort((a, b) => a - b)).toEqual(tops);
   await expect(page.locator(".be-chapter")).toHaveCount(6);
   await expect(page.getByTestId("be-name").locator("h1")).not.toBeEmpty();
-  // the count is folded shut until opened
-  await expect(page.getByTestId("be-band")).toBeHidden();
-  await page.getByTestId("be-count-open").click();
+  // the result is at the top, shown without a click (playtest 8, must-fix 1): the verdict, both
+  // scores and the record; the count below only explains how it was worked out
   await expect(page.getByTestId("be-band")).toBeVisible();
+  await expect(page.getByTestId("be-record")).toBeVisible();
+  await page.getByTestId("be-count-open").click();
   await expect(page.getByTestId("be-found")).toContainText(/1/);
   await axe(page, "end");
   // the run code: open the same code, see the same game; an old code gets the plain line

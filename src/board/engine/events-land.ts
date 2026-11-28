@@ -77,9 +77,6 @@ export function planEvent(model: BoardModel, state: BoardState, e: EventDef, lan
   return { event: e.id, ...warnWindow(model, state, e.id, landing, state.step), step: landing, councils, severity: e.severity };
 }
 
-/** Which councils an event hits when it lands: all its councils (single target events list one). */
-export const hitCouncils = (f: ForecastedEvent): CouncilCode[] => f.councils;
-
 /** The first `size` rule that holds here, else 1. */
 function sizeFactor(model: BoardModel, state: BoardState, e: EventDef, code: CouncilCode): number {
   return e.size.find((s) => allHold(model, state, code, s.when))?.factor ?? 1;

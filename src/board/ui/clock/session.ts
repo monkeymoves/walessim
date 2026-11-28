@@ -5,13 +5,16 @@
  * runner says when.
  *
  * The clock holds itself while a stop is on screen, while an event waits for an answer, while the
- * page is hidden, and (if the player keeps that setting) while they read a sheet. Holding never
- * changes what the player chose: closing the sheet carries on at the speed they had.
+ * page is hidden, and (if the player keeps that setting) while they read a sheet. Only something
+ * drawn on screen can hold it (./hold.ts). Closing a sheet carries on at the speed the player had;
+ * after an answer the clock stays paused until the player presses Play (playtest 8, should fix 7):
+ * it only runs again on its own after "Carry on", which is the player choosing it.
  */
-import { batch, createEffect, createSignal, onCleanup } from "solid-js";
+import { batch, createEffect, createSignal, on, onCleanup } from "solid-js";
 import type { Accessor } from "solid-js";
 import type { BoardModel, BoardState, CouncilCode, StepReport, TermReport } from "../../engine/api";
 import { advance, closesYear, tick } from "../../engine/api";
+import { holdOf, overlays, type HoldReason, type Overlay, type Screenful } from "./hold";
 import { msPerStep, readPrefs, stopOnList, type Prefs } from "./prefs";
 import { ClockRunner } from "./runner";
 import { keepHard, stopsToShow, tickerLines, type QueuedStop, type TickerLine } from "./stops";
@@ -23,8 +26,8 @@ export interface ClockDeps {
   setState: (s: BoardState) => void;
   /** Save the run (after a year closes or a stop). */
   save: (s: BoardState) => void;
-  /** A sheet the player is reading is open (build menu, tree, laws, settings, Why?, a visit). */
-  reading: Accessor<boolean>;
+  /** What is open over the board (the sheets, Why?, a visit, a warning, a past term). */
+  open: Accessor<Pick<Screenful, "sheet" | "selected" | "why" | "visit" | "warning" | "term">>;
   select: (code: CouncilCode | null) => void;
   onEnded: () => void;
   onError: (message: string) => void;
@@ -42,18 +45,31 @@ export function createClock(model: BoardModel, deps: ClockDeps) {
   const [terms, setTerms] = createSignal<Record<number, TermReport>>({});
   const [last, setLast] = createSignal<StepReport | null>(null);
   const [progress, setProgress] = createSignal(0);
+  /** Time has been started in this game (the first press of Start time). */
+  const [started, setStarted] = createSignal(false);
+  /** Why the clock is paused when the clock paused itself, so the screen can say so. */
+  const [pausedFor, setPausedFor] = createSignal<"answered" | null>(null);
+  /** The first-run lesson on pause and speed has been seen through (kept in this browser). */
+  const taughtKey = `${model.game.save_key}clocktaught`;
+  const [taught, setTaught] = createSignal(deps.store.get(taughtKey) === "done");
 
   const phaseHolds = () => deps.state()?.phase !== "play";
-  /** Why the clock is held now, or null when it may run. */
-  const heldBy = (): "stop" | "answer" | "hidden" | "reading" | "ended" | null => {
+  /** What the hold reads: the state, the stops waiting, the page, the setting and what is open. */
+  const screenful = (): Screenful => {
     const s = deps.state();
-    if (!s || s.phase === "ended") return "ended";
-    if (s.phase === "respond") return "answer";
-    if (queue().length) return "stop";
-    if (hidden()) return "hidden";
-    if (prefs().holdWhileReading && deps.reading()) return "reading";
-    return null;
+    return {
+      phase: s ? s.phase : null,
+      answerWaiting: !!s && s.phase === "respond",
+      queued: queue().length,
+      hidden: hidden(),
+      holdWhileReading: prefs().holdWhileReading,
+      ...deps.open(),
+    };
   };
+  /** Why the clock is held now, or null when it may run. Only something on screen can hold it. */
+  const heldBy = (): HoldReason | null => holdOf(screenful());
+  /** What the board draws over the map: the board screen shows exactly these, so what holds the clock is always in sight. */
+  const shown = (): Overlay[] => overlays(screenful());
   const running = () => playing() && !prefs().stepByStep && heldBy() === null;
 
   const runner = new ClockRunner(() => step());
@@ -61,6 +77,11 @@ export function createClock(model: BoardModel, deps: ClockDeps) {
   onCleanup(runner.onProgress(setProgress));
   createEffect(() => (running() ? runner.start() : runner.stop()));
   onCleanup(() => runner.stop());
+
+  // an answered event leaves the clock paused: the player presses Play when ready
+  createEffect(on(() => deps.state()?.phase, (phase, prev) => {
+    if (prev === "respond" && phase === "play" && playing()) batch(() => { setPlaying(false); setPausedFor("answered"); });
+  }));
 
   if (typeof document !== "undefined") {
     const vis = () => { setHidden(document.hidden); if (document.hidden) setPlaying(false); };
@@ -105,6 +126,7 @@ export function createClock(model: BoardModel, deps: ClockDeps) {
     batch(() => {
       deps.setState(out.state);
       absorb(out.reports);
+      setStarted(true);
     });
     if (queue().length || out.state.phase !== "play") runner.stop();
     if (queue().length || out.reports.some((r) => closesYear(model, r.step + 1))) deps.save(out.state);
@@ -123,10 +145,20 @@ export function createClock(model: BoardModel, deps: ClockDeps) {
     });
   }
 
-  function play(): void { if (!prefs().stepByStep) { runner.reset(); setPlaying(true); } }
-  function pause(): void { setPlaying(false); }
+  function markTaught(): void {
+    if (taught()) return;
+    setTaught(true);
+    deps.store.set(taughtKey, "done");
+  }
+  function play(): void {
+    if (prefs().stepByStep) return;
+    runner.reset();
+    batch(() => { setPlaying(true); setStarted(true); setPausedFor(null); });
+  }
+  /** The player pauses. Pausing once is what the first-run lesson asks for. */
+  function pause(): void { if (playing() && started()) markTaught(); setPlaying(false); }
   function toggle(): void { if (playing()) pause(); else play(); }
-  function setSpeed(id: string): void { setPrefs({ ...prefs(), speed: id }); }
+  function setSpeed(id: string): void { if (started()) markTaught(); setPrefs({ ...prefs(), speed: id }); }
 
   /** The stop on screen is read: show the next, or carry on at the speed the player had. */
   function carryOn(): void {
@@ -155,12 +187,15 @@ export function createClock(model: BoardModel, deps: ClockDeps) {
       setTerms({});
       setLast(null);
       setPlaying(false);
+      setPausedFor(null);
+      setStarted(reports.length > 0);
       absorb(reports, false);
     });
   }
 
   return {
     prefs, setPrefs, playing, running, heldBy, phaseHolds, progress, queue, ticker, terms, last,
+    started, pausedFor, taught, markTaught, shown,
     play, pause, toggle, setSpeed, step, runToNext, carryOn, look, restore,
   };
 }

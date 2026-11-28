@@ -3,7 +3,7 @@
  * branches could have reached, drawn as a ghost beside your own 2050. The play again hook.
  */
 import { createMemo, Show, type JSX } from "solid-js";
-import { t } from "../../../i18n";
+import { t } from "../lang";
 import type { BoardModel, Ending, Frame } from "../../engine/api";
 import { outOf10, say, tx } from "../words";
 import { MiniMap } from "./MiniMap";

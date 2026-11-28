@@ -3,7 +3,7 @@
  * "who is behind", and the key as a little stack of offcuts in the map's own colours.
  */
 import { For, Show, type JSX } from "solid-js";
-import { formatNum, t } from "../../i18n";
+import { formatNum, t } from "./lang";
 import { DEFAULT_PALETTE, lensLegend } from "../../map";
 import { rgbCss } from "../../map/palette";
 import { MAP_PALETTE } from "../../ui/atlas/MapView";

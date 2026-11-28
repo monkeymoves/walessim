@@ -18,7 +18,7 @@ import { trackValue } from "./conditions";
 import type { StepCtx } from "./ctx";
 import { applyOnce } from "./effects";
 import { landOne, planEvent, preparedHere } from "./events-land";
-import { outsideSchedule } from "./events-schedule";
+import { outsideSchedule, repeatLimits } from "./events-schedule";
 import { optParam } from "./rules";
 import { specialStands } from "./specials";
 import { ruleParam } from "./rule-defaults";
@@ -35,14 +35,20 @@ const lead = (model: BoardModel, param: "warn_years" | "grown_warn_years"): numb
   Math.max(1, stepsOf(model, ruleParam(model, RULE_IDS.severity, param)));
 
 /**
- * Grown events that may be warned now: not `once` and already seen, not already warned, and not
- * on a council hit in the last four years.
+ * Grown events that may be warned now: not `once` and already seen, not already warned, not back
+ * sooner or more often than E1 allows (`repeatLimits`), and not on a council hit in the last four years.
  */
 function grownChoices(model: BoardModel, draft: BoardState, landing: number) {
   const seen = new Set(draft.events.map((r) => r.event));
   const recent = draft.step - stepsOf(model, 4);
+  const { most, gapYears } = repeatLimits(model);
+  const gap = stepsOf(model, gapYears);
+  const comesBack = (id: EventId) => {
+    const before = draft.events.filter((r) => r.event === id);
+    return before.length < most && before.every((r) => landing - r.step >= gap);
+  };
   return model.events
-    .filter((e) => e.origin === "grown" && !(e.once && seen.has(e.id)) && !draft.forecast.some((f) => f.event === e.id))
+    .filter((e) => e.origin === "grown" && !(e.once && seen.has(e.id)) && !draft.forecast.some((f) => f.event === e.id) && comesBack(e.id))
     .map((e) => planEvent(model, draft, e, landing))
     .filter((f): f is NonNullable<typeof f> => !!f)
     .filter((f) => !draft.events.some((r) => r.event === f.event && r.step >= recent && r.councils.includes(f.councils[0]!)));
@@ -143,6 +149,23 @@ export function respond(ctx: StepCtx, event: EventId, response: string): void {
   draft.pending = draft.pending.filter((p) => !(p.kind === "respond" && p.event === event));
 }
 
+/**
+ * The i18n key of an event's name as a noun phrase that fits inside a sentence ("a dirty river",
+ * "afon fudr"), in board.json `event.<id>`. Say values carry it as a key and the screens look it
+ * up; the event's `name` stays its title (playtest 8, must-fix 7: "The river runs dirty may hit").
+ */
+export const eventNoun = (event: EventId): string => `board.event.${event}`;
+
+/**
+ * The river an event names in a council: the one flowing on from it to `next` (the next council
+ * an event that travels downstream reaches), else any flowing out of it, else any flowing into
+ * it (a river's last council, such as Cardiff on the Taff). Undefined where no river runs.
+ */
+export function riverAt(model: BoardModel, council: CouncilCode, next?: CouncilCode): Text | undefined {
+  const rivers = model.links.filter((l) => l.kind === "river" && l.name);
+  return (rivers.find((l) => l.from === council && l.to === next) ?? rivers.find((l) => l.from === council) ?? rivers.find((l) => l.to === council))?.name;
+}
+
 /** "A, B and C" in both languages, from council names. */
 export function joinNames(names: Text[]): Text {
   const join = (xs: string[], and: string) => (xs.length <= 1 ? xs.join("") : `${xs.slice(0, -1).join(", ")} ${and} ${xs[xs.length - 1]}`);
@@ -164,7 +187,7 @@ export function forecast(model: BoardModel, state: BoardState): Forecast {
   const soonest = [...state.forecast].sort((a, b) => a.fromStep - b.fromStep || a.step - b.step || a.event.localeCompare(b.event));
   const warnings: ForecastWarning[] = soonest.map((f) => {
     const e = model.events.find((d) => d.id === f.event)!;
-    const river = model.links.find((l) => l.kind === "river" && l.from === f.councils[0])?.name;
+    const river = riverAt(model, f.councils[0]!, f.councils[1]);
     return {
       event: e.id, name: e.name, good: e.good, councils: f.councils, preparedBy: e.prepared_by, fromStep: f.fromStep, toStep: f.toStep,
       cutBy: preparedHere(model, state, e, f.councils[0]!),
