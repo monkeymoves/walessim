@@ -1,5 +1,5 @@
 note: >
-  Rule cards for people, backing, elections and deals (P1 to P6), and, because the board has no other
+  Rule cards for people, backing, elections, deals and what councils ask for (P1 to P7), and, because the board has no other
   file for them, the two scores (G1), the weight of outside trouble (E1), rebuilding after it (E2) and place visits (V1).
   The engine reads them by id (RULE_IDS in src/board/engine/types-model.ts, and
   src/board/engine/rule-defaults.ts for the extra params). Every size here is a design choice
@@ -11,8 +11,8 @@ rules:
     kind: stock
     name: { en: Moods move slowly, cy: Mae hwyliau'n symud yn araf, cy_review: true }
     note:
-      en: Each group compares what it cares about with four years ago, in its own council. People expect things to get better. The longer you govern, the more they expect. Moods remember where they were.
-      cy: Mae pob grŵp yn cymharu'r hyn sy'n bwysig iddo yn ei gyngor â phedair blynedd yn ôl. Mae pobl yn disgwyl i bethau wella. Po hiraf y byddwch yn llywodraethu, mwyaf maen nhw'n ei ddisgwyl. Mae hwyliau'n cofio lle'r oedden nhw.
+      en: Each group compares what it cares about with four years ago, in its own council. People expect things to get better. Each election you win, they expect more. A lost election eases it. Moods remember where they were.
+      cy: Mae pob grŵp yn cymharu'r hyn sy'n bwysig iddo yn ei gyngor â phedair blynedd yn ôl. Mae pobl yn disgwyl i bethau wella. Bob tro y byddwch yn ennill etholiad, maen nhw'n disgwyl mwy. Mae colli etholiad yn lleddfu hynny. Mae hwyliau'n cofio lle'r oedden nhw.
       cy_review: true
     params:
       memory_per_year: { default: 0.7746, min: 0.5, max: 0.95, unit: { en: share kept each year, cy: cyfran sy'n aros bob blwyddyn, cy_review: true }, adjustable: true, tune: true }
@@ -23,7 +23,8 @@ rules:
       crisis_points: { default: 0.5, min: 0, max: 2, unit: { en: points for each crisis, cy: pwyntiau am bob argyfwng, cy_review: true }, adjustable: true, tune: true }
       presence_points: { default: 0.5, min: 0, max: 2, unit: { en: points, cy: pwyntiau, cy_review: true }, adjustable: true, tune: true }
       expect_points: { default: 0, min: 0, max: 0.5, unit: { en: points better than four years ago that people expect in your first term, cy: pwyntiau yn well na phedair blynedd yn ôl y mae pobl yn eu disgwyl yn eich tymor cyntaf, cy_review: true }, adjustable: true, tune: true }
-      expect_rise: { default: 0.12, min: 0, max: 0.3, unit: { en: points more that people expect for each election you have faced, cy: pwyntiau yn fwy y mae pobl yn eu disgwyl am bob etholiad rydych chi wedi'i wynebu, cy_review: true }, adjustable: true, tune: true }
+      expect_rise: { default: 0.16, min: 0, max: 0.3, unit: { en: points more that people expect for each election you have won, cy: pwyntiau yn fwy y mae pobl yn eu disgwyl am bob etholiad rydych chi wedi'i ennill, cy_review: true }, adjustable: true, tune: true }
+      loss_eases: { default: 1, min: 0, max: 2, unit: { en: elections' worth of that expectation a lost election takes back, cy: "faint o etholiadau o'r disgwyl hwnnw y mae colli etholiad yn ei dynnu'n ôl", cy_review: true }, adjustable: true, tune: true }
     sources: []
     confidence: low
     evidence: placeholder
@@ -33,8 +34,8 @@ rules:
     kind: linear
     name: { en: Backing at the start, cy: Cefnogaeth ar y dechrau, cy_review: true }
     note:
-      en: Every council starts at 5 out of 10. What you were elected on nudges some councils up.
-      cy: Mae pob cyngor yn dechrau ar 5 allan o 10. Mae'r hyn y cawsoch eich ethol arno yn codi rhai cynghorau.
+      en: Every council starts at 5 out of 10. What you were elected on nudges some councils up and some down. That fades as moods move.
+      cy: Mae pob cyngor yn dechrau ar 5 allan o 10. Mae'r hyn y cawsoch eich ethol arno yn codi rhai cynghorau ac yn gostwng eraill. Mae hynny'n pylu wrth i hwyliau symud.
       cy_review: true
     params:
       start: { default: 5, min: 5, max: 5, unit: { en: points out of 10, cy: pwyntiau allan o 10, cy_review: true }, adjustable: false }
@@ -109,6 +110,23 @@ rules:
     confidence: low
     evidence: placeholder
     game_rule: true
+  - id: P7
+    theme: people
+    kind: threshold
+    name: { en: Asked and answered, cy: Gofyn a chael ateb, cy_review: true }
+    note:
+      en: Each council asks for its two weakest measures. Where a council does not back you, start a project that lifts one. Backing there rises once it works. The thanks fade over four years.
+      cy: Mae pob cyngor eisiau gweld ei ddau fesur gwannaf yn gwella. Lle nad yw cyngor yn eich cefnogi, dechreuwch brosiect sy'n codi un ohonyn nhw. Mae'r gefnogaeth yno'n codi unwaith y bydd yn gweithio. Mae'r diolch yn pylu dros bedair blynedd.
+      cy_review: true
+    params:
+      points: { default: 0.6, min: 0, max: 1.5, unit: { en: points of backing in that council once the project works, cy: pwyntiau o gefnogaeth yn y cyngor hwnnw unwaith mae'r prosiect yn gweithio, cy_review: true }, adjustable: true, tune: true }
+      years: { default: 4, min: 1, max: 8, unit: { en: years for the thanks to fade evenly to nothing, cy: blynyddoedd i'r diolch bylu'n gyfartal i ddim, cy_review: true }, adjustable: true, tune: true }
+      only_below: { default: 1, min: 0, max: 1, unit: { en: "1 when only a council that does not back you answers. 0 when every council does.", cy: "1 pan mai dim ond cyngor nad yw'n eich cefnogi sy'n ymateb. 0 pan fydd pob cyngor yn ymateb.", cy_review: true }, adjustable: false }
+      asked_count: { default: 2, min: 1, max: 3, unit: { en: weakest measures a council asks for, cy: mesurau gwannaf y mae cyngor eisiau eu gweld yn gwella, cy_review: true }, adjustable: false }
+    sources: []
+    confidence: low
+    evidence: placeholder
+    game_rule: true
   - id: E2
     theme: events
     kind: threshold
@@ -138,6 +156,7 @@ rules:
       lowest_count: { default: 3, min: 1, max: 3, unit: { en: councils, cy: cynghorau, cy_review: true }, adjustable: false }
       future_years: { default: 8, min: 0, max: 8, unit: { en: years after 2050, cy: blynyddoedd ar ôl 2050, cy_review: true }, adjustable: false }
       band_little: { default: 1.5, min: 1, max: 4, unit: { en: points out of 100, cy: pwyntiau allan o 100, cy_review: true }, adjustable: true, tune: true }
+      band_some: { default: 5, min: 3, max: 8, unit: { en: "points out of 100 for plainly better or worse, between a little and much", cy: "pwyntiau allan o 100 am well neu waeth yn amlwg, rhwng ychydig a llawer", cy_review: true }, adjustable: true, tune: true }
       band_much: { default: 10, min: 4, max: 12, unit: { en: points out of 100, cy: pwyntiau allan o 100, cy_review: true }, adjustable: true, tune: true }
       risk_left_points: { default: 0.3, min: 0, max: 1, unit: { en: points out of 10 for each risk left high, cy: pwyntiau allan o 10 am bob perygl sy'n uchel, cy_review: true }, adjustable: true, tune: true }
     sources: []

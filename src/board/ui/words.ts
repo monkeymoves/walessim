@@ -6,7 +6,7 @@
 import { fillEn, formatNum, hasKey, lang, pick, t, tn } from "./lang";
 import { fillCy, listCy } from "./cymraeg";
 import type { BoardModel, ChapterRecord, CouncilCode, MeasureId, NodeId, Say, SayVar, Text, WhyQuantity } from "../engine/api";
-import { seasonOf, stepsOf, yearOfStep } from "../engine/api";
+import { seasonOf, shownYear, stepsOf, yearOfStep } from "../engine/api";
 
 const isText = (v: unknown): v is Text => !!v && typeof v === "object" && "en" in (v as object);
 
@@ -125,9 +125,7 @@ export const capFirst = (s: string): string => s.charAt(0).toLocaleUpperCase() +
  * calendar year. Welsh seasons are lower case inside a sentence; `lead` capitalises one that opens a line.
  */
 export function whenWords(model: BoardModel, step: number, lead = false): string {
-  const season = seasonOf(model, step);
-  const year = yearOfStep(model, step) + (season === "spring" ? 1 : 0);
-  const out = t("boardui.when", { season: t(`boardui.season.${season}`), year });
+  const out = t("boardui.when", { season: t(`boardui.season.${seasonOf(model, step)}`), year: shownYear(model, step) });
   return lead ? capFirst(out) : out;
 }
 

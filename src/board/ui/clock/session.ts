@@ -15,16 +15,27 @@
  * The clock's status line and every card say which it will be. A stop whose fact is no longer true
  * is dropped from the queue before it is read (./stops.ts `stillTrue`). A new game starts at the
  * default speed; the speed picked in one game does not carry over to the next.
+ *
+ * After cold playtest 10:
+ * - Space and the Pause button work on a card too, and set what time does after it; the card
+ *   says which and offers the other (must fix 10, should fix 5).
+ * - "Carry on past all" and "Look" never drop a warning unread: each warning passed stays as a
+ *   slip pinned to the board until read or landed (`unread`, should fix 5).
+ * - The purse card stops time once a game; a ticker line is dropped once its fact is no longer
+ *   true; a "purse nearly full" line stays in the ticker while it is so, at any speed (should fix 1).
+ * - The run-up card, a year before each election, names the councils that would tip it (./runup.ts).
+ * - The game is saved after every step, so leaving for the rule book and coming back finds the
+ *   step you left (must fix 14).
  */
 import { batch, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 import type { Accessor } from "solid-js";
 import type { BoardModel, BoardState, CoinsReport, CouncilCode, StepReport, TermReport } from "../../engine/api";
-import { advance, closesYear, tick } from "../../engine/api";
+import { advance, tick } from "../../engine/api";
 import { holdOf, overlays, type HoldReason, type Overlay, type Screenful } from "./hold";
 import { msPerStep, readPrefs, stopOnList, type Prefs } from "./prefs";
 import { ruleParamOf } from "../rules";
 import { ClockRunner } from "./runner";
-import { keepHard, liveQueue, stopsToShow, tickerLines, type QueuedStop, type TickerLine } from "./stops";
+import { keepHard, liveQueue, newsTrue, passedWarnings, perYearOf, purseOnce, purseSoon, runUpStops, stopsToShow, tickerLines, type QueuedStop, type TickerLine } from "./stops";
 
 const TICKER_KEEP = 40;
 
@@ -53,12 +64,29 @@ export function createClock(model: BoardModel, deps: ClockDeps) {
   const [raised, setQueue] = createSignal<QueuedStop[]>([]);
   const purse = ruleParamOf(model, "B1", "purse_max", 0);
   const queue = createMemo(() => liveQueue(raised(), deps.state(), purse));
-  const [ticker, setTicker] = createSignal<TickerLine[]>([]);
+  const [tickerAll, setTicker] = createSignal<TickerLine[]>([]);
+  /** Warnings passed by unread (Carry on past all, Look): slips pinned to the board until read or landed. */
+  const [unreadAll, setUnread] = createSignal<string[]>([]);
+  /** The purse card has stopped time once in this game. */
+  let purseCarded = false;
   const [terms, setTerms] = createSignal<Record<number, TermReport>>({});
   const [last, setLast] = createSignal<StepReport | null>(null);
   /** Each step's coins, by step, so the income line can compare a year with the year before. */
   const [coinLog, setCoinLog] = createSignal<Record<number, CoinsReport>>({});
   const [progress, setProgress] = createSignal(0);
+  const stepsPerYear = Math.round(1 / model.game.years_per_step);
+  /** A year's coins after costs, from the last step run, before the purse cuts them. */
+  const perYear = (): number | null => { const l = last(); return l ? perYearOf(l.coins, stepsPerYear) : null; };
+  /** The ticker as the screen shows it: only lines still true (a spent purse, a landed warning, leave). */
+  const ticker = createMemo(() => {
+    const s = deps.state();
+    return s ? tickerAll().filter((l) => newsTrue(l, s, purse, perYear())) : tickerAll();
+  });
+  /** The unread warnings still to come. */
+  const unread = createMemo(() => {
+    const s = deps.state();
+    return s ? unreadAll().filter((e) => s.forecast.some((f) => f.event === e)) : [];
+  });
   /** Time has been started in this game (the first press of Start time). */
   const [started, setStarted] = createSignal(false);
   /** The first-run lesson on pause and speed has been seen through (kept in this browser). */
@@ -83,6 +111,12 @@ export function createClock(model: BoardModel, deps: ClockDeps) {
   /** What the board draws over the map: the board screen shows exactly these, so what holds the clock is always in sight. */
   const shown = (): Overlay[] => overlays(screenful());
   const running = () => playing() && !prefs().stepByStep && heldBy() === null;
+  /**
+   * The first-run lesson on pause and speed shows: time is running with nothing open, and the
+   * player has not used pause or speed yet. While it shows no other help note does, so two notes
+   * never stack by the clock (cold playtest 10, should fix 9).
+   */
+  const lessonShows = () => !taught() && !prefs().stepByStep && running() && shown().length === 0 && deps.state()?.phase === "play";
 
   const runner = new ClockRunner(() => step());
   runner.setSpeed(msPerStep(model, speed()));
@@ -102,19 +136,27 @@ export function createClock(model: BoardModel, deps: ClockDeps) {
     deps.store.set(prefsKey, JSON.stringify(next));
   }
 
-  /** Take in the reports of the steps that ran: the ticker, the term reports, the stops. */
-  function absorb(reports: StepReport[], show = true): void {
+  /** Take in the reports of the steps that ran (ending at `now`): the ticker, the term reports, the stops. */
+  function absorb(reports: StepReport[], now: BoardState | null, show = true): void {
     if (!reports.length) return;
     const lines = tickerLines(reports);
+    const lastReport = reports[reports.length - 1]!;
+    // the purse is nearly full: a line that stays in the ticker while it is so, whatever the speed
+    if (now && purseSoon(now.coins, purse, perYearOf(lastReport.coins, stepsPerYear)) && !tickerAll().some((l) => l.kind === "news" && l.live === "purse_soon" && newsTrue(l, now, purse, perYearOf(lastReport.coins, stepsPerYear)))) {
+      lines.push({ id: `${lastReport.step}:soon`, step: lastReport.step, kind: "news", council: null, say: { key: "boardclock.purse.tickerSoon" }, live: "purse_soon" });
+    }
     const newTerms = reports.filter((r) => r.term).map((r) => r.term!);
     batch(() => {
       if (lines.length) setTicker((t) => [...t, ...lines].slice(-TICKER_KEEP));
       if (newTerms.length) setTerms((t) => ({ ...t, ...Object.fromEntries(newTerms.map((x) => [x.term, x])) }));
-      setLast(reports[reports.length - 1]!);
+      setLast(lastReport);
       setCoinLog((old) => ({ ...old, ...Object.fromEntries(reports.map((r) => [r.step, r.coins])) }));
       if (show) {
-        const q = stopsToShow(model, prefs(), reports);
-        if (q.length) setQueue((old) => [...liveQueue(old, deps.state(), purse), ...q]);
+        const once = purseOnce([...stopsToShow(model, prefs(), reports), ...(now ? runUpStops(model, reports, now) : [])], purseCarded);
+        purseCarded = once.shown;
+        if (once.queue.length) setQueue((old) => [...liveQueue(old, now, purse), ...once.queue].sort((a, b) => Number(b.stop.hard) - Number(a.stop.hard) || a.step - b.step));
+      } else if (reports.some((r) => r.stops.some((x) => x.kind === "purse_full"))) {
+        purseCarded = true;
       }
     });
   }
@@ -132,11 +174,12 @@ export function createClock(model: BoardModel, deps: ClockDeps) {
     }
     batch(() => {
       deps.setState(out.state);
-      absorb(out.reports);
+      absorb(out.reports, out.state);
       setStarted(true);
     });
     if (queue().length || out.state.phase !== "play") runner.stop();
-    if (queue().length || out.reports.some((r) => closesYear(model, r.step + 1))) deps.save(out.state);
+    // every step: leaving for the rule book and coming back must find this step, not an older one
+    deps.save(out.state);
   }
 
   /** One step: the runner's beat, "Next season", and the full stop key while paused. */
@@ -180,12 +223,26 @@ export function createClock(model: BoardModel, deps: ClockDeps) {
     if (head.stop.kind === "ended") deps.onEnded();
   }
 
-  /** Past every soft stop waiting (they are all in the ticker); hard ones still wait. */
+  /** Pin the warnings among stops passed by, to read later. */
+  function pinUnread(passed: readonly QueuedStop[]): void {
+    const ids = passedWarnings(passed);
+    if (ids.length) setUnread((old) => [...old, ...ids.filter((e) => !old.includes(e))]);
+  }
+  /** A warning has been read (opened): its slip is unpinned. */
+  function read(event: string): void {
+    if (unreadAll().includes(event)) setUnread((old) => old.filter((e) => e !== event));
+  }
+
+  /** Past every soft stop waiting (they are all in the ticker, and warnings stay pinned); hard ones still wait. */
   function carryOnAll(): void {
     const [head, ...rest] = queue();
     if (!head) return;
     if (head.stop.hard) { carryOn(); return; }
-    setQueue(keepHard(rest));
+    batch(() => {
+      // the card on screen has been seen; the warnings behind it have not
+      pinUnread(rest.filter((q) => !q.stop.hard));
+      setQueue(keepHard(rest));
+    });
   }
 
   /** A new game: nothing waiting, and the starting speed again (a speed is picked for one game, not kept for the next). */
@@ -200,6 +257,7 @@ export function createClock(model: BoardModel, deps: ClockDeps) {
     if (!head) return;
     batch(() => {
       setPlaying(false);
+      pinUnread(rest.filter((q) => !q.stop.hard));
       setQueue(keepHard(rest));
       if (head.stop.council) deps.select(head.stop.council);
     });
@@ -210,18 +268,20 @@ export function createClock(model: BoardModel, deps: ClockDeps) {
     batch(() => {
       setQueue([]);
       setTicker([]);
+      setUnread([]);
+      purseCarded = false;
       setTerms({});
       setLast(null);
       setCoinLog({});
       setPlaying(false);
       setStarted(reports.length > 0);
-      absorb(reports, false);
+      absorb(reports, deps.state(), false);
     });
   }
 
   return {
     prefs, setPrefs, speed, playing, running, heldBy, phaseHolds, progress, queue, ticker, terms, last, coinLog,
-    started, taught, markTaught, shown,
+    started, taught, markTaught, shown, unread, read, lessonShows,
     play, pause, toggle, setSpeed, step, runToNext, carryOn, carryOnAll, look, restore, freshGame,
   };
 }

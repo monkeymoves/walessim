@@ -10,7 +10,7 @@ import { join } from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 import { setLang } from "../../i18n";
 import type { BoardModel, BoardState, Deal } from "../engine/api";
-import { act, advance, councilView, election, MEASURE_IDS, newBoard, options, preview, stepsOf, why } from "../engine/api";
+import { act, advance, councilView, MEASURE_IDS, newBoard, options, preview, stepsOf, why } from "../engine/api";
 import { acceptBoardModel } from "../model";
 import { blockerWords, conditionWords, gateWords } from "./blockers";
 import { roadWords } from "./BranchRoad";
@@ -153,7 +153,9 @@ describe.skipIf(!existsSync(realPath))("board panels after playtest 9", () => {
         expect(c).not.toBeNull();
         if (!o?.allowed) continue;
         const after = act(model, s, o.action);
-        expect(election(model, after).backers).toBe(c!.backersAfter);
+        // live backing, never the count just held (playtest 10, must-fix 2)
+        expect(model.game.councils.filter((x) => after.councils[x]!.backing >= 5).length).toBe(c!.backersAfter);
+        expect(model.game.councils.filter((x) => s.councils[x]!.backing >= 5).length).toBe(c!.backersNow);
         for (const code of model.game.councils) {
           const d = councilView(model, after, code).backing - councilView(model, s, code).backing;
           const shown = c!.changes.find((x) => x.council === code)?.delta ?? 0;

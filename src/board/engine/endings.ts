@@ -15,8 +15,7 @@ import { allEndHold, endHolds, flagged } from "./end-conditions";
 import { councilMean, fairnessGap, lowestCouncils, scores } from "./score";
 import { story } from "./story";
 import { riverAt } from "./events";
-import { isRiverEvent, townOf } from "./story-terms";
-import { yearOfStep } from "./time";
+import { eventRiverAt, isRiverEvent, shownYear, townOf } from "./story-terms";
 import type {
   BoardModel, BoardState, CouncilCode, Ending, EndingDef, EvidenceDef, EvidenceLine, Frame, Grade, LetterDef, PlaceId, ProjectDef, ProjectState, Scores, Text,
 } from "./types";
@@ -28,7 +27,8 @@ export function pickEnding(model: BoardModel, state: BoardState): EndingDef {
 }
 
 const nameOf = (model: BoardModel, code: CouncilCode): Text => model.councils.find((c) => c.code === code)?.name ?? { en: code, cy: code };
-const yearReady = (model: BoardModel, readyStep: number): number => yearOfStep(model, readyStep + 1);
+/** The year a project opened, as its build card gave it ("Working from Spring 2035"): the step after `readyStep`. */
+const yearReady = (model: BoardModel, readyStep: number): number => shownYear(model, readyStep + 1);
 const projectDefOf = (model: BoardModel, p: ProjectState): ProjectDef | undefined => model.projects.find((d) => d.id === p.project);
 const mean = (xs: number[]): number => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
 type Slots = Record<string, Text | string | number>;
@@ -218,7 +218,9 @@ export function evidenceLine(model: BoardModel, state: BoardState, ev: EvidenceD
       || Number(b === guarded) - Number(a === guarded) || codes.indexOf(a) - codes.indexOf(b))[0] ?? null;
     const last = code ? floodsAt(model, state, code).slice(-1)[0] : undefined;
     up = !last || (!!guard && last.step <= guard.readyStep);
-    vars = code ? { ...placeSlots(model, code), year: last ? yearOfStep(model, last.step) : model.game.first_year } : {};
+    // the river of that flood, as its warning and the turning points named it (playtest 10, must-fix 7)
+    const river = last && code ? eventRiverAt(model, last, code) : undefined;
+    vars = code ? { ...placeSlots(model, code), ...(river ? { river } : {}), year: last ? shownYear(model, last.step) : model.game.first_year } : {};
   }
   return { council: code, say: { key: "board.ending.evidence", vars: { line: up ? ev.up : ev.down, ...vars } } };
 }
@@ -342,12 +344,39 @@ function visitsMade(state: BoardState): { place: PlaceId; grade: Grade }[] {
 }
 
 /**
+ * The slots a letter reads beyond its place and project: how work in its council stands against
+ * 2026, as The gamble's first evidence line reads it (`measure_change` on work: found new work at
+ * 2026 or above, lower below). `{work_back_in}` is the council's name when work there came back,
+ * `{work_fell_in}` when it did not; only one is ever filled, so a letter that says the town is still
+ * picking up the pieces is never read beside "found new work" (playtest 10, must-fix 8).
+ */
+export function workSlots(model: BoardModel, state: BoardState, code: CouncilCode): Slots {
+  const now = state.councils[code]?.measures.work;
+  const then = state.history[0]?.councils[code]?.measures.work ?? now;
+  if (now === undefined || then === undefined) return {};
+  return now - then >= 0 ? { work_back_in: nameOf(model, code) } : { work_fell_in: nameOf(model, code) };
+}
+
+/** The parts of a letter always shown; only `named` may be left out, when it has no project. */
+const shownParts = (l: LetterDef): Text[] => [l.salutation, l.body, l.signoff];
+
+/**
+ * Does a letter fit what this game can say? Its salutation, body and sign-off must have every slot
+ * filled, as an evidence line must (`sayable`): so a letter whose words need work to have come back
+ * fits only a game where it did.
+ */
+export function letterSayable(l: LetterDef, slots: Record<string, unknown>): boolean {
+  return shownParts(l).every((t) => [...`${t.en} ${t.cy}`.matchAll(/\{(\w+)\}/g)].every((m) => slots[m[1]!] !== undefined));
+}
+
+/**
  * The letters that fit an ending and the lower of the two scores (or either), in the order this
  * game offers them: rotated by the game's seed, so different games open on different letters.
- * The end screen shows the first one this device has not read yet.
+ * With `slots`, only letters this game can say whole (`letterSayable`). The end screen shows the
+ * first one this device has not read yet.
  */
-export function letterChoices(model: BoardModel, state: BoardState, built: EndingDef, lower: Scores["lower"]): LetterDef[] {
-  const fit = model.letters.filter((l) => l.ending === built.id && (l.lower === lower || l.lower === "either"));
+export function letterChoices(model: BoardModel, state: BoardState, built: EndingDef, lower: Scores["lower"], slots?: Record<string, unknown>): LetterDef[] {
+  const fit = model.letters.filter((l) => l.ending === built.id && (l.lower === lower || l.lower === "either") && (!slots || letterSayable(l, slots)));
   if (fit.length === 0) return [];
   const k = Math.abs(state.seed) % fit.length;
   return [...fit.slice(k), ...fit.slice(0, k)];
@@ -364,7 +393,8 @@ export function ending(model: BoardModel, state: BoardState): Ending {
   const near = namedProject(model, state, from, about);
   const nearDef = near && projectDefOf(model, near);
   const named = near && (!model.projects.some(about) || (nearDef && about(nearDef))) ? near : undefined;
-  const letter = letterChoices(model, state, built, own.lower)[0];
+  const slots: Slots = { ...(named ? projectSlots(model, named, from) : placeSlots(model, from)), ...workSlots(model, state, from) };
+  const letter = letterChoices(model, state, built, own.lower, slots)[0];
   const other = nearestNotBuilt(model, state, built);
   const focus = focusOf(model, state, built);
   const clash = gapClashes(model, state);
@@ -375,7 +405,7 @@ export function ending(model: BoardModel, state: BoardState): Ending {
     scores: own,
     autopilot: autopilotScores(model, state),
     mostChanged: changed.slice(0, 3),
-    letter: { from, letter: letter?.id ?? "", slots: named ? projectSlots(model, named, from) : placeSlots(model, from) },
+    letter: { from, letter: letter?.id ?? "", slots },
     notBuilt: { id: other.id, name: other.name, say: { key: "board.ending.not_built", vars: { line: other.not_built, ending: other.name } }, frame: ghostFrame(model, state, other) },
     visits: visitsMade(state),
     story: story(model, state),

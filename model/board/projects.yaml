@@ -62,7 +62,8 @@ projects:
     upgrade_costs: [2, 3]
     level_factor: [1, 2.2, 3.5]
     tags: [bus, services]
-    sources: [transport-labour]
+    # Health: buses to the station help people reach care (transport-health-access); work: transport-labour.
+    sources: [transport-labour, transport-health-access]
 
   - id: station-quarter
     branch: valleys

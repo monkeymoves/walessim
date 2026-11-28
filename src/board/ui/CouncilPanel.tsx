@@ -4,7 +4,7 @@
  * here, and Build here. A sheet on the right of the stage; the map zooms to the council.
  */
 import { createMemo, For, Show, type JSX } from "solid-js";
-import { lang, Pair, t } from "./lang";
+import { lang, Pair, t, tn } from "./lang";
 import { CloseButton, SourceTag, StampButton, TabButton, ThreadButton } from "../../ui/parts";
 import type { Source } from "../../model/schema";
 import type { BoardModel, CouncilView, MeasureId, PreviewChange } from "../engine/api";
@@ -15,10 +15,14 @@ import { useGame } from "./game";
 import { CouncilLinks } from "./CouncilLinks";
 import { visitBlockWords } from "./blockers";
 import { boardSource } from "./whyWords";
-import { dealWords } from "./dealWords";
+import { dealProjectLines, dealWords } from "./dealWords";
+import { backingHolds, liftWords } from "./backingHolds";
+import { electionTargets } from "./electionTargets";
+import { gapShown } from "./TargetsCard";
+import { openWhy } from "./whyWords";
 import { backsAtOf } from "./mapLinks";
 import { ruleParamOf } from "./rules";
-import { backingShown, councilName, measureName, num, outOf10, projectName, say, signed, tx, whenWords } from "./words";
+import { backingShown, councilName, listOf, measureName, num, outOf10, projectName, say, signed, tx, whenWords } from "./words";
 
 /** A source as the board shows it, with no raw data ids in its notes (whyWords.ts). */
 export const sourceOf = (model: BoardModel, id: string): Source | null => boardSource(model, id);
@@ -74,6 +78,44 @@ export function CouncilPanel(props: { code: string }): JSX.Element {
     years: num(ruleParamOf(model, "R2", "over_years", 4)),
     coins: num(ruleParamOf(model, "R2", "coins_per_year", 0.5)),
   });
+  /** This council in the next election: needed to win, to win well, or to hold (the critic's one change). */
+  const targetLine = (): string => {
+    const s = game.state();
+    if (!s) return "";
+    const tg = electionTargets(model, s);
+    if (!tg) return "";
+    const find = (list: { code: string; gap: number }[] | null) => list?.find((c) => c.code === props.code);
+    const win = find(tg.win), well = find(tg.well), hold = find(tg.hold);
+    if (win) return t("boardui.targets.here.win", { year: tg.year, gap: num(gapShown(win.gap)) });
+    if (hold) {
+      const g = gapShown(hold.gap, true);
+      return `${t(`boardui.targets.here.hold.${tg.result === "strong_win" ? "strong_win" : "win"}`, { year: tg.year })} ${g > 0 ? t("boardui.targets.here.above", { gap: num(g) }) : t("boardui.targets.here.onLine")}`;
+    }
+    if (well && !tg.win?.length) return t("boardui.targets.here.well", { year: tg.year, gap: num(gapShown(well.gap)) });
+    const names = (tg.win?.length ? tg.win : tg.hold.slice(0, 2)).map((c) => councilName(model, c.code));
+    return names.length ? t("boardui.targets.here.others", { year: tg.year, list: listOf(names) }) : "";
+  };
+  /** What holds backing under the line here, and the builds that would lift it most (must-fix 4). */
+  const holds = createMemo(() => {
+    const s = game.state(), v = view();
+    if (!s || !v || v.backs || s.step === 0) return null;
+    try { return backingHolds(model, s, props.code); } catch (e) { console.warn(e); return null; }
+  });
+  /** The lever here (rule P7): the cheapest build that answers what this council asks for, and what it gives. */
+  const leverLine = () => {
+    const v = view();
+    const b = v?.lever?.builds[0];
+    if (!v || v.backs || !b || !v.lever.points) return "";
+    return t(b.allowed ? "boardui.holds.lever" : "boardui.holds.leverShort", {
+      council: councilName(model, props.code), measure: measureName(model, b.measure), project: projectName(model, b.project),
+      cost: tn("boardui.respond.cost", b.cost), points: num(v.lever.points), years: num(v.lever.years), year: b.readyYear, short: b.short,
+    });
+  };
+  const openBackingWhy = () => {
+    const s = game.state();
+    if (!s) return;
+    game.setWhyAt(openWhy(model, s, { council: props.code, measure: "backing", fromStep: 0, toStep: step() }));
+  };
   const real = () => (view()?.real ?? []).filter((r) => (shownMeasure() ? r.measure === shownMeasure() : r.measure === view()?.asking[0]));
 
   return (
@@ -89,21 +131,38 @@ export function CouncilPanel(props: { code: string }): JSX.Element {
             <span class="data">{t("boardui.council.backing", { n: num(backingShown(v().backing)), at: num(backsAtOf(model)) })}</span>
             <span class="small bw-honest">{t("boardui.honesty.game_estimate")}</span>{" "}
             {/* backing's own Why?: a law, a deal, a slip or a broken promise is named (playtest 9, must-fix 2) */}
-            <ThreadButton class="bw-why" onClick={() => game.setWhyAt({ council: props.code, measure: "backing", fromStep: Math.max(0, step() - stepsOf(model, 1)), toStep: step() })} data-testid="bw-backing-why">
+            <ThreadButton class="bw-why" onClick={openBackingWhy} data-testid="bw-backing-why">
               {t("boardui.why.button")}
             </ThreadButton>
           </p>
+          <p class="small bw-backing-means">{t("boardui.council.backingMeans")}</p>
+          <Show when={targetLine()}><p class="small bw-target-here" data-testid="bw-target-here">{targetLine()}</p></Show>
           <Show when={v().momentum !== "steady"}>
             <p class={`bw-momentum small ${v().momentum}`}><i aria-hidden="true" /><span><b>{t(`boardui.council.momentum.${v().momentum}`)}</b> {momentumWhy(v().momentum as "rising" | "slipping")}</span></p>
           </Show>
           <Show when={v().deal && v().deal!.kept === null}>
-            <p class="warnstrip small" data-testid="bw-council-deal"><span>{dealWords(model, game.state()!, v().deal!).what}</span></p>
+            <div class="warnstrip small" data-testid="bw-council-deal">
+              <span>{dealWords(model, game.state()!, v().deal!).what}</span>
+              <For each={dealProjectLines(model, game.state()!, v().deal!)}>{(line) => <span class="bw-deal-project">{line}</span>}</For>
+            </div>
           </Show>
           <Show when={v().freshStart}>
             <p class="bw-fresh small">{t("boardui.council.freshStart")}</p>
           </Show>
 
           <div class="bw-council-scroll">
+            <Show when={holds() && (holds()!.lines.length || holds()!.lifts.length || leverLine())}>
+              <section class="bw-sec bw-holds" data-testid="bw-holds">
+                <h3 class="label">{t("boardui.holds.title", { at: num(backsAtOf(model)) })}</h3>
+                <Show when={leverLine()}><p class="small bw-lever" data-testid="bw-lever"><b>{leverLine()}</b></p></Show>
+                <ul class="small bw-holds-list"><For each={holds()!.lines}>{(line) => <li>{line}</li>}</For></ul>
+                <Show when={holds()!.rule}><p class="small bw-honest">{holds()!.rule}</p></Show>
+                <Show when={holds()!.lifts.length} fallback={<p class="small">{t("boardui.holds.noLift")}</p>}>
+                  <p class="small"><b>{t("boardui.holds.lift")}</b></p>
+                  <ul class="small bw-holds-lifts"><For each={holds()!.lifts}>{(l) => <li>{liftWords(model, l)}</li>}</For></ul>
+                </Show>
+              </section>
+            </Show>
             <Show when={onMap().length}>
               <section class="bw-sec bw-onmap-sec" data-testid="bw-onmap">
                 <h3 class="label">{t("boardui.council.onMap")}</h3>
@@ -209,6 +268,7 @@ export function CouncilPanel(props: { code: string }): JSX.Element {
             </Show>
             <Show when={v().visit}>
               <TabButton onClick={() => game.setVisit(v().visit)} why={visitBlock()} data-testid="bw-council-visit">{t("boardui.council.visit")}</TabButton>
+              <p class="small bw-visit-note">{t("boardui.council.visitNote", { place: tx(model.places.find((p) => p.id === v().visit)?.name ?? "") })}</p>
             </Show>
           </footer>
         </aside>

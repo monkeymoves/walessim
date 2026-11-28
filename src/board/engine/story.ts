@@ -16,7 +16,7 @@ import { round4 } from "./ctx";
 import { openedNow } from "./clock-stops";
 import { regionTurnStep, risingCount } from "./momentum";
 import { siteCouncil } from "./conditions";
-import { pickChapter } from "./story-terms";
+import { pickChapter, shownYear } from "./story-terms";
 import { yearOfStep } from "./time";
 import type {
   BoardModel, BoardState, ChapterRecord, Contribution, CouncilCode, Moment, MomentKind, Say, SayVar, Story, Text,
@@ -42,7 +42,8 @@ function momentsOf(ctx: StepCtx, facts: StepFacts): Moment[] {
   const { model, state } = ctx;
   const out: Moment[] = [];
   const at = facts.step;
-  const year = yearOfStep(model, at);
+  // the year the board's season words give this step ("Spring 2035"), as every end screen shows it
+  const year = shownYear(model, at);
   const has = (kind: MomentKind, ref: string, council?: CouncilCode) =>
     state.story.moments.some((m) => m.kind === kind && m.ref === ref && m.council === council) || out.some((m) => m.kind === kind && m.ref === ref && m.council === council);
   const add = (kind: MomentKind, ref: string, say: Say, council?: CouncilCode, when = year) => {
@@ -63,7 +64,7 @@ function momentsOf(ctx: StepCtx, facts: StepFacts): Moment[] {
     if (!p || !model.projects.find((d) => d.id === p.project)?.keystone) continue;
     const code = siteCouncil(model, p);
     // dated the year it opens, as the letter, the evidence and every screen date it: the step after `readyStep`
-    add("keystone", p.project, { key: "board.moment.keystone", vars: withCouncil(code, { project: projectName(model, p.project) }) }, code, yearOfStep(model, p.readyStep + 1));
+    add("keystone", p.project, { key: "board.moment.keystone", vars: withCouncil(code, { project: projectName(model, p.project) }) }, code, shownYear(model, p.readyStep + 1));
   }
   for (const tip of facts.tipped) {
     if (tip.to === "steady") continue;
@@ -73,7 +74,7 @@ function momentsOf(ctx: StepCtx, facts: StepFacts): Moment[] {
     add("region_turn", "region", { key: "board.moment.region_turn", vars: { n: risingCount(model, state) } });
   }
   if (facts.election) {
-    add("election", `${facts.election.year}:${facts.election.result}`, { key: `board.moment.election.${facts.election.result}`, vars: { year: facts.election.year } });
+    add("election", `${facts.election.year}:${facts.election.result}`, { key: `board.moment.election.${facts.election.result}`, vars: { year: facts.election.year } }, undefined, facts.election.year);
   }
   for (const e of facts.events) {
     const def = model.events.find((d) => d.id === e.event);
@@ -133,9 +134,16 @@ export function sharesCause(model: BoardModel, m: Moment, c: Contribution): bool
   }
 }
 
+/**
+ * The game year (May to May, as the ledger counts years) a moment's weight is counted from: the
+ * year of its step, or for a keystone the year of the step it opens. A moment's `year` is the year
+ * the screens show (`shownYear`), which is the next calendar year for a spring step.
+ */
+const weighFrom = (model: BoardModel, m: Moment): number => yearOfStep(model, m.kind === "keystone" ? m.step + 1 : m.step);
+
 /** Add a closed year's ledger to the weight of every moment whose window holds it. The ledger is in order of time. */
 function weighYear(model: BoardModel, state: BoardState, year: number): void {
-  const live = state.story.moments.filter((m) => m.year <= year && year < m.year + WEIGHT_YEARS);
+  const live = state.story.moments.filter((m) => weighFrom(model, m) <= year && year < weighFrom(model, m) + WEIGHT_YEARS);
   if (live.length === 0) return;
   const add = new Map<Moment, number>();
   for (let i = state.ledger.length - 1; i >= 0; i--) {

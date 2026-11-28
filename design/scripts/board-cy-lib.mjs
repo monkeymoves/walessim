@@ -57,5 +57,11 @@ export function welshFaults(line, eng) {
   if (/^(COSTS?|Costs?)$/.test(s) || /\bCOSTS?\b/.test(s)) out.push("English price label");
   if (/\b(c|g|ch|ngh)arreg glo\b/i.test(s) || /onglf(aen|eini)/i.test(s)) out.push("keystone is maen clo");
   if (/(^|[\s(])[-\u2212+]0(?![.,\d])/.test(s)) out.push("signed zero");
+  // playtest 10, should-fix 10: Pill unmutated or mutated in its English form, the region without its
+  // hyphen, a project's verb-noun name with a capital after a verb, Bristol's neighbour misnamed
+  if (/\byn Pill\b|\bMhill\b/.test(s)) out.push("Pill is Pil: ym Mhil");
+  if (/\bDe Ddwyrain\b/.test(s)) out.push("De-ddwyrain Cymru");
+  if (/\b(Mae|Byddai|Bydd|Agorodd|Dydy|fydd|pan fydd) (Cefnogi|Denu|Gwneud|Arafu'r|Rhoi|Cynhesu'r|Talu)\b/.test(s)) out.push("verb-noun name with a capital mid-sentence");
+  if (/Swydd Gaerloyw'r De/.test(s)) out.push("De Swydd Gaerloyw");
   return out;
 }

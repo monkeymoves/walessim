@@ -6,10 +6,11 @@
  * on its face, its stub and its button ("Make it bigger"), never "Build it".
  */
 import { onMount, Show, type JSX } from "solid-js";
-import { t } from "./lang";
+import { t, tn } from "./lang";
 import { Icon, StampButton } from "../../ui/parts";
 import type { ActionOption, BoardModel, ProjectDef } from "../engine/api";
 import { blockerWords } from "./blockers";
+import { dealBuildWords } from "./dealWords";
 import { useGame } from "./game";
 import { iconFor } from "./icons";
 import { PreviewLines } from "./PreviewLines";
@@ -26,7 +27,7 @@ function siteWords(model: BoardModel, o: ActionOption, here: string): string {
   return "";
 }
 
-export function BuildTicket(props: { o: ActionOption; def: ProjectDef | undefined; here: string; open: boolean; onToggle: () => void; onBuild: () => void }): JSX.Element {
+export function BuildTicket(props: { o: ActionOption; def: ProjectDef | undefined; here: string; open: boolean; quiet?: boolean; onToggle: () => void; onBuild: () => void }): JSX.Element {
   const game = useGame();
   const model = game.model;
   const o = () => props.o;
@@ -42,14 +43,17 @@ export function BuildTicket(props: { o: ActionOption; def: ProjectDef | undefine
   const shown = () => (d()?.legacy_of ? o().blockers.filter((b) => !(b.kind === "needs" && b.condition.kind === "project" && b.condition.branch && b.condition.tier)) : o().blockers);
   const why = () => shown().map((b) => blockerWords(model, b, game.state() ?? undefined)).join(" ");
   const opens = () => (o().readyStep !== undefined ? whenWords(model, o().readyStep! + 1) : "");
+  /** Whether it counts for an open deal here, as the engine will judge it (playtest 10, must-fix 1). */
+  const dealLine = () => { const s = game.state(); return s ? dealBuildWords(model, s, o()) : ""; };
   return (
     <li class="bw-ticket" classList={{ locked: !o().allowed, open: props.open, keystone: !!d()?.keystone, upgrade: upgrade() }}>
       <button
         type="button"
         class="bw-ticket-face"
         aria-expanded={props.open}
-        onPointerEnter={() => !props.open && game.setHover(o().action)}
-        onFocus={() => !props.open && game.setHover(o().action)}
+        onPointerEnter={() => !props.open && !props.quiet && game.setHover(o().action)}
+        onPointerMove={() => !props.open && !props.quiet && game.hover() === null && game.setHover(o().action)}
+        onFocus={() => !props.open && !props.quiet && game.setHover(o().action)}
         onClick={props.onToggle}
         data-testid={`bw-opt-${o().project}`}
       >
@@ -66,14 +70,14 @@ export function BuildTicket(props: { o: ActionOption; def: ProjectDef | undefine
           <Show when={upgrade()}><span class="small bw-ticket-up">{t("boardui.build.upgradeLine", { from: level(), to: level() + 1 })}</span></Show>
           <span class="small bw-ticket-site">{siteWords(model, o(), props.here)}</span>
           <Show when={offWords(model, price())}><span class="small bw-ticket-off">{offWords(model, price())}</span></Show>
+          <Show when={dealLine()}><span class="small bw-ticket-deal" data-testid="bw-ticket-deal">{dealLine()}</span></Show>
           <Show when={!o().allowed}><span class="small bw-ticket-why">{why()}</span></Show>
         </span>
         <span class="bw-ticket-fare">
           <span class="furniture">{t("boardui.build.cost")}</span>
-          <span class="bw-fare-n" classList={{ short: o().blockers.some((x) => x.kind === "coins") }}>
-            <Show when={offWords(model, price())}><s class="bw-fare-full" aria-hidden="true">{num(price().full)}</s>{" "}</Show>
-            {fareWords(price())}
-          </span>
+          {/* one figure and its unit, never two bare numbers side by side ("3 1", playtest 10 should-fix 9): the full price is in words on the face */}
+          <span class="bw-fare-n" classList={{ short: o().blockers.some((x) => x.kind === "coins") }}>{fareWords(price())}</span>
+          <Show when={!price().free}><span class="small bw-fare-unit">{tn("boardui.build.fareUnit", price().cost)}</span></Show>
           <Show when={opens()}><span class="small">{upgrade() ? t("boardui.build.biggerAt", { when: opens() }) : t("boardui.build.works", { when: opens() })}</span></Show>
         </span>
       </button>

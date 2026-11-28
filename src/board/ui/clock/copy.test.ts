@@ -28,7 +28,8 @@ const families: Record<string, readonly string[]> = {
   guide: GUIDE_NOTES,
   "income.why": ["budget", "rising", "earns", "running", "care", "weak"].flatMap((k) => [`${k}.up`, `${k}.down`]),
   "income.part": ["budget", "earns", "rising", "care", "weak"],
-  card: ["runs", "runsLook", "paused", "step", "count", "all"],
+  card: ["runs", "runsLook", "paused", "step", "count", "all", "stayPaused", "runAfter"],
+  runup: ["label", "title"],
 };
 
 describe("board clock copy", () => {

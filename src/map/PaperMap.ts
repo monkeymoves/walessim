@@ -241,7 +241,8 @@ export class PaperMap {
     const { W, H, dpr } = this.size;
     const to = this.nat.viewFor(W, H, dpr, this.padding);
     cancelAnimationFrame(this.focusAnim);
-    const finish = () => { this.focusAnim = 0; this.nat.fit(W, H, dpr, this.padding); this.nat.invalidate("all"); this.renderNow(); };
+    // fit to the size when the ease ends, not when it began: the host may have resized meanwhile
+    const finish = () => { this.focusAnim = 0; const z = this.size; this.nat.fit(z.W, z.H, z.dpr, this.padding); this.nat.invalidate("all"); this.renderNow(); };
     if (this.mode !== "national" || this.reduced() || W < 2) { finish(); return; }
     // ease the last frame from the old view to the new, then draw the new view once
     const snap = document.createElement("canvas");

@@ -6,6 +6,7 @@
  * keystone that opened it. Pure, tested in opened.test.ts.
  */
 import type { BoardModel, BoardState, Condition, ProjectDef, ProjectState } from "../../engine/api";
+import { keystoneLastStep } from "../../engine/api";
 
 export type Opened =
   | { kind: "tier"; branch: string; tier: number; need: number; needTier: number; by: ProjectState[]; offers: ProjectDef[] }
@@ -38,4 +39,18 @@ export function openedBy(model: BoardModel, state: BoardState, ref: string): Ope
   const cut = all[need - 1]?.readyStep;
   const by = cut === undefined ? all : all.filter((p) => p.readyStep >= cut);
   return { kind: "tier", branch, tier, need, needTier: cond.tier ?? tier - 1, by, offers };
+}
+
+/**
+ * What a tier card may say about the keystone it opens (cold playtest 10, must fix 12: "You can
+ * start Heat and homes for all now" was shown in 2045 and 2048, after the last season to start
+ * one). Read against the engine's own blockers: "now" only while a keystone can still be started
+ * (`keystoneLastStep`, the `too_late` blocker) and none of that keystone is already built (the
+ * `one_keystone` blocker); "late" once the last season has passed; "built" when it already stands.
+ */
+export type KeystoneOffer = "now" | "late" | "built";
+
+export function keystoneOffer(model: BoardModel, state: BoardState, keystone: string): KeystoneOffer {
+  if (state.projects.some((p) => p.project === keystone)) return "built";
+  return state.step > keystoneLastStep(model) ? "late" : "now";
 }

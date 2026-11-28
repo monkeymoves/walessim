@@ -65,7 +65,7 @@ export type Cause =
   | { kind: "start"; start: StartId }
   | { kind: "election"; year: number }
   /** Groups' moods and people moving (S3) with no single project behind them. */
-  | { kind: "people"; group?: GroupId }
+  | { kind: "people"; group?: GroupId; expect?: true }
   /** Running costs, income and carry over. */
   | { kind: "budget" }
   /** No action: the board left alone. */
@@ -146,6 +146,8 @@ export interface ProjectState {
   grade?: Grade;
   /** Placed free from the start's head start. */
   free?: boolean;
+  /** Rule P7: the councils that asked for what it lifts when it was started, and the measure (asked.ts). */
+  answers?: { council: CouncilCode; measure: MeasureId }[];
 }
 
 /**
@@ -174,6 +176,8 @@ export interface EventRecord {
   /** True when a project that cuts it stood at its target when it landed (outside events). */
   prepared?: boolean;
   response?: string;
+  /** The river link a river flood came down, chosen once when it landed, so every sentence names the same river. */
+  river?: LinkId;
 }
 
 /**

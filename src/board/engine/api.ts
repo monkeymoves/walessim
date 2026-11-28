@@ -50,9 +50,21 @@ export type { AdvanceOptions } from "./clock";
 export { BoardActionError, BoardModelError, BoardRunError } from "./errors";
 export { boardFixture, FIXTURE_COUNCILS } from "./fixture";
 /** Calendar helpers for the screens: the year and season of a step, and steps in a span of years. */
-export { blockOf, closesYear, isElectionStep, keystoneLastStep, perStep, seasonOf, stepOfYear, stepsOf, yearOfStep } from "./time";
+export { blockOf, closesYear, isElectionStep, keystoneLastStep, perStep, seasonOf, shownYear, stepOfYear, stepsOf, yearOfStep } from "./time";
 /** An event's noun key for the middle of a sentence (board.json `event.<id>`), and the river it names in a council. */
 export { eventNoun, riverAt } from "./events";
+/** Playtest 10 must-fix 7: the one river a landed flood came down, kept on its record. */
+export { eventRiver, isRiverEvent } from "./events";
+/**
+ * Playtest 10 must-fix 1: the deal rule. Any project that lifts the deal's measure, working in its
+ * council by `dealLastStep`, keeps it; `buildCountsForDeal` says whether a build (with its
+ * `readyStep`) counts and why not; `dealProgress` lists the projects there that lift it.
+ */
+export { buildCountsForDeal, dealKeptBy, dealLastStep, dealProgress } from "./deals";
+export type { DealCount } from "./deals";
+/** Playtest 10 must-fix 4: what a council asks for, and what a new build there would answer (rule P7). */
+export { answersOf, askingFor } from "./asked";
+export { councilLever } from "./levers";
 /** Playtest 9 must-fix 2 and 9: a law's lasting backing per council, the standing parts now, a broken deal's fade. */
 export { brokenShare, lawBacking, standingParts } from "./standing";
 /** Playtest 9 should-fix 1: points better than four years ago that people expect now (rule P1). */

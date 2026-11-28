@@ -65,6 +65,15 @@ export function seasonOf(model: BoardModel, step: number): Season {
   return seasons[Math.floor(((step % perYear) * seasons.length) / perYear)] ?? seasons[0];
 }
 
+/**
+ * The calendar year a step is shown in: a game year runs from May, so its spring is the next
+ * calendar year ("Spring 2035" in the game year 2034). The one rule for every screen and sentence
+ * (playtest 10 should-fix 10: a letter said 2034 where the build said Spring 2035).
+ */
+export function shownYear(model: BoardModel, step: number): number {
+  return yearOfStep(model, step) + (seasonOf(model, step) === "spring" ? 1 : 0);
+}
+
 /** True when an election is held on arriving at `step`: the first step of an election year. */
 export function isElectionStep(model: BoardModel, step: number): boolean {
   return step > 0 && model.game.election_years.some((y) => stepOfYear(model, y) === step);

@@ -8,11 +8,15 @@
  * - A broken deal costs P6 `broken_here` in that council only, and fades evenly to nothing over P6
  *   `broken_years`, a step each time a year closes. The fade is its own record (rule P6, the deal),
  *   so Why? names it.
+ * - A new project that lifts what a council asked for (rule P7, asked.ts) raises Backing there by
+ *   P7 `points` once it works, fading evenly to nothing over P7 `years`, recorded under P7 with the
+ *   project as its cause.
  *
  * Backing = the groups' moods weighted by their shares (people-moods.ts) + the standing parts.
  * What is applied is kept on the council (`standing`), and `settleStanding` records only the
  * change, each part under its own rule and cause.
  */
+import { answerPoints, answerShare } from "./asked";
 import type { StepCtx } from "./ctx";
 import { groupWeight } from "./people-moods";
 import { optParam } from "./rules";
@@ -21,7 +25,7 @@ import type { BoardModel, BoardState, Cause, CouncilCode, Deal, LawDef, RuleId }
 import { RULE_IDS } from "./types";
 
 export interface StandingPart {
-  /** `law:<id>` or `deal:<council>:<made step>`. */
+  /** `law:<id>`, `deal:<council>:<made step>` or `answer:<project state id>`. */
   key: string;
   /** Backing points in this council, now. */
   points: number;
@@ -72,6 +76,14 @@ export function standingParts(model: BoardModel, state: BoardState, code: Counci
     const points = round4(-brokenHere(model) * brokenShare(model, d, step));
     if (points !== 0) out.push({ key: `deal:${d.council}:${d.madeStep}`, points, rule: RULE_IDS.hungTerm, cause: { kind: "deal", council: d.council } });
   }
+  // Rule P7: a new project that lifts what this council asked for, while its thanks last.
+  const per = stepsOf(model, 1);
+  const pts = answerPoints(model);
+  for (const p of state.projects) {
+    if (!p.answers?.some((a) => a.council === code)) continue;
+    const points = round4(pts * answerShare(model, p, step, per));
+    if (points !== 0) out.push({ key: `answer:${p.id}`, points, rule: RULE_IDS.answered, cause: { kind: "project", project: p.project, site: p.site } });
+  }
   return out;
 }
 
@@ -101,8 +113,9 @@ export function settleStanding(ctx: StepCtx, step = ctx.step): void {
       if (key in now || points === 0) continue;
       // A part that ended (a law repealed, a deal's anger gone): give its points back.
       const law = key.startsWith("law:") ? key.slice(4) : null;
-      const cause: Cause = law ? { kind: "law", law } : { kind: "deal", council: code };
-      const rule = law ? model.laws.find((l) => l.id === law)?.rule ?? RULE_IDS.moods : RULE_IDS.hungTerm;
+      const answered = key.startsWith("answer:") ? state.projects.find((p) => p.id === key.slice(7)) : undefined;
+      const cause: Cause = law ? { kind: "law", law } : answered ? { kind: "project", project: answered.project, site: answered.site } : { kind: "deal", council: code };
+      const rule = law ? model.laws.find((l) => l.id === law)?.rule ?? RULE_IDS.moods : key.startsWith("answer:") ? RULE_IDS.answered : RULE_IDS.hungTerm;
       ctx.change({ council: code, quantity: "backing", delta: round4(-points), rule, cause });
     }
     if (Object.keys(now).length > 0 || c.standing) c.standing = now;

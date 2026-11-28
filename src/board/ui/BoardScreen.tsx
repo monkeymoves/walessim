@@ -3,13 +3,19 @@
  * central, the council panel (or the region) on the right, the build menu from a council, the
  * ticker, and the time line with the clock along the foot. Over the map, one at a time: an event
  * to answer, a stop, the term report, a warning, Why?, a sheet, a place visit, the guide.
+ *
+ * After cold playtest 10: one card at a time in the lane, what the player had open there stepping
+ * aside under it and coming back after (./clock/hold.ts); warnings passed by
+ * unread stay pinned at the head of the lane while it is free; Escape closes one thing, the top
+ * one (./clock/keys.ts `escapeTarget`); and a card that waits for an answer takes the focus
+ * itself, never on one of its answers, so no key answers it by chance (must fix 10).
  */
 import { createMemo, lazy, Match, onCleanup, onMount, Show, Switch, type Component, type JSX } from "solid-js";
 import { t } from "./lang";
 import { PaperSheet, TabButton } from "../../ui/parts";
 import { BuildMenu } from "./BuildMenu";
 import type { Overlay } from "./clock/hold";
-import { clockKey, clockKeyUp } from "./clock/keys";
+import { clockKey, clockKeyUp, escapeTarget } from "./clock/keys";
 import { Settings } from "./clock/Settings";
 import { CouncilPanel } from "./CouncilPanel";
 import { useGame } from "./game";
@@ -24,7 +30,7 @@ import { Ticker } from "./Ticker";
 import { Timeline } from "./Timeline";
 import { TopStrip } from "./TopStrip";
 import { TreeSheet } from "./TreeSheet";
-import { WarningSlip } from "./WarningSlip";
+import { UnreadSlips, WarningSlip } from "./WarningSlip";
 import { WhyPanel } from "./WhyPanel";
 
 /** Place visits (the Rhondda reused, the light places), loaded when one opens. */
@@ -41,10 +47,31 @@ export function BoardScreen(props: { fixture: boolean }): JSX.Element {
   // what is drawn over the map comes from the same list as the clock's hold (clock/hold.ts)
   const shows = (o: Overlay) => c.shown().includes(o);
 
+  /** The lane is free: no card, and nothing the player opened sits in it. Pinned warnings show only then. */
+  const laneFree = () => !c.shown().some((o) => o === "answer" || o === "stop" || o === "term" || o === "warning" || o === "tree" || o === "laws" || o === "visit");
+
+  /** Escape: close the top thing only, wherever the focus is (it may have gone back to the page). */
+  const escape = () => {
+    const shown = c.shown();
+    const target = escapeTarget({
+      visit: shown.includes("visit"), why: shown.includes("why"), warning: shown.includes("warning"), term: shown.includes("term"),
+      sheet: shown.includes("tree") || shown.includes("laws") || shown.includes("settings"), build: shown.includes("build"), council: game.selected() !== null,
+      card: shown.includes("answer") || shown.includes("stop"),
+    });
+    switch (target) {
+      case "why": game.setWhyAt(null); break;
+      case "warning": game.setWarning(null); break;
+      case "term": game.setTermOpen(null); break;
+      case "sheet": game.setSheet(null); break;
+      case "build": game.setSheet(null); break;
+      case "council": game.setSelected(null); break;
+    }
+  };
+
+
   onMount(() => {
-    // Escape closes what is open over the map wherever the focus is (it may have gone back to the page)
     const key = (e: KeyboardEvent) => {
-      if (e.key === "Escape") { game.closeAll(); game.setVisit(null); return; }
+      if (e.key === "Escape") { escape(); return; }
       clockKey(game, e);
     };
     window.addEventListener("keydown", key);
@@ -71,18 +98,20 @@ export function BoardScreen(props: { fixture: boolean }): JSX.Element {
           <p class="bw-standin small" role="note">{t("boardui.fixture.short")}</p>
         </Show>
         <Show when={shows("warning")}><WarningSlip /></Show>
+        <Show when={laneFree()}><UnreadSlips /></Show>
         <Show when={shows("tree")}><TreeSheet /></Show>
         <Show when={shows("laws")}><LawsSheet /></Show>
         <Show when={shows("settings")}><Settings /></Show>
         <Show when={shows("term") && pastTerm()} keyed>{(r) => <TermReport report={r} asStop={false} />}</Show>
+        {/* one card in the lane, and only while nothing the player opened sits there (./clock/hold.ts) */}
         <Switch>
-          <Match when={respond()} keyed>
+          <Match when={shows("answer") && respond()} keyed>
             {(p) => (p.kind === "respond" ? <Respond event={p.event} councils={p.councils} /> : null)}
           </Match>
-          <Match when={head()?.term && head()} keyed>
+          <Match when={shows("stop") && head()?.term && head()} keyed>
             {(q) => <TermReport report={q.term!} asStop ended={q.stop.kind === "ended"} />}
           </Match>
-          <Match when={head()} keyed>
+          <Match when={shows("stop") && head()} keyed>
             {(q) => <StopCard item={q} />}
           </Match>
         </Switch>

@@ -114,3 +114,47 @@ Housekeeping: two testers left `drv.mjs`, `drv.log` and `out.txt` in the project
 **Changed shape:** "too easy late" became "backing stuck under 5 whatever I built"; the same 5 of 8 feel doomed, for the opposite reason. The deal now says where and what to build, but not that the build must be new, and that gap is the new top trust problem. Laws now show each council's cost, but the after count is wrong at the one moment laws are offered.
 
 **Came back:** cards over cards (round 2 must-fix 4); end text that contradicts itself (round 2 must-fix 3, now the river and the gamble); "working from" against "bedded in" dates (must-fix 11); the clock restarting after a card (should-fix 4); a stale purse line in the ticker (must-fix 8); coins piling up (7 of 8, as in round 2).
+
+## After fix round 3
+
+Packages A to D and the Welsh pass fixed their findings; the join made them fit, closed every open NEEDS entry, and played two full games in English from the title page on the clock at the default speed (design/scripts/board-fix3-join.mjs; shots in design/shots-build/board-fix3/join/, a second careless game on the final build in join/rerun/). At the join: `npm run board:build -- --strict` clean, typecheck clean, 913 of 913 unit tests, 71 of 71 e2e (v1 and board), balance 34 of 38 as in package D's run (docs/design/board-balance-log.md).
+
+**The two games.** Careful (26 builds, Living landscape to its keystone): won 2030, won well 2034, lost 2038 (the run-up card a year before said "Held now, you would lose ... bring Cardiff round: needs 0.1 more"), kept the Cardiff deal with a Welsh-medium school, won well 2042 and 2046; ending The green valleys, "much better". Careless (9 builds, a law at once, first answers, ignores deals): won 2030 and 2034, lost 2038 with 5 of 10, broke its Newport deal, won 2042 and 2046 with 8 and 7 of 10; ending The patchwork, "about the same". The rerun careless game lost 2042 with 3 of 10 and won again in 2046. Neither was wiped out (lowest 3 of 10). At each low point the screen showed a lever: the term report and the run-up card named the councils to bring round and how far each is from 5; the council panel opened "What holds it under 5" on "Monmouthshire is asking for Homes and community. Build a repairs team for cold, damp homes here (2 coins): backing +0.6 once it works" (`rerun/careless-80-low-2043.png`); and the full purse card now says where coins move backing (`rerun/careless-40-stop-purse_full.png`). No text faults, no console errors in any of the three games.
+
+### Must fix
+
+| # | Finding | Status | Where |
+|---|---|---|---|
+| 1 | Deal judged broken after building what it asked | Fixed | Rule: deals.ts, any project working there by the deal's last step, never offered for a measure already lifted there (D). Screen: the join made dealWords.ts call the engine (`dealKeptBy`, `dealProgress`, `buildCountsForDeal`) and dropped "Only a project started after this deal counts" in both languages; each build card says Keeps, Too slow or Does not count (C). Record: each deal line has its years (A). Why? reads a broken deal's return as the anger fading (C). Careful game: "2041: your deal with Cardiff to lift Welsh and culture, made in 2038, was kept" |
+| 2 | Law preview counts the wrong thing at an election | Fixed | lawCost.ts counts live backing (C) |
+| 3 | Why? empty or wrong about backing | Fixed | WhyPanel.tsx, whyWords.ts opens on "Since 2026" and lists what holds it under 5 (C; `careful-62-why.png`); the join words the P1 expectation record "People here expect more each term" and a P7 record as answered, then the thanks fading (causes.ts, `cause.expect`, `cause.answered`) |
+| 4 | Backing stuck under 5 with no lever | Fixed | Rule P7 "Asked and answered", P1 `loss_eases` (D); "What holds it under 5" (C); the join put the lever line first on the council panel (`holds.lever`) and on the full purse card (purseLever.ts, tested over bot games) |
+| 5 | White bar on dark warning cards | Fixed | clock.css (B) |
+| 6 | Counts disagree on one screen | Fixed | One count, `backersNow` (C); the join made the top strip count with it and show the year with time.ts `shownYear`; the record ends on a 2050 line (A) |
+| 7 | One flood, two rivers | Fixed | event-river.ts (D), the end (A); the join made Respond.tsx and the turns not taken read the river on the event record. Careless: chapter and turning point both name the Ebbw in Newport |
+| 8 | The gamble contradicts itself | Fixed | endings.yaml, letters.yaml, `letterSayable` (A) |
+| 9 | Placeholder shown as a source | Fixed | `transport-health-access`, `transport-labour` (D); "Rough guess, evidence still to find" (C). The rule book's licence line is v1 book code, left |
+| 10 | Space answers a card | Fixed | clock/keys.ts (B); the join made Respond.tsx and TermReport.tsx take the focus on the card itself and removed BoardScreen's stub |
+| 11 | Cards overlap again | Fixed | hold.ts one card at a time, clock/labels.ts (B); term report steps aside (C). None seen in the join's games |
+| 12 | Keystone start date contradicts the calendar | Fixed | opened.ts `keystoneOffer` (B) |
+| 13 | The map shrinks or is cut off | Fixed | The cause: src/map/PaperMap.ts `focusLas` now fits to the size when its ease ends; the join removed MapStage's delayed refit, and board-map-fit.spec.ts passes without it |
+| 14 | Rule book Back offers an older game | Fixed | session.ts, game.ts `leftFor` (B) |
+
+### Should fix
+
+| # | Finding | Status | Where |
+|---|---|---|---|
+| 1 | Coins pile up | Partly | Purse 24, purse card once a game, ticker lines leave when untrue (B, D); the join's purse card names a build that moves backing. The careless games still sat at a full purse for years, as a careless player would |
+| 2 | Jargon | Fixed | Build menu line on starter, bigger and keystone (C); tips on purse and, at the join, on the backers count (`targets.why`) |
+| 3 | A win never asks for its law | Fixed | Election.tsx "Choose your law change" (C; `careless-50-term-2034.png`) |
+| 4 | Dates and numbers on a card disagree | Fixed | BuildTicket.tsx, preview (C), on-the-way.ts (D); the join: "less than 0.1 more" instead of "(0.0)", and "This counts 0.8 still to come" instead of "0.8 of it is still on the way" beside a smaller rise |
+| 5 | The clock still rushes | Fixed | AfterCard on every card (B); the join put it on the event card and the term report (`careful-43-respond.png`) |
+| 6 | Won and won well look arbitrary | Fixed | Record lines with the people share and the rule (A) |
+| 7 | Verdict bands jump | Fixed | G1 `band_some` (D), words (A) |
+| 8 | The same deal again | Fixed | deals.ts `dealChoices` (D) |
+| 9 | Smaller words and bugs | Fixed | B, C. The join: "Free short courses for learners" (events.yaml); a project named with an article reads "Build a repairs team" mid-sentence (english.ts `namesInSentence`, tested); then and now changes at one decimal ("+2.0" beside "+3.1", ThenNow.tsx) |
+| 10 | Welsh for the fluent reviewer | Fixed | Welsh pass; the join fixed the tab title "De-ddwyrain" (shell.json). Pill stays "Pil" in board sentences through cymraeg.ts; authorities.yaml, shared with the atlas, needs a sourced Welsh name |
+
+Housekeeping: no stray files were left in the project root this round (drv.mjs, drv.log and out.txt were already gone).
+
+**Still open.** The four balance marks that fail every round (drift, tipping in common, stories seen, each branch's day). The careless run chapters can repeat a name ("Holding on" for 2026 to 2030 and 2046 to 2050). On the council panel the lever's build (what the council asks for) and "Builds here that would lift it most" (what its people care about) can name different builds; both are true, but a player may ask which to pick. The Welsh strings the join added (`deal.must`, `build.dealUpgrade`, `holds.lever`, `holds.leverShort`, `cause.expect`, `cause.answered`, `cause.answeredFading`, `stop.purse_full.lever`, `head.*`) are flagged for review and were not replayed in Welsh by hand beyond the e2e.

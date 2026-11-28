@@ -8,7 +8,7 @@ import { siteCouncils } from "./conditions";
 import { visitGrade } from "./places";
 import { popWeights, lowestCouncils } from "./score";
 import { param } from "./rules";
-import { dealKeptBy } from "./deals";
+import { buildCountsForDeal, dealKeptBy, dealProgress } from "./deals";
 import { advance as realAdvance, type AdvanceOptions } from "./clock";
 import { runStep } from "./clock-step";
 import type {
@@ -190,10 +190,10 @@ export function pickDeal(v: BotView, careful: boolean): { council: CouncilCode; 
 export function keepDealOption(v: BotView): ActionOption | null {
   for (const d of v.state.deals) {
     if (d.kept !== null || dealKeptBy(v.model, v.state, d)) continue;
-    const underWay = (p: BoardState["projects"][number]) => p.status === "building" && p.startedStep >= d.madeStep
-      && siteCouncils(v.model, p).includes(d.council) && lifts(v.model, p.project, d.measure);
-    if (v.state.projects.some(underWay)) continue;
-    const o = buildOptions(v, d.council).filter((x) => x.action.kind === "build" && liftsMeasure(v.model, x, d.measure)).sort((a, b) => a.cost - b.cost)[0];
+    if (dealProgress(v.model, v.state, d).some((p) => p.inTime)) continue;
+    const counts = (x: ActionOption) => x.action.kind === "build" && x.readyStep !== undefined
+      && buildCountsForDeal(v.model, d, x.project!, optionCouncils(v.model, x), x.readyStep) === "counts";
+    const o = buildOptions(v, d.council).filter(counts).sort((a, b) => a.cost - b.cost)[0];
     if (o) return o;
   }
   return null;

@@ -6,7 +6,7 @@
  */
 import { hasKey, lang, t as tPlain, tIn } from "../../i18n";
 import { fillCy, isBoardKey } from "./cymraeg";
-import { namesFrom, withArticles } from "./english";
+import { namesFrom, namesInSentence, withArticles } from "./english";
 
 const WITH_THE = "boardui.grammar.withThe";
 
@@ -18,7 +18,7 @@ export * from "../../i18n";
  */
 export function t(key: string, vars?: Record<string, string | number>): string {
   if (!vars || !isBoardKey(key)) return tPlain(key, vars);
-  if (lang() !== "cy") return withArticles(tPlain(key, vars), namesFrom(tIn("en", WITH_THE), WITH_THE));
+  if (lang() !== "cy") return withArticles(tPlain(key, namesInSentence(tIn("en", key), vars)), namesFrom(tIn("en", WITH_THE), WITH_THE));
   const cy = tIn("cy", key);
   // a key with no Welsh yet falls back to English, which must not be mutated
   if (cy === tIn("en", key)) return tPlain(key, vars);
@@ -27,7 +27,8 @@ export function t(key: string, vars?: Record<string, string | number>): string {
 
 /** Fill a model sentence's `{slots}` in English, with "the" before a place name that takes it. */
 export function fillEn(text: string, vars: Record<string, string>): string {
-  return withArticles(text.replace(/\{(\w+)\}/g, (all, k: string) => vars[k] ?? all), namesFrom(tIn("en", WITH_THE), WITH_THE));
+  const v = namesInSentence(text, vars);
+  return withArticles(text.replace(/\{(\w+)\}/g, (all, k: string) => v[k] ?? all), namesFrom(tIn("en", WITH_THE), WITH_THE));
 }
 
 /**

@@ -49,8 +49,20 @@ export function BuildMenu(props: { code: string }): JSX.Element {
     if (o.allowed) return t("boardui.path.here.ready", { council: name, when: whenWords(model, keystoneLastStep(model)), years: def(o)!.build_years });
     return t("boardui.path.here.not", { council: name, why: o.blockers.map((b) => blockerWords(model, b, game.state() ?? undefined)).join(" ") });
   };
+  /**
+   * After a build, the card under the pointer must not preview itself just because the list moved
+   * beneath a still mouse ("4 left if you build it" and "If you build it" bars straight after
+   * building, playtest 10 should-fix 4). Previews wait until the pointer really moves.
+   */
+  const [quietAt, setQuietAt] = createSignal<[number, number] | null>(null);
+  let lastPointer: [number, number] = [0, 0];
+  const onMove = (e: PointerEvent) => {
+    lastPointer = [e.clientX, e.clientY];
+    const q = quietAt();
+    if (q && Math.hypot(e.clientX - q[0], e.clientY - q[1]) > 6) setQuietAt(null);
+  };
   const build = (o: ActionOption) => {
-    if (game.act(o.action)) { setOpen(null); game.setHover(null); }
+    if (game.act(o.action)) { setQuietAt(lastPointer); setOpen(null); game.setHover(null); }
   };
   const Tickets = (p: { list: ActionOption[]; label: string }) => (
     <ol class="bw-tickets" aria-label={p.label} onPointerLeave={() => !open() && game.setHover(null)}>
@@ -58,19 +70,21 @@ export function BuildMenu(props: { code: string }): JSX.Element {
         {(o) => {
           const id = key(o.action);
           const toggle = () => { const next = open() === id ? null : id; setOpen(next); game.setHover(next ? o.action : null); };
-          return <BuildTicket o={o} def={def(o)} here={props.code} open={open() === id} onToggle={toggle} onBuild={() => build(o)} />;
+          return <BuildTicket o={o} def={def(o)} here={props.code} open={open() === id} quiet={quietAt() !== null} onToggle={toggle} onBuild={() => build(o)} />;
         }}
       </For>
     </ol>
   );
 
   return (
-    <aside class="bw-build sheet-held" aria-labelledby="bw-build-title" data-testid="bw-build" onPointerLeave={() => !open() && game.setHover(null)}>
+    <aside class="bw-build sheet-held" aria-labelledby="bw-build-title" data-testid="bw-build" onPointerMove={onMove} onPointerDown={onMove} onPointerLeave={() => !open() && game.setHover(null)}>
       <header class="bw-build-head">
         <h2 class="t-2" id="bw-build-title">{t("boardui.build.title", { name: councilName(model, props.code) })}</h2>
         <CloseButton label={t("boardui.close")} onClick={() => { game.setSheet(null); game.setHover(null); }} />
       </header>
       <p class="small bw-build-coins">{tn("boardui.build.coins", wholeCoins(game.state()?.coins ?? 0))} {t("boardui.build.anyTime")}</p>
+      {/* starter, bigger and keystone in one plain line where the player first meets them (playtest 10, should-fix 2) */}
+      <p class="small bw-build-words">{t("boardui.build.words")}</p>
       <Show when={view()?.freshStart}><p class="small bw-fresh">{t("boardui.build.freshHead")}</p></Show>
       <div class="bw-build-scroll">
         <For each={model.branches}>

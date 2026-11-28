@@ -3,17 +3,17 @@
  * runs from what you did, along the link it travelled, to the rule card and its sources. The red
  * thread is provenance, so this sheet is where red lives.
  */
-import { createMemo, For, Show, type JSX } from "solid-js";
+import { createEffect, createMemo, For, Show, untrack, type JSX } from "solid-js";
 import { t } from "./lang";
 import { CloseButton, SourceTag, sourceShort } from "../../ui/parts";
 import type { Why } from "../engine/api";
 import { viaWords, whyCauseWords } from "./causes";
 import { sourceOf } from "./CouncilPanel";
-import * as eng from "./engine";
+import { backingHolds, liftWords } from "./backingHolds";
+import { backsAtOf } from "./mapLinks";
 import { useGame } from "./game";
-import { councilName, measureName, signed, whenWords } from "./words";
-import { ruleHref, ruleLabel, sourceLabels } from "./whyWords";
-import { stepOfYear, stepsOf } from "../engine/api";
+import { councilName, measureName, num, signed, whenWords } from "./words";
+import { isRoughSource, openWhy, ruleHref, ruleLabel, shownReasons, sourceLabels, whySpans } from "./whyWords";
 
 export function WhyPanel(): JSX.Element {
   const game = useGame();
@@ -22,21 +22,32 @@ export function WhyPanel(): JSX.Element {
   const reasons = createMemo<Why[]>(() => {
     const s = game.state(), w = game.whyAt();
     if (!s || !w) return [];
-    // a reason that rounds to 0 at one decimal reads as "0 points" and explains nothing (fix round 2 join)
-    try { return eng.why(model, s, w).filter((r) => Math.round(Math.abs(r.delta) * 10) > 0); } catch (e) { console.warn(e); return []; }
+    try { return shownReasons(model, s, w); } catch (e) { console.warn(e); return []; }
+  });
+  // opened on a span with nothing to show: move to one that has (playtest 10, must-fix 3). Only on
+  // opening, or for a new council or measure, so a tab the player picks stays picked.
+  let opened = "";
+  createEffect(() => {
+    const s = game.state(), w = game.whyAt();
+    if (!s || !w) { opened = ""; return; }
+    const key = `${w.council}|${w.measure}`;
+    if (key === opened) return;
+    opened = key;
+    const next = untrack(() => openWhy(model, s, w));
+    if (next.fromStep !== w.fromStep || next.toStep !== w.toStep) game.setWhyAt(next);
   });
   const ruleOf = (id: string) => model.rules.find((r) => r.id === id);
   const now = () => game.state()?.step ?? 0;
-  /** The three spans 16.2.7 offers: the last year, this term (since the last election), since 2026. */
-  const spans = (): { id: string; from: number }[] => {
-    const elections = model.game.election_years.map((y) => stepOfYear(model, y)).filter((x) => x <= now());
-    return [
-      { id: "year", from: Math.max(0, now() - stepsOf(model, 1)) },
-      { id: "term", from: elections.length ? elections[elections.length - 1]! : 0 },
-      { id: "all", from: 0 },
-    ];
-  };
+  const spans = () => whySpans(model, now());
   const setSpan = (from: number) => game.setWhyAt({ ...target(), fromStep: from, toStep: now() });
+  /** For a council's backing under the line: what holds it there, always (must-fix 3 and 4). */
+  const holds = createMemo(() => {
+    const s = game.state(), w = game.whyAt();
+    if (!s || !w || w.measure !== "backing" || !w.council || (s.councils[w.council]?.backing ?? 10) >= backsAtOf(model) || s.step === 0) return null;
+    try { return backingHolds(model, s, w.council); } catch { return null; }
+  });
+  const labels = (w: Why) => sourceLabels(w.sources.map((id) => sourceOf(model, id)), sourceShort)
+    .map((label, i) => (isRoughSource(model, w.sources[i]!) ? `${t("boardui.source.roughLabel")}: ${label}` : label));
   return (
     <div class="bw-why-panel sheet-held" role="dialog" aria-labelledby="bw-why-title" data-testid="bw-why">
       <header class="bw-tree-head">
@@ -53,6 +64,16 @@ export function WhyPanel(): JSX.Element {
         </For>
         <span class="small bw-why-range">{t("boardui.why.range", { from: whenWords(model, target().fromStep, true), to: whenWords(model, target().toStep) })}</span>
       </div>
+      <Show when={holds() && (holds()!.lines.length || holds()!.lifts.length)}>
+        <section class="bw-why-holds" data-testid="bw-why-holds">
+          <p class="label">{t("boardui.why.holds", { council: councilName(model, target().council), at: num(backsAtOf(model)) })}</p>
+          <ul class="small"><For each={holds()!.lines}>{(line) => <li>{line}</li>}</For></ul>
+          <Show when={holds()!.lifts.length}>
+            <p class="small"><b>{t("boardui.holds.lift")}</b> {holds()!.lifts.map((l) => liftWords(model, l)).join(". ")}.</p>
+          </Show>
+          <Show when={holds()!.rule}><p class="small bw-honest">{holds()!.rule}</p></Show>
+        </section>
+      </Show>
       <Show when={reasons().length} fallback={<p class="story-small bw-why-none">{t("boardui.why.none")}</p>}>
         <ol class="bw-why-list">
           <For each={reasons()}>
@@ -70,7 +91,7 @@ export function WhyPanel(): JSX.Element {
                 </p>
                 <p class="small"><a class="threadlink" href={ruleHref(model, w.rule)}>{t("boardui.why.ruleLink")}</a></p>
                 <Show when={w.sources.length}>
-                  <p class="bw-why-sources"><span class="small bw-why-sources-label">{t("boardui.why.sources")}</span> <For each={sourceLabels(w.sources.map((id) => sourceOf(model, id)), sourceShort)}>{(label, i) => <SourceTag source={sourceOf(model, w.sources[i()]!)} label={label} />}</For></p>
+                  <p class="bw-why-sources"><span class="small bw-why-sources-label">{t("boardui.why.sources")}</span> <For each={labels(w)}>{(label, i) => <SourceTag source={sourceOf(model, w.sources[i()]!)} label={label} />}</For></p>
                 </Show>
               </li>
             )}

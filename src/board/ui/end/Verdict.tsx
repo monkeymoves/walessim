@@ -13,8 +13,10 @@ import { For, Show, type JSX } from "solid-js";
 import { formatNum, t } from "../lang";
 import * as api from "../../engine/api";
 import type { BoardModel, BoardState, Ending, Frame } from "../../engine/api";
-import { councilName, fill, listOf, outOf10, projectName, tx } from "../words";
-import { dealsOf, electionsOf, shownGap, hardGame, littleOf, lowestIn, promiseOf, turnsNotTaken, verdictOf, type Turn } from "./record";
+import { councilName, fill, listOf, measureName, outOf10, projectName, tx } from "../words";
+import {
+  backingAtEnd, dealsOf, electionShares, electionsOf, shareShown, sharesShown, shownGap, hardGame, littleOf, lowestIn, promiseOf, turnsNotTaken, verdictOf, type Turn,
+} from "./record";
 import { bandKey } from "./view";
 import { tenths } from "../clock/headway";
 
@@ -24,9 +26,6 @@ const tenth = (n: number) => formatNum(tenths(n), { minimumFractionDigits: 1, ma
 /** "+6.2", "−3.0" or "0.0": tenths, with a true minus sign. */
 const signedTenth = (n: number) => { const r = tenths(n); return r > 0 ? `+${tenth(r)}` : r < 0 ? `\u2212${tenth(-r)}` : tenth(0); };
 
-/** The share of people an election needs (rule P4), from the model. */
-const winShareOf = (model: BoardModel): number => model.rules.find((r) => r.id === "P4")?.params["win_share"]?.default ?? 0.5;
-
 export function Verdict(props: { model: BoardModel; state: BoardState; ending: Ending; frames: Frame[] }): JSX.Element {
   const model = props.model;
   const v = verdictOf(props.ending, littleOf(model));
@@ -34,12 +33,14 @@ export function Verdict(props: { model: BoardModel; state: BoardState; ending: E
   const then = lowestIn(model, props.frames[0]!);
   const now = lowestIn(model, props.frames[props.frames.length - 1]!);
   const elections = electionsOf(model, props.state);
-  const deals = dealsOf(props.state);
+  const deals = dealsOf(model, props.state);
+  const atEnd = backingAtEnd(model, props.state);
+  const lines = sharesShown(model);
   const hard = hardGame(props.state, v);
   const shares = (() => {
     try { return Object.fromEntries(api.election(model, props.state).councils.map((c) => [c.code, c.peopleShare])); } catch { return {}; }
   })();
-  const turns = hard ? turnsNotTaken(model, props.state, shares, winShareOf(model)) : [];
+  const turns = hard ? turnsNotTaken(model, props.state, shares, electionShares(model).win) : [];
   // every gap in words comes from the figures the screen shows, to a tenth
   const gapStart = shownGap(v.start, v.left, v.vsStart);
   const gapNothing = shownGap(v.autopilot, v.left, v.vsNothing);
@@ -86,9 +87,13 @@ export function Verdict(props: { model: BoardModel; state: BoardState; ending: E
           <dt class="label">{t("boardend.record.elections")}</dt>
           <dd class="story-small">
             <Show when={elections.length} fallback={t("boardend.record.noElections")}>
-              <ul class="be-record-list">
-                <For each={elections}>{(e) => <li>{t("boardend.record.election", { year: e.year, result: t(`boardend.record.result.${e.result}`), n: e.backers, total: e.councils })}</li>}</For>
+              <ul class="be-record-list" data-testid="be-record-elections">
+                <For each={elections}>{(e) => <li>{t("boardend.record.election", { year: e.year, result: t(`boardend.record.result.${e.result}`), n: e.backers, total: e.councils, share: e.share })}</li>}</For>
+                <Show when={atEnd}>
+                  <li data-testid="be-record-now">{t("boardend.record.now", { year: atEnd!.year, n: atEnd!.backers, total: atEnd!.councils, share: atEnd!.share })}</li>
+                </Show>
               </ul>
+              <p class="small">{t("boardend.record.electionRule", { win: lines.win, strong: lines.strong })}</p>
             </Show>
           </dd>
         </div>
@@ -96,8 +101,10 @@ export function Verdict(props: { model: BoardModel; state: BoardState; ending: E
           <div class="be-record-row">
             <dt class="label">{t("boardend.record.deals")}</dt>
             <dd class="story-small">
-              <ul class="be-record-list">
-                <For each={deals}>{(d) => <li>{t(d.kept ? "boardend.record.dealKept" : "boardend.record.dealBroken", { council: councilName(model, d.council) })}</li>}</For>
+              <ul class="be-record-list" data-testid="be-record-deals">
+                <For each={deals}>{(d) => <li>{t(d.kept ? "boardend.record.dealKept" : "boardend.record.dealBroken", {
+                  year: d.year, made: d.made, council: councilName(model, d.council), measure: measureName(model, d.measure),
+                })}</li>}</For>
               </ul>
             </dd>
           </div>
@@ -122,7 +129,7 @@ export function Verdict(props: { model: BoardModel; state: BoardState; ending: E
 export function turnWords(model: BoardModel, x: Turn): string {
   switch (x.kind) {
     case "election": {
-      const share = formatNum(Math.round(x.share * 100));
+      const share = formatNum(shareShown(model, x.share, "lost"));
       return x.needed.length
         ? t("boardend.turns.election", { year: x.year, share, councils: listOf(x.needed.map((c) => councilName(model, c))) })
         : t("boardend.turns.electionAlone", { year: x.year, share });
@@ -130,7 +137,7 @@ export function turnWords(model: BoardModel, x: Turn): string {
     case "event": {
       // the event's own landed sentence, filled for where it landed; its name when that cannot be said whole
       const def = model.events.find((e) => e.id === x.event);
-      const said = def ? fill(model, tx(def.landed), x.councils, api.riverAt(model, x.councils[0] ?? x.council, x.councils[1])) : "";
+      const said = def ? fill(model, tx(def.landed), x.councils, x.river) : "";
       // an empty slot (no river here) leaves a gap: "{x}", two spaces, or a space before a stop
       const what = said && !/\{\w+\}|\s{2}|\s[.,]|^\s/.test(said)
         ? said : t("boardend.turns.eventNamed", { council: councilName(model, x.council), event: tx(def?.name ?? x.event) });

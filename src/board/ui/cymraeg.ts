@@ -12,17 +12,37 @@
  * - After a, â, gyda, tua, na: the aspirate mutation ("a Chaerdydd"); "a" and "â" before a vowel
  *   are "ac" and "ag".
  * - A value that opens with the article (Y, Yr) joins a word that ends in a vowel ("o'r haf",
- *   "i'r Barri", "Mae'r Gymraeg"), and is lower case in the middle of a sentence ("bod yn y gambl").
+ *   "i'r Barri", "Mae'r Gymraeg", "codi'r Gymraeg", "i godi'r Gymraeg"), and is lower case in the
+ *   middle of a sentence ("bod yn y gambl").
+ * - A project's name that opens with a verb-noun is lower case in the middle of a sentence:
+ *   "Byddai cefnogi cwmnïau lleol yno", never "Byddai Cefnogi cwmnïau lleol" (playtest 10, S10).
+ *   A name that opens with a noun keeps its capital, which marks it as a name ("Mae Iechyd yn agos
+ *   at adref yn gweithio"). cymraeg.test.ts makes every project's first word one or the other.
+ * - A group of people is lower case in the middle of a sentence ("Mae pawb yma'n anesmwyth"),
+ *   and "'n" softens a describing word as "yn" does ("yma'n fodlon").
+ * - A town known in English by an English form is written in its Welsh form first, so it can take
+ *   its mutation: Pill is Pil, "ym Mhil" (playtest 10, S10).
  */
 
 const SOFT = new Set(["am", "ar", "at", "dan", "dros", "drwy", "trwy", "gan", "heb", "hyd", "i", "o", "wrth", "neu", "mor", "rhy", "ail", "dau", "dwy"]);
 const ASPIRATE = new Set(["a", "â", "gyda", "tua", "na"]);
 /** Words after which the article is written onto the word: "i'r", "o'r", "Mae'r", "codi'r". */
-const ELIDE = new Set(["i", "o", "a", "â", "gyda", "tua", "na", "mae", "yw", "ydy", "drwy", "trwy", "dyma", "dyna", "wedi", "codi", "cefnogi"]);
+const ELIDE = new Set(["i", "o", "a", "â", "gyda", "tua", "na", "mae", "yw", "ydy", "drwy", "trwy", "dyma", "dyna", "wedi", "codi", "godi", "cefnogi", "gefnogi"]);
 /** Slots that describe rather than place: "aeth yn {grade}", "yn {mood}". */
 const PREDICATE = new Set(["grade", "mood", "step"]);
 /** Names used in Welsh in their English form, which do not mutate. */
-const KEEP = new Set(["Grangetown", "Pill"]);
+const KEEP = new Set(["Grangetown"]);
+/** Towns the shared model names in an English form, with the Welsh form a Welsh sentence uses. */
+const WELSH_FORM: Record<string, string> = { Pill: "Pil" };
+/** Slots that hold a common noun, lower case in the middle of a sentence: "Mae pawb yma'n anesmwyth". */
+const COMMON_SLOTS = new Set(["group"]);
+/** Slots that hold a project's name. */
+const NAME_SLOTS = new Set(["project", "keystone", "legacy"]);
+/** Verb-nouns a project's name can open with ("Cefnogi cwmnïau lleol", "Arafu'r dŵr"). */
+export const VERB_FIRST = new Set(["cefnogi", "denu", "gwneud", "arafu", "rhoi", "cynhesu", "talu", "codi", "adeiladu", "gwella",
+  "diogelu", "plannu", "agor", "troi", "creu", "cadw", "helpu", "hyfforddi", "trwsio", "glanhau", "dal", "symud", "dod"]);
+/** The first word of a name, without a joined article: "Arafu'r dŵr" gives "arafu". */
+export const firstWord = (name: string): string => (name.split(/\s/)[0] ?? "").replace(/'r$/, "").toLowerCase();
 
 const VOWEL = /^[aeiouwyâêîôûŵŷ]/i;
 const keepCase = (orig: string, out: string): string => (orig[0] && orig[0] !== orig[0].toLowerCase() ? out.charAt(0).toUpperCase() + out.slice(1) : out);
@@ -89,6 +109,8 @@ function fillSlots(s: string, vars: Record<string, string | number>): string {
   return s.replace(/([^\s{}]*)(\s*)\{(\w+)\}/g, (all, before: string, space: string, key: string) => {
     if (!(key in vars)) return all;
     let v = String(vars[key]);
+    // the first word only: a town slot can carry its council too ("Pill, yng Nghasnewydd")
+    v = v.replace(/^[^\s,.]+/, (w) => WELSH_FORM[w] ?? w);
     // the word before, only when the slot follows it directly ("Rhybudd: {name}" has none)
     const prev = space ? (LETTERS.exec(before)?.[0] ?? "").toLowerCase() : "";
     const atStart = !before || /[.!?:]$/.test(before);
@@ -101,6 +123,9 @@ function fillSlots(s: string, vars: Record<string, string | number>): string {
       if (prev && ELIDE.has(prev.replace(/^.*'/, ""))) return `${before}'r ${rest}`;
       return `${before}${space}${atStart ? v : `${art[1]!.toLowerCase()} ${rest}`}`;
     }
+    if (!atStart && (COMMON_SLOTS.has(key) || (NAME_SLOTS.has(key) && VERB_FIRST.has(firstWord(v))))) v = v.charAt(0).toLowerCase() + v.slice(1);
+    // "yma'n {mood}": the 'n is yn, and softens a describing word ("yma'n fodlon")
+    if (prev.endsWith("'n") && PREDICATE.has(key)) return `${before}${space}${/^(ll|rh)/i.test(v) ? v : soft(v)}`;
     if (prev === "yn") {
       if (PREDICATE.has(key)) return `${before}${space}${/^(ll|rh)/i.test(v) ? v : soft(v)}`;
       const p = ynPlace(v);

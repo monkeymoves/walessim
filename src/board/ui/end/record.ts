@@ -9,7 +9,8 @@
  * the state, a turn not taken from an event's own `prepared_by` projects or the election's own
  * count. Nothing is simulated.
  */
-import type { BoardModel, BoardState, CouncilCode, ElectionResult, Ending, Frame, Text } from "../../engine/api";
+import * as api from "../../engine/api";
+import type { BoardModel, BoardState, CouncilCode, ElectionResult, Ending, Frame, MeasureId, Text } from "../../engine/api";
 import { meanOf } from "./view";
 import { ruleParamOf } from "../rules";
 
@@ -70,16 +71,72 @@ export function lowestIn(model: BoardModel, frame: Frame): { code: CouncilCode; 
   return rows[0] ?? null;
 }
 
-export interface ElectionLine { year: number; result: ElectionResult; backers: number; councils: number; peopleShare: number }
+/** The year a step is shown as on every board screen ("Spring 2035"): the engine's one rule, time.ts `shownYear`. */
+export const shownYearOf = (model: BoardModel, step: number): number => api.shownYear(model, step);
 
-/** Every election held, in order. */
-export function electionsOf(model: BoardModel, state: BoardState): ElectionLine[] {
-  return state.election.records.map((r) => ({ year: r.year, result: r.result, backers: r.backers.length, councils: model.game.councils.length, peopleShare: r.peopleShare }));
+/** The shares of people an election needs (rule P4): more than `win` wins, `strong` or more wins well. */
+export function electionShares(model: BoardModel): { win: number; strong: number } {
+  const p = model.rules.find((r) => r.id === "P4")?.params;
+  return { win: p?.["win_share"]?.default ?? 0.5, strong: p?.["strong_share"]?.default ?? 0.667 };
 }
 
-/** Every deal judged, in order: its council and whether it was kept. */
-export function dealsOf(state: BoardState): { council: CouncilCode; kept: boolean }[] {
-  return state.deals.filter((d) => d.kept !== null).map((d) => ({ council: d.council, kept: !!d.kept }));
+/** The rule's lines in whole people in 100, as the record says them: more than `win`; `strong` or more. */
+export function sharesShown(model: BoardModel): { win: number; strong: number } {
+  const { win, strong } = electionShares(model);
+  return { win: Math.floor(win * 100 + 1e-9), strong: Math.ceil(strong * 100 - 1e-9) };
+}
+
+/**
+ * A share of people as a whole number in 100 that never reads against its result (playtest 10,
+ * should-fix 6): a win shows more than the win line, a good win at least the good win line, a plain
+ * win below it, and a loss no more than the win line. Rounding alone could show "won with 50" or
+ * "won with 67" where 67 wins well.
+ */
+export function shareShown(model: BoardModel, share: number, result: ElectionResult): number {
+  const { win, strong } = sharesShown(model);
+  const r = Math.round(share * 100);
+  if (result === "strong_win") return Math.max(r, strong);
+  if (result === "win") return Math.min(Math.max(r, win + 1), strong - 1);
+  return Math.min(r, win);
+}
+
+export interface ElectionLine { year: number; result: ElectionResult; backers: number; councils: number; peopleShare: number; share: number }
+
+/** Every election held, in order, with its share of people as the record says it. */
+export function electionsOf(model: BoardModel, state: BoardState): ElectionLine[] {
+  return state.election.records.map((r) => ({
+    year: r.year, result: r.result, backers: r.backers.length, councils: model.game.councils.length, peopleShare: r.peopleShare, share: shareShown(model, r.peopleShare, r.result),
+  }));
+}
+
+/**
+ * Where backing stands as the game ends (playtest 10, must-fix 6: "6 of 10 back you now" beside
+ * "2046: you won, with 8 of 10" read as a contradiction): the councils that back you in 2050 and
+ * the share of people they hold, counted as the top strip counts them. No election is held then.
+ */
+export function backingAtEnd(model: BoardModel, state: BoardState): { year: number; backers: number; councils: number; share: number } | null {
+  try {
+    const v = api.election(model, state);
+    return { year: model.game.end_year, backers: v.backers, councils: v.councilCount, share: Math.round(v.peopleShare * 100) };
+  } catch {
+    return null;
+  }
+}
+
+export interface DealLine { council: CouncilCode; measure: MeasureId; kept: boolean; year: number; made: number }
+
+/**
+ * Every deal judged, in the order judged, each with the year it was judged and the year it was made
+ * (playtest 10, must-fix 1: "Rhondda Cynon Taf: broken." four times with no year). The year judged
+ * is the deal's own moment in the story; a broken deal without one, the step it was judged broken.
+ */
+export function dealsOf(model: BoardModel, state: BoardState): DealLine[] {
+  return state.deals.filter((d) => d.kept !== null).map((d) => {
+    const how = d.kept ? "kept" : "broken";
+    const m = state.story.moments.find((x) => x.kind === "deal" && x.ref === `${d.council}@${d.madeStep}:${how}`);
+    const step = m?.step ?? d.brokenStep ?? d.dueStep;
+    return { council: d.council, measure: d.measure, kept: !!d.kept, year: m?.year ?? shownYearOf(model, step), made: shownYearOf(model, d.madeStep), step };
+  }).sort((a, b) => a.step - b.step).map(({ step: _s, ...line }) => line);
 }
 
 /** A hard game: worse than 2026, behind doing nothing, or an election lost. */
@@ -91,7 +148,7 @@ export type Turn =
   /** An election lost, its people share, and the councils that would have carried it, biggest first. */
   | { kind: "election"; year: number; share: number; needed: CouncilCode[] }
   /** Trouble that landed unprepared, and a project that would have softened it there. */
-  | { kind: "event"; year: number; event: string; council: CouncilCode; councils: CouncilCode[]; project: string }
+  | { kind: "event"; year: number; event: string; council: CouncilCode; councils: CouncilCode[]; river?: Text; project: string }
   /** The promise, broken. */
   | { kind: "promise"; year: number; text: Text };
 
@@ -115,12 +172,12 @@ export function turnsNotTaken(model: BoardModel, state: BoardState, shares: Reco
     }
     out.push({ kind: "election", year: lost.year, share: lost.peopleShare, needed: share > winShare ? needed : [] });
   }
-  const yearOf = (step: number) => model.game.first_year + Math.floor(step * model.game.years_per_step);
+  const yearOf = (step: number) => shownYearOf(model, step);
   const unready = state.events
     .map((e) => ({ e, def: model.events.find((d) => d.id === e.event) }))
     .filter(({ e, def }) => !!def && !def.good && def.origin === "outside" && !e.prepared && def.prepared_by.length > 0 && e.councils.length > 0)
     .sort((a, b) => b.e.severity - a.e.severity || a.e.step - b.e.step)[0];
-  if (unready) out.push({ kind: "event", year: yearOf(unready.e.step), event: unready.e.event, council: unready.e.councils[0]!, councils: unready.e.councils, project: unready.def!.prepared_by[0]! });
+  if (unready) out.push({ kind: "event", year: yearOf(unready.e.step), event: unready.e.event, council: unready.e.councils[0]!, councils: unready.e.councils, river: api.eventRiver(model, unready.e), project: unready.def!.prepared_by[0]! });
   const p = promiseOf(model, state);
   if (p && p.kept === false) out.push({ kind: "promise", year: p.byYear, text: p.text });
   return out.slice(0, max);

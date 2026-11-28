@@ -89,7 +89,8 @@ describe("the end screen", () => {
       (d) => d.id === "work-up-the-line");
     expect(line.council).toBe(rct);
     expect(line.say.vars?.project).toEqual(model.projects.find((p) => p.id === "work-up-the-line")!.name);
-    expect(line.say.vars?.year).toBe(2026 + Math.floor((30 + 1) / 4));
+    // step 31 is Spring of the 2033 game year: Spring 2034 on the build card, so 2034 here
+    expect(line.say.vars?.year).toBe(2026 + Math.floor((30 + 1) / 4) + 1);
   });
 
   it("with nothing working, a project line names a council only, never a project or year", () => {

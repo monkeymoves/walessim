@@ -6,9 +6,11 @@
  * "on the way" is what arrives, if nothing else changes.
  *
  * Left for 2050 (score.ts) counts it, so the headline moves when a choice is made, not years later.
+ * "Now" is what the ledger says held causes have added, so a quick build or an upgrade made since
+ * the last step counts as on the way until the next step lays it on the board.
  * The screens draw it as the dashed "on the way" part of a council's bars.
  */
-import { heldTargets, lawPassedStep } from "./held";
+import { appliedMeasureTotals, heldTargets, lawPassedStep } from "./held";
 import { stepsOf } from "./time";
 import type { BoardModel, BoardState, CouncilCode, Effect, MeasureId } from "./types";
 import { MEASURE_IDS } from "./types";
@@ -33,7 +35,9 @@ function measureTotals(targets: ReturnType<typeof heldTargets>): Map<string, num
  * now. Projects being built count when they open by `lastStep` (default: the end of the game).
  */
 export function onTheWay(model: BoardModel, state: BoardState, lastStep = model.game.steps): OnTheWay {
-  const now = measureTotals(heldTargets(model, state, state.step));
+  // What is on the board now is what held causes have added so far, not what they should add this
+  // step: a quick build or an upgrade made since the last step is working but not yet on the board.
+  const now = new Map([...appliedMeasureTotals(state)].filter(([k]) => isMeasure(k.split("|")[1]!)));
   const settled: BoardState = {
     ...state,
     projects: state.projects.map((p) => (p.status === "building" && p.readyStep <= lastStep ? { ...p, status: "working" as const } : p)),
@@ -44,7 +48,8 @@ export function onTheWay(model: BoardModel, state: BoardState, lastStep = model.
   const out: OnTheWay = {};
   for (const k of new Set([...now.keys(), ...later.keys()])) {
     const d = (later.get(k) ?? 0) - (now.get(k) ?? 0);
-    if (Math.abs(d) < 1e-6) continue;
+    // The ledger holds four decimal places, so a few ten thousandths either way is rounding, not a lift.
+    if (Math.abs(d) < 5e-4) continue;
     const [council, measure] = k.split("|") as [CouncilCode, MeasureId];
     (out[council] ??= {})[measure] = Math.round(d * 1e4) / 1e4;
   }

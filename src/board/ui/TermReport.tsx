@@ -25,8 +25,23 @@ import { dealWords } from "./dealWords";
 import { Election } from "./Election";
 import { useGame } from "./game";
 import { chapterLine, chapterName, councilName, measureName, say, signed } from "./words";
+import { AfterCard } from "./clock/AfterCard";
 
-export function TermReport(props: { report: TermReportData; asStop: boolean; ended?: boolean }): JSX.Element {
+type TermProps = { report: TermReportData; asStop: boolean; ended?: boolean };
+
+/**
+ * The report steps aside while something else must be read first, and comes back after (playtest
+ * 10, must-fix 11: a tier card over a reopened term report, the 2038 election over a fuel costs
+ * card): an event waiting for its answer, or, for a past term reopened from the time line, a stop
+ * card. Nothing is lost: the report is still open underneath and returns as it was.
+ */
+export function TermReport(props: TermProps): JSX.Element {
+  const game = useGame();
+  const aside = () => game.state()?.phase === "respond" || (!props.asStop && game.clock.queue().length > 0);
+  return <Show when={!aside()}><TermSheet {...props} /></Show>;
+}
+
+function TermSheet(props: TermProps): JSX.Element {
   const game = useGame();
   const model = game.model;
   const r = () => props.report;
@@ -39,12 +54,20 @@ export function TermReport(props: { report: TermReportData; asStop: boolean; end
   };
   const mustDeal = () => props.asStop && !props.ended && dealPending(game);
   const close = () => (props.asStop ? game.clock.carryOn() : game.setTermOpen(null));
+  /** The election just held, with the board still in its term: the card can say what to do next. */
+  const latest = () => {
+    const st = game.state(), last = st?.election.records[st.election.records.length - 1];
+    return !props.ended && !!last && last.year === r().election.year && last.year === r().toYear;
+  };
+  /** Leave the report for the board, paused (to choose a law or look at a council): never runs the clock. */
+  const leave = () => (props.asStop ? game.clock.look() : game.setTermOpen(null));
   let sheet!: HTMLDivElement;
   let scroller!: HTMLDivElement;
   const [more, setMore] = createSignal(false);
   const measure = () => setMore(scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight > 8);
   onMount(() => {
-    sheet.querySelector<HTMLElement>(mustDeal() ? "[data-testid=bw-deal]" : "#bw-term-name")?.focus();
+    // the card takes the focus, never a deal answer (playtest 10 must-fix 10)
+    sheet.focus({ preventScroll: true });
     measure();
     const watch = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(measure);
     watch?.observe(scroller);
@@ -52,7 +75,7 @@ export function TermReport(props: { report: TermReportData; asStop: boolean; end
     onCleanup(() => watch?.disconnect());
   });
   return (
-    <div ref={sheet} class="bw-term bw-term-wide sheet-held" role="dialog" aria-labelledby="bw-term-name" data-testid="bw-term">
+    <div ref={sheet} tabindex="-1" class="bw-term bw-term-wide sheet-held" role="dialog" aria-labelledby="bw-term-name" data-testid="bw-term">
       <header class="bw-term-head">
         <p class="label">{t("boardui.term.label", { n: r().term, from: r().fromYear, to: r().toYear })}</p>
         <h2 class="t-1 bw-term-name" id="bw-term-name" tabindex="-1">{chapterName(model, r().chapter)}</h2>
@@ -61,7 +84,7 @@ export function TermReport(props: { report: TermReportData; asStop: boolean; end
         <Show when={!props.asStop}><CloseButton label={t("boardui.close")} onClick={close} /></Show>
       </header>
       <div ref={scroller} class="bw-term-scroll bw-term-cols" onScroll={measure}>
-        <div class="bw-term-col"><Election view={r().election} /></div>
+        <div class="bw-term-col"><Election view={r().election} latest={latest()} onLeave={mustDeal() ? undefined : leave} /></div>
         <div class="bw-term-col">
           <Show when={deals().length}>
             <ul class="bw-term-deals" data-testid="bw-term-deals">
@@ -95,6 +118,7 @@ export function TermReport(props: { report: TermReportData; asStop: boolean; end
         </button>
       </Show>
       <footer class="bw-term-foot">
+        <Show when={props.asStop}><AfterCard /></Show>
         <Show when={props.asStop} fallback={<StampButton onClick={close}>{t("boardui.term.close")}</StampButton>}>
           <StampButton onClick={close} why={mustDeal() ? t("boardui.deal.first") : null} data-testid="bw-term-on">
             {props.ended ? t("boardui.report.toEnd") : t("boardui.stop.carryOn")}

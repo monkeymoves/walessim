@@ -10,7 +10,7 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import yaml from "js-yaml";
 import { describe, expect, it } from "vitest";
-import { fillCy, listCy, numberWords } from "./cymraeg";
+import { VERB_FIRST, fillCy, firstWord, listCy, numberWords } from "./cymraeg";
 
 const root = join(__dirname, "..", "..", "..");
 
@@ -41,7 +41,7 @@ const FORMS: Record<string, [string, string, string]> = {
   "Trefynwy": ["i Drefynwy", "yn Nhrefynwy", "a Threfynwy"],
   "Dowlais": ["i Ddowlais", "yn Nowlais", "a Dowlais"],
   "Grangetown": ["i Grangetown", "yn Grangetown", "a Grangetown"],
-  "Pill": ["i Pill", "yn Pill", "a Pill"],
+  "Pill": ["i Bil", "ym Mhil", "a Phil"],
   "Sblot": ["i Sblot", "yn Sblot", "a Sblot"],
   "Gwastadeddau Gwent": ["i Wastadeddau Gwent", "yng Ngwastadeddau Gwent", "a Gwastadeddau Gwent"],
   "Y Barri": ["i'r Barri", "yn y Barri", "a'r Barri"],
@@ -98,6 +98,43 @@ describe("Welsh slot grammar", () => {
     expect(numberWords("yn cymryd 0.5 blynedd")).toBe("yn cymryd 0.5 o flynyddoedd");
     expect(numberWords("pan fydd 2 prosiect mwy")).toBe("pan fydd 2 brosiect mwy");
     expect(numberWords("2 cyngor, 12 cyngor, +0.2 o 2027, 2 o 10")).toBe("2 gyngor, 12 cyngor, +0.2 o 2027, 2 o 10");
+  });
+
+  it("writes a project's name that opens with a verb-noun in lower case mid-sentence (playtest 10, S10)", () => {
+    expect(fillCy("Byddai {project} yno'n gyntaf wedi lleddfu'r ergyd.", { project: "Cefnogi cwmnïau lleol" })).toBe("Byddai cefnogi cwmnïau lleol yno'n gyntaf wedi lleddfu'r ergyd.");
+    expect(fillCy("Angen i {project} weithio yma.", { project: "Arafu'r dŵr i fyny'r afon" })).toBe("Angen i arafu'r dŵr i fyny'r afon weithio yma.");
+    // a name that opens with a noun keeps its capital, which marks it as a name
+    expect(fillCy("Mae {project} yn gweithio.", { project: "Iechyd yn agos at adref" })).toBe("Mae Iechyd yn agos at adref yn gweithio.");
+    expect(fillCy("Angen i {project} weithio yma.", { project: "Trenau aml ar lein y cwm" })).toBe("Angen i Drenau aml ar lein y cwm weithio yma.");
+    expect(fillCy("{project}: {list}", { project: "Cefnogi cwmnïau lleol", list: "Iechyd" })).toBe("Cefnogi cwmnïau lleol: Iechyd");
+    expect(fillCy("Brig y gangen: {keystone}.", { keystone: "Ardal yr orsaf" })).toBe("Brig y gangen: Ardal yr orsaf.");
+    // a council or a law keeps its capital
+    expect(fillCy("Mae {council} yn llithro.", { council: "Sir Fynwy" })).toBe("Mae Sir Fynwy yn llithro.");
+  });
+
+  it("knows of every project's name whether it opens with a verb-noun or a noun", () => {
+    // written out by hand: a new project's first word must be put in one list or the other
+    const NOUN_FIRST = new Set(["trenau", "bysiau", "ardal", "gwaith", "coleg", "ynni", "clwstwr", "gwlyptiroedd", "parc", "cartrefi",
+      "ysgol", "iechyd", "gwres", "tîm", "cwmnïau"]);
+    const projects = yaml.load(readFileSync(join(root, "model", "board", "projects.yaml"), "utf8")) as { projects: { name: Text }[] };
+    const unknown = projects.projects.map((p) => p.name.cy).filter((n) => !VERB_FIRST.has(firstWord(n)) && !NOUN_FIRST.has(firstWord(n)));
+    expect(unknown).toEqual([]);
+    for (const w of NOUN_FIRST) expect(VERB_FIRST.has(w), w).toBe(false);
+  });
+
+  it("writes Pill as Pil, with its mutation, also when the slot carries its council (playtest 10, S10)", () => {
+    expect(fillCy("Siopwr yn {town}", { town: "Pill, yng Nghasnewydd" })).toBe("Siopwr ym Mhil, yng Nghasnewydd");
+    expect(fillCy("Roedd bywyd yn dal i wella yn {town}.", { town: "Pill" })).toBe("Roedd bywyd yn dal i wella ym Mhil.");
+  });
+
+  it("writes a group in lower case mid-sentence, and softens a mood after 'n", () => {
+    expect(fillCy("Mae {group} yma'n {mood}.", { group: "Pawb", mood: "bodlon" })).toBe("Mae pawb yma'n fodlon.");
+    expect(fillCy("Mae {group} yma'n {mood}.", { group: "Siaradwyr Cymraeg", mood: "anesmwyth" })).toBe("Mae siaradwyr Cymraeg yma'n anesmwyth.");
+    expect(fillCy("{group}: {why}", { group: "Pobl hŷn", why: "x" })).toBe("Pobl hŷn: x");
+  });
+
+  it("joins the article after a mutated verb-noun: i godi'r Gymraeg", () => {
+    expect(fillCy("bargen i godi {measure}.", { measure: "Y Gymraeg a diwylliant" })).toBe("bargen i godi'r Gymraeg a diwylliant.");
   });
 
   it("says one 'afon', and writes lists with the aspirate and 'ac'", () => {
@@ -249,6 +286,15 @@ const NOT_THESE: [RegExp, string][] = [
   [/\bAr ôl ar gyfer 2050\b/, "Gwaddol 2050"],
   [/\bBywyd yn eich blynyddoedd\b/, "Bywyd yn eich cyfnod"],
   [/\boddi ar y pris llawn o\b/, "Gostyngiad o {n}: y pris llawn yw {full}"],
+  // playtest 10, should-fix 10
+  [/\bDe Ddwyrain\b/, "De-ddwyrain Cymru, with a hyphen"],
+  [/Swydd Gaerloyw'r De/, "De Swydd Gaerloyw"],
+  [/\bY feddygfa'n cau\b/, "Meddygfa'n cau, as the event reads in a sentence"],
+  [/\b(g|ch)wmni\b(?! (mawr|lleol|yn|sy|i|gan))|\bgyda chwmni\b/, "a project with company has cymdogion (cwmni reads as a firm)"],
+  [/\byn gofyn am \{(measure|a)\}/i, "a council wants to see {measure} get better: eisiau gweld ... yn gwella"],
+  [/\{ending\}, na wnaethoch/, "an ending can be plural: y Gymru na wnaethoch chi ei hadeiladu"],
+  [/(^|[.!?:] )Chofnodwyd\b/, "this formal negative opens with Ni: Ni chofnodwyd"],
+  [/\bdewch â'r .* draw\b/, "bring round is ennill, or 'mae angen i'r rhain eich cefnogi'"],
 ];
 
 describe("the board's Welsh words", () => {
@@ -256,6 +302,9 @@ describe("the board's Welsh words", () => {
     const hit = (s: string) => NOT_THESE.some(([re]) => re.test(s));
     for (const s of ["Carreg glo: brig y gangen hon", "Y flwyddyn olaf i ddechrau carreg glo", "COST", "Costs", "Mae conglfaen yn sefyll", "711.2 punnoedd yr wythnos"]) expect(hit(s), s).toBe(true);
     for (const s of ["Pris", "Cost cynnal: tua 1 darn arian y flwyddyn.", "Maen clo: brig y gangen hon", "Y gost:"]) expect(hit(s), s).toBe(false);
+    for (const s of ["Chwarae: arwain De Ddwyrain Cymru", "Bryste a Swydd Gaerloyw'r De", "Y feddygfa'n cau", "ac mae ganddo gwmni am flynyddoedd",
+      "Yn gofyn am {a}, ac am {b}.", "{ending}, na wnaethoch ei hadeiladu", "Chofnodwyd dim newid o'r maint hwn.", "I ennill, dewch â'r cynghorau hyn draw:"]) expect(hit(s), s).toBe(true);
+    for (const s of ["Chwarae: arwain De-ddwyrain Cymru", "Ni chofnodwyd dim.", "Daeth y cwmni mawr", "Mae cwmni yn {council} yn chwilio am le", "Chwaraewch ar liniadur"]) expect(hit(s), s).toBe(false);
   });
 
   it("never uses a word the board has replaced", () => {

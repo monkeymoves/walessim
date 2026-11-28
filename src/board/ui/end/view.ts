@@ -118,11 +118,21 @@ export function fillText(text: Text | undefined, slots: Record<string, SayVar>, 
 export const hasGap = (s: string): boolean => /\{\w+\}/.test(s);
 
 /**
+ * Can this game say a letter whole? Its salutation, body and sign-off need every slot filled (only
+ * the `named` line may be left out), as endings.ts `letterSayable` judges it: a letter about work
+ * coming back fits only a game where it did.
+ */
+export function letterSayableOf(l: BoardModel["letters"][number], slots: Record<string, unknown>): boolean {
+  return [l.salutation, l.body, l.signoff].every((x) => [...`${x.en} ${x.cy}`.matchAll(/\{(\w+)\}/g)].every((m) => slots[m[1]!] !== undefined));
+}
+
+/**
  * The letters that fit this ending, in the game's own order (the engine's choice first, then the
  * rest in the model's order, as endings.ts `letterChoices` rotates them).
  */
 export function letterChoicesOf(model: BoardModel, ending: Ending): string[] {
-  const fit = model.letters.filter((l) => l.ending === ending.id && (l.lower === ending.scores.lower || l.lower === "either")).map((l) => l.id);
+  const slots = ending.letter.slots as Record<string, unknown>;
+  const fit = model.letters.filter((l) => l.ending === ending.id && (l.lower === ending.scores.lower || l.lower === "either") && letterSayableOf(l, slots)).map((l) => l.id);
   const k = fit.indexOf(ending.letter.letter);
   return k < 0 ? fit : [...fit.slice(k), ...fit.slice(0, k)];
 }

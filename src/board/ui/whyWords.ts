@@ -6,7 +6,9 @@
  */
 import { hasKey, t } from "./lang";
 import type { Source } from "../../model/schema";
-import type { BoardModel, Text } from "../engine/api";
+import type { BoardModel, BoardState, Text, Why, WhyTarget } from "../engine/api";
+import { stepOfYear, stepsOf } from "../engine/api";
+import { why } from "./engine";
 import { tx } from "./words";
 
 export interface RuleLabel { name: string; note: string }
@@ -59,11 +61,85 @@ export function boardSource(model: BoardModel, id: string): Source | null {
   const s = model.sources.find((x) => x.id === id) as unknown as (Source & { note?: unknown; notes?: unknown }) | undefined;
   if (!s) return null;
   const clean = (v: unknown): unknown => {
-    if (typeof v === "string") return plainIds(v);
-    if (v && typeof v === "object" && "en" in v) return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, typeof x === "string" ? plainIds(x) : x]));
+    if (typeof v === "string") return plainNote(v);
+    if (v && typeof v === "object" && "en" in v) return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, typeof x === "string" ? plainNote(x) : x]));
     return v;
   };
   return { ...s, ...(s.note !== undefined ? { note: clean(s.note) } : {}), ...(s.notes !== undefined ? { notes: clean(s.notes) } : {}) } as Source;
+}
+
+/** The data team's marks on a source with no real evidence behind its size yet ("Placeholder strength. to check"). */
+const PLACEHOLDER = /\bplaceholder\b/i;
+const TO_CHECK = /[.,;]?\s*\bto check\b\.?/i;
+
+/** Is this source's size a rough guess with its evidence still to find? */
+export function isRoughSource(model: BoardModel, id: string): boolean {
+  const s = model.sources.find((x) => x.id === id) as unknown as { note?: unknown; notes?: unknown } | undefined;
+  const n = s?.note ?? s?.notes;
+  const text = typeof n === "string" ? n : n && typeof n === "object" ? String((n as Record<string, unknown>)["en"] ?? "") : "";
+  return PLACEHOLDER.test(text);
+}
+
+/**
+ * A source note in words for the player (playtest 10, must-fix 9: "Placeholder strength. to check"
+ * broke trust): a placeholder reads as a rough guess with its evidence still to find, and "to
+ * check" as evidence still to check. Never the data team's own marks.
+ */
+export function plainNote(text: string): string {
+  if (PLACEHOLDER.test(text)) return t("boardui.source.rough");
+  if (TO_CHECK.test(text)) {
+    const rest = plainIds(text.replace(TO_CHECK, "").trim());
+    return rest ? `${rest}${/[.!?]$/.test(rest) ? "" : "."} ${t("boardui.source.toCheck")}` : t("boardui.source.toCheck");
+  }
+  return plainIds(text);
+}
+
+/** The three spans 16.2.7 offers, as steps: the last year, this term (since the last election), since 2026. */
+export function whySpans(model: BoardModel, now: number): { id: "year" | "term" | "all"; from: number }[] {
+  const elections = model.game.election_years.map((y) => stepOfYear(model, y)).filter((x) => x <= now);
+  return [
+    { id: "year", from: Math.max(0, now - stepsOf(model, 1)) },
+    { id: "term", from: elections.length ? elections[elections.length - 1]! : 0 },
+    { id: "all", from: 0 },
+  ];
+}
+
+const shows = (d: number): boolean => Math.round(Math.abs(d) * 10) > 0;
+
+/**
+ * The reasons Why? shows: those that do not round to 0 at one decimal ("0 points" explains
+ * nothing). Reasons too small to show alone that share a rule are summed into one, so five groups
+ * each a little less pleased still explain a fall of 0.2 (playtest 10, must-fix 3: Why? was empty
+ * on a council at 4.8). Moods summed over the groups name no one group.
+ */
+export function shownReasons(model: BoardModel, state: BoardState, target: WhyTarget): Why[] {
+  const all = why(model, state, target);
+  const out = all.filter((r) => shows(r.delta));
+  const small = new Map<string, Why[]>();
+  for (const r of all) if (!shows(r.delta)) small.set(r.rule, [...(small.get(r.rule) ?? []), r]);
+  for (const list of small.values()) {
+    const delta = Math.round(list.reduce((a, r) => a + r.delta, 0) * 1e4) / 1e4;
+    if (!shows(delta) || list.length < 2) continue;
+    const first = [...list].sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))[0]!;
+    const groups = new Set(list.map((r) => (r.cause.kind === "people" ? r.cause.group : null)));
+    const cause = first.cause.kind === "people" && groups.size > 1 ? { kind: "people" as const } : first.cause;
+    out.push({ ...first, delta, cause, via: list.every((r) => r.via?.link === first.via?.link) ? first.via : undefined, parts: list.flatMap((r) => r.parts), sources: [...new Set(list.flatMap((r) => r.sources))].sort() });
+  }
+  return out.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+}
+
+/**
+ * Where a Why? opens (playtest 10, must-fix 3: six of eight opened Why? on a council that did not
+ * back them and read "No change of this size was recorded"). Backing opens on the widest span with
+ * a cause, since 2026, which answers "why does this council not back me?" whole. A measure opens on
+ * the span asked for, or the narrowest wider one that has a cause shown.
+ */
+export function openWhy(model: BoardModel, state: BoardState, target: WhyTarget): WhyTarget {
+  const now = state.step;
+  const spans = whySpans(model, now).map((sp) => ({ ...target, fromStep: sp.from, toStep: now }));
+  if (target.measure === "backing") return [...spans].reverse().find((sp) => shownReasons(model, state, sp).length) ?? spans[spans.length - 1]!;
+  if (shownReasons(model, state, target).length) return target;
+  return spans.find((sp) => sp.fromStep <= target.fromStep && shownReasons(model, state, sp).length) ?? target;
 }
 
 const titleOf = (s: Source): string => (typeof s.title === "string" ? s.title : tx(s.title as unknown as Text));

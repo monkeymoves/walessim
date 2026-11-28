@@ -183,8 +183,14 @@ export interface CouncilView {
   risks: Record<RiskKind, RiskStep>;
   links: { link: LinkId; kind: LinkKind; other: NodeId; direction: "in" | "out" | "both"; share?: number; quality?: LinkQuality; name?: Text }[];
   projects: ProjectState[];
-  /** The two weakest measures, as "what it is asking for". */
+  /** The two weakest measures, as "what it is asking for" (rule P7 `asked_count`). */
   asking: MeasureId[];
+  /**
+   * What holds Backing here and the lever to move it (playtest 10 must-fix 4): how much better than
+   * four years ago people expect what they care about to be (rule P1), and the cheapest builds here
+   * that lift what it asks for, each worth P7 `points` of Backing once working (levers.ts).
+   */
+  lever: CouncilLever;
   /** Rising, steady or slipping (rule R2). */
   momentum: Momentum;
   /** The first project placed here now gets the fresh start (rule R3). */
@@ -214,7 +220,7 @@ export interface ElectionView {
 // ---------------------------------------------------------------------------
 // The end
 
-export type ResultBand = "much_worse" | "little_worse" | "same" | "little_better" | "much_better";
+export type ResultBand = "much_worse" | "worse" | "little_worse" | "same" | "little_better" | "better" | "much_better";
 
 export interface Scores {
   /** Life in your years, 0 to 100: the mean over the yearly frames played. */
@@ -252,4 +258,27 @@ export interface Ending {
   visits: { place: PlaceId; grade: Grade }[];
   /** The chapters and turning points (16.5). */
   story: Story;
+}
+
+/** One build that answers what a council asks for (rule P7). */
+export interface LeverBuild {
+  project: ProjectId;
+  measure: MeasureId;
+  cost: number;
+  /** The year it would start working, and so start lifting Backing. */
+  readyYear: number;
+  /** True when it can be built now; otherwise `short` coins short, or blocked for another reason. */
+  allowed: boolean;
+  short: number;
+}
+
+/** What holds a council's Backing, and the lever a player can pull there (levers.ts). */
+export interface CouncilLever {
+  /** Points better than four years ago people now expect (rule P1 `expect_points`, `expect_rise`, `loss_eases`). */
+  expects: number;
+  /** Backing a build that answers what it asks for adds once working (P7 `points`), and over how many years it fades. */
+  points: number;
+  years: number;
+  /** The cheapest answering builds here (up to three), quickest first among equal cost. Empty without P7. */
+  builds: LeverBuild[];
 }

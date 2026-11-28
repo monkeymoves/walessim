@@ -73,4 +73,11 @@ describe("the two scores", () => {
     expect(resultBand(model, 3)).toBe("little_better");
     expect(resultBand(model, 10)).toBe("much_better");
   });
+
+  it("with G1 band_some, a plain middle band each way, so +9 and +10 sit side by side (playtest 10 should-fix 7)", () => {
+    const g1 = model.rules.find((r) => r.id === "G1")!;
+    const some: typeof model = { ...model, rules: model.rules.map((r) => (r === g1 ? { ...r, params: { ...r.params, band_little: { ...Object.values(r.params)[0]!, default: 1.5 }, band_much: { ...Object.values(r.params)[0]!, default: 10 }, band_some: { ...Object.values(r.params)[0]!, default: 5 } } } : r)) };
+    expect([-12, -7, -3, 0, 3, 7, 9.2, 10].map((c) => resultBand(some, c)))
+      .toEqual(["much_worse", "worse", "little_worse", "same", "little_better", "better", "better", "much_better"]);
+  });
 });

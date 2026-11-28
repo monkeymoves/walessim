@@ -6,7 +6,7 @@
  * shapes the story, but is not the result. Also the Fairness gap of section 4.1.
  */
 import { lastArrival, onTheWay, type OnTheWay } from "./on-the-way";
-import { param } from "./rules";
+import { optParam, param } from "./rules";
 import { ruleParam } from "./rule-defaults";
 import { stepsOf, yearOfStep } from "./time";
 import type {
@@ -163,14 +163,21 @@ export function startBoard(model: BoardModel, state: BoardState): MeasureBoard {
   return out;
 }
 
-/** The five plain result bands, from the change in the result against the 2026 board. */
+/**
+ * The plain result bands, from the change in the result against the 2026 board: about the same,
+ * a little, plainly (G1 `band_some`, playtest 10 should-fix 7: +9.2 read "a little better" and
+ * +10.0 "much better") and much better or worse. A model without `band_some` keeps five bands.
+ */
 export function resultBand(model: BoardModel, change: number): ResultBand {
   const little = ruleParam(model, RULE_IDS.score, "band_little");
   const much = ruleParam(model, RULE_IDS.score, "band_much");
+  const some = optParam(model, RULE_IDS.score, "band_some") ?? much;
   if (change >= much) return "much_better";
+  if (change >= some) return "better";
   if (change >= little) return "little_better";
   if (change > -little) return "same";
-  if (change > -much) return "little_worse";
+  if (change > -some) return "little_worse";
+  if (change > -much) return "worse";
   return "much_worse";
 }
 

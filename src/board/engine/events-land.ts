@@ -6,6 +6,7 @@ import { uniform } from "../../engine/rng";
 import { allHold, countProjects, holds, siteCouncils } from "./conditions";
 import type { StepCtx } from "./ctx";
 import { applyOnce } from "./effects";
+import { isRiverEvent, riverLinkAt } from "./event-river";
 import { param } from "./rules";
 import { specialCouncils, specialStands } from "./specials";
 import { ruleParam } from "./rule-defaults";
@@ -142,7 +143,9 @@ export function landOne(ctx: StepCtx, f: ForecastedEvent): { record: EventRecord
   }
   const severity = Math.round(f.severity * (factors[f.councils[0]!] ?? 1) * 1e4) / 1e4;
   const prepared = !e.good && preparedHere(model, draft, e, f.councils[0]!).length > 0;
-  return { record: { event: e.id, step: draft.step, councils: [...f.councils], severity, ...(e.origin === "outside" ? { prepared } : {}) }, flows };
+  // One river for the whole event, named the same in every sentence about it (events.ts `eventRiver`).
+  const river = isRiverEvent(model, e.id) ? riverLinkAt(model, f.councils[0]!, f.councils[1])?.id : undefined;
+  return { record: { event: e.id, step: draft.step, councils: [...f.councils], severity, ...(e.origin === "outside" ? { prepared } : {}), ...(river ? { river } : {}) }, flows };
 }
 
 /** Is the event's trigger holding anywhere now (for tests and hints)? */

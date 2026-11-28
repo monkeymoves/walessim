@@ -1,7 +1,7 @@
 // The clock is held only by something the player can see (playtest 8, must fix 2): every state
 // the screen can be in is tried, and none leaves the clock held with nothing open to close.
 import { describe, expect, it } from "vitest";
-import { holdOf, overlays, type Overlay, type Screenful, type SheetKind } from "./hold";
+import { holdOf, LANE_READING, overlays, type Overlay, type Screenful, type SheetKind } from "./hold";
 
 const SHEETS: SheetKind[] = [null, "build", "tree", "laws", "settings"];
 const bools = [false, true];
@@ -57,13 +57,33 @@ describe("the clock's hold", () => {
   it("does not hold for reading when the player switched that off", () => {
     const s: Screenful = { phase: "play", answerWaiting: false, queued: 0, hidden: false, holdWhileReading: false, sheet: "tree", selected: false, why: true, visit: false, warning: false, term: false };
     expect(holdOf(s)).toBeNull();
+    // a stop comes first: the branches step aside under it
     expect(holdOf({ ...s, queued: 1 })).toBe("stop");
+    expect(overlays({ ...s, queued: 1 })).not.toContain("tree");
   });
 
   it("puts an answer before a stop, as the screen draws it", () => {
-    const s: Screenful = { phase: "respond", answerWaiting: true, queued: 1, hidden: false, holdWhileReading: true, sheet: null, selected: false, why: false, visit: false, warning: true, term: false };
+    const s: Screenful = { phase: "respond", answerWaiting: true, queued: 1, hidden: false, holdWhileReading: true, sheet: null, selected: false, why: false, visit: false, warning: false, term: false };
     expect(overlays(s)).toEqual(["answer"]);
     expect(holdOf(s)).toBe("answer");
+  });
+
+  it("draws one card at a time in the lane: never a card over a past term, a warning, the branches or the laws (cold playtest 10, must fix 11)", () => {
+    for (const s of every()) {
+      const shown = overlays(s);
+      const cards = shown.filter((o) => o === "answer" || o === "stop" || (LANE_READING as readonly string[]).includes(o));
+      if (shown.includes("answer") || shown.includes("stop")) expect(cards, JSON.stringify(s)).toHaveLength(1);
+    }
+  });
+
+  it("brings back what stepped aside once the card is gone, as it was", () => {
+    for (const s of every()) {
+      if (s.phase !== "play" || s.queued === 0) continue;
+      const after = overlays({ ...s, queued: 0 });
+      if (s.term) expect(after).toContain("term");
+      if (s.warning) expect(after).toContain("warning");
+      if (s.sheet === "tree" || s.sheet === "laws") expect(after).toContain(s.sheet);
+    }
   });
 
   it("holds while anything the player opened, or any card, is on screen (cold playtest 9: 6 of 8 felt rushed)", () => {

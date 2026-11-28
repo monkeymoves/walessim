@@ -18,7 +18,8 @@ export function Guide(): JSX.Element {
     return {
       selected: game.selected() !== null,
       buildOpen: shown.includes("build"),
-      otherOpen: shown.some((o) => o !== "build"),
+      // the clock's own lesson on pause and speed is a help note too: one at a time
+      otherOpen: shown.some((o) => o !== "build") || game.clock.lessonShows(),
       built: !!game.state()?.log.some((e) => e.action.kind === "build"),
     };
   };

@@ -29,3 +29,24 @@ export function withArticles(text: string, names: string[]): string {
   }
   return out;
 }
+
+/** Slots that hold a project's name. */
+const NAME_SLOTS = new Set(["project", "keystone", "legacy"]);
+
+/**
+ * A project named with an article ("A repairs team for cold, damp homes") reads "Build a repairs
+ * team" in the middle of a sentence, and keeps its capital at the start of one or after a colon.
+ */
+export function namesInSentence<V extends string | number>(template: string, vars: Record<string, V>): Record<string, V> {
+  let out: Record<string, V> | null = null;
+  for (const [k, v] of Object.entries(vars)) {
+    if (!NAME_SLOTS.has(k) || typeof v !== "string" || !/^(A|An|The) /.test(v)) continue;
+    const at = template.indexOf(`{${k}}`);
+    if (at < 0) continue;
+    const lead = template.slice(0, at).trimEnd();
+    if (lead === "" || /[.!?:]["')]?$/.test(lead)) continue;
+    out ??= { ...vars };
+    out[k] = (v.charAt(0).toLowerCase() + v.slice(1)) as V;
+  }
+  return out ?? vars;
+}

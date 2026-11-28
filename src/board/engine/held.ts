@@ -158,6 +158,8 @@ function addTo(sums: Applied, c: Contribution): void {
   // A law's backing is a standing part (standing.ts), not a held effect: never take it back here.
   // (Playtest 9 must-fix 2: it was taken back the step after the law passed, while the moods kept it.)
   if (c.cause.kind === "law" && c.quantity === "backing") return;
+  // So is a project's thanks (rule P7, asked.ts): it is not the project's held effect.
+  if (c.rule === RULE_IDS.answered) return;
   const k = heldKey(c);
   const got = sums.get(k);
   if (got) got.sum += c.delta;
@@ -174,6 +176,22 @@ function appliedSoFar(ledger: readonly Contribution[]): Applied {
   for (let i = cached.upTo; i < ledger.length; i++) addTo(cached.sums, ledger[i]!);
   cached.upTo = ledger.length;
   return cached.sums;
+}
+
+/**
+ * What held causes have added so far to each council's measures, keyed `council|measure`: the
+ * board's own record of them. A build or upgrade made since the last step is not in it yet, which
+ * is what lets on-the-way.ts count it (playtest 10 should-fix 4: "If you build it: 49.2 (0.0)").
+ */
+export function appliedMeasureTotals(state: BoardState): Map<string, number> {
+  const out = new Map<string, number>();
+  for (const [, a] of appliedSoFar(state.ledger)) {
+    const c = a.first;
+    if (c.council === null) continue;
+    const k = `${c.council}|${c.quantity}`;
+    out.set(k, (out.get(k) ?? 0) + a.sum);
+  }
+  return out;
 }
 
 /** Bring every held effect to its target for this step. */

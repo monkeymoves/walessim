@@ -6,8 +6,12 @@
  * The save is the run code (the game number, the start, the step reached and the log) under the
  * model's own key prefix (`etifeddiaeth.board.v2.`), set and removed singly, never cleared.
  * Replaying it gives the same state, and the reports for the time line and the ticker.
+ *
+ * Leaving the board for another page saves the step you are at (cold playtest 10, must fix 14:
+ * the start page offered an older save). Leaving for the rule book (from a Why? or a source) and
+ * coming back in the same visit puts you straight back in that game at that step.
  */
-import { batch, createContext, createMemo, createSignal, useContext } from "solid-js";
+import { batch, createContext, createMemo, createSignal, onCleanup, useContext } from "solid-js";
 import type { Action, BoardModel, BoardState, CouncilCode, MeasureId, StartId, WhyTarget } from "../engine/api";
 import * as eng from "../engine/api";
 import { createClock } from "./clock/session";
@@ -16,6 +20,9 @@ import { replayWithReports } from "./clock/replay";
 export type Screen = "start" | "board" | "end";
 export type ColourBy = MeasureId | "backing" | "behind" | "none";
 export type Sheet = null | "build" | "tree" | "laws" | "settings";
+
+/** The run code of the game left for another page in this visit, to come straight back to. */
+let leftFor: string | null = null;
 
 export const store = {
   get(key: string): string | null { try { return localStorage.getItem(key); } catch { return null; } },
@@ -37,7 +44,12 @@ export function createGame(model: BoardModel) {
   /** A place visit open on screen (package 12 draws it), by place id. */
   const [visit, setVisit] = createSignal<string | null>(null);
   /** A warned event opened from the time line, by event id. */
-  const [warning, setWarning] = createSignal<string | null>(null);
+  const [warning, setWarningSignal] = createSignal<string | null>(null);
+  /** Open a warning (or close it with null). An opened warning is read, so its pinned slip goes. */
+  const setWarning = (event: string | null) => batch(() => {
+    if (event) clock.read(event);
+    setWarningSignal(event);
+  });
   /** A past term opened from the time line. */
   const [termOpen, setTermOpen] = createSignal<number | null>(null);
   const [litLink, setLitLink] = createSignal<string | null>(null);
@@ -148,6 +160,26 @@ export function createGame(model: BoardModel) {
     if (n < 0) { setGuide(-1); store.set(guideKey, "done"); }
     else setGuide(n);
   }
+
+  // leaving the board: save the step reached; for the rule book (a Why? or a source), remember to
+  // come straight back to it. Home and the title still lead to the start page and its Carry on.
+  const leave = () => {
+    const s = state();
+    if (!s || screen() !== "board") return;
+    save(s);
+    if (typeof location !== "undefined" && location.hash.startsWith("#/llyfr")) leftFor = eng.encodeRun(s);
+  };
+  onCleanup(leave);
+  if (typeof window !== "undefined") {
+    const hide = () => { const s = state(); if (s) save(s); };
+    window.addEventListener("pagehide", hide);
+    onCleanup(() => window.removeEventListener("pagehide", hide));
+  }
+  if (leftFor !== null && store.get(runKey) === leftFor) {
+    leftFor = null;
+    resume();
+  }
+  leftFor = null;
 
   return {
     model, state, screen, setScreen, selected, setSelected, colourBy, setColourBy, sheet, setSheet, hover, setHover,

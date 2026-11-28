@@ -18,12 +18,12 @@ import { createEffect, createMemo, createSignal, Match, onCleanup, Show, Switch,
 import { formatNum, t, tn } from "./lang";
 import { LangToggle, Tooltip } from "../../ui/parts";
 import type { CoinsReport } from "../engine/api";
-import { RULE_IDS, seasonOf, stepOfYear, stepsOf, tick, why, yearOfStep } from "../engine/api";
+import { RULE_IDS, seasonOf, shownYear, stepOfYear, stepsOf, tick, why, yearOfStep } from "../engine/api";
 import { scores } from "./engine";
 import { coinNote, incomeChange, incomeParts, wholeCoins, type CoinNote, type IncomePart } from "./clock/coins";
 import { direction, headlineIf, headway, tenths, type Headway } from "./clock/headway";
 import { useGame } from "./game";
-import { backsAtOf } from "./mapLinks";
+import { backersNow, p4 } from "./electionTargets";
 import { ruleParamOf } from "./rules";
 import { capFirst, incomeWords, listOf, projectName } from "./words";
 
@@ -50,8 +50,9 @@ export function TopStrip(): JSX.Element {
   const model = game.model;
   const s = () => game.state()!;
   const season = () => seasonOf(model, s().step);
-  const year = () => yearOfStep(model, s().step) + (season() === "spring" ? 1 : 0);
-  const backers = () => Object.values(s().councils).filter((c) => c.backing >= backsAtOf(model)).length;
+  const year = () => shownYear(model, s().step);
+  /** Who backs you now: the one count the election card, the laws sheet and the council panel use (playtest 10 must-fix 6). */
+  const backers = () => backersNow(model, s()).backers.length;
   const sc = createMemo(() => { try { return scores(model, s()); } catch (e) { console.warn(e); return null; } });
   const head = createMemo<Headway | null>(() => { try { return headway(model, s()); } catch (e) { console.warn(e); return null; } });
   /** Coins in and out over one step: the last step run, or (before the first) a step tried on a copy. */
@@ -187,7 +188,9 @@ export function TopStrip(): JSX.Element {
               <span class="bw-score-word">
                 <b>{t("boardui.strip.left2050")}</b>
                 <Show when={ifBuilt() === null} fallback={
-                  <span class="bw-head-note bw-head-if">{t("boardclock.head.ifBuilt", { n: f1(ifBuilt()!), change: signed(ifBuilt()! - head()!.now) })}</span>
+                  <span class="bw-head-note bw-head-if">{tenths(ifBuilt()! - head()!.now) === 0
+                    ? t("boardclock.head.ifBuiltTiny", { n: f1(ifBuilt()!) })
+                    : t("boardclock.head.ifBuilt", { n: f1(ifBuilt()!), change: signed(ifBuilt()! - head()!.now) })}</span>
                 }>
                   <span class={`bw-head-note bw-head-${direction(head()!.since)}`} data-testid="bw-head-since">
                     {t(`boardclock.head.${direction(head()!.since)}`, { n: f1(Math.abs(head()!.since)), start: f1(head()!.start) })}
@@ -209,10 +212,12 @@ export function TopStrip(): JSX.Element {
           </Tooltip>
         </div>
       </Show>
-      <button type="button" class="bw-backers" onClick={() => game.setColourBy("backing")} title={t("boardui.strip.backersTip")}>
-        <span class="figure-big">{backers()}</span>
-        <span class="bw-backers-word">{t("boardui.strip.backers", { of: model.game.councils.length })}</span>
-      </button>
+      <Tooltip heading={t("boardui.strip.backersTip")} content={t("boardui.targets.why", { at: formatNum(p4(model).backsAt) })}>
+        <button type="button" class="bw-backers" onClick={() => game.setColourBy("backing")} data-testid="bw-backers">
+          <span class="figure-big">{backers()}</span>
+          <span class="bw-backers-word">{t("boardui.strip.backers", { of: model.game.councils.length })}</span>
+        </button>
+      </Tooltip>
       <LangToggle class="bw-lang" />
     </header>
   );

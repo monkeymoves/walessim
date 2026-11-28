@@ -4,6 +4,13 @@
  * the clock can only be held by something the player can see and close. A sheet that is set but
  * not drawn (the build menu after its council was closed, a past term with no report) holds
  * nothing. hold.test.ts runs every combination and checks that no state leaves the clock stuck.
+ *
+ * One lane, one card at a time (cold playtest 10, must fix 11: a tier card over the reopened term
+ * report, an election card over an event). The lane between the build menu and the council panel
+ * holds one card: an event to answer, or else the first stop. While a card is up, what the player
+ * had open in the lane (a past term report, a warning, the branches, the laws) steps aside, still
+ * open, and comes back as it was once the card is answered. So no card is ever drawn over another.
+ * TermReport.tsx (package C) steps aside by the same rule.
  */
 
 export type SheetKind = null | "build" | "tree" | "laws" | "settings";
@@ -34,18 +41,23 @@ export interface Screenful {
 export type Reading = "build" | "tree" | "laws" | "settings" | "why" | "visit" | "warning" | "term";
 export type Overlay = "answer" | "stop" | Reading;
 
-/** Everything drawn over the board now, in drawing order. */
+/** A card waits: an event to answer, or a stop. */
+const cardWaits = (s: Screenful): boolean => (s.phase === "respond" && s.answerWaiting) || s.queued > 0;
+
+/** Things the player opens that sit where a card would: they step aside while a card is up. */
+export const LANE_READING: readonly Reading[] = ["term", "warning", "tree", "laws"];
+
+/** Everything drawn over the board now, in drawing order. At most one card in the lane: an answer, or else the first stop. */
 export function overlays(s: Screenful): Overlay[] {
   const out: Overlay[] = [];
   const answer = s.phase === "respond" && s.answerWaiting;
-  const stop = s.queued > 0;
-  const busy = answer || stop;
+  const card = cardWaits(s);
   if (s.sheet === "build" && s.selected) out.push("build");
-  if (s.warning && !busy) out.push("warning");
-  if (s.sheet === "tree" || s.sheet === "laws" || s.sheet === "settings") out.push(s.sheet);
-  if (s.term) out.push("term");
+  if (s.warning && !card) out.push("warning");
+  if (s.sheet === "settings" || ((s.sheet === "tree" || s.sheet === "laws") && !card)) out.push(s.sheet);
+  if (s.term && !card) out.push("term");
   if (answer) out.push("answer");
-  else if (stop) out.push("stop");
+  else if (s.queued > 0) out.push("stop");
   if (s.why) out.push("why");
   if (s.visit) out.push("visit");
   return out;

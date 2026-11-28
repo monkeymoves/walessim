@@ -80,7 +80,8 @@ export function buildDiscounts(model: BoardModel, state: BoardState, def: Projec
   if (state.freeProject === def.id) return { fresh: 0, deal: 0 };
   // R3 `max_tier`: a fresh start takes nothing off a keystone (playtest 9 should-fix 10: "3 off the full price of 8").
   const fresh = def.tier <= freshStartMaxTier(model) ? freshStartDiscount(model, state, def.cost, site) : 0;
-  const deal = Math.max(0, Math.min(dealDiscount(model, state, siteOf(model, site), def.id), def.cost - fresh - 1));
+  const ready = readyStepOf(state, buildSteps(model, state, def, site));
+  const deal = Math.max(0, Math.min(dealDiscount(model, state, siteOf(model, site), def.id, ready), def.cost - fresh - 1));
   return { fresh, deal };
 }
 

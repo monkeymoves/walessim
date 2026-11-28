@@ -6,8 +6,14 @@
 import { createMemo, createSignal, For, type JSX } from "solid-js";
 import { formatNum, t } from "../lang";
 import type { BoardModel, CouncilCode, Frame } from "../../engine/api";
-import { councilName, measureName, outOf10, signed } from "../words";
+import { councilName, measureName, outOf10 } from "../words";
 import { MiniMap } from "./MiniMap";
+
+/** A change at one decimal, always shown ("+2.0" beside "+3.1", never "+2"). */
+const signed1 = (n: number): string => {
+  const r = Math.round(n * 10) / 10;
+  return (r > 0 ? "+" : r < 0 ? "\u2212" : "") + formatNum(Math.abs(r), { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+};
 import { changes, END_LENSES, scaleOf, valuesOf, type EndLens } from "./view";
 
 export function lensName(model: BoardModel, by: EndLens): string {
@@ -69,7 +75,7 @@ export function ThenNow(props: { model: BoardModel; frames: Frame[]; mostChanged
           {(r) => (
             <li>
               <span class="strong">{councilName(model, r.code)}</span>{" "}
-              <span class="small">{t("boardend.thenNow.change", { from: lensValue(by(), r.from, false), to: lensValue(by(), r.to, true), d: signed(r.delta) })}</span>
+              <span class="small">{t("boardend.thenNow.change", { from: lensValue(by(), r.from, false), to: lensValue(by(), r.to, true), d: signed1(r.delta) })}</span>
             </li>
           )}
         </For>

@@ -305,11 +305,13 @@ export const RULE_IDS = {
   rebuild: "E2",
   /** Phase 2 (16.4), package 9: a lost election is a deal (deal_years, deal_discount, kept_here, kept_near, broken_here, broken_years). Replaces B3. */
   hungTerm: "P6",
+  /** Playtest 10 (must-fix 4): points, years (backing for a new project that lifts what a council asks for, fading), asked_count. */
+  answered: "P7",
 } as const;
 
 /** The phase 2 cards: optional until they are in every model. Every other id in RULE_IDS must exist. */
 export const OPTIONAL_RULE_IDS: readonly RuleId[] = [
-  RULE_IDS.roots, RULE_IDS.momentum, RULE_IDS.freshStart, RULE_IDS.need, RULE_IDS.rebuild, RULE_IDS.hungTerm,
+  RULE_IDS.roots, RULE_IDS.momentum, RULE_IDS.freshStart, RULE_IDS.need, RULE_IDS.rebuild, RULE_IDS.hungTerm, RULE_IDS.answered,
 ];
 
 /** Rule ids every board model must carry. */

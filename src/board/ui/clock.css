@@ -338,3 +338,45 @@
 .bw-coins-word { min-width: 0; }
 .bw-coins-line, .bw-coins-note, .bw-coins-why, .bw-head-note, .bw-score-word b, .bw-score-word .small { overflow: hidden; text-overflow: ellipsis; }
 .bw-strip { min-width: 0; max-width: 100%; }
+
+/* ---------- cold playtest 10, package B ---------- */
+/* must fix 5: an ink link drawn as a button has no button face (the browser's white face hid its
+   light words on the slate warning card), and on slate it reads light. tests/e2e/board-fix3.spec.ts
+   checks the contrast of every button and link on every card. */
+.bw button.inklink { background: none; border: 0; padding: 0; border-radius: 0; }
+.bw .on-slate .inklink { color: var(--on-slate); }
+.bw-stop-flip { margin-left: 2px; white-space: nowrap; }
+/* the card takes the focus itself (must fix 10): no ring for a focus the player did not move */
+.bw-stop:focus:not(:focus-visible), .bw-respond:focus:not(:focus-visible), .bw-term:focus:not(:focus-visible) { outline: none; }
+
+/* must fix 11: "Close the build menu" never wraps; the visit button goes to the next line instead */
+.bw-council-foot .btn-stamp { flex: 1 0 auto; white-space: nowrap; }
+.bw-council-foot .btn-tab { flex: 1 1 auto; }
+
+/* the run-up card: the councils that would tip the election */
+.bw-runup-list { display: grid; gap: 5px; margin: 0; padding: 0; list-style: none; }
+.bw-runup-list li { position: relative; padding-left: 14px; font-size: 14.5px; line-height: 1.4; max-width: none; }
+.bw-runup-list li::before { content: ""; position: absolute; left: 1px; top: 0.55em; width: 6px; height: 6px; background: var(--ink); transform: rotate(45deg); }
+.bw-stop-runup { border-top: 4px solid var(--slate); }
+.bw-stop-runup .bw-stop-lines .small { color: var(--ink-2); }
+
+/* warnings passed by unread: slate tabs pinned at the head of the lane while it is free */
+.bw-stage .bw-unread {
+  position: absolute; top: 18px; z-index: 12;
+  left: calc(var(--bw-left-col) + var(--bw-lane-gap)); right: calc(var(--bw-right-col) + var(--bw-lane-gap));
+  max-width: 360px; margin: 0 auto; display: grid; gap: 4px; justify-items: start; pointer-events: none;
+}
+.bw-unread > * { pointer-events: auto; }
+.bw-unread-title { color: var(--ink); background: var(--paper); padding: 1px 6px; box-shadow: var(--shadow-flat); }
+.bw-unread-list { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.bw-unread-slip {
+  position: relative; border: 0; cursor: pointer; text-align: left; padding: 7px 12px 7px 22px;
+  background: var(--slate) var(--grain); background-blend-mode: overlay; color: var(--on-slate);
+  font: inherit; font-size: var(--size-label); font-weight: var(--wght-grot-strong); box-shadow: var(--shadow-slate); transform: rotate(-0.8deg);
+}
+.bw-unread-slip:hover { background-color: #3f4652; }
+.bw-unread-slip .bw-slip-pin { position: absolute; left: 8px; top: 50%; width: 8px; height: 8px; margin-top: -4px; border-radius: var(--radius-round); background: var(--brass); }
+.bw-after { color: var(--ink-2); margin-top: 6px; }
+.on-slate .bw-after { color: var(--on-slate-2); }
+/* while the lesson on pause and speed shows, the ticker moves right of it: two notes never stack */
+.bw-board:has(.bw-clock-lesson) .bw-ticker { left: 380px; }

@@ -6,6 +6,11 @@
 import type { RunResult } from "./bots-balance";
 import { byBot, distance, mean, median, percentile, sameGame } from "./bots-balance";
 import { LAW_COST_YEARS } from "./bots-probes";
+import { LEVER_YEARS } from "./bots-levers";
+
+/** No wipe-out: elections after this year, and the councils that must still back a careless player. */
+export const NO_WIPE_AFTER = 2034;
+export const NO_WIPE_MIN = 2;
 
 export interface Row {
   claim: string;
@@ -32,6 +37,8 @@ export interface Extras {
   lawCost?: { most: number; least: number };
   /** Replay of a log is byte equal; ticking every step equals advancing. */
   clock?: { replay: boolean; tickAdvance: boolean };
+  /** A lever exists (bots-levers.ts): councils under 5 at an election in Skilled runs, and how many one affordable build there lifted to 5 within four years. */
+  levers?: { cases: number; lifted: number };
   /** Seconds the run took, and whether it was the quick run. */
   seconds?: { taken: number; quick: boolean };
 }
@@ -150,6 +157,14 @@ export function balanceTable(runs: RunResult[], x: Extras = {}): Row[] {
   const watched = skilledRuns.flatMap((r) => (r.coins ? [r.coins] : []));
   const lostShare = watched.length ? watched.reduce((a, c) => a + c.lost, 0) / Math.max(1e-9, watched.reduce((a, c) => a + c.income + c.lost, 0)) : NaN;
   row("Coins have a use", "Skilled: coins lost to a full purse, share of coins earned", fmt(lostShare, 3), "< 0.10", ok(lostShare, (v) => v < 0.1));
+  // Playtest 10 must-fix 4: backing stuck under 5 "whatever I built", and a careless game at 0 of 10 for twelve years.
+  if (x.levers) {
+    const share = x.levers.cases ? x.levers.lifted / x.levers.cases : NaN;
+    row("A lever exists", `Skilled: councils under 5 at an election (${x.levers.cases}) that one build there, paid from a year's coins, lifts to 5 within ${LEVER_YEARS} years`, fmt(share), ">= 0.90", ok(share, (v) => v >= 0.9));
+  }
+  const after = randomRuns.filter((r) => r.backersAt?.some((b) => b.year > NO_WIPE_AFTER));
+  const kept = after.length ? after.filter((r) => r.backersAt!.filter((b) => b.year > NO_WIPE_AFTER).every((b) => b.backers >= NO_WIPE_MIN)).length / after.length : NaN;
+  row("No wipe-out", `Random keeps ${NO_WIPE_MIN} or more councils backing at every election after ${NO_WIPE_AFTER}: share of runs`, fmt(kept), ">= 0.80", ok(kept, (v) => v >= 0.8));
   if (x.lawCost) row("Laws cost", `largest change a law makes to one council's Backing ${LAW_COST_YEARS} years on (weakest law ${fmt(x.lawCost.least)})`, fmt(x.lawCost.most), ">= 0.5", ok(x.lawCost.most, (v) => v >= 0.5));
 
   const pool = runs.filter((r) => branchBots.includes(r.bot) || r.bot === "skilled");

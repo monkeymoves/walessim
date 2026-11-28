@@ -7,7 +7,7 @@
  * (clock.css `.bw-lane`), so a warning read while building never covers the menu, and it says its
  * window is game time, which moves only while the clock runs.
  */
-import { createMemo, Show, type JSX } from "solid-js";
+import { createMemo, For, Show, type JSX } from "solid-js";
 import { lang, Pair, t } from "./lang";
 import { CloseButton } from "../../ui/parts";
 import { useGame } from "./game";
@@ -39,6 +39,39 @@ export function WarningSlip(): JSX.Element {
           </Show>
         </aside>
       )}
+    </Show>
+  );
+}
+
+/**
+ * Warnings passed by unread (cold playtest 10, should fix 5: "Carry on past all 5 cards" skipped
+ * a storm warning): each stays pinned at the head of the lane as a small slate tab until it is
+ * opened or its event lands. Drawn only while the lane is free, so it is never under or over a card.
+ */
+export function UnreadSlips(): JSX.Element {
+  const game = useGame();
+  const model = game.model;
+  const items = createMemo(() => {
+    const ws = game.forecast()?.warnings ?? [];
+    return game.clock.unread().map((e) => ws.find((w) => w.event === e)).filter((w): w is NonNullable<typeof w> => !!w);
+  });
+  return (
+    <Show when={items().length}>
+      <nav class="bw-unread bw-lane-head" aria-label={t("boardclock.unread.aria")} data-testid="bw-unread">
+        <p class="label bw-unread-title">{t("boardclock.unread.title")}</p>
+        <ul class="bw-unread-list">
+          <For each={items()}>
+            {(w) => (
+              <li>
+                <button type="button" class="bw-unread-slip on-slate" onClick={() => { game.setSelected(w.councils[0] ?? null); game.setWarning(w.event); }} data-testid="bw-unread-slip">
+                  <span class="bw-slip-pin" aria-hidden="true" />
+                  {t("boardclock.unread.item", { name: tx(w.name), place: councilName(model, w.councils[0]), when: whenWords(model, w.fromStep) })}
+                </button>
+              </li>
+            )}
+          </For>
+        </ul>
+      </nav>
     </Show>
   );
 }

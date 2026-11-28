@@ -136,7 +136,7 @@ export function causeKeyOf(c: Cause): string {
     case "visit": return `visit:${c.place}`;
     case "start": return `start:${c.start}`;
     case "election": return `election:${c.year}`;
-    case "people": return `people:${c.group ?? ""}`;
+    case "people": return `people:${c.group ?? ""}${c.expect ? ":expect" : ""}`;
     case "deal": return `deal:${c.council}`;
     default: return c.kind;
   }

@@ -12,8 +12,11 @@
  * After cold playtest 9 (should fix 6): the keystone mark says what it means where it stands,
  * "Keystones: start by here", and its tip says why: a keystone takes so many years to build
  * (from projects.yaml), so one started later would not work by 2050.
+ *
+ * After cold playtest 10 (must fix 11): the labels on the middle row are placed by their real
+ * width on the track (./clock/labels.ts), so "Keystones: start by here" never runs into "Deal".
  */
-import { createMemo, For, Match, Show, Switch, type JSX } from "solid-js";
+import { createMemo, createSignal, For, Match, onCleanup, onMount, Show, Switch, type JSX } from "solid-js";
 import { t } from "./lang";
 import { Icon } from "../../ui/parts";
 import type { BoardModel, BoardState, TimelineView } from "../engine/api";
@@ -23,6 +26,7 @@ import { useGame } from "./game";
 import { eventIcon } from "./icons";
 import { pickTimeline } from "./timelinePick";
 import { layoutTimeline, type TimelineItem } from "./timelineLayout";
+import { labelPx, placeLabels } from "./clock/labels";
 import { chapterName, councilName, projectName, say, tx, whenWords } from "./words";
 
 export { layoutTimeline, type TimelineItem } from "./timelineLayout";
@@ -80,7 +84,21 @@ export function TimelineStrip(props: TimelineStripProps): JSX.Element {
   const model = props.model;
   const g = model.game;
   const at = () => props.at ?? props.view.step;
-  const items = createMemo(() => layoutTimeline(model, props.state, props.view, Math.floor(at())));
+  // the track's width, so each label is placed by the room its words take
+  let track!: HTMLDivElement;
+  const [trackPx, setTrackPx] = createSignal(1000);
+  onMount(() => {
+    const measure = () => { if (track.clientWidth > 0) setTrackPx(track.clientWidth); };
+    measure();
+    if (typeof ResizeObserver === "function") {
+      const ro = new ResizeObserver(measure);
+      ro.observe(track);
+      onCleanup(() => ro.disconnect());
+    }
+  });
+  const labelWords = (i: Extract<TimelineItem, { kind: "warning" | "mark" }>): string =>
+    i.kind === "warning" ? councilName(model, i.councils[0]) : markShort(i.mark);
+  const items = createMemo(() => placeLabels(layoutTimeline(model, props.state, props.view, Math.floor(at())), (i) => labelPx(labelWords(i)) / trackPx()));
   const nowAt = () => Math.max(0, Math.min(1, at() / g.steps));
   const years = Array.from({ length: Math.floor((g.end_year - g.first_year) / 2) + 1 }, (_, i) => g.first_year + i * 2);
   const yearAt = (y: number) => (y - g.first_year) / (g.end_year - g.first_year);
@@ -138,7 +156,7 @@ export function TimelineStrip(props: TimelineStripProps): JSX.Element {
   return (
     <div class="bw-timeline strip" role="group" aria-label={t("boardui.timeline.aria")} data-testid="bw-timeline">
       <Show when={props.lead}><div class="bw-tl-lead">{props.lead}</div></Show>
-      <div class="bw-tl-track" style={{ "--now": pct(nowAt()) }}>
+      <div ref={track} class="bw-tl-track" style={{ "--now": pct(nowAt()) }}>
         <span class="bw-tl-past" aria-hidden="true" />
         <ol class="bw-tl-years" aria-hidden="true">
           <For each={years}>{(y) => <li class="small data" classList={{ "under-now": underNow(yearAt(y), nowAt()) }} style={{ left: pct(yearAt(y)) }}>{y}</li>}</For>

@@ -2,11 +2,14 @@
  * A deal in plain words (rule P6; playtest 9, must-fix 9: "You broke your deal with Cardiff" and 8
  * councils became 1, though nothing had said a project must be built there). What you must build,
  * where and by when, with projects that would keep it; and afterwards what happened to it and what
- * that did to backing. "Keeps it" is judged as the engine judges it (deals.ts `dealKeptBy`): a
- * project that lifts the deal's measure, started after the deal, working in that council.
+ * that did to backing. "Keeps it" is judged by the engine itself (deals.ts `dealKeptBy`,
+ * `buildCountsForDeal`, `dealProgress`): any project that lifts the deal's measure and works in
+ * that council by the deal's last step, whenever it was started (playtest 10, must-fix 1). A deal is
+ * never offered for a measure something there already lifts, so it is never met on the day it is made.
  */
 import { t } from "./lang";
-import type { BoardModel, BoardState, CouncilCode, Deal, MeasureId } from "../engine/api";
+import type { ActionOption, BoardModel, BoardState, CouncilCode, Deal, MeasureId } from "../engine/api";
+import { buildCountsForDeal, dealKeptBy, dealProgress } from "../engine/api";
 import { liftsMeasure } from "./price";
 import { ruleParamOf } from "./rules";
 import { councilName, measureName, num, orOf, projectName, whenWords } from "./words";
@@ -23,10 +26,8 @@ export function dealKeepers(model: BoardModel, measure: MeasureId): string[] {
 
 /** The project that kept a deal, as the engine judges it, or null. */
 export function keptBy(model: BoardModel, state: BoardState, d: Deal): string | null {
-  const here = (p: BoardState["projects"][number]) =>
-    p.site.council === d.council || model.links.some((l) => l.id === p.site.link && (l.from === d.council || l.to === d.council));
-  const p = state.projects.find((x) => x.status === "working" && x.startedStep >= d.madeStep && here(x) && liftsMeasure(model.projects.find((q) => q.id === x.project), d.measure));
-  return p?.project ?? null;
+  const id = dealKeptBy(model, state, d);
+  return id ? state.projects.find((p) => p.id === id)?.project ?? null : null;
 }
 
 const p6 = (model: BoardModel) => ({
@@ -37,11 +38,47 @@ const p6 = (model: BoardModel) => ({
   off: num(ruleParamOf(model, "P6", "deal_discount", 1)),
 });
 
-/** What a deal asks, in one sentence with examples: for an offer (before you take it) or an open deal. */
+/** What a deal asks, with examples: for an offer (before you take it) or an open deal. */
 export function dealAsk(model: BoardModel, council: CouncilCode, measure: MeasureId, dueStep: number): string {
   const keepers = dealKeepers(model, measure).slice(0, KEEPERS_SHOWN).map((id) => projectName(model, id));
   const ask = t("boardui.deal.must", { council: councilName(model, council), measure: measureName(model, measure), when: whenWords(model, dueStep) });
   return keepers.length ? `${ask} ${t("boardui.deal.examples", { list: orOf(keepers) })}` : ask;
+}
+
+/** The councils a site stands in: its council, or both ends of its line. */
+const siteCouncils = (model: BoardModel, site: { council?: string; link?: string }): CouncilCode[] => {
+  if (site.council) return [site.council];
+  const l = model.links.find((x) => x.id === site.link);
+  return l ? [l.from, l.to] : [];
+};
+
+/** For an open deal: each project there that lifts its measure, and whether it works in time to keep it. */
+export function dealProjectLines(model: BoardModel, state: BoardState, d: Deal): string[] {
+  if (d.kept !== null) return [];
+  return dealProgress(model, state, d).map((p) =>
+    t(p.inTime ? "boardui.deal.yourKeeps" : "boardui.deal.yourLate", { project: projectName(model, p.project), opens: whenWords(model, p.readyStep + 1) }));
+}
+
+/**
+ * Whether a build in the build menu would count for an open deal in a council it touches, as the
+ * engine judges it (`buildCountsForDeal`). An upgrade changes no deal. "" when no open deal is near.
+ */
+export function dealBuildWords(model: BoardModel, state: BoardState, o: ActionOption): string {
+  const a = o.action;
+  if (a.kind !== "build" && a.kind !== "upgrade") return "";
+  const councils = siteCouncils(model, a.site);
+  const d = state.deals.find((x) => x.kept === null && councils.includes(x.council));
+  if (!d) return "";
+  const v = { council: councilName(model, d.council), measure: measureName(model, d.measure), when: whenWords(model, d.dueStep) };
+  const project = o.project ?? (a.kind === "build" ? a.project : undefined);
+  if (a.kind === "upgrade" || !project) return t("boardui.build.dealUpgrade");
+  const ready = o.readyStep ?? Number.POSITIVE_INFINITY;
+  switch (buildCountsForDeal(model, d, project, councils, ready)) {
+    case "counts": return t("boardui.build.dealKeeps", v);
+    case "too_late": return t("boardui.build.dealLate", { ...v, opens: whenWords(model, ready + 1) });
+    case "other_measure": return t("boardui.build.dealNo", v);
+    default: return "";
+  }
 }
 
 export interface DealWords {

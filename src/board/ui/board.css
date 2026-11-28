@@ -116,9 +116,29 @@
 .bw-backs { padding: 0 16px 8px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
 .bw-backs b { font-weight: var(--wght-grot-strong); }
 .bw-council > .warnstrip { margin: 0 16px 8px; }
+.bw-council > .bw-backing-means, .bw-council > .bw-target-here { padding: 0 16px 6px; color: var(--ink-2); }
+.bw-council > .bw-target-here { color: var(--ink); font-weight: var(--wght-grot-strong); }
+.bw-council > .warnstrip { display: block; }
+.bw-deal-project { display: block; margin-top: 4px; font-weight: var(--wght-grot-strong); }
+/* what holds a council under the line, and what would lift it (playtest 10, must-fix 3 and 4) */
+.bw-holds-list, .bw-holds-lifts, .bw-why-holds ul { display: grid; gap: 3px; padding-left: 14px; list-style: disc; }
+.bw-why-holds { margin: 10px 18px 0; padding: 8px 12px 10px; border-left: 3px solid var(--ink-2); display: grid; gap: 5px; }
+/* the next election, council by council (the critic's one change) */
+.bw-targets { display: grid; gap: 4px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--rule); }
+.bw-targets-head { margin-top: 4px; font-weight: var(--wght-grot-strong); }
+.bw-targets-list { display: grid; gap: 2px; }
+.bw-target-look { background: none; border: 0; padding: 2px 0; text-align: left; font: inherit; font-size: var(--size-small); color: var(--ink); cursor: pointer; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+.bw-target-look:hover, .bw-target-look:focus-visible { text-decoration-thickness: 2px; }
+.bw-election-law { display: grid; gap: 6px; justify-items: start; margin: 8px 0; padding: 8px 10px; border-left: 3px solid var(--ink); }
+.bw-ticket-deal { font-weight: var(--wght-grot-strong); color: var(--ink); }
+.bw-fare-unit { display: block; text-align: right; }
+.bw-build-words { padding: 0 16px 8px; color: var(--ink-2); }
+.bw-visit-note { flex-basis: 100%; color: var(--ink-2); }
 .bw-council-scroll { flex: 1; min-height: 0; overflow: auto; padding: 2px 16px 12px; border-top: 1px solid var(--rule); }
 .bw-council-foot { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 10px 16px 14px; border-top: 1px solid var(--rule); }
-.bw-council-foot .btn-stamp { flex: 1; }
+.bw-council-foot .btn-stamp { flex: 1 1 100%; }
+/* a list longer than the panel fades into its foot instead of stopping mid line (playtest 10, should-fix 9: "On its way" clipped); the padding lets the last line clear the fade */
+.bw-region .bw-council-scroll, .bw-council .bw-council-scroll { padding-bottom: 30px; -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 30px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 30px), transparent); }
 .bw-measures { display: grid; gap: 7px; padding: 10px 0 4px; }
 .bw-measures li { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "name value" "bar bar" "change change"; gap: 2px 8px; }
 .bw-measures li.asked .bw-m-name::after { content: ""; display: inline-block; width: 7px; height: 7px; margin-left: 6px; background: var(--ink); transform: rotate(45deg) translateY(-1px); }

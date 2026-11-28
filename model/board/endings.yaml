@@ -244,7 +244,9 @@ endings:
   - id: gamble
     priority: 7
     name: { en: "The gamble", cy: "Y gambl", cy_review: true }
-    summary: { en: "A big employer came and then left. Work and pay fell where it had stood.", cy: "Daeth cyflogwr mawr ac yna gadael. Syrthiodd Gwaith a chyflog lle'r oedd wedi sefyll.", cy_review: true }
+    # The summary holds whether work came back or not: the first evidence line says which, and the
+    # letter's own words must agree ({work_back_in} or {work_fell_in}, endings.ts `workSlots`).
+    summary: { en: "A big employer came and then left. The place where it stood had to find its feet again.", cy: "Daeth cyflogwr mawr, ac yna fe adawodd. Bu'n rhaid i'r ardal lle'r oedd yn sefyll gael ei thraed dani eto.", cy_review: true }
     route: { en: "Land a big employer with no college or local firms around it, then meet a downturn.", cy: "Denu cyflogwr mawr heb goleg na chwmnïau lleol o'i gwmpas, yna wynebu dirwasgiad.", cy_review: true }
     when:
       - { kind: event_landed, event: employer-leaves }

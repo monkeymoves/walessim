@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { boardFixture, FIXTURE_COUNCILS } from "./fixture";
 import { ctxOf, handState, nextYears, standing } from "./hand-state";
-import { dealBlockers, dealChoices, dealDiscount, judgeDeals, offerDeals, takeDeal } from "./deals";
+import {
+  buildCountsForDeal, dealBlockers, dealChoices, dealDiscount, dealKeptBy, dealLastStep, dealMeasure, dealProgress, judgeDeals, offerDeals, takeDeal,
+} from "./deals";
 import { seedPeople } from "./people";
 import { P6_START, withCard } from "./test-cards";
-import type { BoardModel, BoardState, ElectionRecord } from "./types";
+import type { BoardModel, BoardState, Deal, ElectionRecord } from "./types";
 
 const { merthyr, rct, cardiff } = FIXTURE_COUNCILS;
 const plain = boardFixture();
@@ -92,5 +94,64 @@ describe("deals after a lost election (rule P6)", () => {
     expect(dealDiscount(model, s, [cardiff], "social-homes")).toBe(0);
     expect(dealDiscount(model, s, [merthyr], "skills-college")).toBe(0);
     expect(dealDiscount(plain, s, [merthyr], "social-homes")).toBe(0);
+  });
+});
+
+describe("the honest deal rule (playtest 10 must-fix 1 and should-fix 8)", () => {
+  const deal = (over: Partial<Deal> = {}): Deal => ({ council: merthyr, measure: "homes", madeStep: 16, dueStep: 32, kept: null, ...over });
+
+  it("any project that lifts the measure there and works by the date keeps it, even one started before the deal", () => {
+    const s = seeded();
+    s.deals.push(deal());
+    // Started at step 4, long before the deal, and opening at step 20: it counts.
+    s.projects.push(standing("social-homes", { council: merthyr }, 4, "building"));
+    s.projects[0]!.readyStep = 20;
+    expect(dealKeptBy(model, s, s.deals[0]!)).toBeNull();
+    s.projects[0]!.status = "working";
+    expect(dealKeptBy(model, s, s.deals[0]!)).toBe("social-homes@" + merthyr);
+    expect(dealProgress(model, s, s.deals[0]!)).toEqual([{ id: "social-homes@" + merthyr, project: "social-homes", readyStep: 20, inTime: true }]);
+  });
+
+  it("says whether a build counts, and why not: another council, another measure, too late, or the deal is closed", () => {
+    const d = deal();
+    const last = dealLastStep(model, d);
+    expect(last).toBe(31);
+    expect(buildCountsForDeal(model, d, "social-homes", [merthyr], last)).toBe("counts");
+    expect(buildCountsForDeal(model, d, "social-homes", [merthyr], last + 1)).toBe("too_late");
+    expect(buildCountsForDeal(model, d, "social-homes", [cardiff], last)).toBe("other_council");
+    expect(buildCountsForDeal(model, d, "skills-college", [merthyr], last)).toBe("other_measure");
+    expect(buildCountsForDeal(model, deal({ kept: true }), "social-homes", [merthyr], last)).toBe("closed");
+    // A deal taken part way through a year runs to the first year close after its due step.
+    expect(dealLastStep(model, deal({ madeStep: 18, dueStep: 34 }))).toBe(35);
+  });
+
+  it("a build that opens too late gets no deal discount", () => {
+    const s = seeded();
+    s.deals.push(deal({ madeStep: 0, dueStep: 4 }));
+    expect(dealDiscount(model, s, [merthyr], "social-homes", 3)).toBe(1);
+    expect(dealDiscount(model, s, [merthyr], "social-homes", 4)).toBe(0);
+  });
+
+  it("is never offered already met: the measure asked for is one nothing there lifts yet", () => {
+    const s = seeded();
+    s.councils[merthyr]!.backing = 1;
+    const weakest = dealMeasure(model, s, merthyr)!;
+    const lifter = model.projects.find((d) => d.site === "council" && d.effects.some((e) => e.kind === "measure" && e.measure === weakest && e.points > 0))!;
+    s.projects.push(standing(lifter.id, { council: merthyr }, 0, "building"));
+    const offered = dealChoices(model, s).find((c) => c.council === merthyr)!;
+    expect(offered.measure).not.toBe(weakest);
+    expect(dealProgress(model, s, { ...deal(), measure: offered.measure })).toEqual([]);
+  });
+
+  it("offers a council never in a deal before one already in a deal, and a broken one last", () => {
+    const s = seeded();
+    s.councils[merthyr]!.backing = 1;
+    s.councils[rct]!.backing = 2;
+    s.councils[cardiff]!.backing = 3;
+    expect(dealChoices(model, s).map((c) => c.council)).toEqual([merthyr, rct]);
+    s.deals.push(deal({ kept: false, brokenStep: 32 }));
+    expect(dealChoices(model, s).map((c) => c.council)).toEqual([rct, cardiff]);
+    s.deals.push(deal({ council: rct, kept: true }));
+    expect(dealChoices(model, s).map((c) => c.council)).toEqual([cardiff, rct]);
   });
 });

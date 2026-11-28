@@ -55,9 +55,14 @@ export function LawsSheet(): JSX.Element {
                         <Show when={falls().length}><p class="bw-law-fall">{t("boardui.laws.falls", { list: named(falls()) })}</p></Show>
                         <Show when={rises().length}><p>{t("boardui.laws.rises", { list: named(rises()) })}</p></Show>
                       </Show>
+                      <Show when={c().lost.length}><p class="bw-law-fall"><b>{t("boardui.laws.stops", { list: listOf(c().lost.map((x) => councilName(model, x))) })}</b></p></Show>
+                      <Show when={c().won.length}><p><b>{t("boardui.laws.starts", { list: listOf(c().won.map((x) => councilName(model, x))) })}</b></p></Show>
                       <p classList={{ "bw-law-fall": c().backersAfter < c().backersNow }}>
                         <b>{t("boardui.laws.backers", { now: c().backersNow, after: c().backersAfter, of: model.game.councils.length })}</b>
                       </p>
+                      <Show when={c().resultAfter !== c().resultNow}>
+                        <p class="bw-law-fall" data-testid="bw-law-result">{t("boardui.laws.result", { now: t(`boardui.timeline.would.${c().resultNow}`), after: t(`boardui.timeline.would.${c().resultAfter}`) })}</p>
+                      </Show>
                     </div>
                   )}
                 </Show>

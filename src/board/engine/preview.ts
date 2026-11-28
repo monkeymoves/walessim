@@ -2,9 +2,10 @@
  * `preview`: the expected changes of an action, at "about" precision, without changing state.
  * Direct effects at full strength (bedding in sets the year, not the size) with R4 need where a lift
  * lands, the first spread hop of new jobs (S1) and of a rise in Work and pay (S2), the pairs it
- * makes or breaks, and notes on a fresh start (R3) and need (R4). Roots start at 1, so a preview
- * shows the size on the day it opens.
+ * makes or breaks, the backing a council that asked for it gives (P7), and notes on a fresh start
+ * (R3) and need (R4). Roots start at 1, so a preview shows the size on the day it opens.
  */
+import { answerPoints, answersOf, answerYears } from "./asked";
 import { effectAmount, effectTargets, type Origin } from "./effects";
 import { pairApplies } from "./held";
 import { dealServed } from "./deals";
@@ -60,7 +61,7 @@ function growthNotes(model: BoardModel, state: BoardState, def: ProjectDef, site
   if (build) {
     const fresh = buildDiscounts(model, state, def, site).fresh;
     if (fresh > 0) notes.push({ key: "board.build.preview_fresh_start", vars: { n: fresh } });
-    const deal = dealServed(model, state, councils, def.id);
+    const deal = dealServed(model, state, councils, def.id, readyStepOf(state, buildSteps(model, state, def, site)));
     if (deal) notes.push({ key: "board.build.deal", vars: { council: council(deal.council) } });
     const rebuild = councils.map((c) => rebuildAfter(model, state, c)).find((x) => !!x);
     const event = rebuild && model.events.find((e) => e.id === rebuild.record.event);
@@ -116,6 +117,13 @@ export function preview(model: BoardModel, state: BoardState, action: Action): P
       changes = changesOf(model, state, def.effects, origin, factor, year, def.rule ?? `project:${def.id}`, links, needOn(model));
       notes = growthNotes(model, state, def, action.site, origin.councils, action.kind === "build");
       if (action.kind === "build") {
+        // Rule P7: a council asking for what this lifts backs you more once it works (asked.ts).
+        for (const a of answersOf(model, state, def, action.site)) {
+          changes.push({ council: a.council, quantity: "backing", delta: r2(answerPoints(model)), year, rule: RULE_IDS.answered });
+          const measure = model.measures.find((m) => m.id === a.measure)?.name ?? a.measure;
+          const council = model.councils.find((c) => c.code === a.council)?.name ?? a.council;
+          notes.push({ key: "board.build.answers", vars: { council, measure, n: r2(answerPoints(model)), years: answerYears(model) } });
+        }
         const fake: ProjectState = { id: projectStateId(def.id, action.site), project: def.id, site: action.site, level: 1, status: "working", startedStep: state.step, readyStep: state.step, roots: 1, joined: false };
         notes.push(...pairNotes(model, state, { ...state, projects: [...state.projects, fake] }));
         if (def.catch) notes.push({ key: "board.build.catch", vars: { catch: def.catch } });

@@ -3,7 +3,8 @@ import { describe, expect, it } from "vitest";
 import type { Stop, StepReport, StopKind } from "../../engine/api";
 import { act, boardFixture, newBoard, options, STOP_KINDS, tick } from "../../engine/api";
 import { defaultPrefs, pausesOn, readPrefs, stopOnList } from "./prefs";
-import { keepHard, liveQueue, stopsToShow, tickerLines, type QueuedStop } from "./stops";
+import { keepHard, liveQueue, newsTrue, passedWarnings, perYearOf, purseOnce, purseSoon, runUpStops, stopsToShow, tickerLines, type QueuedStop, type TickerLine } from "./stops";
+import { opensRunUp } from "./runup";
 
 const model = boardFixture();
 const stop = (kind: StopKind, hard = false): Stop => ({ kind, hard, say: { key: `board.stop.${kind}` } });
@@ -110,5 +111,58 @@ describe("a card says only what is still true (cold playtest 9, must fix 8)", ()
     }
     // the games did meet cards that stopped being true
     expect(dropped).toBeGreaterThan(0);
+  });
+});
+
+describe("cold playtest 10: the purse, the ticker, passed warnings and the run-up", () => {
+  const all = { ...defaultPrefs(model, false), stops: Object.fromEntries(STOP_KINDS.map((k) => [k, true])) };
+  const purse = model.rules.find((r) => r.id === "B1")?.params["purse_max"]?.default ?? 0;
+  const q = (kind: StopKind, ref?: string, hard = false): QueuedStop => ({ id: `${kind}${ref ?? ""}`, step: 1, stop: { ...stop(kind, hard), ...(ref ? { ref } : {}) } });
+
+  it("shows the full purse card once a game, however often the purse fills", () => {
+    const first = purseOnce([q("purse_full"), q("tipping"), q("purse_full")], false);
+    expect(first.queue.map((x) => x.stop.kind)).toEqual(["purse_full", "tipping"]);
+    expect(first.shown).toBe(true);
+    expect(purseOnce([q("purse_full"), q("warning", "storm")], true).queue.map((x) => x.stop.kind)).toEqual(["warning"]);
+  });
+
+  it("keeps every warning it passes, unread, and nothing else", () => {
+    expect(passedWarnings([q("warning", "storm"), q("tipping"), q("warning", "fuel"), q("election", undefined, true)])).toEqual(["storm", "fuel"]);
+  });
+
+  it("drops a ticker line once its fact is no longer true, and keeps the purse line only while the purse is nearly full", () => {
+    if (purse <= 0) return;
+    const s = newBoard(model, 3, model.starts[0]!.id);
+    const full = tickerLines([report(2, [stop("purse_full")])])[0]!;
+    expect(newsTrue(full, { ...s, coins: purse }, purse, 4)).toBe(true);
+    expect(newsTrue(full, { ...s, coins: purse - 2 }, purse, 4)).toBe(false);
+    const soon: TickerLine = { id: "s", step: 2, kind: "news", council: null, say: { key: "boardclock.purse.tickerSoon" }, live: "purse_soon" };
+    expect(newsTrue(soon, { ...s, coins: purse - 2 }, purse, 4)).toBe(true);
+    expect(newsTrue(soon, { ...s, coins: purse }, purse, 4)).toBe(false);
+    expect(newsTrue(soon, { ...s, coins: purse - 8 }, purse, 4)).toBe(false);
+    expect(purseSoon(purse - 1, purse, 4)).toBe(true);
+    expect(perYearOf({ before: 0, income: 1, running: 0.25, charges: 0, after: 0 }, 4)).toBe(3);
+  });
+
+  it("raises the run-up card exactly once a year before each election, over a whole game", () => {
+    let s = newBoard(model, 5, model.starts[0]!.id);
+    const raised: number[] = [];
+    for (let guard = 0; guard < model.game.steps * 2 && s.phase !== "ended"; guard++) {
+      if (s.phase === "respond") {
+        const o = options(model, s).find((x) => x.allowed && x.action.kind === "respond");
+        if (o) s = act(model, s, o.action);
+        continue;
+      }
+      const r = tick(model, s);
+      s = r.state;
+      const cards = runUpStops(model, [r.report], s);
+      for (const c of cards) {
+        raised.push(r.report.step + 1);
+        expect(liveQueue([c], s, purse)).toHaveLength(1);
+        expect(stopsToShow(model, all, [r.report]).some((x) => x.stop.kind === "election")).toBe(false);
+      }
+    }
+    const expected = Array.from({ length: model.game.steps }, (_, k) => k).filter((k) => opensRunUp(model, k));
+    expect(raised).toEqual(expected);
   });
 });

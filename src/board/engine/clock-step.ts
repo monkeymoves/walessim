@@ -5,7 +5,8 @@
  * Inside step s:
  * 1. visits lapse when their window ends;
  * 2. builds whose ready step is s start working; rail quality follows;
- * 3. roots grow (R1), then held effects move to their targets (ramps, roots);
+ * 3. roots grow (R1), then held effects move to their targets (ramps, roots), and standing parts
+ *    of Backing are brought up to date (P6, P7);
  * 4. events whose landing step is s land;
  * 5. spread S1, S2 and S3 along links;
  * then, arriving at step s + 1:
@@ -28,6 +29,7 @@ import { election as electionView, holdElection, judgePromise, updatePeople } fr
 import { growRoots } from "./roots";
 import { runSpread } from "./spread";
 import { settleCoins } from "./budget";
+import { settleStanding } from "./standing";
 import { nameChapter, noteStep } from "./story";
 import { isElectionStep, seasonOf, stepOfYear, stepsOf, yearOfStep, yearsClosed } from "./time";
 import type { BoardModel, BoardState, ChapterRecord, Phase, ReportLine, StepReport, TermReport } from "./types";
@@ -65,6 +67,8 @@ export function runStep(model: BoardModel, draft: BoardState, light: boolean): S
   applyLinkQuality(model, draft);
   growRoots(ctx);
   applyHeld(ctx);
+  // Standing parts of Backing that start or fade with time (a project's thanks, P7; a broken deal's anger, P6).
+  settleStanding(ctx, s);
   const landed = landEvents(ctx);
   runSpread(ctx);
 

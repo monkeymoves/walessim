@@ -12,6 +12,9 @@
  * After cold playtest 9 (should fix 9): held and paused read apart. Held is "Waiting" (time would
  * run, and waits for what is open: a card, a sheet); paused is "Paused by you" (only Play starts
  * it). With a card on screen the line says what time will do after it (should fix 4).
+ *
+ * After cold playtest 10: the lesson sits above the clock, clear of Pause and the speeds
+ * (tests/e2e/board-fix3.spec.ts), and while it shows no guide note does.
  */
 import { For, Match, Show, Switch, type JSX } from "solid-js";
 import { formatNum, t } from "../lang";
@@ -50,7 +53,7 @@ export function Clock(): JSX.Element {
     }
   };
   // the lesson on pause and speed: the first time time runs, until the player has used them
-  const lesson = () => !c.taught() && !c.prefs().stepByStep && face() === "pause" && c.shown().length === 0;
+  const lesson = () => c.lessonShows();
   return (
     <div class="bw-clock" classList={{ fresh: face() === "start", held: face() === "held" }} data-testid="bw-clock">
       <Switch>

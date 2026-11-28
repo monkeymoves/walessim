@@ -33,17 +33,35 @@
  * always "a town, in its council" (`townOf`), of the same council as {council}.
  */
 import { openedNow } from "./clock-stops";
-import { riverAt } from "./events";
+import { eventRiver, isRiverEvent, riverAt } from "./events";
 import type { StepCtx } from "./ctx";
 import { flagged } from "./end-conditions";
 import { siteCouncil } from "./conditions";
 import { frameAtYear } from "./frame";
 import { regionTurnStep } from "./momentum";
 import { boardScore, councilMean, fairnessGap } from "./score";
-import { stepOfYear } from "./time";
+import { seasonOf, stepOfYear, yearOfStep } from "./time";
 import type {
   BoardModel, BoardState, ChapterDef, ChapterRecord, CouncilCode, EventRecord, Frame, Momentum, SayVar, TermCondition, Text,
 } from "./types";
+
+/** The year a step is shown as (time.ts `shownYear`), re-exported for the end's modules. */
+export { shownYear } from "./time";
+
+/**
+ * The river one event reached a council by. Where it landed (and for every council when the event
+ * is not a flow downstream), the river kept on its record, events.ts `eventRiver`, so a chapter, an
+ * evidence line and a turning point never name two rivers for one flood (playtest 10, must-fix 7:
+ * "The Taff flooded homes in Rhondda Cynon Taf" beside "The Ely burst its banks in Rhondda Cynon
+ * Taf"). Downstream, the river from where it landed to that council; else the council's own river.
+ */
+export function eventRiverAt(model: BoardModel, e: EventRecord, code: CouncilCode): Text | undefined {
+  const i = e.councils.indexOf(code);
+  if (i <= 0) return eventRiver(model, e) ?? riverAt(model, code);
+  const top = e.councils[0];
+  const link = model.links.find((l) => l.kind === "river" && l.name && ((l.from === top && l.to === code) || (l.from === code && l.to === top)));
+  return link?.name ?? riverAt(model, code);
+}
 
 /** The fallback chapter id when the model has no chapters yet. */
 export const FALLBACK_CHAPTER = "holding-on";
@@ -109,9 +127,8 @@ export function dealsJudged(t: Term, kept: boolean): CouncilCode[] {
 const youngMean = (board: Record<CouncilCode, { young: number }> | undefined, codes: CouncilCode[]): number =>
   mean(codes.filter((c) => board?.[c]).map((c) => board![c]!.young));
 
-/** A river flood: an event whose trigger needs a river (model/board/events.yaml). */
-export const isRiverEvent = (model: BoardModel, id: string): boolean =>
-  !!model.events.find((d) => d.id === id)?.trigger.some((c) => c.kind === "feature" && c.feature === "river");
+/** A river flood, and the river one landed event came down: events.ts (event-river.ts), the one rule. */
+export { eventRiver, isRiverEvent };
 
 /**
  * An event's track: its own (outside trouble), or for trouble your builds grow, the track its
@@ -226,7 +243,7 @@ export function termSlots(t: Term): Record<string, SayVar> {
   const slots: Record<string, SayVar> = {};
   const bad = t.events.filter((e) => !model.events.find((d) => d.id === e.event)?.good);
   const storm = [...bad].filter((e) => isRiverEvent(model, e.event)).sort((a, b) => b.severity - a.severity || a.step - b.step)[0];
-  const river = storm ? riverAt(model, storm.councils[0]!, storm.councils[1]) : undefined;
+  const river = storm ? eventRiver(model, storm) : undefined;
   if (river) slots.river = river;
   // {town} is always a town of {council}, so a chapter never names two places that disagree
   const council = dealsJudged(t, true)[0] ?? dealsJudged(t, false)[0] ?? mostMoved(t, false);
@@ -272,10 +289,12 @@ function slotsFor(t: Term, def: ChapterDef, slots: Record<string, SayVar>): Reco
   const c = def.when.find((x): x is Extract<TermCondition, { kind: "event_landed" }> => x.kind === "event_landed" && x.at_most === undefined);
   if (!c) return slots;
   const rivers = slotsUsed(def).has("river");
-  const where = landedMatching(t, c, rivers)[0]?.councils[0];
+  const told = landedMatching(t, c, rivers)[0];
+  const where = told?.councils[0];
   const { river: _r, ...rest } = slots;
-  if (!where) return rivers ? rest : slots;
-  const river = rivers ? riverAt(model, where) : undefined;
+  if (!told || !where) return rivers ? rest : slots;
+  // the river of this very event, as its warning, its landed line and the turning points name it
+  const river = rivers ? eventRiver(model, told) : undefined;
   return { ...rest, council: councilName(model, where), town: townOf(model, where), ...(river ? { river } : {}) };
 }
 

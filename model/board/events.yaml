@@ -161,7 +161,7 @@ events:
     prepared_by: [skills-college, buses-meet-trains]
     responses:
       - { id: accept, name: { en: "Ride it out", cy: "Dal ati", cy_review: true }, what: { en: "Let people find their own way.", cy: "Gadael i bobl ffeindio'u ffordd eu hunain.", cy_review: true }, cost: 0, effects: [], handled_well: false }
-      - { id: short-courses, name: { en: "Free short courses", cy: "Cyrsiau byr am ddim", cy_review: true }, what: { en: "Short courses for adults in the skills firms now want.", cy: "Cyrsiau byr i oedolion yn y sgiliau mae cwmnïau eu heisiau nawr.", cy_review: true }, cost: 1, effects: [{ kind: measure, measure: work, points: 0.2 }], handled_well: true }
+      - { id: short-courses, name: { en: "Free short courses for learners", cy: "Cyrsiau byr am ddim i ddysgwyr", cy_review: true }, what: { en: "Short courses for adults in the skills firms now want.", cy: "Cyrsiau byr i oedolion yn y sgiliau mae cwmnïau eu heisiau nawr.", cy_review: true }, cost: 1, effects: [{ kind: measure, measure: work, points: 0.2 }], handled_well: true }
     sources: [returns-qualifications, sw_qualifications]
 
   # ===========================================================================
@@ -321,7 +321,7 @@ events:
     sources: [housing-elasticity, ons_affordability]
 
   - id: surgery-closes
-    name: { en: "The surgery closes", cy: "Y feddygfa'n cau", cy_review: true }
+    name: { en: "The surgery closes", cy: "Meddygfa'n cau", cy_review: true }
     origin: grown
     good: false
     severity: 0

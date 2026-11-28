@@ -17,7 +17,10 @@ import { uniform } from "../../engine/rng";
 import { trackValue } from "./conditions";
 import type { StepCtx } from "./ctx";
 import { applyOnce } from "./effects";
+import { riverLinkAt } from "./event-river";
 import { landOne, planEvent, preparedHere } from "./events-land";
+
+export { eventRiver, isRiverEvent, riverLinkAt } from "./event-river";
 import { outsideSchedule, repeatLimits } from "./events-schedule";
 import { optParam } from "./rules";
 import { specialStands } from "./specials";
@@ -176,8 +179,7 @@ export const eventNoun = (event: EventId): string => `board.event.${event}`;
  * it (a river's last council, such as Cardiff on the Taff). Undefined where no river runs.
  */
 export function riverAt(model: BoardModel, council: CouncilCode, next?: CouncilCode): Text | undefined {
-  const rivers = model.links.filter((l) => l.kind === "river" && l.name);
-  return (rivers.find((l) => l.from === council && l.to === next) ?? rivers.find((l) => l.from === council) ?? rivers.find((l) => l.to === council))?.name;
+  return riverLinkAt(model, council, next)?.name;
 }
 
 /** "A, B and C" in both languages, from council names. */

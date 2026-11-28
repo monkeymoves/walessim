@@ -20,6 +20,7 @@
  "build.preview": "If you build this here",
  "build.preview_pair": "Works better here: {pair}.",
  "build.preview_apart": "Watch out: {pair}.",
+ "build.answers": "{council} is asking for {measure}. Backing there rises about {n} once this works, then fades over {years} years.",
  "build.deal": "This would keep your deal with {council}.",
  "build.rebuild": "After {event}, builds here take half the time until {year}.",
  "build.preview_fresh_start": "A fresh start here: it costs {n} less, and it has company for years.",

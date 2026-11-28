@@ -59,3 +59,17 @@ describe("on the way", () => {
     expect(headway(quiet, s).comingBy).toBeNull();
   });
 });
+
+describe("on the way, quick builds and upgrades (playtest 10 should-fix 4)", () => {
+  it("a build or upgrade that works at once moves Left for 2050 the moment it is made, before the next step lays it on the board", () => {
+    let s = newBoard(quiet, 5, quiet.starts[0]!.id);
+    s = act(quiet, s, build);
+    for (let i = 0; i < 60; i++) s = tick(quiet, s).state;
+    const before = scores(quiet, s).left;
+    // As an upgrade (or a build after a win that makes builds faster) leaves it: working now, at a
+    // new level, with nothing yet on the board for the difference.
+    const after = structuredClone(s);
+    after.projects.find((p) => p.project === "welsh-school")!.level = 2;
+    expect(scores(quiet, after).left).toBeGreaterThan(before + 0.01);
+  });
+});

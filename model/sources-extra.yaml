@@ -129,7 +129,20 @@ sources:
   - id: transport-labour
     title: Transport access and labour market participation studies (body of literature)
     publisher: Various
-    note: Placeholder strength. to check
+    licence: Not one publication, so no single licence. No figure is taken from it.
+    note:
+      en: "A rough guess. Studies of buses, trains and work point this way, but the evidence for the size is still to find. Every size that cites it is a game rule."
+      cy: "Amcan bras. Mae astudiaethau o fysiau, trenau a gwaith yn pwyntio fel hyn, ond mae'r dystiolaeth am y maint i'w chanfod eto. Rheol gêm yw pob maint sy'n ei ddyfynnu."
+      cy_review: true
+  - id: transport-health-access
+    title: "Making the Connections: final report on transport and social exclusion"
+    publisher: Social Exclusion Unit, Office of the Deputy Prime Minister
+    year: 2003
+    licence: Not stated here. No figure is taken from it.
+    note:
+      en: "A rough guess. It found that people without transport miss or turn down health care, so buses that reach the station may help health. The size is a game rule, and the link is still to check against Welsh evidence."
+      cy: "Amcan bras. Canfu fod pobl heb drafnidiaeth yn colli neu'n gwrthod gofal iechyd, felly gall bysiau sy'n cyrraedd yr orsaf helpu iechyd. Rheol gêm yw'r maint, ac mae'r cysylltiad i'w wirio eto yn erbyn tystiolaeth o Gymru."
+      cy_review: true
   - id: wg-io-2022
     title: Supply, Use and Input-Output Tables 2022, Table 5 (indicative economic multipliers)
     publisher: Welsh Government

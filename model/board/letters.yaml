@@ -1,5 +1,5 @@
 # Letters from 2050 (docs/design/v2-board.md sections 8 and 16.5.3). Owner: package 10.
-# 36 letters: three for each of the twelve endings.
+# 37 letters: three for each of the twelve endings, and a fourth for The gamble when work came back.
 # Each is a MADE-UP VOICE, and says so in its sign-off. It comes from the place the ending is about
 # (endings.ts `letterFrom`): the keystone's council, where the event it needs landed, the place
 # furthest behind that moved most the ending's way, else the council that changed most.
@@ -12,6 +12,10 @@
 # a corner, {project} opened by then ("It started to turn with ..."), and {year} is the year it
 # opened, as every screen dates it. {town} is a town with its council ("Treorchy, in Rhondda Cynon
 # Taf"), so the sign-off and the heading "A letter from Rhondda Cynon Taf" name one place.
+# {work_back_in} and {work_fell_in} are the council's name when work there is at or above 2026, or
+# below it (endings.ts `workSlots`); only one is filled, and a letter whose salutation, body or
+# sign-off needs a slot the game cannot fill is not offered (`letterSayable`). So The gamble's letter
+# about picking up the pieces never sits beside "found new work" (playtest 10, must-fix 8).
 # A letter says nothing about whether its place got better or worse unless the ending makes that
 # true (a voice from a council that changed most may have changed either way).
 # People talking: exempt from the plain words list, not from the 18 word and no dash rules.
@@ -192,7 +196,7 @@ letters:
     ending: gamble
     lower: life
     salutation: { en: "To whoever ran Wales from 2026,", cy: "At bwy bynnag oedd yn rhedeg Cymru o 2026,", cy_review: true }
-    body: { en: "When the big firm came, the whole town cheered. I got a job there, and so did my brother. When it went, it went fast. Nothing else had grown up around it. We are still picking up the pieces.", cy: "Pan ddaeth y cwmni mawr, roedd y dref gyfan yn bloeddio. Ces i swydd yno, a fy mrawd hefyd. Pan aeth, aeth yn gyflym. Doedd dim byd arall wedi tyfu o'i gwmpas. Rydyn ni'n dal i godi'r darnau.", cy_review: true }
+    body: { en: "When the big firm came, the whole town cheered. I got a job there, and so did my brother. When it went, it went fast. Nothing else had grown up around it. We are still picking up the pieces in {work_fell_in}.", cy: "Pan ddaeth y cwmni mawr, roedd y dref gyfan yn bloeddio. Ces i swydd yno, a fy mrawd hefyd. Pan aeth, aeth yn gyflym. Doedd dim byd arall wedi tyfu o'i gwmpas. Rydyn ni'n dal i godi'r darnau yn {work_fell_in}.", cy_review: true }
     named: { en: "The big firm came to {town}, in {year}. We thought it would stay.", cy: "Daeth y cwmni mawr i {town}, yn {year}. Roedden ni'n meddwl y byddai'n aros.", cy_review: true }
     signoff: { en: "A former machine operator in {town} (a made-up voice)", cy: "Cyn-weithredwr peiriannau yn {town} (llais dychmygol)", cy_review: true }
 
@@ -310,6 +314,14 @@ letters:
     body: { en: "I was on the line the day it opened, and on the line the day it shut. In between, it was the best job I ever had. When it went, there was little else to go to. I am not angry now. I am careful.", cy: "Roeddwn i ar y lein y diwrnod agorodd, ac ar y lein y diwrnod caeodd. Yn y canol, dyna'r swydd orau ges i erioed. Pan aeth, doedd fawr ddim arall i fynd iddo. Dwi ddim yn grac nawr. Dwi'n ofalus.", cy_review: true }
     named: { en: "The big firm opened in {town}, in {year}.", cy: "Agorodd y cwmni mawr yn {town}, yn {year}.", cy_review: true }
     signoff: { en: "A factory worker in {town} (a made-up voice)", cy: "Gweithiwr ffatri yn {town} (llais dychmygol)", cy_review: true }
+
+  - id: gamble-mended
+    ending: gamble
+    lower: either
+    salutation: { en: "To whoever brought the big firm here, and saw it go,", cy: "At bwy bynnag ddaeth â'r cwmni mawr yma, a'i weld yn mynd,", cy_review: true }
+    body: { en: "When the big firm went, we thought that was the end of us. It was not. Smaller places took people on, one or two at a time. There is work in {work_back_in} again. It is not the same work. But no one can shut it all with one letter.", cy: "Pan aeth y cwmni mawr, roedden ni'n meddwl mai dyna'r diwedd. Nid felly y bu. Cymerodd llefydd llai bobl ymlaen, un neu ddau ar y tro. Mae gwaith yn {work_back_in} eto. Nid yr un gwaith yw e. Ond all neb ei gau i gyd gydag un llythyr.", cy_review: true }
+    named: { en: "The big firm opened in {town}, in {year}, and later left.", cy: "Agorodd y cwmni mawr yn {town} yn {year}, ac yn nes ymlaen fe adawodd.", cy_review: true }
+    signoff: { en: "A shop owner in {town} (a made-up voice)", cy: "Perchennog siop yn {town} (llais dychmygol)", cy_review: true }
 
   - id: holding-line-either
     ending: holding-line

@@ -57,6 +57,10 @@ describe("board screen copy", () => {
     "momentum": ["rising", "slipping"],
     "stop.tipping": ["rising", "slipping"],
     "why.span": ["year", "term", "all"],
+    "targets.now": ["strong_win", "win", "lost"],
+    "targets.holdHead": ["win", "strong_win"],
+    "targets.here.hold": ["win", "strong_win"],
+    "cause": ["group", "groupOne", "groupMood", "groupMoodOne", "groupExpect", "groupExpectOne", "groupSettle", "groupSettleOne"],
     ...Object.fromEntries(["election", "ended", "warning", "keystone", "tier_open", "visit", "tipping", "chapter", "deal_due", "purse_full", "finished", "year"].map((k) => [`stop.${k}`, ["title", "line"]])),
   };
   for (const [lang, d] of [["en", en], ["cy", cy]] as const) {

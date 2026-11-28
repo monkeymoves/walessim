@@ -103,7 +103,8 @@ interface Window { arriving: number; overYears: number }
 
 const pastFrame = (model: BoardModel, state: BoardState, w: Window) => frameAtYear(state, yearOfStep(model, w.arriving) - w.overYears);
 
-interface Signal { value: number; reason: Say }
+/** A signal, and the part of it that is people expecting more (P1 `expect_points`, `expect_rise`), 0 or less. */
+interface Signal { value: number; reason: Say; expect?: number }
 
 /** Rule P1: the share of a measure judgement made against the middle council (phase 1: one half). */
 const middleShare = (model: BoardModel): number => optParam(model, RULE_IDS.moods, "middle_share") ?? 0.5;
@@ -145,7 +146,12 @@ function measureChange(model: BoardModel, state: BoardState, code: CouncilCode, 
 export function expectedGain(model: BoardModel, state: BoardState): number {
   const first = optParam(model, RULE_IDS.moods, "expect_points") ?? 0;
   const rise = optParam(model, RULE_IDS.moods, "expect_rise") ?? 0;
-  return first + rise * state.election.records.length;
+  // A lost election eases it (P1 `loss_eases`, terms of expectation a loss takes back; playtest 10
+  // must-fix 4: a careless game sat at 0 of 10 councils for twelve years). 0 when the card lacks it.
+  const eases = optParam(model, RULE_IDS.moods, "loss_eases") ?? 0;
+  const records = state.election.records;
+  const lost = records.filter((r) => r.result === "lost").length;
+  return first + rise * Math.max(0, records.length - lost - eases * lost);
 }
 
 function signal(model: BoardModel, state: BoardState, code: CouncilCode, care: GroupCare, over: Window): Signal {
@@ -157,7 +163,7 @@ function signal(model: BoardModel, state: BoardState, code: CouncilCode, care: G
     const value = here - middleShare(model) * middle - expected;
     // Better, but not by as much as people expect: say so, rather than "got worse".
     const key = value < 0 && here > 0 && expected > 0 ? "board.mood.measure.slow" : `board.mood.measure.${dir(value)}`;
-    return { value, reason: { key, vars: { measure: measureName(model, m) } } };
+    return { value, reason: { key, vars: { measure: measureName(model, m) } }, expect: -expected };
   }
   if (care === "fell_most") {
     let worst: MeasureId = MEASURE_IDS[0]!;
@@ -239,7 +245,13 @@ export function moveMoods(ctx: StepCtx, years: number): void {
       const next = passed ? clamp10(moved - loss) : moved;
       c.moods[g.id] = { mood: round4(next), reason: passed ? { key: "board.mood.passed_over", vars: { years: passedYears } } : strongest?.reason };
       const w = total > 0 ? groupWeight(model, g, code) / total : 0;
-      record(ctx, code, w * (moved - old), RULE_IDS.moods, { kind: "people", group: g.id });
+      // The part of the move that is people expecting more is its own record, so Why? can name it
+      // (playtest 10 must-fix 3). When the mood is held at 0 or 10 the whole move stays as one.
+      const sExpect = sig.length ? sig.reduce((a, x) => a + (x.expect ?? 0), 0) / sig.length : 0;
+      const raw = memory * old + (1 - memory) * (base + pull * s);
+      const expectPart = raw === moved ? (1 - memory) * pull * sExpect : 0;
+      record(ctx, code, w * (moved - old - expectPart), RULE_IDS.moods, { kind: "people", group: g.id });
+      record(ctx, code, w * expectPart, RULE_IDS.moods, { kind: "people", group: g.id, expect: true });
       record(ctx, code, w * (next - moved), RULE_IDS.passedOver, { kind: "people", group: g.id });
     }
   }

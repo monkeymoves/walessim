@@ -2,7 +2,9 @@
  * `councilView`: one council as the council panel shows it. A pure read of model and state:
  * the moods, risks and measures it shows are written by the clock's step modules.
  */
+import { askingFor } from "./asked";
 import { BoardModelError } from "./errors";
+import { councilLever } from "./levers";
 import { freshStartHere } from "./roots";
 import { param } from "./rules";
 import type {
@@ -48,7 +50,6 @@ export function councilView(model: BoardModel, state: BoardState, code: CouncilC
     .filter((i) => def.real[i.id] !== undefined)
     .map((i) => ({ indicator: i.id, name: i.name, value: def.real[i.id]!, unit: i.unit, year: i.year, source: i.source, measure: measureOf(i.id) }));
 
-  const sorted = [...MEASURE_IDS].sort((a, b) => now.measures[a] - now.measures[b]);
   const pending = state.pending.find((p) => p.kind === "visit" && p.council === code);
 
   return {
@@ -86,7 +87,8 @@ export function councilView(model: BoardModel, state: BoardState, code: CouncilC
         name: l.name,
       })),
     projects: state.projects.filter((p) => projectTouches(model, p, code)),
-    asking: sorted.slice(0, 2),
+    asking: askingFor(model, state, code),
+    lever: councilLever(model, state, code),
     momentum: now.momentum,
     freshStart: freshStartHere(model, state, code),
     deal: state.deals.find((d) => d.council === code && d.kept === null) ?? null,

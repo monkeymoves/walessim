@@ -113,7 +113,7 @@ stubs:
     name: { en: "Powys", cy: "Powys", cy_review: true }
     centre: [135.8, 166.8]
   - id: "stub:bristol"
-    name: { en: "Bristol and South Gloucestershire", cy: "Bryste a Swydd Gaerloyw'r De", cy_review: true }
+    name: { en: "Bristol and South Gloucestershire", cy: "Bryste a De Swydd Gaerloyw", cy_review: true }
     centre: [191.0, 227.5]
   - id: "stub:border"
     name: { en: "The English border: Forest of Dean and Herefordshire", cy: "Y ffin â Lloegr: Fforest y Ddena a Swydd Henffordd", cy_review: true }

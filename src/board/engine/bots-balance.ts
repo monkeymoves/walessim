@@ -45,6 +45,8 @@ export interface RunResult {
   /** Councils that were ever on the rise. */
   risen: CouncilCode[];
   electionsLost: number;
+  /** Councils backing you at each election, by its year (no wipe-out, playtest 10 must-fix 4). */
+  backersAt?: { year: number; backers: number }[];
   /** Elections held in the game (five in a whole game). */
   elections: number;
   /** Coins paid in over the game, and coins lost to a full purse (B1 `purse_max`), when the run watched its steps. */
@@ -130,6 +132,7 @@ export function runResult(model: BoardModel, bot: string, game: number, state: B
     youngRatio: { min: Math.min(...ratios), max: Math.max(...ratios) },
     tips, risen,
     electionsLost: records.filter((r) => r.result === "lost").length,
+    backersAt: records.map((r) => ({ year: r.year, backers: r.backers.length })),
     elections: records.length,
     ...(coins ? { coins } : {}),
     recovered: lostAt >= 0 && records[lostAt + 1] ? records[lostAt + 1]!.result !== "lost" : null,

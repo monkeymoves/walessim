@@ -3,6 +3,7 @@
  * repeal a law, and settle a place visit's grade on the project it scales. Responses are
  * events.ts (package 3), called through hooks.ts.
  */
+import { answersOf } from "./asked";
 import { siteCouncils } from "./conditions";
 import type { StepCtx } from "./ctx";
 import { buildDiscounts, buildSteps, costOf, projectDef, projectStateId, reachedBy, readyStepOf, siteOf } from "./projects";
@@ -35,10 +36,13 @@ export function applyBuild(ctx: StepCtx, a: Build): void {
   pay(ctx, cost + fresh + deal, a.project, a.site);
   if (free) state.freeProject = null;
   const bs = buildSteps(model, state, def, a.site);
+  // Rule P7: judged now, against what each council is asking for as the player sees it.
+  const answers = answersOf(model, state, def, a.site);
   state.projects.push({
     id: projectStateId(a.project, a.site), project: a.project, site: { ...a.site } as ProjectState["site"], level: 1,
     status: bs === 0 ? "working" : "building", startedStep: state.step, readyStep: readyStepOf(state, bs), roots: 1, joined: false,
     ...(free ? { free: true } : {}),
+    ...(answers.length ? { answers } : {}),
   });
   for (const code of reachedBy(model, a.site)) {
     const c = state.councils[code];

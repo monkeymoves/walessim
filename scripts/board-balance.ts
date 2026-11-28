@@ -1,6 +1,7 @@
 /**
- * The bot gate (docs/design/v2-board.md sections 13.2 and 16.6, and the four marks playtest 9 added:
- * careless loses, skill still wins, coins have a use, laws cost): plays the thirteen strategy bots
+ * The bot gate (docs/design/v2-board.md sections 13.2 and 16.6, the four marks playtest 9 added:
+ * careless loses, skill still wins, coins have a use, laws cost, and the two playtest 10 added: a
+ * lever exists, no wipe-out): plays the thirteen strategy bots
  * over many game numbers, across every start and future, plus the measures that need games of
  * their own, and prints the 16.6 table. Writes it to docs/design/board-balance-log.md unless
  * --no-write. Games run in parallel child processes (one per core less one, at most 11).
@@ -26,6 +27,7 @@ import { spreader } from "../src/board/engine/bots-strategies";
 import { botSummary, coinWatch, earlyWatch, median, runResult, type RunResult } from "../src/board/engine/bots-balance";
 import { balanceTable, tableMarkdown } from "../src/board/engine/bots-marks";
 import { clockExact, compoundRatio, idleDrift, lawCost } from "../src/board/engine/bots-probes";
+import { leverWatch } from "../src/board/engine/bots-levers";
 import { keystonesStanding } from "../src/board/engine/end-conditions";
 import { drawFuture, scheduledSeverity } from "../src/board/engine/events";
 import { param } from "../src/board/engine/rules";
@@ -61,12 +63,14 @@ type Job =
   | { kind: "bots"; game: number }
   | { kind: "shuffled"; game: number }
   | { kind: "spreader"; game: number }
+  | { kind: "levers"; game: number }
   | { kind: "search"; from: number; to: number }
   | { kind: "probe"; game: number };
 type Out =
   | { kind: "bots"; runs: RunResult[] }
   | { kind: "shuffled"; result: number }
   | { kind: "spreader"; result: number }
+  | { kind: "levers"; cases: number; lifted: number }
   | { kind: "search"; runs: number; four: number; three: number }
   | { kind: "probe"; drift: number; ratio: number | null; law: { most: number; least: number } };
 
@@ -88,6 +92,11 @@ function runJob(model: BoardModel, job: Job): Out {
   if (job.kind === "spreader") {
     return { kind: "spreader", result: runResult(model, "spreader", job.game, playGame(model, spreader(), job.game, startFor(model, job.game))).result };
   }
+  if (job.kind === "levers") {
+    const watch = leverWatch(model);
+    playGame(model, skilled(), job.game, startFor(model, job.game), realEngine, watch.observe);
+    return { kind: "levers", ...watch.count() };
+  }
   if (job.kind === "search") {
     const out = { kind: "search" as const, runs: 0, four: 0, three: 0 };
     for (let g = job.from; g < job.to; g++) {
@@ -107,6 +116,7 @@ function jobs(): Job[] {
   for (let g = 1; g <= GAMES; g++) out.push({ kind: "bots", game: g });
   for (let g = 1; g <= SHUFFLE_GAMES; g++) out.push({ kind: "shuffled", game: g });
   for (let g = 1; g <= SHUFFLE_GAMES; g++) out.push({ kind: "spreader", game: g });
+  for (let g = 1; g <= SHUFFLE_GAMES; g++) out.push({ kind: "levers", game: g });
   for (let g = 1; g <= SEARCH; g += SEARCH_CHUNK) out.push({ kind: "search", from: g, to: Math.min(SEARCH + 1, g + SEARCH_CHUNK) });
   return out;
 }
@@ -158,6 +168,8 @@ async function main(): Promise<void> {
   const search = { runs: 0, four: 0, three: 0 };
   for (const o of outs) if (o.kind === "search") { search.runs += o.runs; search.four += o.four; search.three += o.three; }
   const probes = outs.flatMap((o) => (o.kind === "probe" ? [o] : []));
+  const levers = { cases: 0, lifted: 0 };
+  for (const o of outs) if (o.kind === "levers") { levers.cases += o.cases; levers.lifted += o.lifted; }
   const ratios = probes.flatMap((p) => (p.ratio === null ? [] : [p.ratio]));
   const sev = Array.from({ length: GAMES }, (_, i) => scheduledSeverity(model, hashSeed(i + 1), drawFuture(model, hashSeed(i + 1))));
   const clock = clockExact(model, 1);
@@ -173,6 +185,7 @@ async function main(): Promise<void> {
     endingsTotal: model.endings.length,
     chaptersTotal: model.chapters.length,
     clock,
+    levers,
     seconds: { taken: seconds, quick: GAMES <= 20 && SEARCH <= 300 },
   });
   const summary = botSummary(runs).map((b) => `| ${b.bot} | ${b.median.toFixed(1)} | ${b.p10.toFixed(1)} to ${b.p90.toFixed(1)} | ${b.keystones.toFixed(2)} | ${Object.entries(b.endings).sort((a, c) => c[1] - a[1]).map(([e, n]) => `${e} ${n}`).join(", ")} |`);
@@ -180,7 +193,7 @@ async function main(): Promise<void> {
   const text = [
     `# Board balance log`,
     ``,
-    `Model: ${label} (hash ${model.meta.hash}${model.meta.fixture ? ", fixture: illustrative numbers" : ""}). ${GAMES} game numbers, every start in turn, futures drawn from the game number. ${SEARCH} random search runs, ${PROBE_GAMES} games for the idle, compounding and law measures, ${SHUFFLE_GAMES} each for Skilled at random sites and for Spreader. Took ${seconds.toFixed(0)} seconds.`,
+    `Model: ${label} (hash ${model.meta.hash}${model.meta.fixture ? ", fixture: illustrative numbers" : ""}). ${GAMES} game numbers, every start in turn, futures drawn from the game number. ${SEARCH} random search runs, ${PROBE_GAMES} games for the idle, compounding and law measures, ${SHUFFLE_GAMES} each for Skilled at random sites, for Spreader and for the lever measure. Took ${seconds.toFixed(0)} seconds.`,
     ``,
     `Every size in the game is a game rule; these are measures of the bots, not of Wales.`,
     ``,

@@ -39,7 +39,7 @@ describe("boardend copy", () => {
 
   it("has the keys that are built from data (bands, grades, moments, themes, kinds)", () => {
     const need = [
-      ...["much_worse", "little_worse", "same", "little_better", "much_better"].map((b) => `band.${b}`),
+      ...["much_worse", "worse", "little_worse", "same", "little_better", "better", "much_better"].map((b) => `band.${b}`),
       ...["poorly", "adequately", "well", "very_well"].map((g) => `grade.${g}`),
       ...["tier_open", "keystone", "tipped", "region_turn", "election", "event", "promise", "deal", "people"].map((k) => `moment.${k}`),
       ...["spread", "budget", "people", "projects", "events", "score", "growth"].map((k) => `book.theme.${k}`),

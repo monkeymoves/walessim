@@ -21,6 +21,12 @@
  *   where a letter's council turned a corner, the project it names had opened by then;
  * - (should-fix 2) a town the board never shows is always named with its council, and a chapter's
  *   {town} is in its {council}.
+ * - (playtest 10) every year the end gives for a project or a flood is the year the board's season
+ *   words give it (should-fix 10: a letter said 2034 where the build said Spring 2035); one flood is
+ *   on one river in every telling (must-fix 7); The gamble's summary, evidence and letter agree on
+ *   whether work came back (must-fix 8); the record gives every deal its year, never one line
+ *   twice (must-fix 1), and ends on the backing the top strip shows in 2050 (must-fix 6); the end
+ *   screen offers the letters the engine offers.
  * The games include careless and losing ones: idle games that build nothing, careless gamblers who
  * land one big employer and nothing else, and extra Random and Scatter games.
  */
@@ -32,11 +38,14 @@ import { allBots, playGame, startFor } from "./bots";
 import { siteCouncil, siteCouncils } from "./conditions";
 import { flagged } from "./end-conditions";
 import { ending, firstRise, focusOf, gapClosed, gapTold, letterChoices, notBuildable, pickEnding } from "./endings";
-import { townOf } from "./story-terms";
+import { eventRiver, eventRiverAt, shownYear, townOf } from "./story-terms";
 import { frameAtYear } from "./frame";
+import { countBacking } from "./people";
 import { fairnessGap } from "./score";
 import { isRiverEvent } from "./story-terms";
 import { stepOfYear, yearOfStep } from "./time";
+import { backingAtEnd, dealsOf } from "../ui/end/record";
+import { letterChoicesOf } from "../ui/end/view";
 import type { BoardModel, BoardState, ChapterRecord, Ending, SayVar, Text } from "./types";
 
 let model: BoardModel;
@@ -118,7 +127,8 @@ function saidOf(g: (typeof games)[number]): { where: string; text: string }[] {
   return out;
 }
 
-const openYear = (p: { readyStep: number }) => yearOfStep(model, p.readyStep + 1);
+/** The year a project opened, as its build card says it ("Working from Spring 2035"). */
+const openYear = (p: { readyStep: number }) => shownYear(model, p.readyStep + 1);
 const projectNamed = (name: string) => model.projects.find((d) => d.name.en === name);
 
 describe("the end screen tells no contradictions (bot games on the real model)", () => {
@@ -322,7 +332,7 @@ describe("the end screen tells no contradictions (bot games on the real model)",
     const check = (label: string, s: BoardState, vars: Record<string, SayVar>, at: string | undefined) => {
       if (vars.project === undefined) return;
       const p = s.projects.find((x) => x.status === "working" && model.projects.find((d) => d.id === x.project)?.name.en === en(vars.project)
-        && (!at || siteCouncils(model, x).includes(at)) && yearOfStep(model, x.readyStep + 1) === vars.year);
+        && (!at || siteCouncils(model, x).includes(at)) && openYear(x) === vars.year);
       expect(p, `${label}: ${en(vars.project)} in ${at}, ${String(vars.year)}`).toBeDefined();
       expect(en(vars.project), label).not.toBe(en(vars.town));
     };
@@ -354,5 +364,111 @@ describe("the end screen tells no contradictions (bot games on the real model)",
         expect(letterChoices(model, g.state, e, lower).length, `${e.id} ${lower}`).toBeGreaterThanOrEqual(2);
       }
     }
+  });
+  it("one flood is on one river in every telling: chapters, evidence and the turns not taken", () => {
+    let told = 0;
+    for (const g of games) {
+      const floods = g.state.events.filter((e) => isRiverEvent(model, e.event) && !model.events.find((d) => d.id === e.event)?.good);
+      // a chapter's river is the river of a flood that landed in its council that term
+      for (const c of g.end.story.chapters.filter((x) => x.slots.river !== undefined && /\{river\}/.test(`${chapterDef(x).name.en} ${chapterDef(x).line.en}`))) {
+        const where = councilByName(en(c.slots.council));
+        const term = floods.filter((e) => e.step >= stepOfYear(model, c.fromYear) && e.step < stepOfYear(model, c.toYear));
+        const rivers = term.filter((e) => !where || e.councils[0] === where).map((e) => eventRiver(model, e)?.en);
+        expect(rivers, `${g.label}: ${fill(chapterDef(c).name, c.slots)} (${c.fromYear} to ${c.toYear})`).toContain(en(c.slots.river));
+        told++;
+      }
+      // an evidence line that names a flood's year names that flood's river
+      for (const l of g.end.evidence) {
+        const v = l.say.vars!;
+        if (v.river === undefined || !l.council || !(v.line as Text).en.includes("{river}")) continue;
+        const there = floods.filter((e) => e.councils.includes(l.council!));
+        const last = there[there.length - 1];
+        if (last) expect(en(v.river), `${g.label}: ${fill(v.line as Text, v)}`).toBe(eventRiverAt(model, last, l.council)!.en);
+      }
+    }
+    expect(told, "river chapters told").toBeGreaterThanOrEqual(1);
+  });
+
+  it("every year said for a flood is the year the board's season words give it", () => {
+    for (const g of games) {
+      for (const l of g.end.evidence) {
+        const v = l.say.vars!;
+        if (v.river === undefined || v.year === undefined || !l.council || !(v.line as Text).en.includes("{river}")) continue;
+        const there = g.state.events.filter((e) => e.councils.includes(l.council!) && isRiverEvent(model, e.event) && !model.events.find((d) => d.id === e.event)?.good);
+        const last = there[there.length - 1];
+        expect(v.year, `${g.label}: ${fill(v.line as Text, v)}`).toBe(last ? shownYear(model, last.step) : model.game.first_year);
+      }
+      for (const m of g.state.story.moments) {
+        if (m.kind === "keystone" || m.kind === "election") continue;
+        expect(m.year, `${g.label}: ${m.kind} at step ${m.step}`).toBe(shownYear(model, m.step));
+      }
+    }
+  });
+
+  it("The gamble's summary, evidence and letter agree on whether work came back", () => {
+    const back = /found new work|work in .* again/i;
+    const fell = /picking up the pieces|Work and pay fell|Work and pay in .* is lower/i;
+    let gambles = 0;
+    for (const g of games) {
+      const said = [g.end.summary.en, ...saidOf(g).map((x) => x.text)];
+      const saysBack = said.filter((x) => back.test(x)), saysFell = said.filter((x) => fell.test(x));
+      expect(saysBack.length > 0 && saysFell.length > 0, `${g.label}: ${[...saysBack, ...saysFell].join(" | ")}`).toBe(false);
+      if (g.end.id !== "gamble") continue;
+      gambles++;
+      const from = g.end.letter.from;
+      const change = g.state.councils[from]!.measures.work - g.state.history[0]!.councils[from]!.measures.work;
+      if (saysBack.length) expect(change, `${g.label}: says work came back in ${from}`).toBeGreaterThanOrEqual(0);
+      if (saysFell.length) expect(change, `${g.label}: says work fell in ${from}`).toBeLessThan(0);
+    }
+    expect(gambles, "games that ended in The gamble").toBeGreaterThanOrEqual(1);
+  });
+
+  it("the end screen offers the letters the engine offers, each one sayable whole", () => {
+    for (const g of games) {
+      const built = model.endings.find((e) => e.id === g.end.id)!;
+      const engine = letterChoices(model, g.state, built, g.end.scores.lower, g.end.letter.slots as Record<string, unknown>).map((l) => l.id);
+      const screen = letterChoicesOf(model, g.end);
+      expect([...screen].sort(), g.label).toEqual([...engine].sort());
+      expect(screen[0], g.label).toBe(g.end.letter.letter);
+      expect(screen.length, `${g.label}: ${g.end.id}`).toBeGreaterThanOrEqual(1);
+      for (const part of saidOf(g).filter((x) => x.where.startsWith("letter"))) {
+        const def = model.letters.find((l) => `letter ${l.id}` === part.where)!;
+        if (part.text === fill(def.named, g.end.letter.slots as Record<string, SayVar>)) continue;
+        expect(part.text, `${g.label} ${part.where}`).not.toMatch(/\{\w+\}/);
+      }
+    }
+  });
+
+  it("every ending offers at least two letters whichever way work went", () => {
+    const g = games[0]!;
+    const name = model.councils[0]!.name;
+    for (const e of model.endings) {
+      for (const lower of ["life", "left"] as const) {
+        for (const work of [{ work_back_in: name }, { work_fell_in: name }]) {
+          const slots = { council: name, town: name, place: name, ...work };
+          expect(letterChoices(model, g.state, e, lower, slots).length, `${e.id} ${lower} ${Object.keys(work)[0]}`).toBeGreaterThanOrEqual(2);
+        }
+      }
+    }
+  });
+
+  it("the record gives every deal its year, no line twice, and ends on the backing the top strip shows", () => {
+    let deals = 0;
+    for (const g of games) {
+      const lines = dealsOf(model, g.state);
+      deals += lines.length;
+      const keys = lines.map((d) => `${d.council}:${d.measure}:${d.kept}:${d.year}`);
+      expect(new Set(keys).size, `${g.label}: ${keys.join(" / ")}`).toBe(keys.length);
+      for (const d of lines) {
+        expect(d.year, `${g.label}: ${d.council}`).toBeGreaterThanOrEqual(d.made);
+        expect(d.year, g.label).toBeLessThanOrEqual(model.game.end_year);
+      }
+      const years = lines.map((d) => d.year);
+      expect(years, g.label).toEqual([...years].sort((a, b) => a - b));
+      const end = backingAtEnd(model, g.state)!;
+      expect(end.backers, g.label).toBe(countBacking(model, g.state).backers.length);
+      expect(end.year).toBe(model.game.end_year);
+    }
+    expect(deals, "deals judged across the games").toBeGreaterThanOrEqual(3);
   });
 });

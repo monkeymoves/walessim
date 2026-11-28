@@ -81,7 +81,8 @@ describe.skipIf(!existsSync(realPath))("board panel words in a real game", () =>
       const o = options(model, states[0]!).find((x) => x.project === p.id);
       expect(o?.allowed).toBe(false);
       const words = o!.blockers.map((b) => blockerWords(model, b)).join(" ");
-      expect(words).toContain(keystone.name.en);
+      // a name opening with an article reads lower case mid-sentence ("Opens when a cluster that roots is working")
+      expect(words.toLowerCase()).toContain(keystone.name.en.toLowerCase());
     }
   });
 
